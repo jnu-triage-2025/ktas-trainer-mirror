@@ -20,6 +20,8 @@ namespace MultiplayerInfrastructure.Chat
 {
   public class ChatService : NetworkBehaviour
   {
+    private const int MaxChatMessageLength = 512;
+    private const int MaxCommandLineLength = 2048;
     [Header("ChatSettings")]
     [SerializeField, Min(0f)]
     private float _messageCooldownSeconds = DefaultsChatControl.MessageCooldownSeconds;
@@ -32,6 +34,7 @@ namespace MultiplayerInfrastructure.Chat
 
     private readonly Dictionary<int, float> _lastMessageTimes = new();
     private readonly Dictionary<int, int> _lastProblemSheetGradeByClientId = new();
+    private readonly Dictionary<int, HashSet<string>> _issuedProblemsByClientId = new();
 
     /// <summary>
     /// 시스템 권한 실행(TryExecuteSystemCommand) 재진입 깊이. 0보다 크면 커맨드 정의가
@@ -113,6 +116,9 @@ namespace MultiplayerInfrastructure.Chat
     {
       if (sender == null || string.IsNullOrWhiteSpace(rawMessage))
         return;
+      rawMessage = SanitizeChatMessage(rawMessage);
+      if (rawMessage.Length == 0)
+        return;
 
       if (!CanSendMessage(sender, out string cooldownMessage))
       {
@@ -145,7 +151,8 @@ namespace MultiplayerInfrastructure.Chat
     [ServerRpc(RequireOwnership = false)]
     private void ExecuteCommandServerRpc(string commandLine, NetworkConnection sender = null)
     {
-      if (sender == null)
+      if (sender == null || string.IsNullOrWhiteSpace(commandLine)
+          || commandLine.Length > MaxCommandLineLength)
         return;
 
       // 커맨드 로그 기록 (서버 측)
@@ -312,13 +319,11 @@ namespace MultiplayerInfrastructure.Chat
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void ReportProblemGradeServerRpc(string problemSetIdentifier, int problemIndex, int gradeCode, NetworkConnection sender = null)
+    private void ReportProblemGradeServerRpc(string problemSetIdentifier, int problemIndex,
+      int selectedChoiceIndex, string shortAnswer, NetworkConnection sender = null)
     {
       if (sender == null)
         return;
-
-      int normalizedCode = gradeCode == 0 ? 0 : 1;
-      _lastProblemSheetGradeByClientId[sender.ClientId] = normalizedCode;
 
       if (!Registry.Registry.TryGetProblemSet(problemSetIdentifier, out var set, out _))
         return;
@@ -326,13 +331,38 @@ namespace MultiplayerInfrastructure.Chat
       if (set?.Problems == null || problemIndex < 0 || problemIndex >= set.Problems.Count)
         return;
 
-      if (normalizedCode == 0)
-        ProblemRewardService.ApplyOnCorrect(set.Problems[problemIndex], sender.ClientId);
+      string issuedKey = BuildIssuedProblemKey(problemSetIdentifier, problemIndex);
+      if (!_issuedProblemsByClientId.TryGetValue(sender.ClientId, out var issued) || !issued.Contains(issuedKey))
+      {
+        Debug.LogWarning($"[ChatService] Rejected unissued or repeated problem grade from client {sender.ClientId}.");
+        return;
+      }
+
+      var problem = set.Problems[problemIndex];
+      bool correct = problem?.Choice != null
+        ? ProblemAnswerEvaluator.EvaluateChoice(problem.Choice, selectedChoiceIndex)
+        : ProblemAnswerEvaluator.EvaluateShortAnswer(problem?.ShortAnswer, shortAnswer);
+      int normalizedCode = correct ? 0 : 1;
+      _lastProblemSheetGradeByClientId[sender.ClientId] = normalizedCode;
+
+      if (correct || problem?.Grading?.RetryOnWrong == false)
+        issued.Remove(issuedKey);
+
+      if (correct)
+        ProblemRewardService.ApplyOnCorrect(problem, sender.ClientId);
     }
 
     #endregion
 
     #region Helpers
+
+    internal static string SanitizeChatMessage(string rawMessage)
+    {
+      string normalized = (rawMessage ?? string.Empty).Trim();
+      if (normalized.Length > MaxChatMessageLength)
+        normalized = normalized[..MaxChatMessageLength];
+      return normalized.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+    }
 
     private bool CanSendMessage(NetworkConnection sender, out string message)
     {
@@ -507,6 +537,12 @@ namespace MultiplayerInfrastructure.Chat
         error = $"Problem set '{problemSetIdentifier}' is not registered.";
         return false;
       }
+      if (!Registry.Registry.TryGetProblemSet(problemSetIdentifier, out var set, out _)
+          || set?.Problems == null || set.Problems.Count == 0)
+      {
+        error = $"Problem set '{problemSetIdentifier}' is invalid.";
+        return false;
+      }
 
       if (targets == null)
       {
@@ -523,6 +559,14 @@ namespace MultiplayerInfrastructure.Chat
 
         anyTarget = true;
         _lastProblemSheetGradeByClientId[target.ClientId] = 1;
+        if (!_issuedProblemsByClientId.TryGetValue(target.ClientId, out var issued))
+        {
+          issued = new HashSet<string>(StringComparer.Ordinal);
+          _issuedProblemsByClientId[target.ClientId] = issued;
+        }
+        int lastIndex = singleProblemMode ? safeStartIndex : set.Problems.Count - 1;
+        for (int index = safeStartIndex; index <= lastIndex && index < set.Problems.Count; index++)
+          issued.Add(BuildIssuedProblemKey(problemSetIdentifier, index));
         TargetRunProblemSheet(target, problemSetIdentifier, safeStartIndex, singleProblemMode);
       }
 
@@ -535,13 +579,19 @@ namespace MultiplayerInfrastructure.Chat
       return true;
     }
 
-    public void ReportProblemGrade(string problemSetIdentifier, int problemIndex, int gradeCode)
+    public void ReportProblemAnswer(string problemSetIdentifier, int problemIndex,
+      int selectedChoiceIndex, string shortAnswer)
     {
       if (string.IsNullOrWhiteSpace(problemSetIdentifier) || problemIndex < 0)
         return;
 
-      ReportProblemGradeServerRpc(problemSetIdentifier, problemIndex, gradeCode);
+      if ((shortAnswer?.Length ?? 0) > 256)
+        return;
+      ReportProblemGradeServerRpc(problemSetIdentifier, problemIndex, selectedChoiceIndex, shortAnswer);
     }
+
+    private static string BuildIssuedProblemKey(string problemSetIdentifier, int problemIndex)
+      => $"{problemSetIdentifier}\u001f{problemIndex}";
 
     public int GetLastProblemSheetGradeCode(NetworkConnection sender)
     {

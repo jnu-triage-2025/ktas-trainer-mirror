@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using MultiplayerInfrastructure.Logging;
 using UnityEngine;
 
@@ -20,6 +21,7 @@ namespace MultiplayerInfrastructure.Session
   /// </summary>
   public static class UserDescriptorService
   {
+    public const int MaxDisplayNameLength = 32;
     // Identifier(UUID) → UserDescriptor  (주 저장소)
     private static readonly Dictionary<string, UserDescriptor> _byIdentifier
       = new(System.StringComparer.Ordinal);
@@ -75,6 +77,37 @@ namespace MultiplayerInfrastructure.Session
         descriptor.DisplayName = newDisplayName;
     }
 
+    public static bool TryNormalizeDisplayName(string displayName, out string normalized, out string error)
+    {
+      normalized = displayName?.Trim() ?? string.Empty;
+      error = string.Empty;
+      if (normalized.Length == 0)
+      {
+        error = "Display name is required.";
+        return false;
+      }
+      if (normalized.Length > MaxDisplayNameLength)
+      {
+        error = $"Display name cannot exceed {MaxDisplayNameLength} characters.";
+        return false;
+      }
+      if (normalized.Any(char.IsControl))
+      {
+        error = "Display name cannot contain control characters.";
+        return false;
+      }
+      return true;
+    }
+
+    public static bool IsDisplayNameInUse(string displayName, string exceptIdentifier = null)
+    {
+      if (!TryNormalizeDisplayName(displayName, out string normalized, out _))
+        return false;
+      return _byIdentifier.Values.Any(value => value != null
+        && !string.Equals(value.Identifier, exceptIdentifier, System.StringComparison.Ordinal)
+        && string.Equals(value.DisplayName, normalized, System.StringComparison.OrdinalIgnoreCase));
+    }
+
     // ── 조회 API ─────────────────────────────────────────────────────────────
 
     /// <summary>Identifier(UUID)로 조회합니다. 코드 내 엔티티 기준 쿼리.</summary>
@@ -99,15 +132,11 @@ namespace MultiplayerInfrastructure.Session
       if (string.IsNullOrWhiteSpace(displayName))
         return false;
 
-      foreach (var d in _byIdentifier.Values)
-      {
-        if (string.Equals(d.DisplayName, displayName, System.StringComparison.OrdinalIgnoreCase))
-        {
-          descriptor = d;
-          return true;
-        }
-      }
-      return false;
+      descriptor = _byIdentifier.Values
+        .Where(d => d != null && string.Equals(d.DisplayName, displayName.Trim(), System.StringComparison.OrdinalIgnoreCase))
+        .OrderBy(d => d.Identifier, System.StringComparer.Ordinal)
+        .FirstOrDefault();
+      return descriptor != null;
     }
 
     /// <summary>Identifier → ClientId 역방향 조회.</summary>

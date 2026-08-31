@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity.Patient;
@@ -211,14 +212,21 @@ namespace TriageTrainer.Entity
       STLeadValues stLeads,
       bool notify = true)
     {
-      _medicalState.ecg = ecg;
-      _medicalState.art = art;
-      _medicalState.cvp = cvp;
-      _medicalState.pleth = pleth;
-      _medicalState.numerics = numerics;
-      _medicalState.nibp = nibp;
-      _medicalState.temperature = temperature;
-      _medicalState.stLeads = stLeads;
+      if (!IsMonitorMedicalStateFinite(ecg, art, cvp, pleth, numerics, nibp, temperature, stLeads))
+      {
+        Debug.LogWarning("[PatientController] 유한하지 않은 환자 모니터 수치 변경을 거부했습니다.", this);
+        return;
+      }
+
+      if (IsFishNetClientInitialized && !IsFishNetServerStarted)
+      {
+        Debug.LogWarning(
+          "[PatientController] 클라이언트의 환자 의료 상태 변경을 거부했습니다. 서버 시나리오 이벤트에서 변경해야 합니다.",
+          this);
+        return;
+      }
+
+      ApplyMonitorMedicalState(ecg, art, cvp, pleth, numerics, nibp, temperature, stLeads);
 
       if (notify)
       {
@@ -244,22 +252,32 @@ namespace TriageTrainer.Entity
         return;
       }
 
-      if (IsFishNetClientInitialized)
-      {
-        CmdSetMonitorMedicalState(
-          _medicalState.ecg,
-          _medicalState.art,
-          _medicalState.cvp,
-          _medicalState.pleth,
-          _medicalState.numerics,
-          _medicalState.nibp,
-          _medicalState.temperature,
-          _medicalState.stLeads);
-      }
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    private void CmdSetMonitorMedicalState(
+    internal static bool IsMonitorMedicalStateFinite(params object[] parameterGroups)
+    {
+      if (parameterGroups == null)
+        return false;
+
+      for (int i = 0; i < parameterGroups.Length; i++)
+      {
+        object group = parameterGroups[i];
+        if (group == null)
+          return false;
+        FieldInfo[] fields = group.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public);
+        for (int fieldIndex = 0; fieldIndex < fields.Length; fieldIndex++)
+        {
+          FieldInfo field = fields[fieldIndex];
+          if (field.FieldType == typeof(float) && !float.IsFinite((float)field.GetValue(group)))
+            return false;
+          if (field.FieldType == typeof(double) && !double.IsFinite((double)field.GetValue(group)))
+            return false;
+        }
+      }
+      return true;
+    }
+
+    private void ApplyMonitorMedicalState(
       ECGParameters ecg,
       ARTParameters art,
       CVPParameters cvp,
@@ -269,8 +287,14 @@ namespace TriageTrainer.Entity
       TemperatureParameters temperature,
       STLeadValues stLeads)
     {
-      SetMonitorMedicalState(ecg, art, cvp, pleth, numerics, nibp, temperature, stLeads, notify: false);
-      NotifyAndSyncMonitorMedicalStateChanged();
+      _medicalState.ecg = ecg;
+      _medicalState.art = art;
+      _medicalState.cvp = cvp;
+      _medicalState.pleth = pleth;
+      _medicalState.numerics = numerics;
+      _medicalState.nibp = nibp;
+      _medicalState.temperature = temperature;
+      _medicalState.stLeads = stLeads;
     }
 
     [ObserversRpc(BufferLast = true)]
@@ -287,7 +311,12 @@ namespace TriageTrainer.Entity
       if (IsFishNetServerStarted)
         return;
 
-      SetMonitorMedicalState(ecg, art, cvp, pleth, numerics, nibp, temperature, stLeads, notify: false);
+      if (!IsMonitorMedicalStateFinite(ecg, art, cvp, pleth, numerics, nibp, temperature, stLeads))
+      {
+        Debug.LogWarning("[PatientController] 서버에서 유한하지 않은 환자 모니터 수치를 받아 무시했습니다.", this);
+        return;
+      }
+      ApplyMonitorMedicalState(ecg, art, cvp, pleth, numerics, nibp, temperature, stLeads);
       NotifyMedicalStateChanged();
     }
 

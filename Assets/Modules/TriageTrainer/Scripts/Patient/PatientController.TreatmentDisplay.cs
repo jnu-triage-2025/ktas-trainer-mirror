@@ -1472,13 +1472,21 @@ namespace TriageTrainer.Entity
         return null;
 
       var points = FindObjectsByType<IntravenousLineConnectionPoint>(
-        FindObjectsInactive.Include, FindObjectsSortMode.None);
+        FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
+      IntravenousLineConnectionPoint match = null;
       for (var i = 0; i < points.Length; i++)
       {
         if (points[i] != null && points[i].ConnectionIdentifier == identifier)
-          return points[i];
+        {
+          if (match != null)
+          {
+            Debug.LogError($"[PatientController] Duplicate intravenous connection identifier '{identifier}'. Lookup was rejected.");
+            return null;
+          }
+          match = points[i];
+        }
       }
-      return null;
+      return match;
     }
 
     [ServerRpc(RequireOwnership = false)]

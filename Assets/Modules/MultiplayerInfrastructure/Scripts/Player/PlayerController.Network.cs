@@ -329,12 +329,26 @@ namespace MultiplayerInfrastructure.Player
     [ServerRpc]
     private void CmdSetDisplayName(string displayName)
     {
-      if (string.IsNullOrWhiteSpace(displayName))
+      if (!UserDescriptorService.TryNormalizeDisplayName(displayName, out string normalized, out string error))
+      {
+        Debug.LogWarning($"[PlayerController] Rejected display name: {error}");
         return;
-      _userDisplayName.Value = displayName;
+      }
+      if (ServerBanService.IsBanned(normalized))
+      {
+        Debug.LogWarning($"[PlayerController] Banned display name '{normalized}' attempted to connect.");
+        Owner?.Disconnect(true);
+        return;
+      }
+      if (UserDescriptorService.IsDisplayNameInUse(normalized, _userIdentifier.Value))
+      {
+        Debug.LogWarning($"[PlayerController] Rejected duplicate display name '{normalized}'.");
+        return;
+      }
+      _userDisplayName.Value = normalized;
       // 서버 측 서비스도 즉시 갱신
-      UserDescriptorService.UpdateDisplayName(_userIdentifier.Value, displayName);
-      Registry.Registry.UpdateEntityDisplayName(_entityIdentifier.Value, displayName);
+      UserDescriptorService.UpdateDisplayName(_userIdentifier.Value, normalized);
+      Registry.Registry.UpdateEntityDisplayName(_entityIdentifier.Value, normalized);
     }
 
     private void RegisterPlayerEntity()
@@ -548,7 +562,8 @@ namespace MultiplayerInfrastructure.Player
         serializedDerivedAttributes,
         position,
         rotation,
-        throwForce);
+        throwForce,
+        requireInventoryBacking: true);
       if (Owner != null && Owner.IsValid)
         TargetCompleteDroppedWorldItemRequest(Owner, requestId, accepted);
     }
@@ -561,7 +576,8 @@ namespace MultiplayerInfrastructure.Player
       string serializedDerivedAttributes,
       Vector3 position,
       Quaternion rotation,
-      Vector3 throwForce)
+      Vector3 throwForce,
+      bool requireInventoryBacking = false)
     {
       if (!TryValidateDroppedWorldItemRequest(
             itemIdentifier,
@@ -574,6 +590,16 @@ namespace MultiplayerInfrastructure.Player
             throwForce,
             out string normalizedIdentifier))
         return false;
+
+      // 서버 복제본의 실제 인벤토리에서 동일 상태의 아이템을 소비해야만 월드 스폰을 승인한다.
+      // 클라이언트가 RPC 인자를 조작해 등록 아이템을 임의 생성하는 경로를 차단한다.
+      if (requireInventoryBacking && !TryConsumeMatchingInventoryDrop(
+            normalizedIdentifier, stackCount, durability, cooldownRemainingMilliseconds,
+            serializedDerivedAttributes))
+      {
+        Debug.LogWarning($"[PlayerController] Rejected unbacked world item drop '{normalizedIdentifier}'.", this);
+        return false;
+      }
 
       string entityIdentifier = BuildDroppedItemEntityIdentifier();
       RpcSpawnDroppedWorldItem(
@@ -737,6 +763,10 @@ namespace MultiplayerInfrastructure.Player
     [ServerRpc]
     private void CmdDestroyWorldItem(string entityIdentifier)
     {
+      if (Owner == null || !Owner.IsValid
+          || !_pendingWorldItemPickups.TryGetValue(entityIdentifier, out var pending)
+          || pending == null || pending.ClaimantClientId != Owner.ClientId)
+        return;
       ServerDestroyWorldItem(entityIdentifier);
     }
 

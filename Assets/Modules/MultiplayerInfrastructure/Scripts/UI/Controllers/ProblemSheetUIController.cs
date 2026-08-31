@@ -148,7 +148,7 @@ namespace MultiplayerInfrastructure.UI
       ShowPanel();
     }
 
-    private void HandleGraded(bool correct)
+    private void HandleGraded(bool correct, int selectedChoiceIndex, string shortAnswer)
     {
       _lastGradeCode = correct ? 0 : 1;
 
@@ -164,7 +164,7 @@ namespace MultiplayerInfrastructure.UI
         {
           _alreadyAwardedCurrent = true;
           if (_chatService != null && !string.IsNullOrWhiteSpace(_activeSetIdentifier))
-            _chatService.ReportProblemGrade(_activeSetIdentifier, _currentIndex, _lastGradeCode);
+            _chatService.ReportProblemAnswer(_activeSetIdentifier, _currentIndex, selectedChoiceIndex, shortAnswer);
         }
         return;
       }
@@ -172,7 +172,7 @@ namespace MultiplayerInfrastructure.UI
       _alreadyFinalizedCurrent = true;
 
       if (_chatService != null && !string.IsNullOrWhiteSpace(_activeSetIdentifier))
-        _chatService.ReportProblemGrade(_activeSetIdentifier, _currentIndex, _lastGradeCode);
+        _chatService.ReportProblemAnswer(_activeSetIdentifier, _currentIndex, selectedChoiceIndex, shortAnswer);
 
       if (!correct || _alreadyAwardedCurrent)
         return;

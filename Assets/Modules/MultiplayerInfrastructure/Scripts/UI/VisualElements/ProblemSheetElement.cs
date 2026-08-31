@@ -24,7 +24,7 @@ namespace MultiplayerInfrastructure.UI
 
     private ProblemDefinition _boundProblem;
 
-    public event Action<bool> OnGraded;
+    public event Action<bool, int, string> OnGraded;
     public event Action OnNextRequested;
     public event Action OnCloseRequested;
 
@@ -118,16 +118,16 @@ namespace MultiplayerInfrastructure.UI
     private void HandleChoiceSelected(int selectedIndex)
     {
       bool correct = ProblemAnswerEvaluator.EvaluateChoice(_boundProblem?.Choice, selectedIndex);
-      ShowResult(correct);
+      ShowResult(correct, selectedIndex, null);
     }
 
     private void HandleShortAnswerSubmit(string input)
     {
       bool correct = ProblemAnswerEvaluator.EvaluateShortAnswer(_boundProblem?.ShortAnswer, input);
-      ShowResult(correct);
+      ShowResult(correct, -1, input);
     }
 
-    private void ShowResult(bool correct)
+    private void ShowResult(bool correct, int selectedChoiceIndex, string shortAnswer)
     {
       if (_gradedFinalized)
         return;
@@ -148,7 +148,7 @@ namespace MultiplayerInfrastructure.UI
         SetAnswerInputsEnabled(false);
       }
 
-      OnGraded?.Invoke(correct);
+      OnGraded?.Invoke(correct, selectedChoiceIndex, shortAnswer);
     }
 
     private void SetAnswerInputsEnabled(bool enabled)

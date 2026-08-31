@@ -322,6 +322,8 @@ namespace MultiplayerInfrastructure.Entity
     {
       if (sender == null || !sender.IsValid || FindHandle(sender.ClientId) < 0)
         return;
+      if (!float.IsFinite(forward) || !float.IsFinite(turn))
+        return;
       _serverInputs[sender.ClientId] =
         new Vector2(Mathf.Clamp(forward, -1f, 1f), Mathf.Clamp(turn, -1f, 1f));
     }

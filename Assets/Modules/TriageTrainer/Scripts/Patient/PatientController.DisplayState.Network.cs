@@ -50,7 +50,9 @@ namespace TriageTrainer.Entity
       }
       else if (IsFishNetClientInitialized)
       {
-        CmdSetTreatmentDisplay(display, active);
+        Debug.LogWarning(
+          "[PatientController] 클라이언트에서 일반 처치 표시 상태를 변경하려는 요청을 거부했습니다. "
+          + "처치별 서버 권위 상호작용 API를 사용해야 합니다.", this);
       }
       else
       {
@@ -80,13 +82,6 @@ namespace TriageTrainer.Entity
       SyncAllDisplayStates(flags);
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    private void CmdSetTreatmentDisplay(TreatmentDisplay display, bool active)
-    {
-      SetTreatmentDisplay(display, active);
-      RpcSyncTreatmentDisplay(display, active);
-    }
-
     [ObserversRpc(BufferLast = true)]
     private void RpcSyncTreatmentDisplay(TreatmentDisplay display, bool active)
     {
@@ -107,13 +102,6 @@ namespace TriageTrainer.Entity
 
     // 서버에서 호출: 현재 DisplayState 구조체 전체를 한 번의 RPC 로 브로드캐스트한다.
     // 다수 항목을 동시에 적용한 뒤 늦은 입장 클라이언트에 전체 상태를 전달하는 용도.
-    [ServerRpc(RequireOwnership = false)]
-    private void CmdSyncAllDisplayStates(PatientTreatmentDisplayModel flags)
-    {
-      ApplyDisplayModelLocally(flags);
-      RpcSyncAllDisplayStates(flags);
-    }
-
     [ObserversRpc(BufferLast = true)]
     private void RpcSyncAllDisplayStates(PatientTreatmentDisplayModel flags)
     {
