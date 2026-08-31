@@ -10,6 +10,7 @@ namespace TriageTrainer.Entity
 
     [Header("Animation")]
     [SerializeField] private RuntimeAnimatorController _runtimeAnimatorController;
+    [SerializeField] private PatientAnimatorRootObject _animatorObject;
 
     private HumanoidAnimationController _animationControllerCache;
     private Animator _animatorCache;
@@ -76,8 +77,18 @@ namespace TriageTrainer.Entity
       if (_animatorCache != null)
         return _animatorCache;
 
+      if (_animatorObject == null)
+      {
+        PatientAnimatorRootObject[] animatorObjects = GetComponentsInChildren<PatientAnimatorRootObject>(true);
+        if (animatorObjects.Length == 1)
+          _animatorObject = animatorObjects[0];
+      }
+
+      if (_animatorObject != null)
+        _animatorCache = _animatorObject.GetComponentInChildren<Animator>(true);
+
       var animationController = ResolveAnimationController();
-      if (animationController != null)
+      if (_animatorCache == null && animationController != null)
         _animatorCache = animationController.Animator;
 
       if (_animatorCache == null)

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 877330694562944328}
   - component: {fileID: 8664081459568851583}
   - component: {fileID: 962962327496599316}
+  - component: {fileID: 910000000000000107}
   m_Layer: 6
   m_Name: endotracheal_tube_ready_A
   m_TagString: Untagged
@@ -18,6 +19,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &910000000000000107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4449932976154874102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a6f3e92b4504c2ab5a84ea45d200007, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.PatientAEtTubePreparedVisualMarker
 --- !u!4 &877330694562944328
 Transform:
   m_ObjectHideFlags: 0

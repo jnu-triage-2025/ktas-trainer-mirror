@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 750828785249334345}
   - component: {fileID: 3114573507983628165}
   - component: {fileID: 4852745268881576130}
+  - component: {fileID: 910000000000000120}
   m_Layer: 6
   m_Name: 20g_2F
   m_TagString: Untagged
@@ -18,6 +19,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &910000000000000120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8309685609686185534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a6f3e92b4504c2ab5a84ea45d200014, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.PatientC20gLeftVisualMarker
 --- !u!4 &750828785249334345
 Transform:
   m_ObjectHideFlags: 0

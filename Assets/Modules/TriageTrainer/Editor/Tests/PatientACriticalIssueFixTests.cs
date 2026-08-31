@@ -387,9 +387,9 @@ namespace TriageTrainer.Tests
         foreach (var fieldName in new[] { "_normalSalineDisplay", "_plasmaSolutionDisplay", "_bloodBagDisplay" })
         {
           var display = controllerType.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
-            ?.GetValue(controller) as GameObject;
+            ?.GetValue(controller) as Component;
           Assert.That(display, Is.Not.Null, $"{fieldName} 가 프리팹에 배선되어야 합니다.");
-          Assert.That(display.activeSelf, Is.False,
+          Assert.That(display.gameObject.activeSelf, Is.False,
             $"{fieldName} 표시 오브젝트는 기본 비활성이어야 합니다(유체 추가 시 ApplyDisplays 가 표시).");
         }
       }

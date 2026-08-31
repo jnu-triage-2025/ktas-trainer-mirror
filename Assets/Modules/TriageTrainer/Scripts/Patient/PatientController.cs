@@ -444,6 +444,7 @@ namespace TriageTrainer.Entity
       _isPlayerAttached = false;
 
       _runtimeAnimatorController = null;
+      _animatorObject = GetComponentInChildren<PatientAnimatorRootObject>(true);
       _capsuleCollider = null;
       _standingCapsuleCenter = new Vector3(0f, 0.9f, 0f);
       _standingCapsuleHeight = 1.8f;

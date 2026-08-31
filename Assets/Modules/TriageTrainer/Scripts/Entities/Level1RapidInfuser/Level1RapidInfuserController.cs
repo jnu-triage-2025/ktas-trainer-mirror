@@ -10,6 +10,7 @@ using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Tag;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.CentralLine;
 using TriageTrainer.Entity.LineConnection;
@@ -176,9 +177,9 @@ namespace TriageTrainer.Entity
     }
 
     [Header("Displays (assign on prefab)")]
-    [SerializeField] private GameObject _normalSalineDisplay;
-    [SerializeField] private GameObject _plasmaSolutionDisplay;
-    [SerializeField] private GameObject _bloodBagDisplay;
+    [SerializeField] private Level1RapidInfuserNormalSalineDisplay _normalSalineDisplay;
+    [SerializeField] private Level1RapidInfuserPlasmaSolutionDisplay _plasmaSolutionDisplay;
+    [SerializeField] private Level1RapidInfuserBloodBagDisplay _bloodBagDisplay;
 
     [Header("Central line connection (assign on prefab)")]
     [SerializeField] private CentralLineConnectionPoint _centralLineConnectionPoint;
@@ -840,6 +841,7 @@ namespace TriageTrainer.Entity
 
     private const string CLineConnectSignal = "connect_cline_to_lv1";
     private const string PatientAIdentifier = "patient_a";
+    private const string CLineOperatorRoleTag = "nurse_c";
 
     /// <summary>
     /// C라인 연결 상호작용 가능 여부를 판정한다.
@@ -967,6 +969,17 @@ namespace TriageTrainer.Entity
     [ServerRpc(RequireOwnership = false)]
     private void CmdRequestCLineConnection(NetworkConnection sender = null)
     {
+      if (sender == null || !sender.IsValid)
+        return;
+      var player = FindPlayer(sender.ClientId);
+      if (player == null
+          || player.Owner == null
+          || !player.Owner.IsValid
+          || player.Owner.ClientId != sender.ClientId
+          || !IsWithinInteractionDistance(player)
+          || string.IsNullOrWhiteSpace(player.UserIdentifier)
+          || !PlayerTagService.HasTag(player.UserIdentifier, CLineOperatorRoleTag))
+        return;
       if (!HasPlasmaSolution || !HasBloodBag)
         return;
       if (_centralLineConnectionPoint == null)
@@ -1142,46 +1155,28 @@ namespace TriageTrainer.Entity
     {
       EnsureDisplayReferences();
       if (_normalSalineDisplay != null)
-        _normalSalineDisplay.SetActive(HasNormalSaline);
+        _normalSalineDisplay.gameObject.SetActive(HasNormalSaline);
       if (_plasmaSolutionDisplay != null)
-        _plasmaSolutionDisplay.SetActive(HasPlasmaSolution);
+        _plasmaSolutionDisplay.gameObject.SetActive(HasPlasmaSolution);
       if (_bloodBagDisplay != null)
-        _bloodBagDisplay.SetActive(HasBloodBag);
+        _bloodBagDisplay.gameObject.SetActive(HasBloodBag);
     }
 
     private void EnsureDisplayReferences()
     {
-      _normalSalineDisplay ??= FindChildGameObject("NormalSalineDisplay")
-                               ?? FindClosestDirectChild(new Vector3(-0.15f, 1.3f, 0f));
-      _plasmaSolutionDisplay ??= FindChildGameObject("PlasmaSolutionDisplay")
-                                 ?? FindClosestDirectChild(new Vector3(0.15f, 1.3f, 0f));
-      _bloodBagDisplay ??= FindChildGameObject("BloodBagDisplay")
-                           ?? FindClosestDirectChild(new Vector3(0f, 1.3f, 0.15f));
+      _normalSalineDisplay ??= ResolveUniqueDisplay<Level1RapidInfuserNormalSalineDisplay>();
+      _plasmaSolutionDisplay ??= ResolveUniqueDisplay<Level1RapidInfuserPlasmaSolutionDisplay>();
+      _bloodBagDisplay ??= ResolveUniqueDisplay<Level1RapidInfuserBloodBagDisplay>();
     }
 
-    private GameObject FindChildGameObject(string childName)
+    private T ResolveUniqueDisplay<T>() where T : Component
     {
-      var children = GetComponentsInChildren<Transform>(true);
-      for (int i = 0; i < children.Length; i++)
-        if (children[i] != null && string.Equals(children[i].name, childName, StringComparison.Ordinal))
-          return children[i].gameObject;
+      var matches = GetComponentsInChildren<T>(true);
+      if (matches.Length == 1)
+        return matches[0];
+      if (matches.Length > 1)
+        Debug.LogError($"[{nameof(Level1RapidInfuserController)}] {matches.Length} {typeof(T).Name} markers found; exactly one is required.", this);
       return null;
-    }
-
-    private GameObject FindClosestDirectChild(Vector3 expectedLocalPosition)
-    {
-      Transform closest = null;
-      float closestDistance = 0.01f * 0.01f;
-      for (int i = 0; i < transform.childCount; i++)
-      {
-        var child = transform.GetChild(i);
-        float distance = (child.localPosition - expectedLocalPosition).sqrMagnitude;
-        if (distance > closestDistance)
-          continue;
-        closest = child;
-        closestDistance = distance;
-      }
-      return closest != null ? closest.gameObject : null;
     }
 
     private static PlayerController FindPlayer(int clientId)

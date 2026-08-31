@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1688330197099835462}
   - component: {fileID: 8589618149190384213}
   - component: {fileID: 868971026503455756}
+  - component: {fileID: 810000000000000001}
   m_Layer: 0
   m_Name: PatientTypeBMale
   m_TagString: Untagged
@@ -20,6 +21,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &810000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 434063568747779160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abef196351274660a7d3727c0286a30e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientAnimatorRootObject
 --- !u!4 &2160556403026478190
 Transform:
   m_ObjectHideFlags: 0
@@ -177,6 +190,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 868971026503455756}
   _networkObjectCache: {fileID: 868971026503455756}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
+  _animatorObject: {fileID: 810000000000000001}
   _assessActions:
   - _identifier: assess_avpu_gcs
     _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC0AC\uC815(AVPU/GCS)"

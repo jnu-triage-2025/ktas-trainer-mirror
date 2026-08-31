@@ -89,7 +89,7 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 4294967295
     _followingPivot: {fileID: 0}
-    _camera: {fileID: 0}
+    _cameraObject: {fileID: 0}
     _spectatorLayerName: Spectator
     _currentDistance: 1.490277
     _targetDistance: 5

@@ -64,7 +64,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1ac947bd0f9b4f47bc7295dc41b12ea9, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.CentralLine.CentralLineConnectionPoint
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
@@ -863,6 +863,7 @@ GameObject:
   - component: {fileID: 3415111579364395856}
   - component: {fileID: 7653721158556900860}
   - component: {fileID: 4111524619819356577}
+  - component: {fileID: 800000000000000001}
   m_Layer: 0
   m_Name: PatientTypeA
   m_TagString: Untagged
@@ -870,6 +871,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &800000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4077515750642718864}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abef196351274660a7d3727c0286a30e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientAnimatorRootObject
 --- !u!4 &1827749486389943084
 Transform:
   m_ObjectHideFlags: 0
@@ -1026,6 +1039,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 4111524619819356577}
   _networkObjectCache: {fileID: 4111524619819356577}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
+  _animatorObject: {fileID: 800000000000000001}
   _assessActions:
   - _identifier: assess_vital
     _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"

@@ -50,7 +50,7 @@ namespace MultiplayerInfrastructure.Camera
     [Header("References")]
     [Tooltip("현재 부착되어 추종 중인 부착점의 피벗 Transform. 런타임에 결정됩니다.")]
     [SerializeField] private Transform _followingPivot;
-    [SerializeField] private UnityEngine.Camera _camera;
+    [SerializeField] private MainGameplayCameraObject _cameraObject;
     [SerializeField] private string _spectatorLayerName = "Spectator";
 
     [Header("State")]
@@ -63,6 +63,7 @@ namespace MultiplayerInfrastructure.Camera
     [SerializeField] private bool _baseMaskInitialized = false;
 
     // 충돌 검사에서 무시할 콜라이더(추종 대상 플레이어 자신). 직렬화 대상이 아니다.
+    [System.NonSerialized] private UnityEngine.Camera _camera;
     private readonly System.Collections.Generic.HashSet<Collider> _ignoredColliders = new();
     // SphereCastAll 결과 버퍼(할당 최소화).
     private readonly RaycastHit[] _collisionHits = new RaycastHit[16];
@@ -360,8 +361,24 @@ namespace MultiplayerInfrastructure.Camera
 
     private void EnsureCamera()
     {
-      if (_camera.IsUnityNull())
-        _camera = UnityEngine.Camera.main ?? Object.FindFirstObjectByType<UnityEngine.Camera>();
+      if (_cameraObject.IsUnityNull())
+      {
+        MainGameplayCameraObject[] cameraObjects = Object.FindObjectsByType<MainGameplayCameraObject>(
+          FindObjectsInactive.Include,
+          FindObjectsSortMode.InstanceID);
+        if (cameraObjects.Length == 1)
+          _cameraObject = cameraObjects[0];
+      }
+
+      UnityEngine.Camera resolvedCamera = _cameraObject.IsUnityNull()
+        ? null
+        : _cameraObject.GetComponent<UnityEngine.Camera>();
+
+      if (_camera != resolvedCamera)
+      {
+        _camera = resolvedCamera;
+        _baseMaskInitialized = false;
+      }
 
       if (!_camera.IsUnityNull() && !_baseMaskInitialized)
       {

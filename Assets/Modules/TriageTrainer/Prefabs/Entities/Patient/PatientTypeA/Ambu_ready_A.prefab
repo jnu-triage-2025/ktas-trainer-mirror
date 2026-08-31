@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4416502670699358882}
   - component: {fileID: 212814744434714161}
   - component: {fileID: 383464304316379314}
+  - component: {fileID: 910000000000000106}
   m_Layer: 0
   m_Name: Ambu_ready_A
   m_TagString: Untagged
@@ -89,3 +90,15 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &910000000000000106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5686076349596775004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a6f3e92b4504c2ab5a84ea45d200006, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.PatientAAmbuConnectedVisualMarker

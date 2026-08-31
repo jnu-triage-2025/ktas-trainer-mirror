@@ -78,6 +78,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 930000000000000002}
+  - component: {fileID: 930000000000000003}
   m_Layer: 0
   m_Name: NormalSalineDisplay
   m_TagString: Untagged
@@ -101,6 +102,18 @@ Transform:
   - {fileID: 4734673787153779022}
   m_Father: {fileID: 5503860412714379286}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &930000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930000000000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a5b6d48e0374f8c91ca1cd4ea200001, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.Level1RapidInfuserNormalSalineDisplay
 --- !u!1 &930000000000000011
 GameObject:
   m_ObjectHideFlags: 0
@@ -110,6 +123,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 930000000000000012}
+  - component: {fileID: 930000000000000013}
   m_Layer: 0
   m_Name: PlasmaSolutionDisplay
   m_TagString: Untagged
@@ -133,6 +147,18 @@ Transform:
   - {fileID: 870608455092702587}
   m_Father: {fileID: 5503860412714379286}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &930000000000000013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930000000000000011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a5b6d48e0374f8c91ca1cd4ea200002, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.Level1RapidInfuserPlasmaSolutionDisplay
 --- !u!1 &930000000000000021
 GameObject:
   m_ObjectHideFlags: 0
@@ -142,6 +168,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 930000000000000022}
+  - component: {fileID: 930000000000000023}
   m_Layer: 0
   m_Name: BloodBagDisplay
   m_TagString: Untagged
@@ -165,6 +192,18 @@ Transform:
   - {fileID: 8410574243369890068}
   m_Father: {fileID: 5503860412714379286}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &930000000000000023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930000000000000021}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a5b6d48e0374f8c91ca1cd4ea200003, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.Level1RapidInfuserBloodBagDisplay
 --- !u!1 &4075860716570454592
 GameObject:
   m_ObjectHideFlags: 0
@@ -357,9 +396,9 @@ MonoBehaviour:
   _exitHint: "\uC67C\uCABD Shift \uD0A4\uB97C \uB204\uB974\uBA74 \uC870\uC885\uC744
     \uC885\uB8CC\uD569\uB2C8\uB2E4."
   _playerAttachPoints: []
-  _normalSalineDisplay: {fileID: 930000000000000001}
-  _plasmaSolutionDisplay: {fileID: 930000000000000011}
-  _bloodBagDisplay: {fileID: 930000000000000021}
+  _normalSalineDisplay: {fileID: 930000000000000003}
+  _plasmaSolutionDisplay: {fileID: 930000000000000013}
+  _bloodBagDisplay: {fileID: 930000000000000023}
   _centralLineConnectionPoint: {fileID: 220815000000000004}
   _initialHasNormalSaline: 0
   _initialHasPlasmaSolution: 0

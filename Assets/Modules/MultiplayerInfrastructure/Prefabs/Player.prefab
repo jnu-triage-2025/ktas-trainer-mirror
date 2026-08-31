@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7672001592040353025}
   - component: {fileID: 8512494014555624857}
   - component: {fileID: 3138189936146535563}
+  - component: {fileID: 910000000000000001}
   m_Layer: 0
   m_Name: SpectatorMarker
   m_TagString: Untagged
@@ -111,6 +112,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &910000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2314869867077987358}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a48d3f876bc54c76819a4067cfa8fe31, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Player.PlayerSpectatorMarkerObject
 --- !u!1 &3140734898821137932
 GameObject:
   m_ObjectHideFlags: 0

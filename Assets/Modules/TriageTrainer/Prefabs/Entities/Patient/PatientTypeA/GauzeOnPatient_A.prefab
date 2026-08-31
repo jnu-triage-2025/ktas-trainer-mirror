@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8934455531572821152}
   - component: {fileID: 2628301494997809636}
   - component: {fileID: 6660029093622367485}
+  - component: {fileID: 910000000000000101}
   m_Layer: 0
   m_Name: GauzeOnPatient_A
   m_TagString: Untagged
@@ -89,3 +90,15 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &910000000000000101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 24523210282719530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a6f3e92b4504c2ab5a84ea45d200001, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.PatientAGauzeVisualMarker

@@ -147,19 +147,19 @@ namespace TriageTrainer.Scenario
     [SerializeField] private GameObject _ivChecklistUiPanel;
     [SerializeField, TextArea] private string _patientAVitalInfoMessage = "[환자 A 활력징후] BP 70/40, HR 140, RR 8, BT 35.9, SpO2 82";
     [SerializeField] private bool _vitalInfoAlsoActivateMonitor = true;
-    [SerializeField] private GameObject _patientAEtTubePreparedVisual;
-    [SerializeField] private GameObject _patientAEtTubeInsertedVisual;
+    [SerializeField] private PatientAEtTubePreparedVisualMarker _patientAEtTubePreparedVisual;
+    [SerializeField] private PatientAEtTubeInsertedVisualMarker _patientAEtTubeInsertedVisual;
     [SerializeField] private GameObject _patientAEtTubeWithoutStyletVisual;
-    [SerializeField] private GameObject _patientATPieceConnectedVisual;
-    [SerializeField] private GameObject _patientAGauzeVisual;
-    [SerializeField] private GameObject _patientAGauzeWithPlasterVisual;
-    [SerializeField] private GameObject _patientA18gLeftVisual;
+    [SerializeField] private PatientATPieceConnectedVisualMarker _patientATPieceConnectedVisual;
+    [SerializeField] private PatientAGauzeVisualMarker _patientAGauzeVisual;
+    [SerializeField] private PatientAGauzeWithPlasterVisualMarker _patientAGauzeWithPlasterVisual;
+    [SerializeField] private PatientA18gLeftVisualMarker _patientA18gLeftVisual;
     [SerializeField] private GameObject _patientANs1LeftConnectedVisual;
-    [SerializeField] private GameObject _patientA18gRightVisual;
+    [SerializeField] private PatientA18gRightVisualMarker _patientA18gRightVisual;
     [SerializeField] private GameObject _patientAPs1RightConnectedVisual;
-    [SerializeField] private GameObject _patientACentralLineVisual;
+    [SerializeField] private PatientACentralLineVisualMarker _patientACentralLineVisual;
     [SerializeField] private GameObject _level1ReadyVisual;
-    [SerializeField] private GameObject _patientAAmbuConnectedVisual;
+    [SerializeField] private PatientAAmbuConnectedVisualMarker _patientAAmbuConnectedVisual;
     [SerializeField] private GameObject _patientADefibrillatorPadVisual;
     [SerializeField] private GameObject _defibrillatorIrregularUiPanel;
     [SerializeField]
@@ -266,13 +266,13 @@ namespace TriageTrainer.Scenario
     [SerializeField] private GameObject _ctTransferFadePanel;
     [SerializeField, Min(0f)] private float _ctTransferFadeHoldSeconds = 1.0f;
     [SerializeField, Min(0f)] private float _ctTransferFadeAutoHideSeconds = 0f;
-    [SerializeField] private GameObject _patientBGauzeVisual;
-    [SerializeField] private GameObject _patientBGauzeWithPlasterVisual;
-    [SerializeField] private GameObject _patientCGauzeVisual;
-    [SerializeField] private GameObject _patientCGauzeWithPlasterVisual;
-    [SerializeField] private GameObject _patientB20gRightVisual;
+    [SerializeField] private PatientBGauzeVisualMarker _patientBGauzeVisual;
+    [SerializeField] private PatientBGauzeWithPlasterVisualMarker _patientBGauzeWithPlasterVisual;
+    [SerializeField] private PatientCGauzeVisualMarker _patientCGauzeVisual;
+    [SerializeField] private PatientCGauzeWithPlasterVisualMarker _patientCGauzeWithPlasterVisual;
+    [SerializeField] private PatientB20gRightVisualMarker _patientB20gRightVisual;
     [SerializeField] private GameObject _patientBNs1RightConnectedVisual;
-    [SerializeField] private GameObject _patientC20gLeftVisual;
+    [SerializeField] private PatientC20gLeftVisualMarker _patientC20gLeftVisual;
     [SerializeField] private GameObject _patientCNs1LeftConnectedVisual;
     [SerializeField]
     private ECGParameters _patientCInitialMonitorParameters = new ECGParameters
@@ -349,6 +349,7 @@ namespace TriageTrainer.Scenario
       }
 
       EnsurePatientAWorldAnchors();
+      RecoverTypedReferences();
       RegisterScenarioGraphs();
     }
 
@@ -496,6 +497,7 @@ namespace TriageTrainer.Scenario
     [ContextMenu("Validate Event Wiring")]
     private void ValidateEventWiring()
     {
+      RecoverTypedReferences();
       var missing = new List<string>(64);
 
       // Core routing references used by multiple events.
@@ -531,7 +533,7 @@ namespace TriageTrainer.Scenario
         sb.Append("- ").AppendLine(missing[i]);
       }
 
-      Debug.LogWarning(sb.ToString(), this);
+      Debug.LogError(sb.ToString(), this);
     }
 
     [ContextMenu("Run Core Smoke Test")]
@@ -680,6 +682,7 @@ namespace TriageTrainer.Scenario
       _nurseDTransform = ResolveEntityTransform(_nurseDTransform, _nurseDEntityIdentifier);
       _nurseDTransform ??= ResolveByAliases(_nurseDAliases)?.transform;
 
+      RecoverTypedReferences();
       LogUnresolvedTargetsIfAny();
     }
 
@@ -750,7 +753,7 @@ namespace TriageTrainer.Scenario
       }
 
       // 2) Find NPC component by authored Identifier.
-      var npcs = FindObjectsByType<Npc>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      var npcs = FindObjectsByType<Npc>(FindObjectsInactive.Exclude, FindObjectsSortMode.InstanceID);
       for (int i = 0; i < npcs.Length; i++)
       {
         var npc = npcs[i];
@@ -810,10 +813,6 @@ namespace TriageTrainer.Scenario
           return true;
         }
 
-        if (value.IndexOf(alias, System.StringComparison.OrdinalIgnoreCase) >= 0)
-        {
-          return true;
-        }
       }
 
       return false;
@@ -1030,6 +1029,14 @@ namespace TriageTrainer.Scenario
       }
     }
 
+    private void SetActiveIfPresent(Component target, bool active)
+    {
+      if (target != null)
+      {
+        target.gameObject.SetActive(active);
+      }
+    }
+
     private void ToggleChecklistPanel(ref GameObject panel,
       bool active,
       string message,
@@ -1080,6 +1087,7 @@ namespace TriageTrainer.Scenario
       }
 
       var transforms = FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+      GameObject match = null;
       for (int i = 0; i < transforms.Length; i++)
       {
         var tr = transforms[i];
@@ -1099,12 +1107,17 @@ namespace TriageTrainer.Scenario
 
           if (string.Equals(name, candidate, StringComparison.OrdinalIgnoreCase))
           {
-            return tr.gameObject;
+            if (match != null && !ReferenceEquals(match, tr.gameObject))
+            {
+              Debug.LogError($"[{nameof(TriageScenarioEventBootstrap)}] Checklist panel name '{candidate}' is ambiguous; automatic recovery was skipped.");
+              return null;
+            }
+            match = tr.gameObject;
           }
         }
       }
 
-      return null;
+      return match;
     }
 
     private void SnapToIfPresent(GameObject target, Transform destination)
