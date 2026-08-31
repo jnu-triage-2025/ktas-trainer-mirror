@@ -23,6 +23,10 @@ namespace MultiplayerInfrastructure.Session
 
     private CancellationTokenSource _broadcastCts;
     private CancellationTokenSource _listenCts;
+    private Task _broadcastTask;
+    private Task _listenTask;
+    private int _broadcastGeneration;
+    private int _listenGeneration;
 
     private bool _pendingUpdate;
     private List<SessionInformationModel> _lastSnapshot = new List<SessionInformationModel>();
@@ -78,14 +82,17 @@ namespace MultiplayerInfrastructure.Session
     {
       StopBroadcast();
       _broadcastCts = new CancellationTokenSource();
-      _ = BroadcastLoop(sessionName, gamePort, _broadcastCts.Token);
+      int generation = ++_broadcastGeneration;
+      _broadcastTask = BroadcastLoop(sessionName, gamePort, _broadcastCts.Token);
+      ObserveLoop(_broadcastTask, _broadcastCts, generation, broadcast: true);
     }
 
     public void StopBroadcast()
     {
-      _broadcastCts?.Cancel();
-      _broadcastCts?.Dispose();
+      _broadcastGeneration++;
+      var cancellation = _broadcastCts;
       _broadcastCts = null;
+      CancelSafely(cancellation);
     }
 
     public void StartDiscovery()
@@ -93,14 +100,17 @@ namespace MultiplayerInfrastructure.Session
       StopDiscovery();
       ClearDiscovered();
       _listenCts = new CancellationTokenSource();
-      _ = ListenLoop(_listenCts.Token);
+      int generation = ++_listenGeneration;
+      _listenTask = ListenLoop(_listenCts.Token);
+      ObserveLoop(_listenTask, _listenCts, generation, broadcast: false);
     }
 
     public void StopDiscovery()
     {
-      _listenCts?.Cancel();
-      _listenCts?.Dispose();
+      _listenGeneration++;
+      var cancellation = _listenCts;
       _listenCts = null;
+      CancelSafely(cancellation);
     }
 
     public void ClearDiscovered()
@@ -109,6 +119,57 @@ namespace MultiplayerInfrastructure.Session
       {
         _sessions.Clear();
         _pendingUpdate = true;
+      }
+    }
+
+    private async void ObserveLoop(
+      Task task,
+      CancellationTokenSource cancellation,
+      int generation,
+      bool broadcast)
+    {
+      try
+      {
+        await task;
+      }
+      catch (OperationCanceledException)
+      {
+        // 정상적인 Stop 요청입니다.
+      }
+      catch (Exception exception)
+      {
+        Debug.LogError($"[LanDiscovery] {(broadcast ? "Broadcast" : "Listen")} loop stopped: {exception}", this);
+      }
+      finally
+      {
+        if (broadcast && generation == _broadcastGeneration && ReferenceEquals(_broadcastTask, task))
+        {
+          _broadcastTask = null;
+          if (ReferenceEquals(_broadcastCts, cancellation))
+            _broadcastCts = null;
+        }
+        else if (!broadcast && generation == _listenGeneration && ReferenceEquals(_listenTask, task))
+        {
+          _listenTask = null;
+          if (ReferenceEquals(_listenCts, cancellation))
+            _listenCts = null;
+        }
+        cancellation.Dispose();
+      }
+    }
+
+    private static void CancelSafely(CancellationTokenSource cancellation)
+    {
+      if (cancellation == null)
+        return;
+
+      try
+      {
+        cancellation.Cancel();
+      }
+      catch (ObjectDisposedException)
+      {
+        // 완료 감시자가 먼저 정리한 소스는 이미 취소된 것과 같습니다.
       }
     }
 
@@ -254,6 +315,8 @@ namespace MultiplayerInfrastructure.Session
     {
       StopBroadcast();
       StopDiscovery();
+      if (Instance == this)
+        Instance = null;
     }
   }
 }

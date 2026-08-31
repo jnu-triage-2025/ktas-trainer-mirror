@@ -6,6 +6,8 @@ namespace MultiplayerInfrastructure.UI
   /// <summary>SettingsUIController의 "일반" 탭 구현.</summary>
   public partial class SettingsUIController
   {
+    private int _clearLogsGeneration;
+    private bool _isClearingLogs;
     private VisualElement EnsureGeneralTabContent()
     {
       if (_generalTabContent != null)
@@ -57,19 +59,40 @@ namespace MultiplayerInfrastructure.UI
 
     private async void HandleClearAllLogsClicked()
     {
+      if (_isClearingLogs)
+        return;
+
+      _isClearingLogs = true;
+      int generation = ++_clearLogsGeneration;
       var button = _generalTabContent?.Q<Button>(className: "settings__danger-btn");
       if (button != null)
         button.SetEnabled(false);
 
-      SetStatusText("세션 로그를 제거하는 중입니다...");
-      var result = await GameLogService.ClearAllSessionLogsAsync();
-      SetStatusText(result.Message);
+      try
+      {
+        SetStatusText("세션 로그를 제거하는 중입니다...");
+        var result = await GameLogService.ClearAllSessionLogsAsync();
+        if (this == null || generation != _clearLogsGeneration)
+          return;
 
-      if (button != null)
-        button.SetEnabled(true);
-
-      if (!result.Success)
-        UnityEngine.Debug.LogWarning($"[SettingsUI] {result.Message}");
+        SetStatusText(result.Message);
+        if (!result.Success)
+          UnityEngine.Debug.LogWarning($"[SettingsUI] {result.Message}");
+      }
+      catch (System.Exception exception)
+      {
+        if (this != null && generation == _clearLogsGeneration)
+          UnityEngine.Debug.LogException(exception, this);
+      }
+      finally
+      {
+        if (this != null && generation == _clearLogsGeneration)
+        {
+          _isClearingLogs = false;
+          if (button != null && button.panel != null)
+            button.SetEnabled(true);
+        }
+      }
     }
   }
 }

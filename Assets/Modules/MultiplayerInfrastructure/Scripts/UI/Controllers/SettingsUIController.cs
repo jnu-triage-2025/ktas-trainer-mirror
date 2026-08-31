@@ -92,6 +92,7 @@ namespace MultiplayerInfrastructure.UI
 
     protected override void OnDestroy()
     {
+      _clearLogsGeneration++;
       DetachChrome();
       DetachKeyTab();
       DetachGraphicsTab();
