@@ -137,8 +137,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     public bool EnableDetailedContentOverlay => _enableDetailedContentOverlay;
     protected virtual void OnEnable()
     {
-      // DualPatientMonitorController creates missing display children before calling base.OnEnable.
-      // Calculate the auto-managed collider after that structure is complete.
+      // DualPatientMonitorController 는 base.OnEnable 을 호출하기 전에 없는 표시 자식을
+      // 만든다. 자동 관리 콜라이더는 그 구조가 완성된 뒤에 계산한다.
       EnsureInteractionCollider();
       uiDocument = GetComponent<UIDocument>();
       // 더미 재생 값은 환자 상태가 반영되기 전, 인스펙터에 저장된 값으로 고정한다.
@@ -958,29 +958,37 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       bool hasPatient = patientState?.Descriptor != null;
       var numerics = monitorNumerics;
 
-      // 측정 불가(-1) 여부. 측정 불가인 경우 폴백(> 0f) 대신 -?- 로 표시한다.
+      // 측정 불가(-1) 여부. 측정 불가인 경우 폴백 대신 -?- 로 표시한다.
       bool bpmUnavailable = IsUnavailable(numerics.bpm);
       bool prUnavailable = IsUnavailable(numerics.pulseRate);
       bool nibpUnavailable = IsUnavailable(monitorNIBP.systolic) || IsUnavailable(monitorNIBP.diastolic);
-      // SpO2는 numerics.spo2(> 0f)를 우선하고, 없으면 pleth.spo2로 폴백한다.
+      // SpO2는 numerics.spo2를 우선하고, 그것이 측정 불가이면 pleth.spo2로 폴백한다.
       // 두 값이 모두 측정 불가(-1)이면 -?- 로 표시한다.
       bool spo2Unavailable = IsUnavailable(numerics.spo2) && IsUnavailable(monitorPleth.spo2);
 
-      float bpmValue = numerics.bpm > 0f ? numerics.bpm : _currentParameters.bpm;
-      float prValue = numerics.pulseRate > 0f ? numerics.pulseRate : monitorPleth.bpm;
-      float spo2Value = numerics.spo2 > 0f ? numerics.spo2 : monitorPleth.spo2;
-      float piValue = numerics.perfusionIndex > 0f ? numerics.perfusionIndex : (hasPatient ? 3.0f : 0f);
+      // 0 은 "값이 없음"이 아니라 임상적으로 유효한 값이다(무수축/무맥의 심박수 0).
+      // 폴백 조건에 `> 0f` 를 쓰면 심박수 0 이 ECG 프로파일 설정값으로 대체되어, 무수축 환자가
+      // 정상 심박수로 표시된다. 값 부재는 측정 불가 센티넬(-1)로만 표현되므로 그 기준으로 판정한다.
+      float bpmValue = IsUnavailable(numerics.bpm) ? _currentParameters.bpm : numerics.bpm;
+      float prValue = IsUnavailable(numerics.pulseRate) ? monitorPleth.bpm : numerics.pulseRate;
+      float spo2Value = IsUnavailable(numerics.spo2) ? monitorPleth.spo2 : numerics.spo2;
+      float piValue = IsUnavailable(numerics.perfusionIndex)
+        ? (hasPatient ? 3.0f : 0f)
+        : numerics.perfusionIndex;
 
       if (ecgValueLabel != null)
       {
+        // ECG 채널의 HR 은 파형을 만들어 내는 실제 파라미터 값을 그대로 표시한다.
         ecgValueLabel.text = bpmUnavailable ? $"HR {UnavailableDisplay}" : $"HR {Mathf.RoundToInt(_currentParameters.bpm)}";
       }
 
       if (plethValueLabel != null)
       {
+        // 숫자 라벨(spo2NumericLabel)과 동일한 해석 값을 사용한다. monitorPleth.spo2 를 직접
+        // 읽으면 numerics.spo2 가 유효한 경우 두 라벨이 서로 다른 값을 표시한다.
         plethValueLabel.text = spo2Unavailable
           ? $"SpO2 {UnavailableDisplay}"
-          : $"SpO2 {Mathf.RoundToInt(monitorPleth.spo2)}%";
+          : $"SpO2 {Mathf.RoundToInt(spo2Value)}%";
       }
 
       if (artValueLabel != null)
