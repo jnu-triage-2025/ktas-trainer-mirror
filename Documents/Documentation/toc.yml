@@ -1,0 +1,1932 @@
+### YamlMime:TableOfContent
+- name: MultiplayerInfrastructure
+  href: MultiplayerInfrastructure.md
+  items:
+  - name: Audio
+    href: MultiplayerInfrastructure.Audio.md
+    items:
+    - name: Native
+      href: MultiplayerInfrastructure.Audio.Native.md
+      items:
+      - name: Classes
+        items:
+        - name: MacAudioDeviceEnumerator
+          href: MultiplayerInfrastructure.Audio.Native.MacAudioDeviceEnumerator.md
+    - name: Classes
+      items:
+      - name: AudioDeviceCatalog
+        href: MultiplayerInfrastructure.Audio.AudioDeviceCatalog.md
+      - name: AudioDeviceDescriptor
+        href: MultiplayerInfrastructure.Audio.AudioDeviceDescriptor.md
+      - name: AudioDevicePreferenceService
+        href: MultiplayerInfrastructure.Audio.AudioDevicePreferenceService.md
+      - name: AudioDeviceSelectionResolver
+        href: MultiplayerInfrastructure.Audio.AudioDeviceSelectionResolver.md
+      - name: AudioDeviceSettingsData
+        href: MultiplayerInfrastructure.Audio.AudioDeviceSettingsData.md
+      - name: AudioEndpointPath
+        href: MultiplayerInfrastructure.Audio.AudioEndpointPath.md
+      - name: AudioOutputRouting
+        href: MultiplayerInfrastructure.Audio.AudioOutputRouting.md
+      - name: AudioVolumePreferenceService
+        href: MultiplayerInfrastructure.Audio.AudioVolumePreferenceService.md
+      - name: MicrophoneAudioDeviceEnumerator
+        href: MultiplayerInfrastructure.Audio.MicrophoneAudioDeviceEnumerator.md
+      - name: NetworkSoundEmitter
+        href: MultiplayerInfrastructure.Audio.NetworkSoundEmitter.md
+      - name: SoundService
+        href: MultiplayerInfrastructure.Audio.SoundService.md
+    - name: Interfaces
+      items:
+      - name: IAudioDeviceEnumerator
+        href: MultiplayerInfrastructure.Audio.IAudioDeviceEnumerator.md
+      - name: IAudioOutputRouter
+        href: MultiplayerInfrastructure.Audio.IAudioOutputRouter.md
+    - name: Enums
+      items:
+      - name: AudioDeviceKind
+        href: MultiplayerInfrastructure.Audio.AudioDeviceKind.md
+  - name: Camera
+    href: MultiplayerInfrastructure.Camera.md
+    items:
+    - name: Classes
+      items:
+      - name: CameraAttachPoint
+        href: MultiplayerInfrastructure.Camera.CameraAttachPoint.md
+      - name: CameraHolder
+        href: MultiplayerInfrastructure.Camera.CameraHolder.md
+      - name: MainCameraController
+        href: MultiplayerInfrastructure.Camera.MainCameraController.md
+      - name: MainGameplayCameraObject
+        href: MultiplayerInfrastructure.Camera.MainGameplayCameraObject.md
+      - name: NearbyInteractablesDetector
+        href: MultiplayerInfrastructure.Camera.NearbyInteractablesDetector.md
+    - name: Enums
+      items:
+      - name: CameraViewMode
+        href: MultiplayerInfrastructure.Camera.CameraViewMode.md
+  - name: Chat
+    href: MultiplayerInfrastructure.Chat.md
+    items:
+    - name: Classes
+      items:
+      - name: ChatService
+        href: MultiplayerInfrastructure.Chat.ChatService.md
+  - name: Command
+    href: MultiplayerInfrastructure.Command.md
+    items:
+    - name: Classes
+      items:
+      - name: ChatCommandCompletionService
+        href: MultiplayerInfrastructure.Command.ChatCommandCompletionService.md
+      - name: ChatCommandHelp
+        href: MultiplayerInfrastructure.Command.ChatCommandHelp.md
+      - name: ChatCommandService
+        href: MultiplayerInfrastructure.Command.ChatCommandService.md
+      - name: CommandDefinition_Character
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Character.md
+      - name: CommandDefinition_Clean
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Clean.md
+      - name: CommandDefinition_ConnGate
+        href: MultiplayerInfrastructure.Command.CommandDefinition_ConnGate.md
+      - name: CommandDefinition_EntityPreset
+        href: MultiplayerInfrastructure.Command.CommandDefinition_EntityPreset.md
+      - name: CommandDefinition_Gamemode
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Gamemode.md
+      - name: CommandDefinition_Gamerule
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Gamerule.md
+      - name: CommandDefinition_Give
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Give.md
+      - name: CommandDefinition_Help
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Help.md
+      - name: CommandDefinition_Item
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Item.md
+      - name: CommandDefinition_Kick
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Kick.md
+      - name: CommandDefinition_Log
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Log.md
+      - name: CommandDefinition_Permission
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Permission.md
+      - name: CommandDefinition_ProblemSheet
+        href: MultiplayerInfrastructure.Command.CommandDefinition_ProblemSheet.md
+      - name: CommandDefinition_Scenario
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Scenario.md
+      - name: CommandDefinition_ScenarioAlias
+        href: MultiplayerInfrastructure.Command.CommandDefinition_ScenarioAlias.md
+      - name: CommandDefinition_Scoreboard
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Scoreboard.md
+      - name: CommandDefinition_Server
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Server.md
+      - name: CommandDefinition_ServerAlias
+        href: MultiplayerInfrastructure.Command.CommandDefinition_ServerAlias.md
+      - name: CommandDefinition_Signal
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Signal.md
+      - name: CommandDefinition_Speed
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Speed.md
+      - name: CommandDefinition_Tag
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Tag.md
+      - name: CommandDefinition_TimeSync
+        href: MultiplayerInfrastructure.Command.CommandDefinition_TimeSync.md
+      - name: CommandDefinition_Title
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Title.md
+      - name: CommandDefinition_Tp
+        href: MultiplayerInfrastructure.Command.CommandDefinition_Tp.md
+      - name: TargetSelectorResolver
+        href: MultiplayerInfrastructure.Command.TargetSelectorResolver.md
+    - name: Structs
+      items:
+      - name: UsageLine
+        href: MultiplayerInfrastructure.Command.UsageLine.md
+    - name: Interfaces
+      items:
+      - name: IChatCommandCompletion
+        href: MultiplayerInfrastructure.Command.IChatCommandCompletion.md
+      - name: IChatCommandModel
+        href: MultiplayerInfrastructure.Command.IChatCommandModel.md
+      - name: IChatCommandPipelineCommand
+        href: MultiplayerInfrastructure.Command.IChatCommandPipelineCommand.md
+      - name: IChatCommandUsage
+        href: MultiplayerInfrastructure.Command.IChatCommandUsage.md
+  - name: Commons
+    href: MultiplayerInfrastructure.Commons.md
+    items:
+    - name: Classes
+      items:
+      - name: IconSpriteIdentifiers
+        href: MultiplayerInfrastructure.Commons.IconSpriteIdentifiers.md
+      - name: IconSpriteReference
+        href: MultiplayerInfrastructure.Commons.IconSpriteReference.md
+      - name: Josa
+        href: MultiplayerInfrastructure.Commons.Josa.md
+      - name: UnityColorJsonConverter
+        href: MultiplayerInfrastructure.Commons.UnityColorJsonConverter.md
+    - name: Enums
+      items:
+      - name: IconSpriteDefinitions
+        href: MultiplayerInfrastructure.Commons.IconSpriteDefinitions.md
+  - name: Datapack
+    href: MultiplayerInfrastructure.Datapack.md
+    items:
+    - name: Classes
+      items:
+      - name: DatapackCommandAlias
+        href: MultiplayerInfrastructure.Datapack.DatapackCommandAlias.md
+      - name: DatapackDefinition
+        href: MultiplayerInfrastructure.Datapack.DatapackDefinition.md
+      - name: DatapackEventCommandHandler
+        href: MultiplayerInfrastructure.Datapack.DatapackEventCommandHandler.md
+      - name: DatapackFileInfo
+        href: MultiplayerInfrastructure.Datapack.DatapackFileInfo.md
+      - name: DatapackGameRule
+        href: MultiplayerInfrastructure.Datapack.DatapackGameRule.md
+      - name: DatapackPeriodicCommand
+        href: MultiplayerInfrastructure.Datapack.DatapackPeriodicCommand.md
+      - name: DatapackRuntimeService
+        href: MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md
+  - name: Definitions
+    href: MultiplayerInfrastructure.Definitions.md
+    items:
+    - name: Classes
+      items:
+      - name: ConstantString
+        href: MultiplayerInfrastructure.Definitions.ConstantString.md
+      - name: DefaultsChatControl
+        href: MultiplayerInfrastructure.Definitions.DefaultsChatControl.md
+      - name: DefaultsInteractInteractiveGameObject
+        href: MultiplayerInfrastructure.Definitions.DefaultsInteractInteractiveGameObject.md
+      - name: DefaultsItemRegistry
+        href: MultiplayerInfrastructure.Definitions.DefaultsItemRegistry.md
+      - name: DefaultsKeyConfiguration
+        href: MultiplayerInfrastructure.Definitions.DefaultsKeyConfiguration.md
+      - name: DefaultsLoadingScreen
+        href: MultiplayerInfrastructure.Definitions.DefaultsLoadingScreen.md
+      - name: DefaultsPlayerInventory
+        href: MultiplayerInfrastructure.Definitions.DefaultsPlayerInventory.md
+      - name: DefaultsQuestControl
+        href: MultiplayerInfrastructure.Definitions.DefaultsQuestControl.md
+      - name: DefaultsResource
+        href: MultiplayerInfrastructure.Definitions.DefaultsResource.md
+      - name: DefaultsSceneControl
+        href: MultiplayerInfrastructure.Definitions.DefaultsSceneControl.md
+      - name: DefaultsSessionInformationModel
+        href: MultiplayerInfrastructure.Definitions.DefaultsSessionInformationModel.md
+      - name: DefaultsUIDocument
+        href: MultiplayerInfrastructure.Definitions.DefaultsUIDocument.md
+  - name: Entity
+    href: MultiplayerInfrastructure.Entity.md
+    items:
+    - name: Classes
+      items:
+      - name: Entity
+        href: MultiplayerInfrastructure.Entity.Entity.md
+      - name: MinecraftBoatLikeControl
+        href: MultiplayerInfrastructure.Entity.MinecraftBoatLikeControl.md
+      - name: NPCBaseModelSO
+        href: MultiplayerInfrastructure.Entity.NPCBaseModelSO.md
+      - name: NPCScenarioInteractDefinition
+        href: MultiplayerInfrastructure.Entity.NPCScenarioInteractDefinition.md
+      - name: NPCSubmissionInteractDefinition
+        href: MultiplayerInfrastructure.Entity.NPCSubmissionInteractDefinition.md
+      - name: Npc
+        href: MultiplayerInfrastructure.Entity.Npc.md
+      - name: ReposableAttachPointObject
+        href: MultiplayerInfrastructure.Entity.ReposableAttachPointObject.md
+      - name: Ridable
+        href: MultiplayerInfrastructure.Entity.Ridable.md
+      - name: RidableAttachPointObject
+        href: MultiplayerInfrastructure.Entity.RidableAttachPointObject.md
+    - name: Interfaces
+      items:
+      - name: IItemUseTarget
+        href: MultiplayerInfrastructure.Entity.IItemUseTarget.md
+      - name: IItemizableWorldEntity
+        href: MultiplayerInfrastructure.Entity.IItemizableWorldEntity.md
+      - name: IReposable
+        href: MultiplayerInfrastructure.Entity.IReposable.md
+      - name: IScenarioEntityInitTarget
+        href: MultiplayerInfrastructure.Entity.IScenarioEntityInitTarget.md
+      - name: IScenarioEntityStateEventSource
+        href: MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource.md
+      - name: IScenarioIdentifiedEntity
+        href: MultiplayerInfrastructure.Entity.IScenarioIdentifiedEntity.md
+      - name: IScenarioTriageAssessTarget
+        href: MultiplayerInfrastructure.Entity.IScenarioTriageAssessTarget.md
+  - name: FishNetSupports
+    href: MultiplayerInfrastructure.FishNetSupports.md
+    items:
+    - name: Classes
+      items:
+      - name: FishNetDeferredPlayerSpawner
+        href: MultiplayerInfrastructure.FishNetSupports.FishNetDeferredPlayerSpawner.md
+      - name: FishNetSupport
+        href: MultiplayerInfrastructure.FishNetSupports.FishNetSupport.md
+      - name: PlayerSpawnPointRegistry
+        href: MultiplayerInfrastructure.FishNetSupports.PlayerSpawnPointRegistry.md
+      - name: SystemSceneObserverBinder
+        href: MultiplayerInfrastructure.FishNetSupports.SystemSceneObserverBinder.md
+    - name: Interfaces
+      items:
+      - name: IPlayerSpawnPointProvider
+        href: MultiplayerInfrastructure.FishNetSupports.IPlayerSpawnPointProvider.md
+  - name: InteractableEntity
+    href: MultiplayerInfrastructure.InteractableEntity.md
+    items:
+    - name: Definitions
+      href: MultiplayerInfrastructure.InteractableEntity.Definitions.md
+      items:
+      - name: Classes
+        items:
+        - name: LootableItemInteractHandler
+          href: MultiplayerInfrastructure.InteractableEntity.Definitions.LootableItemInteractHandler.md
+    - name: Classes
+      items:
+      - name: Interactable
+        href: MultiplayerInfrastructure.InteractableEntity.Interactable.md
+      - name: InteractableEntityResolver
+        href: MultiplayerInfrastructure.InteractableEntity.InteractableEntityResolver.md
+      - name: ItemSubmissionDefinition
+        href: MultiplayerInfrastructure.InteractableEntity.ItemSubmissionDefinition.md
+      - name: ItemSubmissionInteractable
+        href: MultiplayerInfrastructure.InteractableEntity.ItemSubmissionInteractable.md
+      - name: NearestOnlyInteractUtility
+        href: MultiplayerInfrastructure.InteractableEntity.NearestOnlyInteractUtility.md
+      - name: PlayerInteractableModel
+        href: MultiplayerInfrastructure.InteractableEntity.PlayerInteractableModel.md
+    - name: Structs
+      items:
+      - name: ItemRequirement
+        href: MultiplayerInfrastructure.InteractableEntity.ItemRequirement.md
+    - name: Interfaces
+      items:
+      - name: IAdditionalInteractProvider
+        href: MultiplayerInfrastructure.InteractableEntity.IAdditionalInteractProvider.md
+      - name: IInteract
+        href: MultiplayerInfrastructure.InteractableEntity.IInteract.md
+      - name: IInteractDisplayIcons
+        href: MultiplayerInfrastructure.InteractableEntity.IInteractDisplayIcons.md
+      - name: IInteractDisplayPriority
+        href: MultiplayerInfrastructure.InteractableEntity.IInteractDisplayPriority.md
+      - name: IInteractToggleable
+        href: MultiplayerInfrastructure.InteractableEntity.IInteractToggleable.md
+      - name: IInteractable
+        href: MultiplayerInfrastructure.InteractableEntity.IInteractable.md
+      - name: IInteractorConditional
+        href: MultiplayerInfrastructure.InteractableEntity.IInteractorConditional.md
+      - name: ILocalInteractionFocus
+        href: MultiplayerInfrastructure.InteractableEntity.ILocalInteractionFocus.md
+      - name: INearestOnlyInteract
+        href: MultiplayerInfrastructure.InteractableEntity.INearestOnlyInteract.md
+      - name: IQuestPresentationTarget
+        href: MultiplayerInfrastructure.InteractableEntity.IQuestPresentationTarget.md
+  - name: ItemSystem
+    href: MultiplayerInfrastructure.ItemSystem.md
+    items:
+    - name: Examples
+      href: MultiplayerInfrastructure.ItemSystem.Examples.md
+      items:
+      - name: Classes
+        items:
+        - name: StoneBlock
+          href: MultiplayerInfrastructure.ItemSystem.Examples.StoneBlock.md
+        - name: TemplateItem
+          href: MultiplayerInfrastructure.ItemSystem.Examples.TemplateItem.md
+        - name: WoodBlock
+          href: MultiplayerInfrastructure.ItemSystem.Examples.WoodBlock.md
+    - name: Classes
+      items:
+      - name: EquipmentAttributeHelper
+        href: MultiplayerInfrastructure.ItemSystem.EquipmentAttributeHelper.md
+      - name: EquipmentShadowSpriteProvider
+        href: MultiplayerInfrastructure.ItemSystem.EquipmentShadowSpriteProvider.md
+      - name: EquippableGloveAttribute
+        href: MultiplayerInfrastructure.ItemSystem.EquippableGloveAttribute.md
+      - name: IntendedMissing3DModelAttribute
+        href: MultiplayerInfrastructure.ItemSystem.IntendedMissing3DModelAttribute.md
+      - name: IntendedMissingItemSpriteAttribute
+        href: MultiplayerInfrastructure.ItemSystem.IntendedMissingItemSpriteAttribute.md
+      - name: Item
+        href: MultiplayerInfrastructure.ItemSystem.Item.md
+      - name: ItemCombineRecipe
+        href: MultiplayerInfrastructure.ItemSystem.ItemCombineRecipe.md
+      - name: ItemCombineRecipeRegistry
+        href: MultiplayerInfrastructure.ItemSystem.ItemCombineRecipeRegistry.md
+      - name: ItemMissingAssetSuppression
+        href: MultiplayerInfrastructure.ItemSystem.ItemMissingAssetSuppression.md
+      - name: ItemObject
+        href: MultiplayerInfrastructure.ItemSystem.ItemObject.md
+      - name: SceneItemPlacement
+        href: MultiplayerInfrastructure.ItemSystem.SceneItemPlacement.md
+      - name: StaticObjectDisplayment
+        href: MultiplayerInfrastructure.ItemSystem.StaticObjectDisplayment.md
+      - name: StaticObjectDisplaymentService
+        href: MultiplayerInfrastructure.ItemSystem.StaticObjectDisplaymentService.md
+      - name: StaticPlacedItem
+        href: MultiplayerInfrastructure.ItemSystem.StaticPlacedItem.md
+      - name: StaticPlacedItemService
+        href: MultiplayerInfrastructure.ItemSystem.StaticPlacedItemService.md
+    - name: Structs
+      items:
+      - name: ItemCombineRecipe.RecipeIngredient
+        href: MultiplayerInfrastructure.ItemSystem.ItemCombineRecipe.RecipeIngredient.md
+      - name: StaticPlacedItemPickupReward
+        href: MultiplayerInfrastructure.ItemSystem.StaticPlacedItemPickupReward.md
+      - name: StaticPlacedItemState
+        href: MultiplayerInfrastructure.ItemSystem.StaticPlacedItemState.md
+      - name: TypedActionResult<T>
+        href: MultiplayerInfrastructure.ItemSystem.TypedActionResult-1.md
+    - name: Enums
+      items:
+      - name: ActionResult
+        href: MultiplayerInfrastructure.ItemSystem.ActionResult.md
+      - name: StaticObjectDisplaymentShareMode
+        href: MultiplayerInfrastructure.ItemSystem.StaticObjectDisplaymentShareMode.md
+      - name: StaticPlacedItemVanishBehavior
+        href: MultiplayerInfrastructure.ItemSystem.StaticPlacedItemVanishBehavior.md
+      - name: StaticPlacedItemVanishMode
+        href: MultiplayerInfrastructure.ItemSystem.StaticPlacedItemVanishMode.md
+  - name: Logging
+    href: MultiplayerInfrastructure.Logging.md
+    items:
+    - name: Classes
+      items:
+      - name: GameLogEntry
+        href: MultiplayerInfrastructure.Logging.GameLogEntry.md
+      - name: GameLogService
+        href: MultiplayerInfrastructure.Logging.GameLogService.md
+      - name: GameSessionService
+        href: MultiplayerInfrastructure.Logging.GameSessionService.md
+      - name: LogService
+        href: MultiplayerInfrastructure.Logging.LogService.md
+    - name: Structs
+      items:
+      - name: GameLogService.SessionLogClearResult
+        href: MultiplayerInfrastructure.Logging.GameLogService.SessionLogClearResult.md
+    - name: Enums
+      items:
+      - name: GameLogCategory
+        href: MultiplayerInfrastructure.Logging.GameLogCategory.md
+  - name: Performance
+    href: MultiplayerInfrastructure.Performance.md
+    items:
+    - name: Tests
+      href: MultiplayerInfrastructure.Performance.Tests.md
+      items:
+      - name: Classes
+        items:
+        - name: MppmLiteModePlayModeTests
+          href: MultiplayerInfrastructure.Performance.Tests.MppmLiteModePlayModeTests.md
+    - name: Classes
+      items:
+      - name: CameraDistancePreferenceService
+        href: MultiplayerInfrastructure.Performance.CameraDistancePreferenceService.md
+      - name: GraphicsQualityPresets
+        href: MultiplayerInfrastructure.Performance.GraphicsQualityPresets.md
+      - name: GraphicsSettingsData
+        href: MultiplayerInfrastructure.Performance.GraphicsSettingsData.md
+      - name: MppmLiteMode
+        href: MultiplayerInfrastructure.Performance.MppmLiteMode.md
+      - name: TexturePerformanceService
+        href: MultiplayerInfrastructure.Performance.TexturePerformanceService.md
+      - name: UIScalePreferenceService
+        href: MultiplayerInfrastructure.Performance.UIScalePreferenceService.md
+    - name: Enums
+      items:
+      - name: GraphicsAdditionalLights
+        href: MultiplayerInfrastructure.Performance.GraphicsAdditionalLights.md
+      - name: GraphicsAntiAliasing
+        href: MultiplayerInfrastructure.Performance.GraphicsAntiAliasing.md
+      - name: GraphicsQualityProfile
+        href: MultiplayerInfrastructure.Performance.GraphicsQualityProfile.md
+      - name: GraphicsShadowResolution
+        href: MultiplayerInfrastructure.Performance.GraphicsShadowResolution.md
+  - name: Permission
+    href: MultiplayerInfrastructure.Permission.md
+    items:
+    - name: Classes
+      items:
+      - name: PermissionService
+        href: MultiplayerInfrastructure.Permission.PermissionService.md
+  - name: Player
+    href: MultiplayerInfrastructure.Player.md
+    items:
+    - name: Classes
+      items:
+      - name: EquipmentSlotModelDTO
+        href: MultiplayerInfrastructure.Player.EquipmentSlotModelDTO.md
+      - name: PlayerCharacterBody
+        href: MultiplayerInfrastructure.Player.PlayerCharacterBody.md
+      - name: PlayerCharacterModelAnimatorControllerObject
+        href: MultiplayerInfrastructure.Player.PlayerCharacterModelAnimatorControllerObject.md
+      - name: PlayerCharacterModelAttachPoint
+        href: MultiplayerInfrastructure.Player.PlayerCharacterModelAttachPoint.md
+      - name: PlayerCharacterModelHoldingItemAttachPoint
+        href: MultiplayerInfrastructure.Player.PlayerCharacterModelHoldingItemAttachPoint.md
+      - name: PlayerCharacterModelObjectExample
+        href: MultiplayerInfrastructure.Player.PlayerCharacterModelObjectExample.md
+      - name: PlayerController
+        href: MultiplayerInfrastructure.Player.PlayerController.md
+      - name: PlayerController.ItemUseConsumptionReceipt
+        href: MultiplayerInfrastructure.Player.PlayerController.ItemUseConsumptionReceipt.md
+      - name: PlayerGamemodeService
+        href: MultiplayerInfrastructure.Player.PlayerGamemodeService.md
+      - name: PlayerSpectatorMarkerObject
+        href: MultiplayerInfrastructure.Player.PlayerSpectatorMarkerObject.md
+    - name: Structs
+      items:
+      - name: PlayerControllerInventoryConfiguration
+        href: MultiplayerInfrastructure.Player.PlayerControllerInventoryConfiguration.md
+    - name: Interfaces
+      items:
+      - name: IPlayerCharacterModelObject
+        href: MultiplayerInfrastructure.Player.IPlayerCharacterModelObject.md
+    - name: Enums
+      items:
+      - name: EquipmentSlotType
+        href: MultiplayerInfrastructure.Player.EquipmentSlotType.md
+      - name: PlayerGamemode
+        href: MultiplayerInfrastructure.Player.PlayerGamemode.md
+  - name: Problem
+    href: MultiplayerInfrastructure.Problem.md
+    items:
+    - name: Classes
+      items:
+      - name: ProblemAnswerEvaluator
+        href: MultiplayerInfrastructure.Problem.ProblemAnswerEvaluator.md
+      - name: ProblemDefinition
+        href: MultiplayerInfrastructure.Problem.ProblemDefinition.md
+      - name: ProblemDefinition.ChoiceDefinition
+        href: MultiplayerInfrastructure.Problem.ProblemDefinition.ChoiceDefinition.md
+      - name: ProblemDefinition.ConditionDefinition
+        href: MultiplayerInfrastructure.Problem.ProblemDefinition.ConditionDefinition.md
+      - name: ProblemDefinition.GradingDefinition
+        href: MultiplayerInfrastructure.Problem.ProblemDefinition.GradingDefinition.md
+      - name: ProblemDefinition.OnCorrectDefinition
+        href: MultiplayerInfrastructure.Problem.ProblemDefinition.OnCorrectDefinition.md
+      - name: ProblemDefinition.ScoreboardAdjustmentDefinition
+        href: MultiplayerInfrastructure.Problem.ProblemDefinition.ScoreboardAdjustmentDefinition.md
+      - name: ProblemDefinition.ShortAnswerDefinition
+        href: MultiplayerInfrastructure.Problem.ProblemDefinition.ShortAnswerDefinition.md
+      - name: ProblemRewardService
+        href: MultiplayerInfrastructure.Problem.ProblemRewardService.md
+      - name: ProblemSetDefinition
+        href: MultiplayerInfrastructure.Problem.ProblemSetDefinition.md
+      - name: ProblemSetLoader
+        href: MultiplayerInfrastructure.Problem.ProblemSetLoader.md
+  - name: Quest
+    href: MultiplayerInfrastructure.Quest.md
+    items:
+    - name: Classes
+      items:
+      - name: BasicMovementControlTutorialQuestResolver
+        href: MultiplayerInfrastructure.Quest.BasicMovementControlTutorialQuestResolver.md
+      - name: PlayerQuestStateFlagService
+        href: MultiplayerInfrastructure.Quest.PlayerQuestStateFlagService.md
+      - name: QuestCompletionCriteria
+        href: MultiplayerInfrastructure.Quest.QuestCompletionCriteria.md
+      - name: QuestCriteriaEvaluator
+        href: MultiplayerInfrastructure.Quest.QuestCriteriaEvaluator.md
+      - name: QuestData
+        href: MultiplayerInfrastructure.Quest.QuestData.md
+      - name: QuestDefinition
+        href: MultiplayerInfrastructure.Quest.QuestDefinition.md
+      - name: QuestDefinitionRegistry
+        href: MultiplayerInfrastructure.Quest.QuestDefinitionRegistry.md
+      - name: QuestDefinitionRegistryPayload
+        href: MultiplayerInfrastructure.Quest.QuestDefinitionRegistryPayload.md
+      - name: QuestManager
+        href: MultiplayerInfrastructure.Quest.QuestManager.md
+      - name: QuestPresentationBinding
+        href: MultiplayerInfrastructure.Quest.QuestPresentationBinding.md
+      - name: QuestPresentationService
+        href: MultiplayerInfrastructure.Quest.QuestPresentationService.md
+      - name: QuestProgressValue
+        href: MultiplayerInfrastructure.Quest.QuestProgressValue.md
+    - name: Structs
+      items:
+      - name: QuestCriteriaEvaluationResult
+        href: MultiplayerInfrastructure.Quest.QuestCriteriaEvaluationResult.md
+    - name: Enums
+      items:
+      - name: QuestCompletionCriteriaType
+        href: MultiplayerInfrastructure.Quest.QuestCompletionCriteriaType.md
+      - name: QuestManager.FeatureFlags
+        href: MultiplayerInfrastructure.Quest.QuestManager.FeatureFlags.md
+      - name: QuestPresentationActivation
+        href: MultiplayerInfrastructure.Quest.QuestPresentationActivation.md
+      - name: QuestPresentationIconMode
+        href: MultiplayerInfrastructure.Quest.QuestPresentationIconMode.md
+      - name: QuestPresentationTargetType
+        href: MultiplayerInfrastructure.Quest.QuestPresentationTargetType.md
+      - name: QuestScopeType
+        href: MultiplayerInfrastructure.Quest.QuestScopeType.md
+  - name: Registry
+    href: MultiplayerInfrastructure.Registry.md
+    items:
+    - name: Classes
+      items:
+      - name: EntityDescriptor
+        href: MultiplayerInfrastructure.Registry.EntityDescriptor.md
+      - name: EntityId
+        href: MultiplayerInfrastructure.Registry.EntityId.md
+      - name: EntityPresetDefinition
+        href: MultiplayerInfrastructure.Registry.EntityPresetDefinition.md
+      - name: Registry
+        href: MultiplayerInfrastructure.Registry.Registry.md
+      - name: RegistryGlobalKeys
+        href: MultiplayerInfrastructure.Registry.RegistryGlobalKeys.md
+      - name: RegistryPreloadEntitySO
+        href: MultiplayerInfrastructure.Registry.RegistryPreloadEntitySO.md
+      - name: RegistryPreloadIconSpriteSO
+        href: MultiplayerInfrastructure.Registry.RegistryPreloadIconSpriteSO.md
+      - name: RegistryPreloadInteractableEntitySO
+        href: MultiplayerInfrastructure.Registry.RegistryPreloadInteractableEntitySO.md
+      - name: RegistryPreloadNpcSO
+        href: MultiplayerInfrastructure.Registry.RegistryPreloadNpcSO.md
+      - name: RegistryPreloadPlayerCharacterSO
+        href: MultiplayerInfrastructure.Registry.RegistryPreloadPlayerCharacterSO.md
+      - name: RegistryPreloadProblemSetSO
+        href: MultiplayerInfrastructure.Registry.RegistryPreloadProblemSetSO.md
+      - name: RegistryPreloadScenarioGraphSO
+        href: MultiplayerInfrastructure.Registry.RegistryPreloadScenarioGraphSO.md
+      - name: RegistryPreloadUIControllerSO
+        href: MultiplayerInfrastructure.Registry.RegistryPreloadUIControllerSO.md
+      - name: RegistryPreloadWaypointSO
+        href: MultiplayerInfrastructure.Registry.RegistryPreloadWaypointSO.md
+      - name: RegistryPreloaderController
+        href: MultiplayerInfrastructure.Registry.RegistryPreloaderController.md
+      - name: WaypointAnchor
+        href: MultiplayerInfrastructure.Registry.WaypointAnchor.md
+      - name: WaypointSet
+        href: MultiplayerInfrastructure.Registry.WaypointSet.md
+    - name: Structs
+      items:
+      - name: EntityPresetChildReference
+        href: MultiplayerInfrastructure.Registry.EntityPresetChildReference.md
+      - name: EntityRegistryRequirement
+        href: MultiplayerInfrastructure.Registry.EntityRegistryRequirement.md
+      - name: IconSpriteRegistryRequirement
+        href: MultiplayerInfrastructure.Registry.IconSpriteRegistryRequirement.md
+      - name: ItemRegistryRequirement
+        href: MultiplayerInfrastructure.Registry.ItemRegistryRequirement.md
+      - name: NPCRegistryRequirements
+        href: MultiplayerInfrastructure.Registry.NPCRegistryRequirements.md
+      - name: PlayerCharacterRegistryRequirement
+        href: MultiplayerInfrastructure.Registry.PlayerCharacterRegistryRequirement.md
+      - name: ProblemSetRegistryRequirement
+        href: MultiplayerInfrastructure.Registry.ProblemSetRegistryRequirement.md
+      - name: ScenarioGraphRegistryRequirement
+        href: MultiplayerInfrastructure.Registry.ScenarioGraphRegistryRequirement.md
+      - name: UIControllerRegistryRequirement
+        href: MultiplayerInfrastructure.Registry.UIControllerRegistryRequirement.md
+      - name: WaypointRequirements
+        href: MultiplayerInfrastructure.Registry.WaypointRequirements.md
+    - name: Interfaces
+      items:
+      - name: IEntityPresetParentLinkReceiver
+        href: MultiplayerInfrastructure.Registry.IEntityPresetParentLinkReceiver.md
+      - name: ISpawnedEntityIdentifierReceiver
+        href: MultiplayerInfrastructure.Registry.ISpawnedEntityIdentifierReceiver.md
+    - name: Enums
+      items:
+      - name: EntityType
+        href: MultiplayerInfrastructure.Registry.EntityType.md
+      - name: RegistryType
+        href: MultiplayerInfrastructure.Registry.RegistryType.md
+  - name: Scenario
+    href: MultiplayerInfrastructure.Scenario.md
+    items:
+    - name: Classes
+      items:
+      - name: ScenarioActingNpcDefinition
+        href: MultiplayerInfrastructure.Scenario.ScenarioActingNpcDefinition.md
+      - name: ScenarioActingNpcInteractionDefinition
+        href: MultiplayerInfrastructure.Scenario.ScenarioActingNpcInteractionDefinition.md
+      - name: ScenarioActingNpcItemRequirement
+        href: MultiplayerInfrastructure.Scenario.ScenarioActingNpcItemRequirement.md
+      - name: ScenarioBedSnapNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioBedSnapNode.md
+      - name: ScenarioCameraTargetNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioCameraTargetNode.md
+      - name: ScenarioChatPrintNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioChatPrintNode.md
+      - name: ScenarioChecklistItemRequirement
+        href: MultiplayerInfrastructure.Scenario.ScenarioChecklistItemRequirement.md
+      - name: ScenarioChoiceNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioChoiceNode.md
+      - name: ScenarioChoiceOption
+        href: MultiplayerInfrastructure.Scenario.ScenarioChoiceOption.md
+      - name: ScenarioClientSignalAuthorization
+        href: MultiplayerInfrastructure.Scenario.ScenarioClientSignalAuthorization.md
+      - name: ScenarioCombineItemNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioCombineItemNode.md
+      - name: ScenarioConcurrencyConflictPolicyExtensions
+        href: MultiplayerInfrastructure.Scenario.ScenarioConcurrencyConflictPolicyExtensions.md
+      - name: ScenarioConditionalSignalListeners
+        href: MultiplayerInfrastructure.Scenario.ScenarioConditionalSignalListeners.md
+      - name: ScenarioController
+        href: MultiplayerInfrastructure.Scenario.ScenarioController.md
+      - name: ScenarioDelayNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioDelayNode.md
+      - name: ScenarioDialogueNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioDialogueNode.md
+      - name: ScenarioDisinteractableDialogueNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioDisinteractableDialogueNode.md
+      - name: ScenarioEntityInitNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioEntityInitNode.md
+      - name: ScenarioEntityPresetSpawnNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioEntityPresetSpawnNode.md
+      - name: ScenarioEntityStateOperation
+        href: MultiplayerInfrastructure.Scenario.ScenarioEntityStateOperation.md
+      - name: ScenarioEntityStateSignalBindingNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioEntityStateSignalBindingNode.md
+      - name: ScenarioEntityStateSignalBindings
+        href: MultiplayerInfrastructure.Scenario.ScenarioEntityStateSignalBindings.md
+      - name: ScenarioEntityTagNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioEntityTagNode.md
+      - name: ScenarioEventIdentifierRegistry
+        href: MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md
+      - name: ScenarioExecuteCommandNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioExecuteCommandNode.md
+      - name: ScenarioGameRules
+        href: MultiplayerInfrastructure.Scenario.ScenarioGameRules.md
+      - name: ScenarioGraph
+        href: MultiplayerInfrastructure.Scenario.ScenarioGraph.md
+      - name: ScenarioGraphLoader
+        href: MultiplayerInfrastructure.Scenario.ScenarioGraphLoader.md
+      - name: ScenarioInteractable
+        href: MultiplayerInfrastructure.Scenario.ScenarioInteractable.md
+      - name: ScenarioInteractionNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioInteractionNode.md
+      - name: ScenarioInteractionSignals
+        href: MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.md
+      - name: ScenarioInvokeEventNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioInvokeEventNode.md
+      - name: ScenarioItemRequirement
+        href: MultiplayerInfrastructure.Scenario.ScenarioItemRequirement.md
+      - name: ScenarioItemSubmissionConfigNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioItemSubmissionConfigNode.md
+      - name: ScenarioLifecycleNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioLifecycleNode.md
+      - name: ScenarioManualEntrypointNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioManualEntrypointNode.md
+      - name: ScenarioNPCControlNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioNPCControlNode.md
+      - name: ScenarioNPCMoveNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioNPCMoveNode.md
+      - name: ScenarioNetworkRelay
+        href: MultiplayerInfrastructure.Scenario.ScenarioNetworkRelay.md
+      - name: ScenarioNpcInteractControlNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioNpcInteractControlNode.md
+      - name: ScenarioParallelAssignmentState
+        href: MultiplayerInfrastructure.Scenario.ScenarioParallelAssignmentState.md
+      - name: ScenarioParallelBranch
+        href: MultiplayerInfrastructure.Scenario.ScenarioParallelBranch.md
+      - name: ScenarioParallelNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioParallelNode.md
+      - name: ScenarioParallelRoleAllocator
+        href: MultiplayerInfrastructure.Scenario.ScenarioParallelRoleAllocator.md
+      - name: ScenarioPatientMedicalStatePresetNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioPatientMedicalStatePresetNode.md
+      - name: ScenarioPlayTTSNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioPlayTTSNode.md
+      - name: ScenarioPlayerMoveNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioPlayerMoveNode.md
+      - name: ScenarioPlayerTagNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioPlayerTagNode.md
+      - name: ScenarioQuestControlNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioQuestControlNode.md
+      - name: ScenarioQuestMarkNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioQuestMarkNode.md
+      - name: ScenarioQuestWaypointHighlightNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioQuestWaypointHighlightNode.md
+      - name: ScenarioQuizNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioQuizNode.md
+      - name: ScenarioReturnToOriginNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioReturnToOriginNode.md
+      - name: ScenarioSchemaValidationException
+        href: MultiplayerInfrastructure.Scenario.ScenarioSchemaValidationException.md
+      - name: ScenarioServerInternalSignalNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioServerInternalSignalNode.md
+      - name: ScenarioServerInternalSignalRegistry
+        href: MultiplayerInfrastructure.Scenario.ScenarioServerInternalSignalRegistry.md
+      - name: ScenarioSignalCounterNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioSignalCounterNode.md
+      - name: ScenarioSignalCounters
+        href: MultiplayerInfrastructure.Scenario.ScenarioSignalCounters.md
+      - name: ScenarioSignalListenerNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioSignalListenerNode.md
+      - name: ScenarioSignalParameterStore
+        href: MultiplayerInfrastructure.Scenario.ScenarioSignalParameterStore.md
+      - name: ScenarioSignalPlayerContext
+        href: MultiplayerInfrastructure.Scenario.ScenarioSignalPlayerContext.md
+      - name: ScenarioSoundNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioSoundNode.md
+      - name: ScenarioStateUpdateNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioStateUpdateNode.md
+      - name: ScenarioTTSBakeScanner
+        href: MultiplayerInfrastructure.Scenario.ScenarioTTSBakeScanner.md
+      - name: ScenarioTTSBakeScanner.InlineTTSJob
+        href: MultiplayerInfrastructure.Scenario.ScenarioTTSBakeScanner.InlineTTSJob.md
+      - name: ScenarioTTSBakeScanner.ScanResult
+        href: MultiplayerInfrastructure.Scenario.ScenarioTTSBakeScanner.ScanResult.md
+      - name: ScenarioTTSVoiceProfile
+        href: MultiplayerInfrastructure.Scenario.ScenarioTTSVoiceProfile.md
+      - name: ScenarioTextResolver
+        href: MultiplayerInfrastructure.Scenario.ScenarioTextResolver.md
+      - name: ScenarioTimeControlNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioTimeControlNode.md
+      - name: ScenarioTimeRelay
+        href: MultiplayerInfrastructure.Scenario.ScenarioTimeRelay.md
+      - name: ScenarioTimeState
+        href: MultiplayerInfrastructure.Scenario.ScenarioTimeState.md
+      - name: ScenarioTimeSyncSettings
+        href: MultiplayerInfrastructure.Scenario.ScenarioTimeSyncSettings.md
+      - name: ScenarioTriageAssessControlNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioTriageAssessControlNode.md
+      - name: ScenarioTriggerZone
+        href: MultiplayerInfrastructure.Scenario.ScenarioTriggerZone.md
+      - name: ScenarioValidatorNode
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorNode.md
+      - name: ScenarioValidatorRootCondition
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorRootCondition.md
+      - name: ScenarioValidatorRule
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorRule.md
+      - name: ScenarioWaypointDefinition
+        href: MultiplayerInfrastructure.Scenario.ScenarioWaypointDefinition.md
+      - name: TTSVoiceProfileDefinition
+        href: MultiplayerInfrastructure.Scenario.TTSVoiceProfileDefinition.md
+      - name: TTSVoiceProfileDefinitions
+        href: MultiplayerInfrastructure.Scenario.TTSVoiceProfileDefinitions.md
+      - name: Waypoint
+        href: MultiplayerInfrastructure.Scenario.Waypoint.md
+    - name: Structs
+      items:
+      - name: ScenarioNetworkRelay.LineTopologyPair
+        href: MultiplayerInfrastructure.Scenario.ScenarioNetworkRelay.LineTopologyPair.md
+      - name: ScenarioNodeVisitTiming
+        href: MultiplayerInfrastructure.Scenario.ScenarioNodeVisitTiming.md
+      - name: ScenarioSignalParameter
+        href: MultiplayerInfrastructure.Scenario.ScenarioSignalParameter.md
+      - name: ScenarioTimeValue
+        href: MultiplayerInfrastructure.Scenario.ScenarioTimeValue.md
+    - name: Interfaces
+      items:
+      - name: IScenarioArrivalSignalEntityResolver
+        href: MultiplayerInfrastructure.Scenario.IScenarioArrivalSignalEntityResolver.md
+      - name: IScenarioNode
+        href: MultiplayerInfrastructure.Scenario.IScenarioNode.md
+    - name: Enums
+      items:
+      - name: CareZoneMissingEquipmentFallback
+        href: MultiplayerInfrastructure.Scenario.CareZoneMissingEquipmentFallback.md
+      - name: PatientMedicalStateTransitionMode
+        href: MultiplayerInfrastructure.Scenario.PatientMedicalStateTransitionMode.md
+      - name: ScenarioActingNpcInteractionType
+        href: MultiplayerInfrastructure.Scenario.ScenarioActingNpcInteractionType.md
+      - name: ScenarioActingNpcType
+        href: MultiplayerInfrastructure.Scenario.ScenarioActingNpcType.md
+      - name: ScenarioChatPrintTarget
+        href: MultiplayerInfrastructure.Scenario.ScenarioChatPrintTarget.md
+      - name: ScenarioConcurrencyConflictPolicy
+        href: MultiplayerInfrastructure.Scenario.ScenarioConcurrencyConflictPolicy.md
+      - name: ScenarioController.State
+        href: MultiplayerInfrastructure.Scenario.ScenarioController.State.md
+      - name: ScenarioDelayWaitUntil
+        href: MultiplayerInfrastructure.Scenario.ScenarioDelayWaitUntil.md
+      - name: ScenarioEntityStateOperationKind
+        href: MultiplayerInfrastructure.Scenario.ScenarioEntityStateOperationKind.md
+      - name: ScenarioEntityStateSignalBindingOperation
+        href: MultiplayerInfrastructure.Scenario.ScenarioEntityStateSignalBindingOperation.md
+      - name: ScenarioInteractionActorScope
+        href: MultiplayerInfrastructure.Scenario.ScenarioInteractionActorScope.md
+      - name: ScenarioInteractionType
+        href: MultiplayerInfrastructure.Scenario.ScenarioInteractionType.md
+      - name: ScenarioInvokeEventMoveNextBehavior
+        href: MultiplayerInfrastructure.Scenario.ScenarioInvokeEventMoveNextBehavior.md
+      - name: ScenarioLifecycleOperation
+        href: MultiplayerInfrastructure.Scenario.ScenarioLifecycleOperation.md
+      - name: ScenarioMoveDestinationType
+        href: MultiplayerInfrastructure.Scenario.ScenarioMoveDestinationType.md
+      - name: ScenarioMoveMode
+        href: MultiplayerInfrastructure.Scenario.ScenarioMoveMode.md
+      - name: ScenarioNPCControlMode
+        href: MultiplayerInfrastructure.Scenario.ScenarioNPCControlMode.md
+      - name: ScenarioNPCInteractCrudOperation
+        href: MultiplayerInfrastructure.Scenario.ScenarioNPCInteractCrudOperation.md
+      - name: ScenarioNodeType
+        href: MultiplayerInfrastructure.Scenario.ScenarioNodeType.md
+      - name: ScenarioNpcInteractControlOperation
+        href: MultiplayerInfrastructure.Scenario.ScenarioNpcInteractControlOperation.md
+      - name: ScenarioParallelAllocationType
+        href: MultiplayerInfrastructure.Scenario.ScenarioParallelAllocationType.md
+      - name: ScenarioParallelMismatchHandling
+        href: MultiplayerInfrastructure.Scenario.ScenarioParallelMismatchHandling.md
+      - name: ScenarioPlayerTagMatchMode
+        href: MultiplayerInfrastructure.Scenario.ScenarioPlayerTagMatchMode.md
+      - name: ScenarioPlayerTagOperationType
+        href: MultiplayerInfrastructure.Scenario.ScenarioPlayerTagOperationType.md
+      - name: ScenarioPlayerTagScope
+        href: MultiplayerInfrastructure.Scenario.ScenarioPlayerTagScope.md
+      - name: ScenarioQuestFailureStrategy
+        href: MultiplayerInfrastructure.Scenario.ScenarioQuestFailureStrategy.md
+      - name: ScenarioQuestMarkOperationType
+        href: MultiplayerInfrastructure.Scenario.ScenarioQuestMarkOperationType.md
+      - name: ScenarioQuestOperationType
+        href: MultiplayerInfrastructure.Scenario.ScenarioQuestOperationType.md
+      - name: ScenarioServerInternalSignalOperationType
+        href: MultiplayerInfrastructure.Scenario.ScenarioServerInternalSignalOperationType.md
+      - name: ScenarioSignalCounterOperation
+        href: MultiplayerInfrastructure.Scenario.ScenarioSignalCounterOperation.md
+      - name: ScenarioSignalListenerOperation
+        href: MultiplayerInfrastructure.Scenario.ScenarioSignalListenerOperation.md
+      - name: ScenarioTimeDirection
+        href: MultiplayerInfrastructure.Scenario.ScenarioTimeDirection.md
+      - name: ScenarioTimeOperationType
+        href: MultiplayerInfrastructure.Scenario.ScenarioTimeOperationType.md
+      - name: ScenarioTimeUnit
+        href: MultiplayerInfrastructure.Scenario.ScenarioTimeUnit.md
+      - name: ScenarioValidatorBlockLogTarget
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorBlockLogTarget.md
+      - name: ScenarioValidatorCondition
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorCondition.md
+      - name: ScenarioValidatorFailureReportTarget
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorFailureReportTarget.md
+      - name: ScenarioValidatorMatchMode
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorMatchMode.md
+      - name: ScenarioValidatorOnFailure
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorOnFailure.md
+      - name: ScenarioValidatorPlayerScope
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorPlayerScope.md
+      - name: ScenarioValidatorRuleCondition
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorRuleCondition.md
+      - name: ScenarioValidatorRuleType
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorRuleType.md
+      - name: ScenarioValidatorWaitTimeoutBehavior
+        href: MultiplayerInfrastructure.Scenario.ScenarioValidatorWaitTimeoutBehavior.md
+      - name: ScenarioWaitMode
+        href: MultiplayerInfrastructure.Scenario.ScenarioWaitMode.md
+      - name: TTSVoiceStyle
+        href: MultiplayerInfrastructure.Scenario.TTSVoiceStyle.md
+    - name: Delegates
+      items:
+      - name: ScenarioEventIdentifierRegistry.ScenarioEventHandler
+        href: MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.ScenarioEventHandler.md
+  - name: Server
+    href: MultiplayerInfrastructure.Server.md
+    items:
+    - name: Classes
+      items:
+      - name: DedicatedServerOptions
+        href: MultiplayerInfrastructure.Server.DedicatedServerOptions.md
+      - name: DedicatedServerRuntime
+        href: MultiplayerInfrastructure.Server.DedicatedServerRuntime.md
+      - name: ServerBanService
+        href: MultiplayerInfrastructure.Server.ServerBanService.md
+  - name: Session
+    href: MultiplayerInfrastructure.Session.md
+    items:
+    - name: Classes
+      items:
+      - name: ConnectionGateService
+        href: MultiplayerInfrastructure.Session.ConnectionGateService.md
+      - name: LanDiscoveryService
+        href: MultiplayerInfrastructure.Session.LanDiscoveryService.md
+      - name: SessionConfiguration
+        href: MultiplayerInfrastructure.Session.SessionConfiguration.md
+      - name: SessionConfigurationService
+        href: MultiplayerInfrastructure.Session.SessionConfigurationService.md
+      - name: SessionInformationModel
+        href: MultiplayerInfrastructure.Session.SessionInformationModel.md
+      - name: UserDescriptor
+        href: MultiplayerInfrastructure.Session.UserDescriptor.md
+      - name: UserDescriptorService
+        href: MultiplayerInfrastructure.Session.UserDescriptorService.md
+  - name: TTS
+    href: MultiplayerInfrastructure.TTS.md
+    items:
+    - name: Classes
+      items:
+      - name: ScenarioTTSService
+        href: MultiplayerInfrastructure.TTS.ScenarioTTSService.md
+  - name: Tag
+    href: MultiplayerInfrastructure.Tag.md
+    items:
+    - name: Classes
+      items:
+      - name: PlayerTagService
+        href: MultiplayerInfrastructure.Tag.PlayerTagService.md
+  - name: UI
+    href: MultiplayerInfrastructure.UI.md
+    items:
+    - name: Models
+      href: MultiplayerInfrastructure.UI.Models.md
+      items:
+      - name: Enums
+        items:
+        - name: TextureQuality
+          href: MultiplayerInfrastructure.UI.Models.TextureQuality.md
+        - name: UIScale
+          href: MultiplayerInfrastructure.UI.Models.UIScale.md
+    - name: Classes
+      items:
+      - name: ChatPanelElement
+        href: MultiplayerInfrastructure.UI.ChatPanelElement.md
+      - name: ChatPanelElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.ChatPanelElement.UxmlSerializedData.md
+      - name: ChatUIController
+        href: MultiplayerInfrastructure.UI.ChatUIController.md
+      - name: CrosshairElement
+        href: MultiplayerInfrastructure.UI.CrosshairElement.md
+      - name: CrosshairElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.CrosshairElement.UxmlSerializedData.md
+      - name: CrosshairUIController
+        href: MultiplayerInfrastructure.UI.CrosshairUIController.md
+      - name: DatapackSelectionUIController
+        href: MultiplayerInfrastructure.UI.DatapackSelectionUIController.md
+      - name: DialogueElement
+        href: MultiplayerInfrastructure.UI.DialogueElement.md
+      - name: DialogueElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.DialogueElement.UxmlSerializedData.md
+      - name: DialoguePanelUIController
+        href: MultiplayerInfrastructure.UI.DialoguePanelUIController.md
+      - name: EntityOverheadLabelElement
+        href: MultiplayerInfrastructure.UI.EntityOverheadLabelElement.md
+      - name: EntityOverheadLabelUIController
+        href: MultiplayerInfrastructure.UI.EntityOverheadLabelUIController.md
+      - name: GameEscapeMenuUIController
+        href: MultiplayerInfrastructure.UI.GameEscapeMenuUIController.md
+      - name: GraphicsSettingsUIController
+        href: MultiplayerInfrastructure.UI.GraphicsSettingsUIController.md
+      - name: HotbarControl
+        href: MultiplayerInfrastructure.UI.HotbarControl.md
+      - name: HotbarControl.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.HotbarControl.UxmlSerializedData.md
+      - name: HotbarUIController
+        href: MultiplayerInfrastructure.UI.HotbarUIController.md
+      - name: Icon
+        href: MultiplayerInfrastructure.UI.Icon.md
+      - name: InteractableObjectHintList
+        href: MultiplayerInfrastructure.UI.InteractableObjectHintList.md
+      - name: InteractableObjectHintList.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.InteractableObjectHintList.UxmlSerializedData.md
+      - name: InteractableObjectHintListElement
+        href: MultiplayerInfrastructure.UI.InteractableObjectHintListElement.md
+      - name: InteractableObjectHintListElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.InteractableObjectHintListElement.UxmlSerializedData.md
+      - name: InteractableObjectHintUIController
+        href: MultiplayerInfrastructure.UI.InteractableObjectHintUIController.md
+      - name: InventoryUIController
+        href: MultiplayerInfrastructure.UI.InventoryUIController.md
+      - name: InventoryUIView
+        href: MultiplayerInfrastructure.UI.InventoryUIView.md
+      - name: InventoryUIView.CraftableRecipeDisplay
+        href: MultiplayerInfrastructure.UI.InventoryUIView.CraftableRecipeDisplay.md
+      - name: InventoryUIView.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.InventoryUIView.UxmlSerializedData.md
+      - name: ItemDurabilityBar
+        href: MultiplayerInfrastructure.UI.ItemDurabilityBar.md
+      - name: ItemSubmissionUIController
+        href: MultiplayerInfrastructure.UI.ItemSubmissionUIController.md
+      - name: ItemSubmissionUIView
+        href: MultiplayerInfrastructure.UI.ItemSubmissionUIView.md
+      - name: ItemSubmissionUIView.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.ItemSubmissionUIView.UxmlSerializedData.md
+      - name: KeyBindingEntry
+        href: MultiplayerInfrastructure.UI.KeyBindingEntry.md
+      - name: KeyBindingRepository
+        href: MultiplayerInfrastructure.UI.KeyBindingRepository.md
+      - name: KeyConfigEntryElement
+        href: MultiplayerInfrastructure.UI.KeyConfigEntryElement.md
+      - name: KeyConfigEntryElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.KeyConfigEntryElement.UxmlSerializedData.md
+      - name: KeyConfigUIController
+        href: MultiplayerInfrastructure.UI.KeyConfigUIController.md
+      - name: KeyboardLayoutElement
+        href: MultiplayerInfrastructure.UI.KeyboardLayoutElement.md
+      - name: KeyboardLayoutElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.KeyboardLayoutElement.UxmlSerializedData.md
+      - name: LoadingScreen
+        href: MultiplayerInfrastructure.UI.LoadingScreen.md
+      - name: OverflowScrollView
+        href: MultiplayerInfrastructure.UI.OverflowScrollView.md
+      - name: ProblemChoiceElement
+        href: MultiplayerInfrastructure.UI.ProblemChoiceElement.md
+      - name: ProblemChoiceElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.ProblemChoiceElement.UxmlSerializedData.md
+      - name: ProblemPromptElement
+        href: MultiplayerInfrastructure.UI.ProblemPromptElement.md
+      - name: ProblemPromptElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.ProblemPromptElement.UxmlSerializedData.md
+      - name: ProblemSheetElement
+        href: MultiplayerInfrastructure.UI.ProblemSheetElement.md
+      - name: ProblemSheetElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.ProblemSheetElement.UxmlSerializedData.md
+      - name: ProblemSheetUIController
+        href: MultiplayerInfrastructure.UI.ProblemSheetUIController.md
+      - name: ProblemShortAnswerElement
+        href: MultiplayerInfrastructure.UI.ProblemShortAnswerElement.md
+      - name: ProblemShortAnswerElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.ProblemShortAnswerElement.UxmlSerializedData.md
+      - name: QuestPanelElement
+        href: MultiplayerInfrastructure.UI.QuestPanelElement.md
+      - name: QuestPanelElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.QuestPanelElement.UxmlSerializedData.md
+      - name: QuestPreviewHudElement
+        href: MultiplayerInfrastructure.UI.QuestPreviewHudElement.md
+      - name: QuestPreviewHudElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.QuestPreviewHudElement.UxmlSerializedData.md
+      - name: QuestPreviewHudUIController
+        href: MultiplayerInfrastructure.UI.QuestPreviewHudUIController.md
+      - name: QuestUIController
+        href: MultiplayerInfrastructure.UI.QuestUIController.md
+      - name: ReusableVerticalScrollbar
+        href: MultiplayerInfrastructure.UI.ReusableVerticalScrollbar.md
+      - name: ScenarioSelectionInteractable
+        href: MultiplayerInfrastructure.UI.ScenarioSelectionInteractable.md
+      - name: SceneUIIntroSceneController
+        href: MultiplayerInfrastructure.UI.SceneUIIntroSceneController.md
+      - name: SettingsUIController
+        href: MultiplayerInfrastructure.UI.SettingsUIController.md
+      - name: TextureQualityOptionElement
+        href: MultiplayerInfrastructure.UI.TextureQualityOptionElement.md
+      - name: TextureQualityOptionElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.TextureQualityOptionElement.UxmlSerializedData.md
+      - name: TimeDisplayElement
+        href: MultiplayerInfrastructure.UI.TimeDisplayElement.md
+      - name: TimeDisplayElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.TimeDisplayElement.UxmlSerializedData.md
+      - name: TimeDisplayUIController
+        href: MultiplayerInfrastructure.UI.TimeDisplayUIController.md
+      - name: TitleUIController
+        href: MultiplayerInfrastructure.UI.TitleUIController.md
+      - name: TitleUIElement
+        href: MultiplayerInfrastructure.UI.TitleUIElement.md
+      - name: TitleUIElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.TitleUIElement.UxmlSerializedData.md
+      - name: UIControllerABC
+        href: MultiplayerInfrastructure.UI.UIControllerABC.md
+      - name: UIDocumentControllerABC
+        href: MultiplayerInfrastructure.UI.UIDocumentControllerABC.md
+      - name: UIDocumentInteractionPolicy
+        href: MultiplayerInfrastructure.UI.UIDocumentInteractionPolicy.md
+      - name: UIDocumentInteractionStateGuard
+        href: MultiplayerInfrastructure.UI.UIDocumentInteractionStateGuard.md
+      - name: UIOverlayStack
+        href: MultiplayerInfrastructure.UI.UIOverlayStack.md
+      - name: UIRuntimeEventSystemGuard
+        href: MultiplayerInfrastructure.UI.UIRuntimeEventSystemGuard.md
+      - name: UIScaleOptionElement
+        href: MultiplayerInfrastructure.UI.UIScaleOptionElement.md
+      - name: UIScaleOptionElement.UxmlSerializedData
+        href: MultiplayerInfrastructure.UI.UIScaleOptionElement.UxmlSerializedData.md
+    - name: Structs
+      items:
+      - name: EntityOverheadLabelUIController.LabelContent
+        href: MultiplayerInfrastructure.UI.EntityOverheadLabelUIController.LabelContent.md
+      - name: InventoryUIView.CraftableRecipeDisplay.Ingredient
+        href: MultiplayerInfrastructure.UI.InventoryUIView.CraftableRecipeDisplay.Ingredient.md
+    - name: Interfaces
+      items:
+      - name: IOverheadPresentationAnchorProvider
+        href: MultiplayerInfrastructure.UI.IOverheadPresentationAnchorProvider.md
+      - name: IUIOverlay
+        href: MultiplayerInfrastructure.UI.IUIOverlay.md
+    - name: Enums
+      items:
+      - name: InteractableHintUIMode
+        href: MultiplayerInfrastructure.UI.InteractableHintUIMode.md
+      - name: SettingsUIController.SettingsTab
+        href: MultiplayerInfrastructure.UI.SettingsUIController.SettingsTab.md
+  - name: Variable
+    href: MultiplayerInfrastructure.Variable.md
+    items:
+    - name: Classes
+      items:
+      - name: SessionVariableService
+        href: MultiplayerInfrastructure.Variable.SessionVariableService.md
+      - name: SessionVariableService.ObjectiveDefinition
+        href: MultiplayerInfrastructure.Variable.SessionVariableService.ObjectiveDefinition.md
+- name: TriageTrainer
+  href: TriageTrainer.md
+  items:
+  - name: DebugTools
+    href: TriageTrainer.DebugTools.md
+    items:
+    - name: Classes
+      items:
+      - name: DebugSignalEmitter
+        href: TriageTrainer.DebugTools.DebugSignalEmitter.md
+      - name: ScenarioDevStub
+        href: TriageTrainer.DebugTools.ScenarioDevStub.md
+    - name: Enums
+      items:
+      - name: ScenarioDevStub.StubMode
+        href: TriageTrainer.DebugTools.ScenarioDevStub.StubMode.md
+  - name: Entity
+    href: TriageTrainer.Entity.md
+    items:
+    - name: AEDLine
+      href: TriageTrainer.Entity.AEDLine.md
+      items:
+      - name: Classes
+        items:
+        - name: AEDLineConnectionPoint
+          href: TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint.md
+    - name: CentralLine
+      href: TriageTrainer.Entity.CentralLine.md
+      items:
+      - name: Classes
+        items:
+        - name: CentralLineConnectionPoint
+          href: TriageTrainer.Entity.CentralLine.CentralLineConnectionPoint.md
+    - name: ElectricalLine
+      href: TriageTrainer.Entity.ElectricalLine.md
+      items:
+      - name: Classes
+        items:
+        - name: ElectricalLineConnectionPoint
+          href: TriageTrainer.Entity.ElectricalLine.ElectricalLineConnectionPoint.md
+    - name: IntravenousLine
+      href: TriageTrainer.Entity.IntravenousLine.md
+      items:
+      - name: Classes
+        items:
+        - name: IntravenousLineConnectionPoint
+          href: TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint.md
+        - name: IntravenousLineConnectionPoint.InteractConfig
+          href: TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint.InteractConfig.md
+    - name: LineConnection
+      href: TriageTrainer.Entity.LineConnection.md
+      items:
+      - name: Classes
+        items:
+        - name: LineConnectionPoint
+          href: TriageTrainer.Entity.LineConnection.LineConnectionPoint.md
+        - name: LineConnectionRuntime
+          href: TriageTrainer.Entity.LineConnection.LineConnectionRuntime.md
+        - name: LineConnectionService
+          href: TriageTrainer.Entity.LineConnection.LineConnectionService.md
+    - name: OxyLine
+      href: TriageTrainer.Entity.OxyLine.md
+      items:
+      - name: Classes
+        items:
+        - name: OxyLineConnectionPoint
+          href: TriageTrainer.Entity.OxyLine.OxyLineConnectionPoint.md
+        - name: OxyLinePairInteractable
+          href: TriageTrainer.Entity.OxyLine.OxyLinePairInteractable.md
+    - name: Patient
+      href: TriageTrainer.Entity.Patient.md
+      items:
+      - name: Classes
+        items:
+        - name: BloodPressure
+          href: TriageTrainer.Entity.Patient.BloodPressure.md
+        - name: BloodPulse
+          href: TriageTrainer.Entity.Patient.BloodPulse.md
+        - name: BodyTemperature
+          href: TriageTrainer.Entity.Patient.BodyTemperature.md
+        - name: Consciousness
+          href: TriageTrainer.Entity.Patient.Consciousness.md
+        - name: HealthProblem
+          href: TriageTrainer.Entity.Patient.HealthProblem.md
+        - name: PatientDescriptor
+          href: TriageTrainer.Entity.Patient.PatientDescriptor.md
+        - name: PatientMedicalState
+          href: TriageTrainer.Entity.Patient.PatientMedicalState.md
+        - name: RequiredDrug
+          href: TriageTrainer.Entity.Patient.RequiredDrug.md
+        - name: Respiration
+          href: TriageTrainer.Entity.Patient.Respiration.md
+        - name: Skin
+          href: TriageTrainer.Entity.Patient.Skin.md
+        - name: TriageLevelInfo
+          href: TriageTrainer.Entity.Patient.TriageLevelInfo.md
+      - name: Structs
+        items:
+        - name: ARTParameters
+          href: TriageTrainer.Entity.Patient.ARTParameters.md
+        - name: CVPParameters
+          href: TriageTrainer.Entity.Patient.CVPParameters.md
+        - name: ECGParameters
+          href: TriageTrainer.Entity.Patient.ECGParameters.md
+        - name: NIBPParameters
+          href: TriageTrainer.Entity.Patient.NIBPParameters.md
+        - name: NumericsParameters
+          href: TriageTrainer.Entity.Patient.NumericsParameters.md
+        - name: PlethParameters
+          href: TriageTrainer.Entity.Patient.PlethParameters.md
+        - name: STLeadValues
+          href: TriageTrainer.Entity.Patient.STLeadValues.md
+        - name: TemperatureParameters
+          href: TriageTrainer.Entity.Patient.TemperatureParameters.md
+      - name: Enums
+        items:
+        - name: BloodPulseForceType
+          href: TriageTrainer.Entity.Patient.BloodPulseForceType.md
+        - name: BloodPulseSpeedType
+          href: TriageTrainer.Entity.Patient.BloodPulseSpeedType.md
+        - name: BloodType
+          href: TriageTrainer.Entity.Patient.BloodType.md
+        - name: BodyTemperatureType
+          href: TriageTrainer.Entity.Patient.BodyTemperatureType.md
+        - name: Drug
+          href: TriageTrainer.Entity.Patient.Drug.md
+        - name: ECGRhythmType
+          href: TriageTrainer.Entity.Patient.ECGRhythmType.md
+        - name: EyeOpeningResponse
+          href: TriageTrainer.Entity.Patient.EyeOpeningResponse.md
+        - name: GCSLabel
+          href: TriageTrainer.Entity.Patient.GCSLabel.md
+        - name: HealthProblemType
+          href: TriageTrainer.Entity.Patient.HealthProblemType.md
+        - name: LOCLabel
+          href: TriageTrainer.Entity.Patient.LOCLabel.md
+        - name: MotorResponse
+          href: TriageTrainer.Entity.Patient.MotorResponse.md
+        - name: PupillaryResponse
+          href: TriageTrainer.Entity.Patient.PupillaryResponse.md
+        - name: RespirationType
+          href: TriageTrainer.Entity.Patient.RespirationType.md
+        - name: Sex
+          href: TriageTrainer.Entity.Patient.Sex.md
+        - name: SkinColorHue
+          href: TriageTrainer.Entity.Patient.SkinColorHue.md
+        - name: SkinTemperatureType
+          href: TriageTrainer.Entity.Patient.SkinTemperatureType.md
+        - name: TriageLevel
+          href: TriageTrainer.Entity.Patient.TriageLevel.md
+        - name: VerbalResponse
+          href: TriageTrainer.Entity.Patient.VerbalResponse.md
+    - name: PatientMonitor
+      href: TriageTrainer.Entity.PatientMonitor.md
+      items:
+      - name: Models
+        href: TriageTrainer.Entity.PatientMonitor.Models.md
+        items:
+        - name: Classes
+          items:
+          - name: ARTWaveformCalculator
+            href: TriageTrainer.Entity.PatientMonitor.Models.ARTWaveformCalculator.md
+          - name: CVPWaveformCalculator
+            href: TriageTrainer.Entity.PatientMonitor.Models.CVPWaveformCalculator.md
+          - name: DualPatientMonitorController
+            href: TriageTrainer.Entity.PatientMonitor.Models.DualPatientMonitorController.md
+          - name: ECGWaveformCalculator
+            href: TriageTrainer.Entity.PatientMonitor.Models.ECGWaveformCalculator.md
+          - name: PatientMonitorController
+            href: TriageTrainer.Entity.PatientMonitor.Models.PatientMonitorController.md
+          - name: PatientMonitorController.InteractEntry
+            href: TriageTrainer.Entity.PatientMonitor.Models.PatientMonitorController.InteractEntry.md
+          - name: PatientMonitorTrackingLineEndpoint
+            href: TriageTrainer.Entity.PatientMonitor.Models.PatientMonitorTrackingLineEndpoint.md
+          - name: PlethWaveformCalculator
+            href: TriageTrainer.Entity.PatientMonitor.Models.PlethWaveformCalculator.md
+          - name: SinglePatientMonitorController
+            href: TriageTrainer.Entity.PatientMonitor.Models.SinglePatientMonitorController.md
+        - name: Structs
+          items:
+          - name: ECGRuntimeState
+            href: TriageTrainer.Entity.PatientMonitor.Models.ECGRuntimeState.md
+        - name: Enums
+          items:
+          - name: DisconnectedPatientDisplayMode
+            href: TriageTrainer.Entity.PatientMonitor.Models.DisconnectedPatientDisplayMode.md
+          - name: OnEnterAnotherPatientAlreadyPatientExists
+            href: TriageTrainer.Entity.PatientMonitor.Models.OnEnterAnotherPatientAlreadyPatientExists.md
+          - name: PatientMonitorController.ECGDisplayMode
+            href: TriageTrainer.Entity.PatientMonitor.Models.PatientMonitorController.ECGDisplayMode.md
+          - name: PatientMonitorLineConnectionServiceUnavailableOption
+            href: TriageTrainer.Entity.PatientMonitor.Models.PatientMonitorLineConnectionServiceUnavailableOption.md
+          - name: PatientMonitorTrackingLineDisplayOption
+            href: TriageTrainer.Entity.PatientMonitor.Models.PatientMonitorTrackingLineDisplayOption.md
+          - name: PatientTrackingMethod
+            href: TriageTrainer.Entity.PatientMonitor.Models.PatientTrackingMethod.md
+      - name: Classes
+        items:
+        - name: DualPatientMonitorGraphPartController
+          href: TriageTrainer.Entity.PatientMonitor.DualPatientMonitorGraphPartController.md
+        - name: DualPatientMonitorMetricsPartController
+          href: TriageTrainer.Entity.PatientMonitor.DualPatientMonitorMetricsPartController.md
+        - name: PatientMonitorDisplayView
+          href: TriageTrainer.Entity.PatientMonitor.PatientMonitorDisplayView.md
+        - name: PatientMonitorGraphElement
+          href: TriageTrainer.Entity.PatientMonitor.PatientMonitorGraphElement.md
+        - name: PatientMonitorGraphElement.UxmlSerializedData
+          href: TriageTrainer.Entity.PatientMonitor.PatientMonitorGraphElement.UxmlSerializedData.md
+        - name: PatientMonitorMountPoint
+          href: TriageTrainer.Entity.PatientMonitor.PatientMonitorMountPoint.md
+        - name: PatientMonitorPlane
+          href: TriageTrainer.Entity.PatientMonitor.PatientMonitorPlane.md
+        - name: UIDocumentWorldSurfaceBinder
+          href: TriageTrainer.Entity.PatientMonitor.UIDocumentWorldSurfaceBinder.md
+      - name: Structs
+        items:
+        - name: GraphRange
+          href: TriageTrainer.Entity.PatientMonitor.GraphRange.md
+      - name: Enums
+        items:
+        - name: MonitorChannelId
+          href: TriageTrainer.Entity.PatientMonitor.MonitorChannelId.md
+        - name: PatientMonitorPlaneType
+          href: TriageTrainer.Entity.PatientMonitor.PatientMonitorPlaneType.md
+    - name: SuctionLine
+      href: TriageTrainer.Entity.SuctionLine.md
+      items:
+      - name: Classes
+        items:
+        - name: SuctionLineConnectionPoint
+          href: TriageTrainer.Entity.SuctionLine.SuctionLineConnectionPoint.md
+    - name: Classes
+      items:
+      - name: DefibrillatorCartController
+        href: TriageTrainer.Entity.DefibrillatorCartController.md
+      - name: DefibrillatorCartSnapPoint
+        href: TriageTrainer.Entity.DefibrillatorCartSnapPoint.md
+      - name: HumanoidAnimationController
+        href: TriageTrainer.Entity.HumanoidAnimationController.md
+      - name: Level1RapidInfuserBloodBagDisplay
+        href: TriageTrainer.Entity.Level1RapidInfuserBloodBagDisplay.md
+      - name: Level1RapidInfuserController
+        href: TriageTrainer.Entity.Level1RapidInfuserController.md
+      - name: Level1RapidInfuserNormalSalineDisplay
+        href: TriageTrainer.Entity.Level1RapidInfuserNormalSalineDisplay.md
+      - name: Level1RapidInfuserPlasmaSolutionDisplay
+        href: TriageTrainer.Entity.Level1RapidInfuserPlasmaSolutionDisplay.md
+      - name: MovingPatientBedController
+        href: TriageTrainer.Entity.MovingPatientBedController.md
+      - name: MovingPatientBedController.AttachableItemVisualPair
+        href: TriageTrainer.Entity.MovingPatientBedController.AttachableItemVisualPair.md
+      - name: MovingPatientBedIntravenousStandDisplay
+        href: TriageTrainer.Entity.MovingPatientBedIntravenousStandDisplay.md
+      - name: MovingPatientBedNormalSalineDisplay
+        href: TriageTrainer.Entity.MovingPatientBedNormalSalineDisplay.md
+      - name: MovingPatientBedPatientAttachPointObject
+        href: TriageTrainer.Entity.MovingPatientBedPatientAttachPointObject.md
+      - name: MovingPatientBedPlasmaSolutionDisplay
+        href: TriageTrainer.Entity.MovingPatientBedPlasmaSolutionDisplay.md
+      - name: MovingPatientBedPositioningPoint
+        href: TriageTrainer.Entity.MovingPatientBedPositioningPoint.md
+      - name: PatientAnimatorRootObject
+        href: TriageTrainer.Entity.PatientAnimatorRootObject.md
+      - name: PatientCareDescriptionZone
+        href: TriageTrainer.Entity.PatientCareDescriptionZone.md
+      - name: PatientController
+        href: TriageTrainer.Entity.PatientController.md
+      - name: PatientController.AssessActionConfig
+        href: TriageTrainer.Entity.PatientController.AssessActionConfig.md
+      - name: PatientController.InteractConfig
+        href: TriageTrainer.Entity.PatientController.InteractConfig.md
+      - name: RecognitionCheckMicrophoneInput
+        href: TriageTrainer.Entity.RecognitionCheckMicrophoneInput.md
+      - name: StaticEntityLayoutDefinition
+        href: TriageTrainer.Entity.StaticEntityLayoutDefinition.md
+      - name: StretcherController
+        href: TriageTrainer.Entity.StretcherController.md
+      - name: WallAttachedOxyflowmeter
+        href: TriageTrainer.Entity.WallAttachedOxyflowmeter.md
+      - name: WallAttachedWallSuction
+        href: TriageTrainer.Entity.WallAttachedWallSuction.md
+    - name: Structs
+      items:
+      - name: Level1RapidInfuserState
+        href: TriageTrainer.Entity.Level1RapidInfuserState.md
+      - name: PatientController.IntravenousLineCannulaConfig
+        href: TriageTrainer.Entity.PatientController.IntravenousLineCannulaConfig.md
+      - name: PatientController.TriageAssessmentConfig
+        href: TriageTrainer.Entity.PatientController.TriageAssessmentConfig.md
+      - name: PatientSupportExternalRefs
+        href: TriageTrainer.Entity.PatientSupportExternalRefs.md
+      - name: RapidInfuserFluidLifecycleEvent
+        href: TriageTrainer.Entity.RapidInfuserFluidLifecycleEvent.md
+      - name: StaticEntityLayoutGroup
+        href: TriageTrainer.Entity.StaticEntityLayoutGroup.md
+      - name: StaticEntityTransformDefinition
+        href: TriageTrainer.Entity.StaticEntityTransformDefinition.md
+    - name: Interfaces
+      items:
+      - name: IAttachCompletionSignalConfigurable
+        href: TriageTrainer.Entity.IAttachCompletionSignalConfigurable.md
+      - name: ILevel1RapidInfuserStateSource
+        href: TriageTrainer.Entity.ILevel1RapidInfuserStateSource.md
+      - name: PatientController.IMedicalStateListener
+        href: TriageTrainer.Entity.PatientController.IMedicalStateListener.md
+      - name: PatientController.IMonitorSelectionRequester
+        href: TriageTrainer.Entity.PatientController.IMonitorSelectionRequester.md
+    - name: Enums
+      items:
+      - name: BloodBagCancellationBehaviour
+        href: TriageTrainer.Entity.BloodBagCancellationBehaviour.md
+      - name: BloodBagWithoutPlasmaPolicy
+        href: TriageTrainer.Entity.BloodBagWithoutPlasmaPolicy.md
+      - name: PatientController.ChangeAssessableOnAssessDone
+        href: TriageTrainer.Entity.PatientController.ChangeAssessableOnAssessDone.md
+      - name: PatientController.TreatmentDisplay
+        href: TriageTrainer.Entity.PatientController.TreatmentDisplay.md
+      - name: RapidInfuserFluidCancellationReason
+        href: TriageTrainer.Entity.RapidInfuserFluidCancellationReason.md
+      - name: RecognitionCheckMicrophoneInput.Availability
+        href: TriageTrainer.Entity.RecognitionCheckMicrophoneInput.Availability.md
+      - name: StaticEntityLayoutType
+        href: TriageTrainer.Entity.StaticEntityLayoutType.md
+  - name: ItemDefinitions
+    href: TriageTrainer.ItemDefinitions.md
+    items:
+    - name: Classes
+      items:
+      - name: Ambubag
+        href: TriageTrainer.ItemDefinitions.Ambubag.md
+      - name: BloodBag
+        href: TriageTrainer.ItemDefinitions.BloodBag.md
+      - name: BloodTransfusionSet
+        href: TriageTrainer.ItemDefinitions.BloodTransfusionSet.md
+      - name: Cannula16g
+        href: TriageTrainer.ItemDefinitions.Cannula16g.md
+      - name: Cannula18g
+        href: TriageTrainer.ItemDefinitions.Cannula18g.md
+      - name: Cannula20g
+        href: TriageTrainer.ItemDefinitions.Cannula20g.md
+      - name: Cannula22g
+        href: TriageTrainer.ItemDefinitions.Cannula22g.md
+      - name: Cannula24g
+        href: TriageTrainer.ItemDefinitions.Cannula24g.md
+      - name: CentralLineSet
+        href: TriageTrainer.ItemDefinitions.CentralLineSet.md
+      - name: CervicalCollar
+        href: TriageTrainer.ItemDefinitions.CervicalCollar.md
+      - name: ChecklistPaper
+        href: TriageTrainer.ItemDefinitions.ChecklistPaper.md
+      - name: ContaminatedGloves
+        href: TriageTrainer.ItemDefinitions.ContaminatedGloves.md
+      - name: DefibrillatorPad
+        href: TriageTrainer.ItemDefinitions.DefibrillatorPad.md
+      - name: ElasticBand
+        href: TriageTrainer.ItemDefinitions.ElasticBand.md
+      - name: Electrode
+        href: TriageTrainer.ItemDefinitions.Electrode.md
+      - name: ElectrodeCable
+        href: TriageTrainer.ItemDefinitions.ElectrodeCable.md
+      - name: EndotrachealTube
+        href: TriageTrainer.ItemDefinitions.EndotrachealTube.md
+      - name: EndotrachealTubeReady
+        href: TriageTrainer.ItemDefinitions.EndotrachealTubeReady.md
+      - name: Epinephrine16g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine16g20ccSyringe.md
+      - name: Epinephrine16g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine16g50ccSyringe.md
+      - name: Epinephrine16g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine16g5ccSyringe.md
+      - name: Epinephrine18g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine18g20ccSyringe.md
+      - name: Epinephrine18g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine18g50ccSyringe.md
+      - name: Epinephrine18g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine18g5ccSyringe.md
+      - name: Epinephrine20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine20ccSyringe.md
+      - name: Epinephrine20g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine20g20ccSyringe.md
+      - name: Epinephrine20g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine20g50ccSyringe.md
+      - name: Epinephrine20g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine20g5ccSyringe.md
+      - name: Epinephrine22g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine22g20ccSyringe.md
+      - name: Epinephrine22g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine22g50ccSyringe.md
+      - name: Epinephrine22g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine22g5ccSyringe.md
+      - name: Epinephrine24g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine24g20ccSyringe.md
+      - name: Epinephrine24g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine24g50ccSyringe.md
+      - name: Epinephrine24g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine24g5ccSyringe.md
+      - name: Epinephrine50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine50ccSyringe.md
+      - name: Epinephrine5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Epinephrine5ccSyringe.md
+      - name: EpinephrineAmpule
+        href: TriageTrainer.ItemDefinitions.EpinephrineAmpule.md
+      - name: FacialMask
+        href: TriageTrainer.ItemDefinitions.FacialMask.md
+      - name: Flowmeter
+        href: TriageTrainer.ItemDefinitions.Flowmeter.md
+      - name: Gauze
+        href: TriageTrainer.ItemDefinitions.Gauze.md
+      - name: HandyClock
+        href: TriageTrainer.ItemDefinitions.HandyClock.md
+      - name: Humidifier
+        href: TriageTrainer.ItemDefinitions.Humidifier.md
+      - name: HumidifierSterileDistilledWaterBottle
+        href: TriageTrainer.ItemDefinitions.HumidifierSterileDistilledWaterBottle.md
+      - name: IntravenousSet
+        href: TriageTrainer.ItemDefinitions.IntravenousSet.md
+      - name: Laryngoscope
+        href: TriageTrainer.ItemDefinitions.Laryngoscope.md
+      - name: LaryngoscopeBlade
+        href: TriageTrainer.ItemDefinitions.LaryngoscopeBlade.md
+      - name: LaryngoscopeHandle
+        href: TriageTrainer.ItemDefinitions.LaryngoscopeHandle.md
+      - name: Level1RapidInfuser
+        href: TriageTrainer.ItemDefinitions.Level1RapidInfuser.md
+      - name: MedicalItem
+        href: TriageTrainer.ItemDefinitions.MedicalItem.md
+      - name: NasalCannula
+        href: TriageTrainer.ItemDefinitions.NasalCannula.md
+      - name: Norepinephrine16g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine16g20ccSyringe.md
+      - name: Norepinephrine16g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine16g50ccSyringe.md
+      - name: Norepinephrine16g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine16g5ccSyringe.md
+      - name: Norepinephrine18g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine18g20ccSyringe.md
+      - name: Norepinephrine18g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine18g50ccSyringe.md
+      - name: Norepinephrine18g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine18g5ccSyringe.md
+      - name: Norepinephrine20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine20ccSyringe.md
+      - name: Norepinephrine20g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine20g20ccSyringe.md
+      - name: Norepinephrine20g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine20g50ccSyringe.md
+      - name: Norepinephrine20g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine20g5ccSyringe.md
+      - name: Norepinephrine22g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine22g20ccSyringe.md
+      - name: Norepinephrine22g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine22g50ccSyringe.md
+      - name: Norepinephrine22g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine22g5ccSyringe.md
+      - name: Norepinephrine24g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine24g20ccSyringe.md
+      - name: Norepinephrine24g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine24g50ccSyringe.md
+      - name: Norepinephrine24g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine24g5ccSyringe.md
+      - name: Norepinephrine50ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine50ccSyringe.md
+      - name: Norepinephrine5ccSyringe
+        href: TriageTrainer.ItemDefinitions.Norepinephrine5ccSyringe.md
+      - name: NorepinephrineAmpule
+        href: TriageTrainer.ItemDefinitions.NorepinephrineAmpule.md
+      - name: NormalSaline1000ml
+        href: TriageTrainer.ItemDefinitions.NormalSaline1000ml.md
+      - name: NormalSaline16g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline16g20ccSyringe.md
+      - name: NormalSaline16g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline16g50ccSyringe.md
+      - name: NormalSaline16g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline16g5ccSyringe.md
+      - name: NormalSaline18g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline18g20ccSyringe.md
+      - name: NormalSaline18g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline18g50ccSyringe.md
+      - name: NormalSaline18g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline18g5ccSyringe.md
+      - name: NormalSaline20ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline20ccSyringe.md
+      - name: NormalSaline20g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline20g20ccSyringe.md
+      - name: NormalSaline20g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline20g50ccSyringe.md
+      - name: NormalSaline20g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline20g5ccSyringe.md
+      - name: NormalSaline20ml
+        href: TriageTrainer.ItemDefinitions.NormalSaline20ml.md
+      - name: NormalSaline22g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline22g20ccSyringe.md
+      - name: NormalSaline22g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline22g50ccSyringe.md
+      - name: NormalSaline22g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline22g5ccSyringe.md
+      - name: NormalSaline24g20ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline24g20ccSyringe.md
+      - name: NormalSaline24g50ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline24g50ccSyringe.md
+      - name: NormalSaline24g5ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline24g5ccSyringe.md
+      - name: NormalSaline50ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline50ccSyringe.md
+      - name: NormalSaline5ccSyringe
+        href: TriageTrainer.ItemDefinitions.NormalSaline5ccSyringe.md
+      - name: NormalSalineIntravenousReady
+        href: TriageTrainer.ItemDefinitions.NormalSalineIntravenousReady.md
+      - name: O2Line
+        href: TriageTrainer.ItemDefinitions.O2Line.md
+      - name: Oxyflowmeter
+        href: TriageTrainer.ItemDefinitions.Oxyflowmeter.md
+      - name: Paper
+        href: TriageTrainer.ItemDefinitions.Paper.md
+      - name: PatientMonitor
+        href: TriageTrainer.ItemDefinitions.PatientMonitor.md
+      - name: Penlight
+        href: TriageTrainer.ItemDefinitions.Penlight.md
+      - name: PlasmaSolution1000ml
+        href: TriageTrainer.ItemDefinitions.PlasmaSolution1000ml.md
+      - name: PlasmaSolutionIntravenousReady
+        href: TriageTrainer.ItemDefinitions.PlasmaSolutionIntravenousReady.md
+      - name: Plaster
+        href: TriageTrainer.ItemDefinitions.Plaster.md
+      - name: ReservoirBag
+        href: TriageTrainer.ItemDefinitions.ReservoirBag.md
+      - name: Scissors
+        href: TriageTrainer.ItemDefinitions.Scissors.md
+      - name: SmallChain
+        href: TriageTrainer.ItemDefinitions.SmallChain.md
+      - name: SmallGear
+        href: TriageTrainer.ItemDefinitions.SmallGear.md
+      - name: SterileDistilledWater
+        href: TriageTrainer.ItemDefinitions.SterileDistilledWater.md
+      - name: SterileGloves
+        href: TriageTrainer.ItemDefinitions.SterileGloves.md
+      - name: Stylet
+        href: TriageTrainer.ItemDefinitions.Stylet.md
+      - name: SuctionCatheter
+        href: TriageTrainer.ItemDefinitions.SuctionCatheter.md
+      - name: SuctionLine
+        href: TriageTrainer.ItemDefinitions.SuctionLine.md
+      - name: Swab
+        href: TriageTrainer.ItemDefinitions.Swab.md
+      - name: Syringe20cc
+        href: TriageTrainer.ItemDefinitions.Syringe20cc.md
+      - name: Syringe50cc
+        href: TriageTrainer.ItemDefinitions.Syringe50cc.md
+      - name: Syringe5cc
+        href: TriageTrainer.ItemDefinitions.Syringe5cc.md
+      - name: TPieceSet
+        href: TriageTrainer.ItemDefinitions.TPieceSet.md
+      - name: TinIngot
+        href: TriageTrainer.ItemDefinitions.TinIngot.md
+      - name: TutorialDecoy8909
+        href: TriageTrainer.ItemDefinitions.TutorialDecoy8909.md
+      - name: TutorialDecoyKimGangsanMail
+        href: TriageTrainer.ItemDefinitions.TutorialDecoyKimGangsanMail.md
+      - name: TutorialDecoyOvernightYouth
+        href: TriageTrainer.ItemDefinitions.TutorialDecoyOvernightYouth.md
+      - name: TutorialDeliveryPackage
+        href: TriageTrainer.ItemDefinitions.TutorialDeliveryPackage.md
+      - name: VitalSet
+        href: TriageTrainer.ItemDefinitions.VitalSet.md
+      - name: WallSuction
+        href: TriageTrainer.ItemDefinitions.WallSuction.md
+      - name: Yankauer
+        href: TriageTrainer.ItemDefinitions.Yankauer.md
+      - name: YankauerSuctionReady
+        href: TriageTrainer.ItemDefinitions.YankauerSuctionReady.md
+  - name: MultiplayerInfrastructureSupports
+    href: TriageTrainer.MultiplayerInfrastructureSupports.md
+    items:
+    - name: ScriptableObjects
+      href: TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects.md
+      items:
+      - name: Classes
+        items:
+        - name: EntityPresetRegistryRequirementsSO
+          href: TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects.EntityPresetRegistryRequirementsSO.md
+        - name: PlayerModelRegistryRequirementsSO
+          href: TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects.PlayerModelRegistryRequirementsSO.md
+      - name: Structs
+        items:
+        - name: EntityPresetRegistryRequirement
+          href: TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects.EntityPresetRegistryRequirement.md
+        - name: PlayerModelRegistryRequirement
+          href: TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects.PlayerModelRegistryRequirement.md
+    - name: Classes
+      items:
+      - name: PlayerCharacterModelAiden
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelAiden.md
+      - name: PlayerCharacterModelBase
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelBase.md
+      - name: PlayerCharacterModelBrian
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelBrian.md
+      - name: PlayerCharacterModelDominic
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelDominic.md
+      - name: PlayerCharacterModelEmma
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelEmma.md
+      - name: PlayerCharacterModelEthan
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelEthan.md
+      - name: PlayerCharacterModelFallBackSphere
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelFallBackSphere.md
+      - name: PlayerCharacterModelJeb
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelJeb.md
+      - name: PlayerCharacterModelLiam
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelLiam.md
+      - name: PlayerCharacterModelLisa
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelLisa.md
+      - name: PlayerCharacterModelMaya
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelMaya.md
+      - name: PlayerCharacterModelOlivia
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelOlivia.md
+      - name: PlayerCharacterModelSerah
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelSerah.md
+      - name: PlayerCharacterModelSofia
+        href: TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelSofia.md
+      - name: RegisteringMultiplayerInfrastructureSupport
+        href: TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.md
+  - name: Patient
+    href: TriageTrainer.Patient.md
+    items:
+    - name: Classes
+      items:
+      - name: PatientDisplayState
+        href: TriageTrainer.Patient.PatientDisplayState.md
+      - name: PatientDummyDState
+        href: TriageTrainer.Patient.PatientDummyDState.md
+      - name: PatientDummyDTreatmentDisplayState
+        href: TriageTrainer.Patient.PatientDummyDTreatmentDisplayState.md
+      - name: PatientStateABC
+        href: TriageTrainer.Patient.PatientStateABC.md
+      - name: PatientTreatmentDisplayStateABC
+        href: TriageTrainer.Patient.PatientTreatmentDisplayStateABC.md
+      - name: PatientTreatmentDisplayingChildGameObjects
+        href: TriageTrainer.Patient.PatientTreatmentDisplayingChildGameObjects.md
+      - name: PatientTreatmentState
+        href: TriageTrainer.Patient.PatientTreatmentState.md
+      - name: PatientTypeAState
+        href: TriageTrainer.Patient.PatientTypeAState.md
+      - name: PatientTypeATreatmentDisplayState
+        href: TriageTrainer.Patient.PatientTypeATreatmentDisplayState.md
+      - name: PatientTypeBFemaleState
+        href: TriageTrainer.Patient.PatientTypeBFemaleState.md
+      - name: PatientTypeBFemaleTreatmentDisplayState
+        href: TriageTrainer.Patient.PatientTypeBFemaleTreatmentDisplayState.md
+      - name: PatientTypeBMaleState
+        href: TriageTrainer.Patient.PatientTypeBMaleState.md
+      - name: PatientTypeBMaleTreatmentDisplayState
+        href: TriageTrainer.Patient.PatientTypeBMaleTreatmentDisplayState.md
+    - name: Structs
+      items:
+      - name: PatientTreatmentDisplayModel
+        href: TriageTrainer.Patient.PatientTreatmentDisplayModel.md
+  - name: Scenario
+    href: TriageTrainer.Scenario.md
+    items:
+    - name: Rubric
+      href: TriageTrainer.Scenario.Rubric.md
+      items:
+      - name: Classes
+        items:
+        - name: RubricDefinitionSet
+          href: TriageTrainer.Scenario.Rubric.RubricDefinitionSet.md
+        - name: RubricItemDefinition
+          href: TriageTrainer.Scenario.Rubric.RubricItemDefinition.md
+        - name: RubricRecorder
+          href: TriageTrainer.Scenario.Rubric.RubricRecorder.md
+        - name: RubricResult
+          href: TriageTrainer.Scenario.Rubric.RubricResult.md
+        - name: RubricResultStore
+          href: TriageTrainer.Scenario.Rubric.RubricResultStore.md
+      - name: Enums
+        items:
+        - name: RubricArea
+          href: TriageTrainer.Scenario.Rubric.RubricArea.md
+        - name: RubricStatus
+          href: TriageTrainer.Scenario.Rubric.RubricStatus.md
+    - name: Classes
+      items:
+      - name: PatientA18gLeftVisualMarker
+        href: TriageTrainer.Scenario.PatientA18gLeftVisualMarker.md
+      - name: PatientA18gRightVisualMarker
+        href: TriageTrainer.Scenario.PatientA18gRightVisualMarker.md
+      - name: PatientAAmbuConnectedVisualMarker
+        href: TriageTrainer.Scenario.PatientAAmbuConnectedVisualMarker.md
+      - name: PatientACentralLineVisualMarker
+        href: TriageTrainer.Scenario.PatientACentralLineVisualMarker.md
+      - name: PatientACriticalQuestStateFlags
+        href: TriageTrainer.Scenario.PatientACriticalQuestStateFlags.md
+      - name: PatientAEtTubeInsertedVisualMarker
+        href: TriageTrainer.Scenario.PatientAEtTubeInsertedVisualMarker.md
+      - name: PatientAEtTubePreparedVisualMarker
+        href: TriageTrainer.Scenario.PatientAEtTubePreparedVisualMarker.md
+      - name: PatientAGauzeVisualMarker
+        href: TriageTrainer.Scenario.PatientAGauzeVisualMarker.md
+      - name: PatientAGauzeWithPlasterVisualMarker
+        href: TriageTrainer.Scenario.PatientAGauzeWithPlasterVisualMarker.md
+      - name: PatientATPieceConnectedVisualMarker
+        href: TriageTrainer.Scenario.PatientATPieceConnectedVisualMarker.md
+      - name: PatientB20gRightVisualMarker
+        href: TriageTrainer.Scenario.PatientB20gRightVisualMarker.md
+      - name: PatientBGauzeVisualMarker
+        href: TriageTrainer.Scenario.PatientBGauzeVisualMarker.md
+      - name: PatientBGauzeWithPlasterVisualMarker
+        href: TriageTrainer.Scenario.PatientBGauzeWithPlasterVisualMarker.md
+      - name: PatientC20gLeftVisualMarker
+        href: TriageTrainer.Scenario.PatientC20gLeftVisualMarker.md
+      - name: PatientCGauzeVisualMarker
+        href: TriageTrainer.Scenario.PatientCGauzeVisualMarker.md
+      - name: PatientCGauzeWithPlasterVisualMarker
+        href: TriageTrainer.Scenario.PatientCGauzeWithPlasterVisualMarker.md
+      - name: ScenarioActionInteractable
+        href: TriageTrainer.Scenario.ScenarioActionInteractable.md
+      - name: TriageScenarioEventBootstrap
+        href: TriageTrainer.Scenario.TriageScenarioEventBootstrap.md
+      - name: TriageScenarioReferenceMarker
+        href: TriageTrainer.Scenario.TriageScenarioReferenceMarker.md
+      - name: TriageWorldInteractionSignals
+        href: TriageTrainer.Scenario.TriageWorldInteractionSignals.md
+      - name: TutorialDecoyInteractable
+        href: TriageTrainer.Scenario.TutorialDecoyInteractable.md
+    - name: Structs
+      items:
+      - name: TriageScenarioEventBootstrap.PatientBedPair
+        href: TriageTrainer.Scenario.TriageScenarioEventBootstrap.PatientBedPair.md
+    - name: Enums
+      items:
+      - name: TriageScenarioReferenceRole
+        href: TriageTrainer.Scenario.TriageScenarioReferenceRole.md
+  - name: SceneBootstrapper
+    href: TriageTrainer.SceneBootstrapper.md
+    items:
+    - name: Classes
+      items:
+      - name: IndevConnectionFailureOverlay
+        href: TriageTrainer.SceneBootstrapper.IndevConnectionFailureOverlay.md
+      - name: IndevSceneBootstrapper
+        href: TriageTrainer.SceneBootstrapper.IndevSceneBootstrapper.md
+      - name: NetworkSessionFailure
+        href: TriageTrainer.SceneBootstrapper.NetworkSessionFailure.md
+      - name: TutorialSceneBootstrapper
+        href: TriageTrainer.SceneBootstrapper.TutorialSceneBootstrapper.md
+    - name: Enums
+      items:
+      - name: NetworkSessionFailure.StatusCode
+        href: TriageTrainer.SceneBootstrapper.NetworkSessionFailure.StatusCode.md
+  - name: Tests
+    href: TriageTrainer.Tests.md
+    items:
+    - name: PupilReflexSandbox
+      href: TriageTrainer.Tests.PupilReflexSandbox.md
+      items:
+      - name: Classes
+        items:
+        - name: PupilReflexExamController
+          href: TriageTrainer.Tests.PupilReflexSandbox.PupilReflexExamController.md
+        - name: PupilReflexEye
+          href: TriageTrainer.Tests.PupilReflexSandbox.PupilReflexEye.md
+        - name: PupilReflexMouseProbe
+          href: TriageTrainer.Tests.PupilReflexSandbox.PupilReflexMouseProbe.md
+        - name: PupilReflexSandboxBootstrap
+          href: TriageTrainer.Tests.PupilReflexSandbox.PupilReflexSandboxBootstrap.md
+  - name: UI
+    href: TriageTrainer.UI.md
+    items:
+    - name: Classes
+      items:
+      - name: TriageAssessmentPanelElement
+        href: TriageTrainer.UI.TriageAssessmentPanelElement.md
+      - name: TriageAssessmentUIController
+        href: TriageTrainer.UI.TriageAssessmentUIController.md
+  - name: Utils
+    href: TriageTrainer.Utils.md
+    items:
+    - name: Classes
+      items:
+      - name: EntityPresetDebugger
+        href: TriageTrainer.Utils.EntityPresetDebugger.md
+      - name: GeneratedByOverworldGameObjectInitializerEditor
+        href: TriageTrainer.Utils.GeneratedByOverworldGameObjectInitializerEditor.md
+      - name: OverworldSpawnPoint
+        href: TriageTrainer.Utils.OverworldSpawnPoint.md

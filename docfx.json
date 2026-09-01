@@ -1,0 +1,22 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": ".",
+          "files": [
+            "Assembly-CSharp.csproj"
+          ]
+        }
+      ],
+      "dest": "Documents/Documentation",
+      "outputFormat": "markdown",
+      "allowCompilationErrors": true,
+      "filter": "Tools/CommentDocumentation/filter.yml",
+      "includePrivateMembers": false,
+      "memberLayout": "samePage",
+      "namespaceLayout": "nested",
+      "categoryLayout": "nested"
+    }
+  ]
+}

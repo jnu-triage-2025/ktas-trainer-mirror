@@ -4,6 +4,7 @@
 - [작업 상황 동기화 및 공유](./working-guide/sync-working-progress.md): 프로젝트 다운받기, 작업물을 다른 사람과 공유하기
 - [온보딩 가이드](./working-guide/onboarding.md): 프로젝트 시작 시 참고
 - [AI 작업 흐름 가이드](./working-guide/ai-workflow.md): AI를 활용해 작업할 때의 흐름과 주의사항
+- [Comment Documentation](./Documentation/toc.yml): DocFX가 C# XML 문서 주석에서 생성한 API 색인
 
 ### MultiplayerInfrastructure:
 

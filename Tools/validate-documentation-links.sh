@@ -83,6 +83,13 @@ while IFS= read -r md_file; do
     # Drop optional title part: path "title"
     link="${link%% \"*}"
 
+    # DocFX escapes Markdown-sensitive characters in generated API filenames
+    # and anchors (for example, CommandDefinition\_Character.md). Normalize
+    # them before resolving the target on disk.
+    link="${link//\\_/_}"
+    link="${link//\\#/#}"
+    link="${link//\\-/-}"
+
     if is_external_or_anchor "$link"; then
       continue
     fi
