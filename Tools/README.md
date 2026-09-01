@@ -39,6 +39,22 @@ Documentation된 Markdown 문서의 링크 대상 파일 존재 여부를 검사
 - `./validate-documentation-links.sh ../Documents`
 - `./validate-documentation-links.sh ../Documents/README.md ../Documents/working-guide`
 
+### run-docfx.sh
+
+저장소 로컬에 설치한 .NET 8 SDK와 DocFX 런타임을 사용합니다. DocFX 구성은
+저장소 루트의 `docfx.json`에 있으며, C# XML 문서 주석 메타데이터를
+`Documents/Documentation/`으로 렌더링합니다.
+`Tools/CommentDocumentation/filter.yml`은 `MultiplayerInfrastructure`와 `TriageTrainer`
+네임스페이스만 생성 결과에 포함하도록 제한합니다.
+
+실행 예시 (working directory: 저장소 루트):
+
+- macOS/Linux: `Tools/setup-docfx.sh` 후 `Tools/run-docfx.sh metadata docfx.json`
+- Windows PowerShell: `./Tools/setup-docfx.ps1` 후 `./Tools/run-docfx.ps1 metadata docfx.json`
+
+두 초기화 스크립트은 .NET SDK `8.0.424`와 DocFX `2.78.5`를 `Tools/` 아래에 설치합니다.
+런타임 파일과 캐시는 Git에서 제외하고, 렌더된 Markdown은 추적합니다.
+
 ### unitydiff
 
 (Unity YAML을 pretty-print해 diff로 보여주는 diff 드라이버. `.gitattributes`의 `diff=unitydiff` 항목 참조.)
