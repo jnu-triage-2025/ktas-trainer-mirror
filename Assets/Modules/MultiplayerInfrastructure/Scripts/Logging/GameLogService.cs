@@ -250,20 +250,16 @@ namespace MultiplayerInfrastructure.Logging
         return false;
       }
 
-      // 경로 탈출 방지: 정규화된 전체 경로로 변환한 뒤 안전 루트 내에 있는지 확인
+      // 경로 탈출 방지.
+      //
+      // 원본 문자열에 대한 '..' 검사는 의미가 없다. Path.GetFullPath 가 '..' 를 이미 해소하므로
+      // 정규화된 결과에는 '..' 가 남지 않아 검사가 항상 통과한다. 따라서 정규화된 경로가
+      // 허용 루트 하위인지 직접 확인하고, 이후 파일 조작에도 정규화된 경로만 사용한다.
+      // (정규화되지 않은 원본으로 복사하면 검사와 실제 대상이 달라진다.)
+      string fullDestination;
       try
       {
-        string fullDest = Path.GetFullPath(destinationPath);
-        string safeRoot = Path.GetFullPath(Application.persistentDataPath);
-
-        // persistentDataPath 하위가 아닌 경우에는 경고는 하지 않고 그대로 허용하되,
-        // 상위 디렉터리 탈출(..를 통한) 여부만 체크한다.
-        // (operator만 이 커맨드를 사용할 수 있으므로 절대 경로 외부 export도 허용)
-        if (fullDest.Contains("..", StringComparison.Ordinal))
-        {
-          error = "Destination path must not contain '..'.";
-          return false;
-        }
+        fullDestination = Path.GetFullPath(destinationPath);
       }
       catch (Exception ex)
       {
@@ -271,15 +267,21 @@ namespace MultiplayerInfrastructure.Logging
         return false;
       }
 
+      if (!IsWithinExportRoot(fullDestination, out string exportRoot))
+      {
+        error = $"Destination path must be inside '{exportRoot}'.";
+        return false;
+      }
+
       try
       {
-        string dir = Path.GetDirectoryName(destinationPath);
+        string dir = Path.GetDirectoryName(fullDestination);
         if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
           Directory.CreateDirectory(dir);
 
         // 현재 버퍼를 플러시한 뒤 파일을 복사한다.
         _writer?.Flush();
-        File.Copy(_currentLogFilePath, destinationPath, overwrite: true);
+        File.Copy(_currentLogFilePath, fullDestination, overwrite: true);
         return true;
       }
       catch (Exception ex)
@@ -288,6 +290,35 @@ namespace MultiplayerInfrastructure.Logging
         return false;
       }
     }
+
+    /// <summary>
+    /// 내보내기 대상이 허용 루트(<see cref="Application.persistentDataPath"/>) 하위인지 확인한다.
+    /// 루트 자체와 그 하위만 허용하며, 접두사 문자열이 우연히 일치하는 형제 디렉터리
+    /// (예: "GameLogs" 루트에 대한 "GameLogsBackup")는 거부한다.
+    /// </summary>
+    private static bool IsWithinExportRoot(string fullDestination, out string exportRoot)
+    {
+      exportRoot = Path.GetFullPath(Application.persistentDataPath);
+
+      string normalizedRoot = exportRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+      if (string.Equals(fullDestination, normalizedRoot, PathComparison))
+        return false; // 루트 자체를 파일로 덮어쓸 수는 없다.
+
+      string rootWithSeparator = normalizedRoot + Path.DirectorySeparatorChar;
+      return fullDestination.StartsWith(rootWithSeparator, PathComparison);
+    }
+
+    /// <summary>
+    /// 파일 시스템 경로 비교 규칙. Windows/macOS 는 대소문자를 구분하지 않는 것이 기본이므로
+    /// 그 환경에서 대소문자만 다른 경로가 검사를 우회하지 못하게 한다.
+    /// </summary>
+    private static StringComparison PathComparison =>
+      Application.platform == RuntimePlatform.WindowsPlayer
+      || Application.platform == RuntimePlatform.WindowsEditor
+      || Application.platform == RuntimePlatform.OSXPlayer
+      || Application.platform == RuntimePlatform.OSXEditor
+        ? StringComparison.OrdinalIgnoreCase
+        : StringComparison.Ordinal;
 
     /// <summary>
     /// 로그 루트 폴더에 저장된 세션 로그 파일 목록을 반환한다.
