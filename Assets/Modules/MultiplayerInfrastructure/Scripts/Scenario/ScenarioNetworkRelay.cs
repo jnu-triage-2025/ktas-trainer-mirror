@@ -753,6 +753,24 @@ namespace MultiplayerInfrastructure.Scenario
       string actingNpcIdentifier,
       NetworkObject actorObject)
     {
+      ApplyScenarioActingNpcConfiguration(graphIdentifier, actingNpcIdentifier, actorObject);
+    }
+
+    /// <summary>
+    /// ActingNpc 구성을 이 피어에 적용한다. Observers/Target 두 수신 경로가 공유한다.
+    ///
+    /// <para>
+    /// client RPC 의 본문에서 다른 client RPC 메서드를 호출하면 안 된다. FishNet 코드젠은 원본
+    /// 메서드를 "송신부"로 치환하고 송신부에 IsServer 가드를 삽입하므로, 클라이언트에서 실행되는
+    /// RPC 본문이 다른 client RPC 를 호출하면 그 호출은 조용히 무시된다. 따라서 공통 처리는
+    /// 반드시 이 메서드처럼 RPC 가 아닌 일반 메서드로 분리해 각 수신부가 직접 호출해야 한다.
+    /// </para>
+    /// </summary>
+    private void ApplyScenarioActingNpcConfiguration(
+      string graphIdentifier,
+      string actingNpcIdentifier,
+      NetworkObject actorObject)
+    {
       // 호스트는 서버 경로에서 이미 동일 인스턴스를 구성했다.
       if (InstanceFinder.IsServerStarted)
         return;
@@ -794,6 +812,28 @@ namespace MultiplayerInfrastructure.Scenario
       bool hasInteractEnabled,
       bool interactEnabled)
     {
+      ApplyNPCControlUpdateOnPeer(
+        actorObject, nodeIdentifier, displayName,
+        hasShowOverheadName, showOverheadName, interactOperation,
+        interactableIdentifier, hasInteractEnabled, interactEnabled);
+    }
+
+    /// <summary>
+    /// NPC 제어 갱신을 이 피어에 적용한다. Observers/Target 두 수신 경로가 공유한다.
+    /// client RPC 본문에서 다른 client RPC 를 호출하면 안 되는 이유는
+    /// <see cref="ApplyScenarioActingNpcConfiguration"/> 의 설명을 참고한다.
+    /// </summary>
+    private void ApplyNPCControlUpdateOnPeer(
+      NetworkObject actorObject,
+      string nodeIdentifier,
+      string displayName,
+      bool hasShowOverheadName,
+      bool showOverheadName,
+      int interactOperation,
+      string interactableIdentifier,
+      bool hasInteractEnabled,
+      bool interactEnabled)
+    {
       if (InstanceFinder.IsServerStarted || actorObject == null)
         return;
 
@@ -819,7 +859,7 @@ namespace MultiplayerInfrastructure.Scenario
       bool hasInteractEnabled,
       bool interactEnabled)
     {
-      ObserversUpdateNPCControl(
+      ApplyNPCControlUpdateOnPeer(
         actorObject, nodeIdentifier, displayName,
         hasShowOverheadName, showOverheadName, interactOperation,
         interactableIdentifier, hasInteractEnabled, interactEnabled);
@@ -829,7 +869,7 @@ namespace MultiplayerInfrastructure.Scenario
     private void TargetConfigureScenarioActingNpc(
       NetworkConnection connection, string graphIdentifier, string actingNpcIdentifier, NetworkObject actorObject)
     {
-      ObserversConfigureScenarioActingNpc(graphIdentifier, actingNpcIdentifier, actorObject);
+      ApplyScenarioActingNpcConfiguration(graphIdentifier, actingNpcIdentifier, actorObject);
     }
 
     [ServerRpc(RequireOwnership = false)]

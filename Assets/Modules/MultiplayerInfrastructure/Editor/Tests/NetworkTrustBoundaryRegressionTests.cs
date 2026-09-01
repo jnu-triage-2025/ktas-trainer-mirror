@@ -1,5 +1,8 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using MultiplayerInfrastructure.Chat;
 using NUnit.Framework;
 
@@ -43,6 +46,139 @@ namespace MultiplayerInfrastructure.Editor.Tests
       Assert.That(source, Does.Contain("RemoveItemFromInventory(authoritativeItemIdentifier, authoritativeConsumeCount)"));
       Assert.That(source.IndexOf("ServerConfirmStaticObjectApplySuccess(entityIdentifier, claimant)", System.StringComparison.Ordinal),
         Is.GreaterThan(source.IndexOf("RemoveItemFromInventory(authoritativeItemIdentifier, authoritativeConsumeCount)", System.StringComparison.Ordinal)));
+    }
+
+    private static readonly string[] RuntimeScriptRoots =
+    {
+      "Assets/Modules/MultiplayerInfrastructure/Scripts",
+      "Assets/Modules/TriageTrainer/Scripts",
+    };
+
+    /// <summary>
+    /// FishNet 코드젠은 [ObserversRpc]/[TargetRpc] 원본 메서드를 "송신부"로 치환하고 송신부에
+    /// IsServer 가드를 삽입한다. 따라서 클라이언트에서 실행되는 client RPC 본문이 다른 client RPC
+    /// 메서드를 호출하면 그 호출은 경고 로그 없이 무시되어, 조용한 무동작(silent no-op)이 된다.
+    /// 공통 처리는 RPC 가 아닌 일반 메서드로 분리해 각 수신부가 직접 호출해야 한다.
+    /// </summary>
+    [Test]
+    public void ClientRpcBodiesDoNotInvokeOtherClientRpcs()
+    {
+      var violations = new List<string>();
+
+      foreach (string root in RuntimeScriptRoots)
+      {
+        Assert.That(Directory.Exists(root), Is.True, $"Runtime script root was not found: {root}");
+
+        foreach (string path in Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories))
+        {
+          if (path.Contains("/Tests/", StringComparison.Ordinal)
+              || path.Contains("\\Tests\\", StringComparison.Ordinal))
+            continue;
+
+          CollectClientRpcChainViolations(path, violations);
+        }
+      }
+
+      Assert.That(violations, Is.Empty,
+        "A client RPC body invokes another client RPC, which FishNet silently drops on clients:"
+        + Environment.NewLine + string.Join(Environment.NewLine, violations));
+    }
+
+    private static void CollectClientRpcChainViolations(string path, List<string> violations)
+    {
+      string[] lines = File.ReadAllLines(path);
+      var clientRpcNames = new HashSet<string>(StringComparer.Ordinal);
+      var declarationLineByName = new Dictionary<string, int>(StringComparer.Ordinal);
+
+      var attributeExpression = new Regex(@"^\s*\[\s*(ObserversRpc|TargetRpc)\b", RegexOptions.Compiled);
+      var declarationExpression = new Regex(
+        @"^\s*(?:private|public|protected|internal)(?:\s+\w+)*\s+void\s+(\w+)\s*\(", RegexOptions.Compiled);
+
+      // 1단계: 이 파일에 선언된 client RPC 메서드 이름을 모은다.
+      for (int i = 0; i < lines.Length; i++)
+      {
+        if (!attributeExpression.IsMatch(lines[i]))
+          continue;
+
+        for (int j = i + 1; j < Math.Min(i + 6, lines.Length); j++)
+        {
+          Match declaration = declarationExpression.Match(lines[j]);
+          if (!declaration.Success)
+            continue;
+
+          clientRpcNames.Add(declaration.Groups[1].Value);
+          declarationLineByName[declaration.Groups[1].Value] = j;
+          break;
+        }
+      }
+
+      if (clientRpcNames.Count < 2)
+        return;
+
+      // 2단계: 각 client RPC 본문이 다른 client RPC 를 호출하는지 확인한다.
+      foreach (KeyValuePair<string, int> entry in declarationLineByName)
+      {
+        int start = entry.Value;
+        if (IsExpressionBodiedMember(lines, start))
+          continue;
+
+        int depth = 0;
+        bool entered = false;
+
+        for (int i = start; i < lines.Length; i++)
+        {
+          string line = StripLineComment(lines[i]);
+          depth += CountOccurrences(line, '{') - CountOccurrences(line, '}');
+          if (line.Contains('{'))
+            entered = true;
+
+          if (i > start && entered)
+          {
+            foreach (string candidate in clientRpcNames)
+            {
+              if (string.Equals(candidate, entry.Key, StringComparison.Ordinal))
+                continue;
+              if (Regex.IsMatch(line, @"(?<![\w.])" + Regex.Escape(candidate) + @"\s*\("))
+                violations.Add($"{path}:{i + 1}  {entry.Key} -> {candidate}");
+            }
+          }
+
+          if (entered && depth <= 0)
+            break;
+        }
+      }
+    }
+
+    private static bool IsExpressionBodiedMember(string[] lines, int declarationLine)
+    {
+      for (int i = declarationLine; i < Math.Min(declarationLine + 6, lines.Length); i++)
+      {
+        string line = StripLineComment(lines[i]);
+        if (line.Contains("=>", StringComparison.Ordinal))
+          return true;
+        if (line.Contains('{'))
+          return false;
+      }
+
+      return false;
+    }
+
+    private static string StripLineComment(string line)
+    {
+      int index = line.IndexOf("//", StringComparison.Ordinal);
+      return index >= 0 ? line.Substring(0, index) : line;
+    }
+
+    private static int CountOccurrences(string value, char target)
+    {
+      int count = 0;
+      for (int i = 0; i < value.Length; i++)
+      {
+        if (value[i] == target)
+          count++;
+      }
+
+      return count;
     }
   }
 }
