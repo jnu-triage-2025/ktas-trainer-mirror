@@ -19,6 +19,9 @@ namespace TriageTrainer.Entity
     private bool _hasValidatedAnimationParameters;
     private bool _hasRequiredAnimationParameters;
     private bool _hasForceLyingState;
+#if !UNITY_EDITOR
+    private bool _hasWarnedMissingRuntimeAnimatorController;
+#endif
 
     public HumanoidAnimationController AnimationController => ResolveAnimationController();
 
@@ -133,7 +136,7 @@ namespace TriageTrainer.Entity
       if (animationController == null && animator == null)
         return;
 
-      // Once lying-idle is entered, keep the animator in lying-idle.
+      // 한 번 lying-idle 에 들어가면 애니메이터를 lying-idle 로 유지한다.
       bool effectiveIsLying = isLying || _currentLyingAnimationParameter;
 
       bool changed = !_hasAnimationParameterState
@@ -154,6 +157,15 @@ namespace TriageTrainer.Entity
         _hasForceLyingState = true;
     }
 
+    /// <summary>
+    /// 직렬화된 애니메이터 컨트롤러 참조가 비어 있으면 에디터에서 기본 애셋으로 채운다.
+    ///
+    /// <para>
+    /// <b>이 폴백은 에디터 전용이다.</b> AssetDatabase 는 빌드에 존재하지 않으므로, 프리팹에
+    /// 참조가 직렬화되지 않은 채 빌드되면 런타임에 폴백이 동작하지 않는다. 환자가 누운 자세로
+    /// 전환되지 않으면 훈련 상황 자체가 성립하지 않으므로, 빌드에서는 한 번만 오류를 남긴다.
+    /// </para>
+    /// </summary>
     private void EnsureDefaultRuntimeAnimatorController()
     {
       if (_runtimeAnimatorController != null)
@@ -161,6 +173,21 @@ namespace TriageTrainer.Entity
 
 #if UNITY_EDITOR
       _runtimeAnimatorController = UnityEditor.AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(DefaultRuntimeAnimatorControllerAssetPath);
+      if (_runtimeAnimatorController == null)
+      {
+        Debug.LogError(
+          $"[PatientController] Default animator controller was not found at '{DefaultRuntimeAnimatorControllerAssetPath}'. "
+          + "Assign it on the prefab; builds have no AssetDatabase fallback.", this);
+      }
+#else
+      if (!_hasWarnedMissingRuntimeAnimatorController)
+      {
+        _hasWarnedMissingRuntimeAnimatorController = true;
+        Debug.LogError(
+          "[PatientController] Runtime animator controller is not assigned on this prefab, so the patient "
+          + "will not switch to its lying pose. The editor-only AssetDatabase fallback does not exist in builds; "
+          + "assign the controller on the prefab.", this);
+      }
 #endif
     }
 

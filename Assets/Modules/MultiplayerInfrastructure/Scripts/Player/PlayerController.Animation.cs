@@ -18,7 +18,10 @@ namespace MultiplayerInfrastructure.Player
     private bool _hasValidatedAnimationParameters;
     private bool _hasRequiredAnimationParameters;
     private bool _hasWarnedMissingAnimationParameters;
-    // Hysteresis for walk detection to prevent jitter
+#if !UNITY_EDITOR
+    private bool _hasWarnedMissingRuntimeAnimatorController;
+#endif
+    // 지터 방지를 위한 걷기 판정 히스테리시스
     private bool _wasWalking;
     private const float WalkEnterThreshold = 0.1f;
     private const float WalkExitThreshold = 0.05f;
@@ -193,6 +196,16 @@ namespace MultiplayerInfrastructure.Player
       animator.runtimeAnimatorController = _runtimeAnimatorController;
     }
 
+    /// <summary>
+    /// 직렬화된 애니메이터 컨트롤러 참조가 비어 있으면 에디터에서 기본 애셋으로 채운다.
+    ///
+    /// <para>
+    /// <b>이 폴백은 에디터 전용이다.</b> AssetDatabase 는 빌드에 존재하지 않으므로, 프리팹에
+    /// 참조가 직렬화되지 않은 채 빌드되면 런타임에 폴백이 동작하지 않는다. 그 경우 애니메이션이
+    /// 조용히 재생되지 않으므로, 빌드에서는 원인을 알 수 있도록 한 번만 오류를 남긴다.
+    /// (에디터에서 Reset/OnValidate 가 참조를 채워 두는 것이 정상 경로다.)
+    /// </para>
+    /// </summary>
     private void EnsureDefaultRuntimeAnimatorController()
     {
       if (_runtimeAnimatorController != null)
@@ -200,6 +213,21 @@ namespace MultiplayerInfrastructure.Player
 
 #if UNITY_EDITOR
       _runtimeAnimatorController = UnityEditor.AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(DefaultRuntimeAnimatorControllerAssetPath);
+      if (_runtimeAnimatorController == null)
+      {
+        Debug.LogError(
+          $"[PlayerController] Default animator controller was not found at '{DefaultRuntimeAnimatorControllerAssetPath}'. "
+          + "Assign it on the prefab; builds have no AssetDatabase fallback.", this);
+      }
+#else
+      if (!_hasWarnedMissingRuntimeAnimatorController)
+      {
+        _hasWarnedMissingRuntimeAnimatorController = true;
+        Debug.LogError(
+          "[PlayerController] Runtime animator controller is not assigned on this prefab, so player animation "
+          + "will not play. The editor-only AssetDatabase fallback does not exist in builds; "
+          + "assign the controller on the prefab.", this);
+      }
 #endif
     }
 
