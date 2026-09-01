@@ -1,4 +1,5 @@
 ﻿using System;
+using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -221,25 +222,33 @@ namespace TriageTrainer.Entity
     /// <summary>
     /// 시나리오가 오답인 환자만 다시 분류시킬 때 사용한다. 이전 등급과 정답 제출로 닫힌
     /// 상호작용 상태를 함께 초기화해, 재시도 인터랙션이 확실히 다시 노출되게 한다.
+    ///
+    /// <para>
+    /// SyncVar 쓰기는 서버(또는 오프라인) 컨텍스트에서만 수행한다. 이 메서드는 시나리오
+    /// 이벤트에서 호출되고 시나리오 이벤트는 표시 전용 클라이언트에서도 실행되므로, 컨텍스트를
+    /// 검사하지 않으면 서버 권위 값에 비권위 쓰기가 발생한다. 그러면 해당 피어만 미분류로
+    /// 보이거나 오류가 기록되어, 재시도 인터랙션 노출 상태가 피어마다 갈라진다.
+    /// </para>
     /// </summary>
     public void ResetTriageAssessmentForRetry()
     {
+      bool hasAuthority = IsFishNetServerStarted || InstanceFinder.IsOffline;
+
       _triageConfig.Assessable = true;
-      _assessedTriage.Value = TriageLevel.Unassessed;
 
-      if (_patientDescriptor != null)
-        _patientDescriptor.assessedTriage = TriageLevel.Unassessed;
-
-      if (IsFishNetServerStarted)
+      if (hasAuthority)
       {
+        _assessedTriage.Value = TriageLevel.Unassessed;
         _assessable.Value = true;
         _assessableInitialized = true;
-        UpdateTriageOverheadLabel(TriageLevel.Unassessed);
-        RefreshTriageInteractableHints();
-        return;
+
+        if (_patientDescriptor != null)
+          _patientDescriptor.assessedTriage = TriageLevel.Unassessed;
       }
 
-      UpdateTriageOverheadLabel(TriageLevel.Unassessed);
+      // 표시 갱신은 모든 피어에서 수행한다. 권위 값은 서버가 복제하며, 클라이언트는
+      // 복제된 값이 도착하면 그에 맞춰 다시 갱신된다.
+      UpdateTriageOverheadLabel(hasAuthority ? TriageLevel.Unassessed : AssessedTriage);
       RefreshTriageInteractableHints();
     }
 
