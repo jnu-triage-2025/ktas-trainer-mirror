@@ -9,7 +9,7 @@ namespace MultiplayerInfrastructure.Entity
   {
     [SerializeField] private List<RidableAttachPointObject> attachPoints = new List<RidableAttachPointObject>();
 
-    // length must be same as attachPoints
+    // 길이는 attachPoints 와 같아야 한다
     [SerializeField] private List<PlayerController> nowRidingPlayers = new List<PlayerController>();
 
     protected void Awake_Ridable()

@@ -67,11 +67,11 @@ namespace MultiplayerInfrastructure.Scenario
           return;
         }
 
-        // JsonSchema.Net includes failed `if` predicate details in List output even
-        // when the associated `then` branch is not applicable.  ScenarioNode uses
-        // those predicates to dispatch by nodeType, so without this filter every
-        // valid node is reported as all of the *other* node types.  Keep all actual
-        // required/property/type errors; ignore only those dispatch-predicate traces.
+        // JsonSchema.Net 은 해당 `then` 분기가 적용되지 않더라도 실패한 `if`
+        // 조건의 상세를 List 출력에 포함한다. ScenarioNode 는 이 조건들로
+        // nodeType 별 분기를 처리하므로, 이 필터가 없으면 모든 유효한 노드가
+        // *다른* 모든 노드 타입으로도 보고된다. 실제 required/property/type
+        // 오류는 모두 유지하고, 분기 조건 흔적만 무시한다.
         var actionableErrors = result.Details
           .Where(detail => detail.Errors != null && detail.Errors.Any())
           .SelectMany(detail => detail.Errors.Select(error => new
@@ -272,11 +272,10 @@ namespace MultiplayerInfrastructure.Scenario
 
       try
       {
-        // JsonSchema.FromText() uses SchemaRegistry.Global by default.  The editor
-        // intentionally rebuilds this schema after an asset refresh, so registering
-        // the same $id globally would fail on the next graph open/save.  A fresh
-        // local registry keeps the rebuild isolated while still allowing the schema
-        // to register its own internal resources and anchors.
+        // JsonSchema.FromText() 는 기본적으로 SchemaRegistry.Global 을 사용한다.
+        // 에디터는 에셋 갱신 뒤에 이 스키마를 의도적으로 다시 만들므로, 같은 $id 를
+        // 전역에 등록하면 다음 그래프 열기/저장에서 실패한다. 새 로컬 레지스트리를
+        // 쓰면 재생성을 격리하면서도 스키마가 자체 내부 리소스와 앵커를 등록할 수 있다.
         _schema = JsonSchema.FromText(
           schemaText,
           new BuildOptions { SchemaRegistry = new SchemaRegistry() });

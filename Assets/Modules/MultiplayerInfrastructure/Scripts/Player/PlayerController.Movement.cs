@@ -11,7 +11,7 @@ namespace MultiplayerInfrastructure.Player
   [RequireComponent(typeof(CharacterController))]
   public partial class PlayerController : NetworkBehaviour
   {
-    // Movement Configuration
+    // 이동 설정
     [Header("PlayerObject Configuration")]
     [SerializeField] private float _walkingSpeed = 7.5f;
     [SerializeField] private float _jumpSpeed = 8.0f;
@@ -196,13 +196,13 @@ namespace MultiplayerInfrastructure.Player
       }
       else if (!_characterController.isGrounded)
       {
-        // Apply gravity and retain vertical velocity from jump/fall
+        // 중력을 적용하고 점프/낙하의 수직 속도를 유지한다
         _moveDirection.y = movementDirectionY - _gravity * Time.deltaTime;
       }
       else
       {
-        // Grounded but not jumping: clamp vertical velocity to zero to prevent
-        // tiny negative values that can cause isGrounded to flicker.
+        // 접지 상태이면서 점프 중이 아닐 때는 수직 속도를 0 으로 묶어,
+        // isGrounded 가 깜빡이게 만드는 미세한 음수 값이 생기지 않게 한다.
         _moveDirection.y = 0f;
       }
 

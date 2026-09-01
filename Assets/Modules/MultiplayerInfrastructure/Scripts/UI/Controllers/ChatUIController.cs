@@ -85,19 +85,18 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       var commandService = FindFirstObjectByType<ChatCommandService>(FindObjectsInactive.Include);
-      // The chat UI can start before the network service is spawned. Do not
-      // permanently cache a completion service with a null command source;
-      // HandleTabKey will retry this lookup after the service appears.
+      // 채팅 UI 는 네트워크 서비스가 스폰되기 전에 시작될 수 있다. 커맨드 소스가 null 인
+      // 완성 서비스를 영구적으로 캐시하지 않는다. 서비스가 나타나면 HandleTabKey 가
+      // 이 조회를 다시 시도한다.
       if (commandService != null)
         _completionService = new ChatCommandCompletionService(commandService);
     }
 
     private void HandleInputKeyPressed(KeyCode keyCode)
     {
-      // The actual Tab action is handled from PlayerController.Input so it is
-      // consistent with Return/Escape/history handling. The UI event only
-      // prevents focus traversal and tells the completion session when the
-      // user started editing or used another navigation key.
+      // 실제 Tab 동작은 Return/Escape/히스토리 처리와 일관성을 유지하기 위해
+      // PlayerController.Input 에서 처리한다. UI 이벤트는 포커스 이동을 막고,
+      // 사용자가 편집을 시작했거나 다른 탐색 키를 눌렀을 때 완성 세션에 알리는 역할만 한다.
       if (keyCode != KeyCode.Tab)
         _completionService?.ResetSession();
     }
@@ -183,8 +182,8 @@ namespace MultiplayerInfrastructure.UI
     }
 
     /// <summary>
-    /// Handles a Tab press while the chat input is focused. Returns silently
-    /// when there are no candidates so Tab remains harmless in normal chat.
+    /// 채팅 입력에 포커스가 있는 동안 Tab 누름을 처리한다. 후보가 없으면 조용히
+    /// 반환하여 일반 채팅에서 Tab 이 아무 부작용도 일으키지 않도록 한다.
     /// </summary>
     public void HandleTabKey()
     {

@@ -13,7 +13,7 @@ using UnityEngine;
 namespace MultiplayerInfrastructure.Quest
 {
   /// <summary>
-  /// Manages quest lifecycle and tracked selections shared by UI controllers.
+  /// UI 컨트롤러들이 공유하는 퀘스트 수명 주기와 추적 선택 상태를 관리한다.
   /// </summary>
   public class QuestManager : MonoBehaviour
   {
@@ -1374,7 +1374,7 @@ namespace MultiplayerInfrastructure.Quest
       }
     }
 
-    /// <summary>Editor authoring tools call this after changing a Resources/Quest asset.</summary>
+    /// <summary>에디터 작성 도구가 Resources/Quest 에셋을 변경한 뒤 호출한다.</summary>
     public static void InvalidateResourceCache()
     {
       _resourceDefinitions = null;

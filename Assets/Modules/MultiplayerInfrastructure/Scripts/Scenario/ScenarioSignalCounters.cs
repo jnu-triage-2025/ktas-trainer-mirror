@@ -95,7 +95,7 @@ namespace MultiplayerInfrastructure.Scenario
       _isDispatching = false;
     }
 
-    /// <summary>Re-evaluates counters whose expected signal set can change as players disconnect.</summary>
+    /// <summary>플레이어가 연결을 끊으면 기대 신호 집합이 바뀔 수 있는 카운터를 다시 평가한다.</summary>
     public static void RefreshDynamicThresholds()
     {
       // 고정 임계치 카운터는 신호가 도착할 때만 상태가 바뀌므로 Dispatch 가 이미 처리한다.

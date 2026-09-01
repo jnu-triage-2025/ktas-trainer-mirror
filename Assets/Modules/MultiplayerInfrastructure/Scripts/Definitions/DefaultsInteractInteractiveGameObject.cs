@@ -5,22 +5,22 @@
     public const float ScrollSpeedUnderBoundOnHintUI = 0.01f;
 
     /**
-     * Visual Element Identifiers and Class Names
-     * These definitions have to equal the ones used in the UXML and USS files.
+     * Visual Element 식별자와 클래스 이름
+     * 이 정의들은 UXML 과 USS 파일에서 쓰는 값과 일치해야 한다.
      */
 
-    // Identifier of Row
+    // 행(Row)의 식별자
     public const string VisualElementIdentifierInteractive = "interactive-item";
-    // Identifier of Interactives' container
+    // 상호작용 항목 컨테이너의 식별자
     public const string VisualElementIdentifierInteractivesContainer = "InteractivesContainer";
-    // Identifier of Selected Row's Label
+    // 선택된 행 라벨의 식별자
     public const string VisualElementIdentifierSelectedInteractableLabel = "SelectedLabel";
-    // Identifier of Row's icon
+    // 행 아이콘의 식별자
     public const string VisualElementIdentifierInteractableIcon = "interactable-icon";
-    // Identifier or Row's text
+    // 행 텍스트의 식별자
     public const string VisualElementIdentifierInteractableLabel = "interactable-label";
 
-    // Classname of Selected Row
+    // 선택된 행의 클래스 이름
     public const string VisualElementClassNameSelectedInteractable = "selected";
   }
 }

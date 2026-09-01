@@ -644,9 +644,9 @@ namespace MultiplayerInfrastructure.Chat
       {
         result = string.IsNullOrWhiteSpace(error) ? "Command execution failed." : error;
 
-        // Only surface the error here when the command layer has NOT already
-        // shown it to the user. Commands that run with system messages enabled
-        // report their own usage/errors, so re-sending would duplicate output.
+        // 커맨드 계층이 오류를 사용자에게 이미 보여주지 않았을 때만 여기서
+        // 오류를 노출한다. 시스템 메시지가 켜진 채 실행되는 커맨드는 자신의
+        // 사용법/오류를 스스로 보고하므로, 다시 보내면 출력이 중복된다.
         if (!alreadyReported)
           SendSystemMessage(sender, result);
 
@@ -880,9 +880,9 @@ namespace MultiplayerInfrastructure.Chat
 
       if (!string.IsNullOrWhiteSpace(error))
       {
-        // The command exists and ran. When system messages are enabled the
-        // command already delivered its own error/usage output to the user,
-        // so the caller must not print it again (prevents duplicate hints).
+        // 커맨드가 존재하고 실행되었다. 시스템 메시지가 켜져 있으면 커맨드가
+        // 이미 자체 오류/사용법 출력을 사용자에게 전달했으므로, 호출자가 다시
+        // 출력해서는 안 된다(힌트 중복 방지).
         alreadyReported = !suppressSystemMessages;
         return false;
       }

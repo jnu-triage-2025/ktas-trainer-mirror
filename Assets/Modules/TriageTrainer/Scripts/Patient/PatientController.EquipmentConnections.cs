@@ -390,7 +390,7 @@ namespace TriageTrainer.Entity
         SetConnectedOxyflowmeter(null);
     }
 
-    // ── Bed connection event bridging ──
+    // ── 침대 연결 이벤트 브리징 ──
     //
     // _currentBed 는 이미 SetCurrentBed() 로 관리되지만, 기존 코드에 이벤트/로그가 없다.
     // 기존 SetCurrentBed() 에서 호출하는 브리지 메서드를 추가해 통일된 이벤트/로그를 제공한다.
@@ -405,7 +405,7 @@ namespace TriageTrainer.Entity
       NotifyEquipmentSwap(EquipmentTypeBed, previousBed, newBed);
     }
 
-    // ── Logging ──
+    // ── 로깅 ──
 
     /// <summary>
     /// 장비 연결 변경을 로그로 기록한다. Unity fake-null(파괴된 MonoBehaviour)을 안전하게 처리한다.
@@ -421,7 +421,7 @@ namespace TriageTrainer.Entity
       GameLogService.Write(GameLogCategory.Interaction, message, tag: Identifier);
     }
 
-    // ── Scenario State Event dispatch ──
+    // ── 시나리오 상태 이벤트 디스패치 ──
 
     private void RaiseEquipmentStateEvent(string equipmentType, bool connected)
     {
@@ -432,7 +432,7 @@ namespace TriageTrainer.Entity
       DispatchScenarioStateEvent(eventName, equipmentType);
     }
 
-    // ── Debug / Summary ──
+    // ── 디버그 / 요약 ──
 
     /// <summary>
     /// CareZone 장비 인식과 실제 물리 라인 연결 상태를 구분해 요약한다.

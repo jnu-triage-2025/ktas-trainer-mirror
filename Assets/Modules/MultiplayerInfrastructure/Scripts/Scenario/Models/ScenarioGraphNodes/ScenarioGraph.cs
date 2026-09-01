@@ -14,10 +14,10 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
 
-    /// <summary>Connected player roles which form this graph's authoritative active roster.</summary>
+    /// <summary>이 그래프의 권위 있는 활성 로스터를 이루는 접속 플레이어 역할들.</summary>
     public IReadOnlyList<string> ActiveRoleTags { get; set; } = Array.Empty<string>();
 
-    /// <summary>Allows ByRole branches for declared roles absent from the active roster to be skipped.</summary>
+    /// <summary>활성 로스터에 없는 선언 역할의 ByRole 분기를 건너뛸 수 있게 한다.</summary>
     public bool SkipAbsentRoleBranches { get; set; }
 
     /// <summary>
@@ -27,10 +27,10 @@ namespace MultiplayerInfrastructure.Scenario
     public IReadOnlyDictionary<string, IReadOnlyList<ScenarioChecklistItemRequirement>> ChecklistItemSetsByPlayerTag { get; set; }
       = new Dictionary<string, IReadOnlyList<ScenarioChecklistItemRequirement>>(StringComparer.Ordinal);
 
-    /// <summary>Exact generic signals that clients may report for this graph.</summary>
+    /// <summary>클라이언트가 이 그래프에 대해 보고할 수 있는 정확한 일반 신호들.</summary>
     public IReadOnlyList<string> ClientSignalIdentifiers { get; set; } = Array.Empty<string>();
 
-    /// <summary>Generic client signal prefixes. Use only for bounded, gameplay-owned namespaces.</summary>
+    /// <summary>일반 클라이언트 신호 접두사. 범위가 한정된 게임플레이 소유 네임스페이스에만 사용한다.</summary>
     public IReadOnlyList<string> ClientSignalPrefixes { get; set; } = Array.Empty<string>();
 
     /// <summary>

@@ -505,7 +505,7 @@ namespace TriageTrainer.Entity
       WallAttachedWallSuction suction = patient.ConnectedWallSuction;
       if (suction != null && _newlyInstalledWallSuction.Contains(suction))
       {
-        // TODO: Configure the wall-suction and patient suction ports after the appropriate targets are finalized.
+        // TODO: 적절한 대상이 확정되면 벽면 흡인기와 환자 흡인 포트를 설정한다.
         var equipmentPoint = suction.SuctionLineConnectionPoint;
         var patientPoint = patient.SuctionLineAttachmentPoint;
         if (TryCreateAutomaticLine(equipmentPoint, patientPoint, "suction"))
@@ -516,8 +516,7 @@ namespace TriageTrainer.Entity
     }
 
     /// <summary>
-    /// Reconciles the oxygen line after a flowmeter operation when this zone contains
-    /// both the flowmeter and its current patient.
+    /// 유량계 조작 뒤, 이 구역에 유량계와 현재 환자가 모두 있을 때 산소 라인을 재조정한다.
     /// </summary>
     public void TryReconcileOxygenLineFor(WallAttachedOxyflowmeter flowmeter)
     {

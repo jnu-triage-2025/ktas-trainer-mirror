@@ -364,8 +364,8 @@ namespace TriageTrainer.Entity
     public override void ApplyShownFromNetwork()
     {
       Show();
-      // CareZone reconnects synchronously from AttachmentStateChanged, so the
-      // equipment collider must already be visible when the event is raised.
+      // CareZone 이 AttachmentStateChanged 에서 동기적으로 재연결하므로,
+      // 이벤트가 발생하는 시점에 장비 콜라이더가 이미 보이는 상태여야 한다.
       SetAttached(true);
     }
 

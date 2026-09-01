@@ -14,7 +14,7 @@ namespace MultiplayerInfrastructure.Session
     public string[] datapacks = Array.Empty<string>();
   }
 
-  /// <summary>Loads the development/runtime defaults used when opening a session.</summary>
+  /// <summary>세션을 열 때 사용하는 개발/런타임 기본값을 불러온다.</summary>
   public static class SessionConfigurationService
   {
     private const string RelativePath = "Session/session.config.json";

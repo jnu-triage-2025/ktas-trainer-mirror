@@ -9,8 +9,8 @@ using UnityEngine.UIElements;
 namespace MultiplayerInfrastructure.UI
 {
   /// <summary>
-  /// Data-only controller for DatapackSelectionUI. Layout and visual styling live in
-  /// DatapackSelectionUI.uxml/.uss, matching the IntroScene UIDocument workflow.
+  /// DatapackSelectionUI 의 데이터 전용 컨트롤러이다. 레이아웃과 시각 스타일은
+  /// DatapackSelectionUI.uxml/.uss 에 있으며, IntroScene UIDocument 워크플로를 따른다.
   /// </summary>
   public sealed class DatapackSelectionUIController : UIDocumentControllerABC
   {

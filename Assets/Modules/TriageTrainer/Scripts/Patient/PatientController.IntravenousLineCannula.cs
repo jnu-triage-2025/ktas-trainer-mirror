@@ -175,8 +175,8 @@ namespace TriageTrainer.Entity
 
     private bool IsCannulaGaugeAllowed(string itemIdentifier)
     {
-      // patient_b_c_ct requires a 20G line. Scope this restriction to its two
-      // runtime patient identifiers so existing 18G-capable scenarios keep working.
+      // patient_b_c_ct 는 20G 라인이 필요하다. 이 제한은 해당 시나리오의 두 런타임
+      // 환자 식별자로 한정하여, 기존 18G 사용 시나리오가 계속 동작하게 한다.
       if ((string.Equals(Identifier, "patient_b", StringComparison.Ordinal)
            || string.Equals(Identifier, "patient_c", StringComparison.Ordinal))
           && !string.Equals(itemIdentifier, TriageTrainer.ItemDefinitions.Cannula20g.Identifier, StringComparison.Ordinal))
@@ -260,8 +260,8 @@ namespace TriageTrainer.Entity
       if (IsPatientBC && !TryValidatePatientBCTreatmentActor(player, NurseCRoleTag))
         return;
 
-      // Advance the authoritative stage before consuming the item. A stale
-      // interaction must never destroy a cannula without completing the IV step.
+      // 아이템을 소비하기 전에 권한 있는 단계를 먼저 진행한다. 오래된 상호작용이
+      // IV 단계를 완료하지 않은 채 캐뉼라를 파괴해서는 안 된다.
       if (IsPatientBC && !TryAdvancePatientBCIvStageAuthoritative())
         return;
 

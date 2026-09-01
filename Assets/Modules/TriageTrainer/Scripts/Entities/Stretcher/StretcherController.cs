@@ -138,7 +138,7 @@ namespace TriageTrainer.Entity
         CmdToggle();
     }
 
-    // ── Server: Toggle (Join or Leave) ──
+    // ── 서버: 토글(참가 또는 퇴장) ──
 
     [ServerRpc(RequireOwnership = false)]
     private void CmdToggle(NetworkConnection sender = null)
@@ -175,7 +175,7 @@ namespace TriageTrainer.Entity
       return true;
     }
 
-    // ── Server: Move between handles ──
+    // ── 서버: 손잡이 간 이동 ──
 
     [ServerRpc(RequireOwnership = false)]
     private void CmdMoveHandle(int fromHandle, int toHandle, NetworkConnection sender = null)
@@ -196,7 +196,7 @@ namespace TriageTrainer.Entity
       ApplyLocalFollowAnchor();
     }
 
-    // ── Server: Input reporting ──
+    // ── 서버: 입력 보고 ──
 
     [ServerRpc(RequireOwnership = false)]
     private void CmdReportInput(float forward, float turn, NetworkConnection sender = null)
@@ -209,7 +209,7 @@ namespace TriageTrainer.Entity
         new Vector2(Mathf.Clamp(forward, -1f, 1f), Mathf.Clamp(turn, -1f, 1f));
     }
 
-    // ── Observers: Transform & weight sync ──
+    // ── 관전자: Transform 및 무게 동기화 ──
 
     [ObserversRpc]
     private void RpcApplyTransform(Vector3 position, Quaternion rotation)
@@ -315,7 +315,7 @@ namespace TriageTrainer.Entity
       return changed;
     }
 
-    // ── Handle Position Selection (Ctrl+1~6) ──
+    // ── 손잡이 위치 선택 (Ctrl+1~6) ──
 
     private void HandlePositionSelection()
     {
@@ -443,7 +443,7 @@ namespace TriageTrainer.Entity
       UpdateWeightBalance();
     }
 
-    // ── Local follow anchor management ──
+    // ── 로컬 추종 앵커 관리 ──
 
     private void ApplyLocalFollowAnchor()
     {

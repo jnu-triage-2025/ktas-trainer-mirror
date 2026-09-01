@@ -5,8 +5,8 @@ using System.Collections.Generic;
 namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
-  /// Maps scenario event identifiers to handlers that can be invoked by scenario nodes.
-  /// Handlers may return a coroutine to allow asynchronous execution; returning null is treated as an immediate completion.
+  /// 시나리오 이벤트 식별자를 시나리오 노드가 호출할 수 있는 핸들러에 매핑한다.
+  /// 핸들러는 비동기 실행을 위해 코루틴을 반환할 수 있으며, null 을 반환하면 즉시 완료로 취급한다.
   /// </summary>
   public static class ScenarioEventIdentifierRegistry
   {

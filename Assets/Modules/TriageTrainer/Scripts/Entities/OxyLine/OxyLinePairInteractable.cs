@@ -8,9 +8,9 @@ using UnityEngine;
 namespace TriageTrainer.Entity.OxyLine
 {
   /// <summary>
-  /// Exposes one oxygen-line connection action from either endpoint of a configured pair.
-  /// Both instances must reference each other. The action is unavailable until the required
-  /// patient display object is active and the associated wall flowmeter is attached.
+  /// 설정된 쌍의 어느 한쪽 종단점에서 산소 라인 연결 동작을 제공한다.
+  /// 두 인스턴스는 서로를 참조해야 한다. 필수 환자 표시 오브젝트가 활성 상태이고
+  /// 연결된 벽면 플로미터가 부착되기 전까지는 이 동작을 사용할 수 없다.
   /// </summary>
   [DisallowMultipleComponent]
   [RequireComponent(typeof(Collider))]

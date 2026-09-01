@@ -51,10 +51,10 @@ namespace TriageTrainer.Editor.Utils
     public const string CommonSpawnPointIdentifier = "spawnpoint-commons";
     public static readonly Vector3 DefaultCommonSpawnPoint = new(-73f, 1f, -7.5f);
 
-    // Scenario A anchors mirror the runtime fallback in
-    // TriageScenarioEventBootstrap.PatientAWorldAnchors.EnsurePatientAWorldAnchors. Keep both in sync:
-    // a scene-authored anchor wins over the runtime fallback, so a placeholder baked here silently
-    // relocates the patient_a spawn instead of leaving it unresolved.
+    // Scenario A 앵커는 TriageScenarioEventBootstrap.PatientAWorldAnchors.EnsurePatientAWorldAnchors
+    // 의 런타임 폴백과 같은 값을 쓴다. 양쪽을 항상 동기화한다. 씬에 작성된 앵커가 런타임
+    // 폴백보다 우선하므로, 여기서 구운 플레이스홀더가 patient_a 스폰 위치를 해결되지 않은
+    // 상태로 두는 대시 조용히 옮겨버릴 수 있다.
     public const string PatientASpawnWaypointIdentifier = "scen_a:patient_spawnpoint_a";
     public static readonly Vector3 DefaultPatientASpawnWaypoint = new(-71.73906f, 0.01f, 0.07443f);
 
@@ -71,8 +71,8 @@ namespace TriageTrainer.Editor.Utils
     public static readonly string[] PatientAArrivalEnterSignals = System.Array.Empty<string>();
     public const string PatientAArrivalPerEntitySignalTemplate = "quest_arrival_patient_a_{id}";
 
-    // patient_b_c_ct spatial anchors. These are intentionally plain WaypointAnchor
-    // objects: runtime patient/preset spawns resolve their destinations by ID.
+    // patient_b_c_ct 공간 앵커. 의도적으로 평범한 WaypointAnchor 오브젝트로 둔다.
+    // 런타임의 환자/프리셋 스폰이 ID 로 목적지를 해석하기 때문이다.
     public const string PatientBSpawnWaypointIdentifier = "scen_b:patient_spawnpoint_b";
     public static readonly Vector3 DefaultPatientBSpawnWaypoint = new(-74f, 0f, 2.3f);
 
@@ -114,10 +114,9 @@ namespace TriageTrainer.Editor.Utils
     public const string CtPatientCTargetPositionWaypointIdentifier = "ct:patient_target_pos_c";
     public static readonly Vector3 DefaultCtPatientCTargetPositionWaypoint = new(-80f, 0.5f, -18.3f);
 
-    // Scenario signal zones. Each zone reuses the identifier and position of the waypoint it
-    // wraps, so only the box size and the signal strings specialize it. Arrival is judged by
-    // collider overlap, which means the effective tolerance is the box half-extent plus the
-    // half-extent of whatever enters it.
+    // 시나리오 신호 존. 각 존은 감싸는 웨이포인트의 식별자와 위치를 재사용하므로,
+    // 박스 크기와 신호 문자열만 개별화한다. 도착은 콜라이더 겹침으로 판정하므로,
+    // 실효 허용 오차는 박스 절반 크기에 진입 물체의 절반 크기를 더한 값이다.
     public static readonly Vector3 DefaultTriageArrivalZoneSize = new(8f, 3f, 8f);
 
     // Scenario B의 역할별 도착 집계와 Patient A t14의 공통 분류구역 도착 게이트는 같은 물리
@@ -126,9 +125,9 @@ namespace TriageTrainer.Editor.Utils
       { "quest_arrival_triage_area", "arrive_triagearea" };
     public const string TriageArrivalPerEntitySignalTemplate = "quest_arrival_triage_area_{id}";
 
-    // B/C target anchors intentionally share a position. One arrival zone records each
-    // identified patient independently, so minor placement differences still count. The box
-    // must stay wide enough to hold the B and C beds parked side by side at that shared anchor.
+    // B/C 목표 앵커는 의도적으로 같은 위치를 공유한다. 하나의 도착 존이 식별된
+    // 환자를 각자 따로 기록하므로, 배치가 조금 어긋나도 도착으로 인정된다. 박스는
+    // 그 공유 앵커에 나란히 놓인 B 와 C 침대를 모두 담을 만큼 넓어야 한다.
     public static readonly Vector3 DefaultCtPatientTargetZoneSize = new(4f, 3f, 4f);
     public static readonly string[] CtPatientArrivalEnterSignals = System.Array.Empty<string>();
     public const string CtPatientArrivalPerEntitySignalTemplate = "ct_patient_arrived_{id}";

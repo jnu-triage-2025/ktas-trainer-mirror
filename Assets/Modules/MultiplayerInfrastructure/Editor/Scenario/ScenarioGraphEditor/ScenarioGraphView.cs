@@ -58,9 +58,9 @@ namespace MultiplayerInfrastructure.Editor
     }
 
     /// <summary>
-    /// Lowers GraphView's zoom-out limit only as far as the current node bounds require.
-    /// This keeps normal zoom sensitivity while allowing Frame All and manual zooming to
-    /// reach the same complete graph extent that the Preview displays.
+    /// GraphView 의 축소 한도를 현재 노드 경계가 필요한 만큼만 낮춘다. 일반 줌
+    /// 감도는 유지하면서, Frame All 과 수동 줌이 Preview 가 표시하는 것과 같은
+    /// 완전한 그래프 범위까지 도달할 수 있게 한다.
     /// </summary>
     public void UpdateZoomRangeToFitAllNodes()
     {

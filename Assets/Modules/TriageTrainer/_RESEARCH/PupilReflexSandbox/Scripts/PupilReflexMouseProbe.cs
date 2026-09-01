@@ -7,8 +7,7 @@ using UnityEngine.Rendering;
 namespace TriageTrainer.Tests.PupilReflexSandbox
 {
   /// <summary>
-  /// Uses the mouse cursor as a penlight source and samples direct light
-  /// impact for each target eye.
+  /// 마우스 커서를 펜라이트 광원으로 사용하여 각 대상 눈의 직접광 영향을 샘플링한다.
   /// </summary>
   [DisallowMultipleComponent]
   public class PupilReflexMouseProbe : MonoBehaviour

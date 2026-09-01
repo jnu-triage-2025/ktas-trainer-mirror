@@ -504,8 +504,8 @@ namespace TriageTrainer.Scenario
       if (animator != null)
         return animator;
 
-      // The scenario-only ambu display is a static authored object. An Animator is
-      // attached lazily so the blend-shape clip can be driven without a controller.
+      // 시나리오 전용 앰부 표시는 정적으로 작성된 오브젝트다. Animator 를 늦게
+      // 붙여 컨트롤러 없이 블렌드셰이프 클립을 구동할 수 있게 한다.
       return target.gameObject.AddComponent<Animator>();
     }
 

@@ -44,7 +44,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
     }
 
     /// <summary>
-    /// Tries to resolve a NetworkManager from this object first, then scene hierarchy.
+    /// 이 오브젝트에서 먼저 NetworkManager 를 찾고, 없으면 씬 계층에서 찾는다.
     /// </summary>
     public bool ResolveNetworkManagerInHierarchy()
     {

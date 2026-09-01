@@ -32,7 +32,7 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      // Camera components
+      // 카메라 컴포넌트
       _detector = _camControl.GetComponent<NearbyInteractablesDetector>();
       _interactableHintUI = _camControl.GetComponent<InteractableObjectHintUIController>();
 
@@ -168,9 +168,9 @@ namespace MultiplayerInfrastructure.Player
 
     public void RefreshInteractableHintsNow()
     {
-      // EditMode/offline utility objects may not be attached to a spawned NetworkObject.
-      // Ownership is meaningful only once one exists; dereferencing IsOwner before that
-      // throws inside FishNet and can break otherwise-local inventory interactions.
+      // EditMode/오프라인 유틸리티 오브젝트는 스폰된 NetworkObject 에 붙지 않을 수 있다.
+      // 소유권은 NetworkObject 가 생긴 뒤에만 의미가 있으므로, 그 전에 IsOwner 를
+      // 역참조하면 FishNet 내부에서 예외가 발생해 로컬 인벤토리 상호작용까지 망가뜨릴 수 있다.
       if (NetworkObject != null && !IsOwner)
         return;
 
@@ -180,7 +180,7 @@ namespace MultiplayerInfrastructure.Player
       HandleNearbyUpdated(_detector.Nearby);
     }
 
-    // called from PlayerController.Input
+    // PlayerController.Input 에서 호출
     private void TryInteractWithSelection()
     {
       // 대화창이 최상단인 동안에는 월드 상호작용을 절대 실행하지 않는다.
@@ -274,7 +274,7 @@ namespace MultiplayerInfrastructure.Player
       TryInteractWithSelection();
     }
 
-    // called from PlayerController.Input
+    // PlayerController.Input 에서 호출
     private void HandleInteractablesSelectionInput()
     {
       if (_interactableHintUI == null)

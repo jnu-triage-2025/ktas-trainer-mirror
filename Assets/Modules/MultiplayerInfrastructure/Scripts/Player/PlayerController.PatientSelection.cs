@@ -20,8 +20,8 @@ namespace MultiplayerInfrastructure.Player
     public bool IsLineConnectionMode => _isIntravenousLineConnectionMode;
 
     /// <summary>
-    /// Generic line-connection API. The serialized IV-named backing field is
-    /// retained to preserve existing scene and prefab data.
+    /// 범용 라인 연결 API 이다. IV(intravenous) 명칭의 직렬화 필드는 기존 씬과
+    /// 프리팹 데이터를 보존하기 위해 유지한다.
     /// </summary>
     public void SetLineConnectionMode(bool enabled, bool showActionbarHint = true) =>
       SetIntravenousLineConnectionMode(enabled, showActionbarHint);

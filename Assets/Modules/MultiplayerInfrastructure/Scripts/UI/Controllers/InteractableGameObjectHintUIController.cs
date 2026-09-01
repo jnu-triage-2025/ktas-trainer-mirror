@@ -578,7 +578,7 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      // wrap-around selection
+      // 순환 선택(끝에서 처음으로)
       if (idx < 0)
         idx = (_interacts.Count + (idx % _interacts.Count)) % _interacts.Count;
       else

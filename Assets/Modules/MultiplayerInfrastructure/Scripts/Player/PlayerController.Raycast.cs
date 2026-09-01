@@ -54,9 +54,9 @@ namespace MultiplayerInfrastructure.Player
       // 뷰포트 중앙(0.5, 0.5)에서 레이 생성
       var ray = camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
 
-      // The ray often starts inside the local player's collider. A single Raycast
-      // therefore reports Player(Clone) and hides the world object behind it.
-      // Select the nearest hit that is not part of this PlayerController.
+      // 광선은 로컬 플레이어 콜라이더 내부에서 시작되는 경우가 많다. 따라서
+      // Raycast 한 번으로는 Player(Clone) 이 잡혀 뒤의 월드 오브젝트가 가려진다.
+      // 이 PlayerController 에 속하지 않은 가장 가까운 히트를 선택한다.
       var hits = Physics.RaycastAll(ray, _raycastMaxDistance, _raycastLayerMask, QueryTriggerInteraction.Ignore);
       RaycastHit nearestHit = default;
       bool foundHit = false;

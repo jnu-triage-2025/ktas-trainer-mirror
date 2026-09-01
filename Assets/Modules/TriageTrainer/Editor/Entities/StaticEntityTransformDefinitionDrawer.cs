@@ -11,7 +11,7 @@ namespace TriageTrainer.Editor
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-      int rows = 4; // type, identifier, position, rotation
+      int rows = 4; // 타입, 식별자, 위치, 회전
       StaticEntityLayoutType type = ReadType(property);
       if (type == StaticEntityLayoutType.MovingPatientBedPositioningPoint || type == StaticEntityLayoutType.DefibrillatorCartSnapPoint)
         rows += 2;

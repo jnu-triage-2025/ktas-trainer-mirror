@@ -9,10 +9,10 @@ public class InventorySlotModelDTODrawer : PropertyDrawer
 {
   public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
   {
-    // Begin drawing property
+    // 프로퍼티 그리기 시작
     EditorGUI.BeginProperty(position, label, property);
 
-    // Draw prefix label
+    // 접두 라벨 그리기
     position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
 
     var indent = EditorGUI.indentLevel;
@@ -24,19 +24,19 @@ public class InventorySlotModelDTODrawer : PropertyDrawer
     float y = position.y;
     float width = position.width;
 
-    // ItemInstance (object reference) - use boxedValue for SerializeReference
+    // ItemInstance (오브젝트 참조) - SerializeReference 이므로 boxedValue 사용
     SerializedProperty itemProp = property.FindPropertyRelative("_itemInstance");
     Rect itemRect = new Rect(x, y, width, lineHeight);
     EditorGUI.PropertyField(itemRect, itemProp, new GUIContent("Item Instance"));
     y += lineHeight + spacing;
 
-    // If item is not null, show some of its fields via reflection
+    // 아이템이 null 이 아니면 리플렉션으로 일부 필드를 표시한다
     if (itemProp.boxedValue != null)
     {
       Item item = itemProp.boxedValue as Item;
       if (item != null)
       {
-        // Helper to get property value via reflection
+        // 리플렉션으로 프로퍼티 값을 가져오는 헬퍼
         object GetPropValue(string propName)
         {
           var prop = item.GetType().GetProperty(propName,
@@ -44,7 +44,7 @@ public class InventorySlotModelDTODrawer : PropertyDrawer
           return prop?.GetValue(item, null);
         }
 
-        // Identifier
+        // 식별자
         var idVal = GetPropValue(nameof(Item.Identifier));
         if (idVal != null)
         {
@@ -52,7 +52,7 @@ public class InventorySlotModelDTODrawer : PropertyDrawer
           y += lineHeight + spacing;
         }
 
-        // DisplayName
+        // 표시 이름
         var nameVal = GetPropValue(nameof(Item.DisplayName));
         if (nameVal != null)
         {
@@ -60,7 +60,7 @@ public class InventorySlotModelDTODrawer : PropertyDrawer
           y += lineHeight + spacing;
         }
 
-        // Description
+        // 설명
         var descVal = GetPropValue(nameof(Item.Description));
         if (descVal != null)
         {
@@ -68,7 +68,7 @@ public class InventorySlotModelDTODrawer : PropertyDrawer
           y += lineHeight + spacing;
         }
 
-        // CurrentStackCount
+        // 현재 스택 수
         var stackVal = GetPropValue(nameof(Item.CurrentStackCount));
         if (stackVal != null)
         {
@@ -86,14 +86,14 @@ public class InventorySlotModelDTODrawer : PropertyDrawer
   {
     float lineHeight = EditorGUIUtility.singleLineHeight;
     float spacing = 2f;
-    float height = lineHeight; // ItemInstance
+    float height = lineHeight; // ItemInstance 높이
     SerializedProperty itemProp = property.FindPropertyRelative("_itemInstance");
     if (itemProp != null && itemProp.boxedValue != null)
     {
       Item item = itemProp.boxedValue as Item;
       if (item != null)
       {
-        // Up to 4 fields
+        // 최대 4개 필드
         height += lineHeight * 4;
         height += spacing * 4;
       }

@@ -132,7 +132,7 @@ namespace MultiplayerInfrastructure.Camera
       if (playerController.IsUnityNull())
         return;
       if (!playerController.IsOwner)
-        return; // Only bind to the local owner's player
+        return; // 로컬 소유자의 플레이어에만 바인딩한다
       _holder.AttachTo(playerController.CameraAttachPoint);
     }
   }

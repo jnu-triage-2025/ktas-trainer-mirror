@@ -9,8 +9,8 @@ namespace MultiplayerInfrastructure.Command
     public string CommandEntry { get; }
 
     /// <summary>
-    /// One-line human readable description used by /help listings.
-    /// Keep this short: a single sentence, no line breaks.
+    /// /help 목록에 사용되는 한 줄짜리 사람이 읽을 수 있는 설명이다.
+    /// 짧게 유지한다. 한 문장으로, 줄 바꿈 없이 작성한다.
     /// </summary>
     public string Description { get; }
 
@@ -26,16 +26,15 @@ namespace MultiplayerInfrastructure.Command
   }
 
   /// <summary>
-  /// A single usage row: a syntax fragment (subcommand + arguments) on the
-  /// left and its explanation on the right. Rendered as an aligned two-column
-  /// row under the command name.
+  /// 사용법 한 행이다. 왼쪽에 구문 조각(하위 커맨드 + 인자), 오른쪽에 그 설명을 담는다.
+  /// 커맨드 이름 아래에 정렬된 두 열 행으로 표시된다.
   /// </summary>
   public readonly struct UsageLine
   {
-    /// <summary>Left column, e.g. "add &lt;target&gt; &lt;tag&gt;".</summary>
+    /// <summary>왼쪽 열. 예: "add &lt;target&gt; &lt;tag&gt;".</summary>
     public readonly string Syntax;
 
-    /// <summary>Right column explanation. May be empty.</summary>
+    /// <summary>오른쪽 열 설명. 비어 있을 수 있다.</summary>
     public readonly string Description;
 
     public UsageLine(string syntax, string description)
@@ -48,31 +47,31 @@ namespace MultiplayerInfrastructure.Command
   }
 
   /// <summary>
-  /// Optional interface for commands that expose structured, multi-line usage.
-  /// Rendered as:
+  /// 구조화된 여러 줄 사용법을 노출하는 커맨드를 위한 선택 인터페이스이다.
+  /// 다음과 같이 표시된다:
   ///   /command
   ///       syntax1     description1
   ///       syntax2     description2
-  /// When not implemented, help falls back to <see cref="IChatCommandModel.Description"/>.
+  /// 구현하지 않으면 도움말은 <see cref="IChatCommandModel.Description"/> 로 대체된다.
   /// </summary>
   public interface IChatCommandUsage
   {
     /// <summary>
-    /// The rows describing each subcommand/argument form of the command.
+    /// 커맨드의 각 하위 커맨드/인자 형태를 설명하는 행들이다.
     /// </summary>
     public IReadOnlyList<UsageLine> UsageLines { get; }
   }
 
   public static class ChatCommandHelp
   {
-    // Column gap and indentation used when rendering aligned usage rows.
+    // 정렬된 사용법 행을 표시할 때 사용하는 열 간격과 들여쓰기.
     private const string LineIndent = "    ";
     private const int ColumnGap = 5;
 
     /// <summary>
-    /// Returns the short, single-line summary shown in /help listings.
-    /// Always collapses to the first non-empty line so listings stay clean
-    /// even if a command's Description accidentally contains line breaks.
+    /// /help 목록에 표시되는 짧은 한 줄 요약을 반환한다.
+    /// 커맨드의 Description 에 실수로 줄 바꿈이 포함되더라도 항상 첫 번째 비어 있지
+    /// 않은 줄로 축약하여 목록이 깔끔하게 유지되도록 한다.
     /// </summary>
     public static string GetSummary(IChatCommandModel command)
     {
@@ -89,13 +88,12 @@ namespace MultiplayerInfrastructure.Command
     }
 
     /// <summary>
-    /// Builds the full help page for a command:
+    /// 커맨드의 전체 도움말 페이지를 만든다:
     ///   /command - summary
     ///       syntax1     description1
     ///       syntax2     description2
-    /// The left (syntax) column is auto-aligned so descriptions line up.
-    /// Falls back to the one-line Description when the command has no
-    /// structured usage.
+    /// 왼쪽(구문) 열은 자동 정렬되어 설명이 줄을 맞춘다.
+    /// 커맨드에 구조화된 사용법이 없으면 한 줄 Description 으로 대체한다.
     /// </summary>
     public static string GetHelpPage(IChatCommandModel command)
     {
@@ -118,11 +116,11 @@ namespace MultiplayerInfrastructure.Command
     }
 
     /// <summary>
-    /// Renders usage rows into an aligned two-column, indented block.
+    /// 사용법 행들을 정렬된 두 열의 들여쓰기 블록으로 표시한다.
     /// </summary>
     private static string RenderUsageLines(IReadOnlyList<UsageLine> lines)
     {
-      // Determine the widest syntax fragment so descriptions align.
+      // 설명이 정렬되도록 가장 넓은 구문 조각을 찾는다.
       int widest = 0;
       for (int i = 0; i < lines.Count; i++)
       {
@@ -157,7 +155,7 @@ namespace MultiplayerInfrastructure.Command
     }
 
     /// <summary>
-    /// True when the first argument is a help flag (-h, --help, /?, ?, help).
+    /// 첫 번째 인자가 도움말 플래그(-h, --help, /?, ?, help)이면 true 를 반환한다.
     /// </summary>
     public static bool IsHelpFlag(string[] args)
     {

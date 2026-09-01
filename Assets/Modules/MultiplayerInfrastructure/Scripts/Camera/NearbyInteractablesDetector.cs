@@ -38,7 +38,7 @@ namespace MultiplayerInfrastructure.Camera
 
     public event Action<IReadOnlyList<IInteractable>> NearbyUpdated;
 
-    // must be allocated from outside to set position
+    // 위치를 설정하려면 외부에서 할당해야 한다
     [SerializeField] private Transform detectBased;
 
     public IReadOnlyList<IInteractable> Nearby => _nearby;
@@ -50,7 +50,7 @@ namespace MultiplayerInfrastructure.Camera
       QueryNearbyAndUpdate();
     }
 
-    // must be allocated from outside to set position
+    // 위치를 설정하려면 외부에서 할당해야 한다
     public void RegisterDetectBased(Transform _transform)
     {
       detectBased = _transform;

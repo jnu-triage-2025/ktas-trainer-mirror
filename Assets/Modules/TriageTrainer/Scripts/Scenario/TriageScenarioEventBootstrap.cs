@@ -14,11 +14,11 @@ using UnityEngine;
 namespace TriageTrainer.Scenario
 {
   /// <summary>
-  /// Registers TriageTrainer scenario event handlers without modifying base infrastructure.
+  /// 기반 인프라를 수정하지 않고 TriageTrainer 시나리오 이벤트 핸들러를 등록한다.
   ///
-  /// NOTE:
-  /// - Current handlers are safe placeholders for MVP wiring.
-  /// - Replace each coroutine body with real presentation/interaction logic incrementally.
+  /// 참고:
+  /// - 현재 핸들러는 MVP 연결을 위한 안전한 플레이스홀더다.
+  /// - 각 코루틴 본문을 실제 표시/상호작용 로직으로 점진적으로 교체한다.
   /// </summary>
   public partial class TriageScenarioEventBootstrap : MonoBehaviour
   {
@@ -455,7 +455,7 @@ namespace TriageTrainer.Scenario
 
     private IEnumerator LogRegistrySnapshotDeferred()
     {
-      // Defer one frame so other runtime registrations in Awake/Start can settle.
+      // 한 프레임 미뤄서 Awake/Start 의 다른 런타임 등록이 안정될 시간을 준다.
       yield return null;
       LogRegistrySnapshot();
     }
@@ -500,7 +500,7 @@ namespace TriageTrainer.Scenario
       RecoverTypedReferences();
       var missing = new List<string>(64);
 
-      // Core routing references used by multiple events.
+      // 여러 이벤트가 공유하는 핵심 라우팅 참조.
       AppendMissingIfNull(missing, nameof(_triageArrivalPoint), _triageArrivalPoint);
       AppendMissingIfNull(missing, nameof(_playerATriagePoint), _playerATriagePoint);
       AppendMissingIfNull(missing, nameof(_patientATreatmentRoomPoint), _patientATreatmentRoomPoint);
@@ -509,7 +509,7 @@ namespace TriageTrainer.Scenario
       AppendMissingIfNull(missing, nameof(_patientBCtRoomPoint), _patientBCtRoomPoint);
       AppendMissingIfNull(missing, nameof(_patientCCtRoomPoint), _patientCCtRoomPoint);
 
-      // Frequently toggled panels/visuals.
+      // 자주 켜고 끄는 패널/표시 요소.
       AppendMissingIfNull(missing, nameof(_patientAUiPanel), _patientAUiPanel);
       AppendMissingIfNull(missing, nameof(_patientDummyDAUiPanel), _patientDummyDAUiPanel);
       AppendMissingIfNull(missing, nameof(_patientBUiPanel), _patientBUiPanel);
@@ -713,7 +713,7 @@ namespace TriageTrainer.Scenario
         return fromRegistry;
       }
 
-      // Final fallback for authored scenes where entity registration is not yet complete.
+      // 엔티티 등록이 아직 끝나지 않은 작성 씬을 위한 최종 폴백.
       return GameObject.Find(entityIdentifier);
     }
 
@@ -735,7 +735,7 @@ namespace TriageTrainer.Scenario
         return null;
       }
 
-      // 1) Registry direct lookup by aliases.
+      // 1) Registry 의 별칭 직접 조회.
       for (int i = 0; i < aliases.Length; i++)
       {
         var alias = aliases[i];
@@ -752,7 +752,7 @@ namespace TriageTrainer.Scenario
         }
       }
 
-      // 2) Find NPC component by authored Identifier.
+      // 2) 작성된 Identifier 로 NPC 컴포넌트를 찾는다.
       var npcs = FindObjectsByType<Npc>(FindObjectsInactive.Exclude, FindObjectsSortMode.InstanceID);
       for (int i = 0; i < npcs.Length; i++)
       {
@@ -774,7 +774,7 @@ namespace TriageTrainer.Scenario
         }
       }
 
-      // 3) Final fallback: global name search.
+      // 3) 최종 폴백: 전역 이름 탐색.
       for (int i = 0; i < aliases.Length; i++)
       {
         var alias = aliases[i];
@@ -1282,14 +1282,14 @@ namespace TriageTrainer.Scenario
     {
       Debug.Log("[TriageScenarioEventBootstrap] Core smoke test started.", this);
 
-      // Intro + patient A critical core flow.
+      // 인트로 + patient A critical 핵심 흐름.
       yield return RunSmokeStep("triage_patient_a_patient_dummy_d_a", Event_TriagePatientAAndPatientDummyDA);
       yield return RunSmokeStep("show_patientA_ui", Event_ShowPatientAUi);
       yield return RunSmokeStep("show_patient_dummy_d_a_ui", Event_ShowPatientDummyDAUi);
       yield return RunSmokeStep("move_patientA_to_treatmentroom", Event_MovePatientAToTreatmentRoom);
       yield return RunSmokeStep("activate_vital_monitor_ui_patientA", Event_ActivateVitalMonitorUiPatientA);
 
-      // Patient B/C entry + transition flow.
+      // 환자 B/C 진입 + 전이 흐름.
       yield return RunSmokeStep("triage_patient_b_patient_c_patient_dummy_d_b", Event_TriagePatientBPatientCPatientDummyDB);
       yield return RunSmokeStep("move_patientB", Event_MovePatientB);
       yield return RunSmokeStep("move_patientC", Event_MovePatientC);

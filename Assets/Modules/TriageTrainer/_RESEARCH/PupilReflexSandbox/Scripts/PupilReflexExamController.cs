@@ -4,8 +4,8 @@ using UnityEngine.Events;
 namespace TriageTrainer.Tests.PupilReflexSandbox
 {
   /// <summary>
-  /// Tracks bilateral direct light exam completion and exposes UnityEvents
-  /// that can be connected to downstream scenario logic.
+  /// 양쪽 눈의 직접 대사광 검사 완료 상태를 추적하고, 이후 시나리오 로직에 연결할 수 있는
+  /// UnityEvent 를 노출한다.
   /// </summary>
   [DisallowMultipleComponent]
   public class PupilReflexExamController : MonoBehaviour

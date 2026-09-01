@@ -44,7 +44,7 @@
     /// <summary>임계치. 서로 다른 매칭 신호 수가 이 값 이상이면 출력 신호를 발신한다(1 이상).</summary>
     public int Threshold { get; set; } = 1;
 
-    /// <summary>Uses the graph's current active-role roster instead of the static threshold.</summary>
+    /// <summary>고정 임계치 대신 그래프의 현재 활성 역할 로스터를 사용한다.</summary>
     public bool UseActiveRoleRosterThreshold { get; set; }
 
     /// <summary>임계치 도달 시 발신할 신호 식별자.</summary>

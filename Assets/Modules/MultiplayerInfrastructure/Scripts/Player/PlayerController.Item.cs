@@ -75,10 +75,10 @@ namespace MultiplayerInfrastructure.Player
     }
 
     /// <summary>
-    /// Usage Sequence:
-    /// called TriggerAttack/TriggerUseItem from other part
-    /// -> triggered by Trigger~
-    /// -> trigger resolved when Update_Item called in Update loop
+    /// 사용 순서:
+    /// 다른 파트에서 TriggerAttack/TriggerUseItem 를 호출한다
+    /// -> Trigger~ 에 의해 발동된다
+    /// -> Update 루프에서 Update_Item 이 호출될 때 트리거가 해소된다
     /// </summary>
 
     private void Update_Item()

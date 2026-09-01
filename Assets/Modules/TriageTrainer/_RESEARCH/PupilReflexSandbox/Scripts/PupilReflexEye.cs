@@ -4,9 +4,8 @@ using UnityEngine.Rendering;
 namespace TriageTrainer.Tests.PupilReflexSandbox
 {
   /// <summary>
-  /// Models a single eye with sclera, iris, pupil and cornea layers.
-  /// The iris and pupil are rendered as spherical patches that share
-  /// the same curvature as the eyeball.
+  /// 공막, 홍채, 동공, 각막 층을 갖춘 한쪽 눈을 표현한다.
+  /// 홍채와 동공은 안구와 같은 곡률을 공유하는 구면 조각으로 표시된다.
   /// </summary>
   [DisallowMultipleComponent]
   public class PupilReflexEye : MonoBehaviour
@@ -221,8 +220,8 @@ namespace TriageTrainer.Tests.PupilReflexSandbox
     }
 
     /// <summary>
-    /// Samples how much direct light reaches the pupil.
-    /// Returns true when the probe ray can be projected onto the pupil plane.
+    /// 동공에 도달하는 직접광의 양을 샘플링한다.
+    /// 탐침 광선을 동공 평면에 투영할 수 있으면 true 를 반환한다.
     /// </summary>
     public bool TrySampleLight(
       Ray probeRay,

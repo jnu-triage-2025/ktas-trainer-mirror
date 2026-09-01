@@ -8,14 +8,14 @@ using UnityEngine.SceneManagement;
 namespace MultiplayerInfrastructure.FishNetSupports
 {
   /// <summary>
-  /// Facade component for FishNet runtime controls from scene scripts.
-  /// This class is split by concerns using partial declarations.
+  /// 씬 스크립트에서 FishNet 런타임을 제어하기 위한 퍼사드 컴포넌트이다.
+  /// 이 클래스는 관심사별로 partial 선언으로 분리되어 있다.
   /// </summary>
   [DisallowMultipleComponent]
   public partial class FishNetSupport : MonoBehaviour
   {
     [Header("References")]
-    [Tooltip("If empty, FishNetSupport will query NetworkManager in hierarchy at runtime.")]
+    [Tooltip("비어 있으면 FishNetSupport가 런타임에 계층에서 NetworkManager를 찾습니다.")]
     [SerializeField] private FishNet.Managing.NetworkManager networkManager;
 
     [Header("Player Prefab Fallback")]
@@ -24,11 +24,11 @@ namespace MultiplayerInfrastructure.FishNetSupports
     [SerializeField] private FishNet.Object.NetworkObject fallbackPlayerPrefab;
 
     [Header("Network HUD")]
-    [Tooltip("When true, NetworkHudCanvas objects under NetworkManager are hidden when a session starts.")]
+    [Tooltip("참이면 세션이 시작될 때 NetworkManager 하위의 NetworkHudCanvas 오브젝트를 숨깁니다.")]
     [SerializeField] private bool hideNetworkHudCanvasOnSessionStart = true;
 
     [Header("Fallback")]
-    [Tooltip("When IntroScene launch data exists and IngameSceneBootstrapper is missing, start session automatically.")]
+    [Tooltip("IntroScene 실행 데이터가 있고 IngameSceneBootstrapper가 없으면 세션을 자동으로 시작합니다.")]
     [SerializeField] private bool autoStartFromRegistryWhenNoBootstrapper = true;
 
     private static FishNetSupport _instance;
@@ -49,8 +49,8 @@ namespace MultiplayerInfrastructure.FishNetSupports
         return;
       }
 
-      // Static singleton can remain when domain reload is disabled.
-      // If previous instance is inactive or effectively missing, replace it.
+      // 도메인 리로드가 비활성화된 경우 정적 싱글턴이 남을 수 있다.
+      // 이전 인스턴스가 비활성이거나 사실상 존재하지 않으면 교체한다.
       if (!_instance || !_instance.isActiveAndEnabled)
       {
         _instance = this;
@@ -101,9 +101,9 @@ namespace MultiplayerInfrastructure.FishNetSupports
 
     private void Start()
     {
-      // OnEnable may run before the NetworkManager finishes Awake, in which case the
-      // server-connection-state subscription silently fails. Retry once everything is initialized
-      // so deferred player spawning is always prepared when the server starts.
+      // OnEnable 이 NetworkManager 의 Awake 보다 먼저 실행되면 서버 연결 상태 구독이
+      // 조용히 실패할 수 있다. 초기화가 모두 끝난 뒤 다시 시도하여, 서버가 시작될 때
+      // 지연된 플레이어 스폰이 항상 준비되도록 한다.
       ResolveNetworkManagerInHierarchy();
 
       if (!autoStartFromRegistryWhenNoBootstrapper)
@@ -116,9 +116,9 @@ namespace MultiplayerInfrastructure.FishNetSupports
     }
 
     /// <summary>
-    /// Applies launch info and starts host/client according to the mode.
-    /// When <paramref name="startLocalClient"/> is false the local client is skipped,
-    /// which is how a dedicated (headless) server runs.
+    /// 실행 정보를 적용하고 모드에 따라 호스트/클라이언트를 시작한다.
+    /// <paramref name="startLocalClient"/> 가 false 이면 로컬 클라이언트를 건너뛰며,
+    /// 이것이 데디케이티드(헤드리스) 서버의 동작 방식이다.
     /// </summary>
     public bool StartSession(
       SessionInformationModel sessionInformation,

@@ -17,8 +17,8 @@ using UnityEngine.UIElements;
 ///
 /// 설정 UI는 <see cref="SettingsUIController"/>를 동적으로 생성하여 <see cref="UIOverlayStack"/>으로 표시합니다.
 ///
-/// Requirements:
-///   - Scenes in Build Settings: IntroScene, IngameScene, TutorialScene
+/// 요구사항:
+///   - Build Settings 씬: IntroScene, IngameScene, TutorialScene
 /// </summary>
 namespace MultiplayerInfrastructure.UI
 {
@@ -40,19 +40,19 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private VisualTreeAsset settingsUxml;
     [SerializeField] private VisualTreeAsset datapackSelectionUxml;
 
-    // ─── Panels ────────────────────────────────────────────────────────────
+    // ─── 패널 ────────────────────────────────────────────────────────────
     private VisualElement _mainPanel;
     private VisualElement _playPanel;
     private VisualElement _directPanel;
 
-    // ─── Main menu elements ────────────────────────────────────────────────
+    // ─── 메인 메뉴 요소 ────────────────────────────────────────────────
     private TextField _nameField;
     private Button _btnTutorial;
     private Button _btnPlay;
     private Button _btnSettings;
     private Button _btnExit;
 
-    // ─── Play panel elements ───────────────────────────────────────────────
+    // ─── 플레이 패널 요소 ───────────────────────────────────────────────
     private Button _btnHost;
     private Button _btnDatapacks;
     private TextField _searchField;
@@ -62,16 +62,16 @@ namespace MultiplayerInfrastructure.UI
     private Button _btnPlayBack;
     private Button _btnDirectConnect;
 
-    // ─── Direct connect panel elements ─────────────────────────────────────
+    // ─── 직접 연결 패널 요소 ─────────────────────────────────────
     private TextField _addrField;
     private TextField _portField;
     private Button _btnDirectBack;
     private Button _btnDirectJoin;
 
-    // ─── Status ────────────────────────────────────────────────────────────
+    // ─── 상태 ────────────────────────────────────────────────────────────
     private Label _status;
 
-    // ─── Data ──────────────────────────────────────────────────────────────
+    // ─── 데이터 ──────────────────────────────────────────────────────────────
     private readonly List<SessionInformationModel> _items = new List<SessionInformationModel>();
     private SessionInformationModel _selected;
     private LanDiscoveryService _discovery;
@@ -79,7 +79,7 @@ namespace MultiplayerInfrastructure.UI
     private DatapackSelectionUIController _datapackController;
 
     // ════════════════════════════════════════════════════════════════════════
-    // Unity Lifecycle
+    // Unity 수명 주기
     // ════════════════════════════════════════════════════════════════════════
 
     private void Awake()
@@ -105,19 +105,19 @@ namespace MultiplayerInfrastructure.UI
       SetDocumentVisible(doc, true);
       var root = doc.rootVisualElement;
 
-      // ── Panels ──
+      // ── 패널 ──
       _mainPanel = root.Q<VisualElement>("mainPanel");
       _playPanel = root.Q<VisualElement>("playPanel");
       _directPanel = root.Q<VisualElement>("directPanel");
 
-      // ── Main menu ──
+      // ── 메인 메뉴 ──
       _nameField = root.Q<TextField>("nameField");
       _btnTutorial = root.Q<Button>("btnTutorial");
       _btnPlay = root.Q<Button>("btnPlay");
       _btnSettings = root.Q<Button>("btnSettings");
       _btnExit = root.Q<Button>("btnExit");
 
-      // ── Play panel ──
+      // ── 플레이 패널 ──
       _btnHost = root.Q<Button>("btnHost");
       _btnDatapacks = root.Q<Button>("btnDatapacks");
       _searchField = root.Q<TextField>("searchField");
@@ -127,16 +127,16 @@ namespace MultiplayerInfrastructure.UI
       _btnPlayBack = root.Q<Button>("btnPlayBack");
       _btnDirectConnect = root.Q<Button>("btnDirectConnect");
 
-      // ── Direct connect panel ──
+      // ── 직접 연결 패널 ──
       _addrField = root.Q<TextField>("addrField");
       _portField = root.Q<TextField>("portField");
       _btnDirectBack = root.Q<Button>("btnDirectBack");
       _btnDirectJoin = root.Q<Button>("btnDirectJoin");
 
-      // ── Status ──
+      // ── 상태 ──
       _status = root.Q<Label>("statusLabel");
 
-      // ── Button bindings ──
+      // ── 버튼 바인딩 ──
       _btnTutorial.clicked += OnTutorial;
       _btnPlay.clicked += () => ShowPanel(_playPanel);
       _btnSettings.clicked += OnSettings;
@@ -152,26 +152,26 @@ namespace MultiplayerInfrastructure.UI
       _btnDirectBack.clicked += () => ShowPanel(_playPanel);
       _btnDirectJoin.clicked += OnDirectJoin;
 
-      // ── ListView setup ──
+      // ── ListView 설정 ──
       SetupListView();
 
-      // ── Search filter ──
+      // ── 검색 필터 ──
       _searchField.RegisterValueChangedCallback(_ => RefreshSessions());
 
-      // ── Name validation (soft constraint) ──
+      // ── 이름 검증(소프트 제약) ──
       _nameField.RegisterValueChangedCallback(evt =>
       {
         PersistUserDisplayName(evt.newValue);
         UpdateNameValidation();
       });
 
-      // ── Defaults ──
+      // ── 기본값 ──
       _addrField.value = defaultAddress;
       _portField.value = defaultPort.ToString();
 
       RestoreUserDisplayName();
 
-      // ── Show main menu ──
+      // ── 메인 메뉴 표시 ──
       ShowPanel(_mainPanel);
       UpdateNameValidation();
     }
@@ -188,7 +188,7 @@ namespace MultiplayerInfrastructure.UI
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // Panel Switching
+    // 패널 전환
     // ════════════════════════════════════════════════════════════════════════
 
     private void ShowPanel(VisualElement panel)
@@ -245,7 +245,7 @@ namespace MultiplayerInfrastructure.UI
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // Session Discovery
+    // 세션 탐색
     // ════════════════════════════════════════════════════════════════════════
 
     private void RefreshSessions()
@@ -255,7 +255,7 @@ namespace MultiplayerInfrastructure.UI
 
       var snapshot = _discovery.GetDiscoveredSessions();
 
-      // Apply search filter
+      // 검색 필터 적용
       var query = _searchField?.value?.Trim();
       IEnumerable<SessionInformationModel> filtered = snapshot;
       if (!string.IsNullOrEmpty(query))
@@ -288,7 +288,7 @@ namespace MultiplayerInfrastructure.UI
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // Actions — Main Menu
+    // 동작: 메인 메뉴
     // ════════════════════════════════════════════════════════════════════════
 
     private void OnTutorial()
@@ -335,7 +335,7 @@ namespace MultiplayerInfrastructure.UI
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // Actions — Play Panel
+    // 동작: 플레이 패널
     // ════════════════════════════════════════════════════════════════════════
 
     /// <summary>
@@ -368,7 +368,7 @@ namespace MultiplayerInfrastructure.UI
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // Actions — Play Panel: Join Selected
+    // 동작: 플레이 패널(선택 항목 참가)
     // ════════════════════════════════════════════════════════════════════════
 
     /// <summary>
@@ -396,7 +396,7 @@ namespace MultiplayerInfrastructure.UI
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // Actions — Direct Connect Panel
+    // 동작: 직접 연결 패널
     // ════════════════════════════════════════════════════════════════════════
 
     private void OnDirectJoin()
@@ -422,7 +422,7 @@ namespace MultiplayerInfrastructure.UI
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // Settings UI (Dynamic Creation)
+    // 설정 UI(동적 생성)
     // ════════════════════════════════════════════════════════════════════════
 
     private void CreateSettingsUI()
@@ -465,11 +465,11 @@ namespace MultiplayerInfrastructure.UI
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // Helpers
+    // 헬퍼
     // ════════════════════════════════════════════════════════════════════════
 
     // ════════════════════════════════════════════════════════════════════════
-    // Name Validation (Soft Constraint)
+    // 이름 검증(소프트 제약)
     // ════════════════════════════════════════════════════════════════════════
 
     private bool IsNameValid()
@@ -485,7 +485,7 @@ namespace MultiplayerInfrastructure.UI
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // Helpers (continued)
+    // 헬퍼(계속)
     // ════════════════════════════════════════════════════════════════════════
 
     private void EnsureDiscoveryService()

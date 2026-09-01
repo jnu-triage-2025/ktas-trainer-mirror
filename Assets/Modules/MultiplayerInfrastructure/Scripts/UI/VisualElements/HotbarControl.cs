@@ -35,7 +35,7 @@ namespace MultiplayerInfrastructure.UI
           return;
 
         _hotbarSlotCount = clamped;
-        if (panel != null) // only rebuild once we’re actually on-screen
+        if (panel != null) // 실제로 화면에 나타났을 때만 한 번 재구성한다
         {
           Initialize(_hotbarSlotCount);
         }
@@ -73,7 +73,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnDetachFromPanel(DetachFromPanelEvent _)
     {
-      // optional: cleanup if you subscribe to external events
+      // 선택: 외부 이벤트를 구독한다면 여기서 해제한다
     }
 
     public void Initialize(int slotCount)
@@ -86,7 +86,7 @@ namespace MultiplayerInfrastructure.UI
       }
       else
       {
-        RefreshSlots(); // inventory might have changed
+        RefreshSlots(); // 인벤토리가 변경되었을 수 있다
       }
     }
 
@@ -265,7 +265,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnAnyClick(ClickEvent evt)
     {
-      // Use this if you need to stop propagation, etc.
+      // 전파를 중단해야 하는 경우 등에 사용한다
     }
 
     public void ForceRefresh() => RefreshSlots();

@@ -7,7 +7,7 @@ using MultiplayerInfrastructure.Registry;
 namespace MultiplayerInfrastructure.Command
 {
   /// <summary>
-  /// Groups item-related commands.
+  /// 아이템 관련 커맨드를 묶는 그룹이다.
   /// </summary>
   public class CommandDefinition_Item : IChatCommandModel, IChatCommandUsage
   {

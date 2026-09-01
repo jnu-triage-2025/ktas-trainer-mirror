@@ -929,9 +929,9 @@ namespace TriageTrainer.Tests
       Assert.That(prefab.GetComponent<CapsuleCollider>(), Is.Not.Null);
       Assert.That(prefab.GetComponent<NetworkObject>(), Is.Not.Null);
       Assert.That(visual, Is.Not.Null, "the triage dummy must include its dedicated visual model");
-      // Dummy D is a classification-only static/Generic-rig model. If a future model is
-      // upgraded to Humanoid animation, require the complete animation specification rather
-      // than accepting a partially configured Animator.
+      // 더미 D 는 분류 전용 static/Generic-rig 모델이다. 향후 모델이 Humanoid
+      // 애니메이션으로 업그레이드되면, 일부만 설정된 Animator 를 받아들이는 대신
+      // 완전한 애니메이션 명세를 요구한다.
       if (animator != null)
       {
         Assert.That(animator.avatar, Is.Not.Null,

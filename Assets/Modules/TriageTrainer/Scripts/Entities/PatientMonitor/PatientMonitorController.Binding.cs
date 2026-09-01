@@ -15,8 +15,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     [Header("Monitoring")]
     [SerializeField] private PatientController _monitoringPatient;
 
-    // PatientController references are local Unity objects. Replicate the stable runtime
-    // identifier instead, then resolve it on each peer after the patient has spawned.
+    // PatientController 참조는 로컬 Unity 오브젝트다. 대신 안정적인 런타임 식별자를
+    // 복제하고, 환자가 스폰된 뒤 각 피어에서 해석한다.
     private readonly SyncVar<string> _monitoringPatientIdentifier = new(string.Empty);
 
     private PatientController _subscribedPatient;

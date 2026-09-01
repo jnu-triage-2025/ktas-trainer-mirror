@@ -31,11 +31,11 @@ namespace MultiplayerInfrastructure.UI
       verticalScrollerVisibility = ScrollerVisibility.Hidden;
 
       style.flexGrow = 1f;
-      style.alignSelf = Align.Center; // center horizontally within parent
-      style.justifyContent = Justify.Center; // center vertically within parent flow
+      style.alignSelf = Align.Center; // 부모 내에서 수평 중앙 정렬
+      style.justifyContent = Justify.Center; // 부모 플로우 내에서 수직 중앙 정렬
       style.alignItems = Align.Center;
 
-      // left-align children inside the scroll content
+      // 스크롤 콘텐츠 내부 자식은 왼쪽 정렬
       contentContainer.style.alignItems = Align.FlexStart;
       contentContainer.style.justifyContent = Justify.FlexStart;
 

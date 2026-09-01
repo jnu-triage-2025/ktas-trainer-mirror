@@ -38,9 +38,9 @@ namespace TriageTrainer.Entity
       string trimmed = identifier.Trim();
       _identifier = trimmed; // 로컬 즉시 반영(서버에서 OnStartClient 전 RaisePatientInteractionSignals 등에 대비)
 
-      // EditMode/offline instances may have a PatientController before FishNet has
-      // populated NetworkBehaviour's NetworkObject cache. The local identifier is
-      // still valid in that state; only touch the SyncVar on an initialized server.
+      // EditMode/오프라인 인스턴스에는 FishNet 이 NetworkBehaviour 의 NetworkObject
+      // 캐시를 채우기 전에 PatientController 가 있을 수 있다. 그 상태에서도 로컬
+      // 식별자는 유효하므로, 초기화된 서버에서만 SyncVar 를 다룬다.
       if (IsFishNetServerStarted)
       {
         _runtimeIdentifier.Value = trimmed;

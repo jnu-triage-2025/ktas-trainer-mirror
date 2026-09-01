@@ -221,8 +221,8 @@ namespace MultiplayerInfrastructure.Registry
       var registry = ResolveRegistry(RegistryType.ScenarioGraph);
       if (!registry.TryGetValue(identifier, out var definition))
       {
-        // Scenario documents use the ".scenario.json" extension, so Unity exposes them
-        // as "<identifier>.scenario".
+        // 시나리오 문서는 ".scenario.json" 확장자를 사용하므로 Unity 는 이를
+        // "<identifier>.scenario" 이름으로 노출한다.
         var textAsset = Resources.Load<TextAsset>($"Scenario/{identifier}{ScenarioGraphAssetSuffix}");
         if (textAsset != null)
         {
@@ -231,8 +231,8 @@ namespace MultiplayerInfrastructure.Registry
         }
         else
         {
-          // Secondary fallback: scan all scenario TextAssets and register them.
-          // This allows lookup by graph identifier even when file name differs.
+          // 2차 폴백: 모든 시나리오 TextAsset 을 훑어 등록한다.
+          // 파일 이름이 달라도 그래프 식별자로 조회할 수 있게 한다.
           PreloadScenarioGraphsFromResources(validateWithSchema);
 
           if (!registry.TryGetValue(identifier, out definition))
@@ -261,17 +261,16 @@ namespace MultiplayerInfrastructure.Registry
         if (string.IsNullOrWhiteSpace(assetName))
           continue;
 
-        // Only ScenarioGraph documents are loaded as graphs. Scenario documents use the
-        // ".scenario.json" extension; Unity strips the trailing ".json", so they surface
-        // as asset names ending in ".scenario". Companion artifacts (editor layout
-        // sidecars ".scenario.editor", conversion reports ".scenario.unsupported.flags",
-        // and rubric definitions ".rubric") intentionally do not match the ScenarioGraph
-        // schema and must not be loaded as graphs.
+        // ScenarioGraph 문서만 그래프로 불러온다. 시나리오 문서는 ".scenario.json" 확장자를
+        // 사용하며, Unity 가 끝의 ".json" 을 제거하므로 ".scenario" 로 끝나는 에셋 이름으로
+        // 나타난다. 함께 생성되는 부산물(에디터 레이아웃 사이드카 ".scenario.editor", 변환
+        // 리포트 ".scenario.unsupported.flags", 루브릭 정의 ".rubric")은 의도적으로
+        // ScenarioGraph 스키마와 일치하지 않으므로 그래프로 불러와서는 안 된다.
         if (!IsScenarioGraphAsset(assetName))
           continue;
 
-        // Register under the bare identifier (without the ".scenario" suffix) so lookups
-        // by scenario identifier resolve regardless of the file extension scheme.
+        // 접미사 ".scenario" 를 제외한 순수 식별자로 등록하여, 파일 확장자 방식과
+        // 무관하게 시나리오 식별자 조회가 동작하도록 한다.
         string key = StripScenarioGraphSuffix(assetName);
         if (string.IsNullOrWhiteSpace(key))
           continue;
@@ -290,10 +289,9 @@ namespace MultiplayerInfrastructure.Registry
     }
 
     /// <summary>
-    /// Registers Scenario TextAssets by identifier without parsing them. The first typed
-    /// Get/TryGet (or an explicit preload) performs schema validation and replaces the
-    /// TextAsset with the resolved graph. This keeps scene startup lightweight without
-    /// bypassing runtime validation.
+    /// 시나리오 TextAsset 을 파싱하지 않고 식별자로 등록한다. 첫 형식 지정
+    /// Get/TryGet(또는 명시적 프리로드)이 스키마 검증을 수행하고 TextAsset 을
+    /// 해석된 그래프로 교체한다. 런타임 검증을 우회하지 않으면서 씬 시작을 가볍게 유지한다.
     /// </summary>
     public static int IndexScenarioGraphAssetsFromResources()
     {
@@ -317,7 +315,7 @@ namespace MultiplayerInfrastructure.Registry
         if (string.IsNullOrWhiteSpace(key))
           continue;
 
-        // Do not replace an explicitly registered or already resolved graph.
+        // 명시적으로 등록되었거나 이미 해석된 그래프는 교체하지 않는다.
         if (!registry.TryGetValue(key, out var definition) || definition == null)
           registry[key] = asset;
 
@@ -328,32 +326,32 @@ namespace MultiplayerInfrastructure.Registry
     }
 
     /// <summary>
-    /// Asset-name suffix exposed by Unity for ScenarioGraph documents. Scenario files use
-    /// the ".scenario.json" extension; Unity strips the trailing ".json", leaving
-    /// ".scenario".
+    /// Unity 가 ScenarioGraph 문서에 노출하는 에셋 이름 접미사. 시나리오 파일은
+    /// ".scenario.json" 확장자를 사용하며, Unity 가 끝의 ".json" 을 제거하여
+    /// ".scenario" 가 남는다.
     /// </summary>
     private const string ScenarioGraphAssetSuffix = ".scenario";
 
     /// <summary>
-    /// Returns true when a Resources/Scenario asset is an actual ScenarioGraph document.
-    /// Scenario documents end in ".scenario" (from ".scenario.json"). Companion artifacts
-    /// such as editor layout sidecars (".scenario.editor"), conversion reports
-    /// (".scenario.unsupported.flags"), and rubric definitions (".rubric") intentionally do
-    /// not match the ScenarioGraph schema and must not be loaded as graphs.
+    /// Resources/Scenario 에셋이 실제 ScenarioGraph 문서이면 true 를 반환한다.
+    /// 시나리오 문서는 ".scenario" 로 끝난다(".scenario.json" 에서 유래). 에디터 레이아웃
+    /// 사이드카(".scenario.editor"), 변환 리포트(".scenario.unsupported.flags"), 루브릭
+    /// 정의(".rubric") 같은 부산물은 의도적으로 ScenarioGraph 스키마와 일치하지 않으므로
+    /// 그래프로 불러와서는 안 된다.
     /// </summary>
     private static bool IsScenarioGraphAsset(string assetName)
     {
       if (string.IsNullOrWhiteSpace(assetName))
         return false;
 
-      // ".scenario.editor", ".scenario.unsupported.flags", etc. carry additional suffixes
-      // after ".scenario" and must be excluded.
+      // ".scenario.editor", ".scenario.unsupported.flags" 등은 ".scenario" 뒤에 추가
+      // 접미사를 가지므로 제외해야 한다.
       return assetName.EndsWith(ScenarioGraphAssetSuffix, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
-    /// Strips the trailing ".scenario" suffix from a ScenarioGraph asset name, yielding the
-    /// bare scenario identifier used as the registry key.
+    /// ScenarioGraph 에셋 이름에서 끝의 ".scenario" 접미사를 제거하여, 레지스트리 키로
+    /// 사용할 순수 시나리오 식별자를 얻는다.
     /// </summary>
     private static string StripScenarioGraphSuffix(string assetName)
     {
@@ -750,7 +748,7 @@ namespace MultiplayerInfrastructure.Registry
     }
 
     // =========================================================================
-    // ScenarioEvent helpers
+    // ScenarioEvent 헬퍼
     // =========================================================================
 
     /// <summary>
@@ -794,7 +792,7 @@ namespace MultiplayerInfrastructure.Registry
       => GetAll<ScenarioEventIdentifierRegistry.ScenarioEventHandler>(RegistryType.ScenarioEvent);
 
     // =========================================================================
-    // ScenarioGraph helpers
+    // ScenarioGraph 헬퍼
     // =========================================================================
 
     /// <summary>
@@ -829,7 +827,7 @@ namespace MultiplayerInfrastructure.Registry
     }
 
     // =========================================================================
-    // ItemDefinition helpers
+    // ItemDefinition 헬퍼
     // =========================================================================
 
     /// <summary>

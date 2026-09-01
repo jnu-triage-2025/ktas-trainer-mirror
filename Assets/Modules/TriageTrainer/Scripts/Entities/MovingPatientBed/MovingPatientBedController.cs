@@ -136,8 +136,8 @@ namespace TriageTrainer.Entity
     {
       get
       {
-        // Unity objects can remain in nearby-interactable snapshots after their native
-        // object has been destroyed. Avoid touching Component APIs in that state.
+        // 네이티브 오브젝트가 파괴된 뒤에도 Unity 오브젝트가 인접 상호작용
+        // 스냅숏에 남을 수 있다. 그 상태에서는 Component API 에 접근하지 않는다.
         if (this == null)
           return Array.Empty<IInteract>();
 
@@ -260,15 +260,15 @@ namespace TriageTrainer.Entity
       InitializeIntravenousAttachmentDisplay();
       if (_reposeAnchor == null)
         _reposeAnchor = transform;
-      // Note: Entity identifier is assigned by server via SetIdentifier().
-      // Do not generate UUID here; wait for server assignment.
+      // 참고: 엔티티 식별자는 서버가 SetIdentifier() 로 할당한다.
+      // 여기서 UUID 를 생성하지 않고 서버 할당을 기다린다.
     }
 
     /// <summary>
-    /// Called by server/network system to assign a runtime entity identifier.
-    /// Registers this bed in the global Registry if an identifier is provided.
+    /// 서버/네트워크 시스템이 런타임 엔티티 식별자를 할당하기 위해 호출한다.
+    /// 식별자가 제공되면 이 침대를 전역 Registry 에 등록한다.
     /// </summary>
-    /// <param name="identifier">Server-assigned entity identifier (e.g., "moving_patient_bed:{uuid}"), or null to defer registration.</param>
+    /// <param name="identifier">서버가 할당한 엔티티 식별자(예: "moving_patient_bed:{uuid}"). null 이면 등록을 미룬다.</param>
     /// <summary>
     /// 엔티티 프리셋 스폰 시 식별자를 주입받는다(ISpawnedEntityIdentifierReceiver).
     /// 침대는 SetIdentifier 로 식별자 설정 + 레지스트리 등록이 이루어지므로 그대로 위임한다.
@@ -333,8 +333,8 @@ namespace TriageTrainer.Entity
       if (collider == null)
         return false;
 
-      // The bed moves at floor height. Floor colliders whose top does not rise above the
-      // bed origin must not turn a horizontal ray into a collision at tile seams.
+      // 침대는 바닥 높이에서 이동한다. 바닥 콜라이더의 윗면이 침대 원점보다
+      // 위로 솟지 않는다면, 타일 이음새에서 수평 광선이 충돌로 판정되어서는 안 된다.
       if (collider.bounds.max.y <= transform.position.y + 0.01f)
         return true;
 
@@ -378,9 +378,9 @@ namespace TriageTrainer.Entity
     }
 
     /// <summary>
-    /// Resolves another bed occupying a positioning point before the incoming bed latches to it.
-    /// A patient-bearing bed is protected by default; empty beds are removed by default so stale
-    /// scenario beds do not prevent the next patient bed from reaching the point.
+    /// 들어오는 침대가 배치 지점에 고정되기 전에, 그 지점을 점유한 다른 침대를 처리한다.
+    /// 환자가 실린 침대는 기본적으로 보호하고, 빈 침대는 기본적으로 치워서 오래된
+    /// 시나리오 침대가 다음 환자 침대의 도달을 막지 않게 한다.
     /// </summary>
     private bool TryResolvePositioningPointBedCollision(MovingPatientBedPositioningPoint point)
     {
@@ -407,7 +407,7 @@ namespace TriageTrainer.Entity
           continue;
         }
 
-        // This explicit opt-in takes precedence over replacing an empty bed.
+        // 이 명시적 옵트인은 빈 침대 교체보다 우선한다.
         if (point.BlockWhenAnyBedIsPresent)
         {
           blockIncomingBed = true;

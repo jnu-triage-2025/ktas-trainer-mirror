@@ -27,7 +27,7 @@ public class InventorySlotModelDTO
 
   public void SetItem(Item? item) => _itemInstance = item;
 
-  /// <summary>item をこのスロットに可能な限り積みます。余りを返します。null なら全部収納できた。</summary>
+  /// <summary>아이템을 이 슬롯에 가능한 한 만큼 쌓는다. 남은 분량을 반환하며, null 이면 전부 담겼다는 뜻이다.</summary>
   public Item? Push(Item item)
   {
     if (IsEmpty)

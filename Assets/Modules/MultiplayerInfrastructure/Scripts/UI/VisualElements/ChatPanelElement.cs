@@ -43,9 +43,8 @@ namespace MultiplayerInfrastructure.UI
     private int _scrollToBottomRequest;
 
     /// <summary>
-    /// Raised for keyboard input in the chat field. The controller uses this
-    /// to invalidate a Tab-cycling session when the user edits the text or
-    /// navigates with another key.
+    /// 채팅 입력창에서 키보드 입력이 발생하면 일어난다. 컨트롤러는 이 이벤트로,
+    /// 사용자가 텍스트를 편집하거나 다른 키로 이동할 때 Tab 순환 세션을 무효화한다.
     /// </summary>
     public event System.Action<KeyCode> InputKeyPressed;
 
@@ -113,11 +112,11 @@ namespace MultiplayerInfrastructure.UI
       _panel.style.flexDirection = FlexDirection.Column;
       _panel.style.flexGrow = 0;
       _panel.style.flexShrink = 0;
-      // Always fill the fixed-width root so the panel width is constant.
+      // 고정 폭 루트를 항상 채워 패널 폭이 일정하게 유지되도록 한다.
       _panel.style.width = Length.Percent(100);
       _panel.style.alignItems = Align.Stretch;
-      // USS `gap` and IStyle.pointerEvents are not available in this scripting API level.
-      // Use margins on children for spacing and pickingMode for pointer behavior.
+      // 이 스크립팅 API 수준에서는 USS `gap` 과 IStyle.pointerEvents 를 사용할 수 없다.
+      // 간격에는 자식의 margin 을, 포인터 동작에는 pickingMode 를 사용한다.
       _panel.pickingMode = PickingMode.Position;
       Add(_panel);
 
@@ -127,9 +126,9 @@ namespace MultiplayerInfrastructure.UI
         pickingMode = PickingMode.Position
       };
       _logViewportFrame.AddToClassList("chat-log-frame");
-      // Critical viewport constraints are inline on purpose. If the external
-      // USS is missing or imported late, a content-sized frame grows forever
-      // and there is no overflow for the ScrollView to scroll.
+      // 중요한 뷰포트 제약은 의도적으로 인라인으로 지정한다. 외부 USS 가 없거나 늦게
+      // 임포트되면 콘텐츠 크기에 맞춘 프레임이 계속 커져서 ScrollView 가 스크롤할
+      // 오버플로가 사라진다.
       _logViewportFrame.style.position = Position.Relative;
       _logViewportFrame.style.width = Length.Percent(100);
       _logViewportFrame.style.height = 200;
@@ -144,23 +143,23 @@ namespace MultiplayerInfrastructure.UI
       _logView = new ScrollView(ScrollViewMode.Vertical)
       {
         name = DefaultsChatControl.ChatLogName,
-        // A dedicated chat scrollbar is rendered beside the ScrollView. It
-        // avoids relying on Unity-version-specific internal USS class names.
+        // 채팅 전용 스크롤바를 ScrollView 옆에 직접 그린다. Unity 버전마다 다른
+        // 내부 USS 클래스 이름에 의존하지 않기 위해서다.
         verticalScrollerVisibility = ScrollerVisibility.Hidden,
         horizontalScrollerVisibility = ScrollerVisibility.Hidden,
-        // Must accept pointer events so the user can scroll the log with the
-        // mouse wheel and drag the scrollbar. PickingMode.Ignore here would
-        // block all scroll interaction (the reported "can't scroll history" bug).
+        // 사용자가 마우스 휠로 로그를 스크롤하고 스크롤바를 드래그할 수 있도록
+        // 포인터 이벤트를 받아야 한다. 여기서 PickingMode.Ignore 를 쓰면 모든 스크롤
+        // 상호작용이 막힌다("히스토리를 스크롤할 수 없음" 버그 보고).
         pickingMode = PickingMode.Position
       };
-      // Speed up mouse-wheel scrolling a bit for chat history browsing.
+      // 채팅 기록을 탐색할 때 마우스 휠 스크롤을 조금 빠르게 한다.
       _logView.mouseWheelScrollSize = 40f;
-      // Ensure the viewport and content also receive pointer/wheel events so
-      // wheel scrolling works when hovering anywhere over the log area.
+      // 뷰포트와 콘텐츠도 포인터/휠 이벤트를 받아서, 로그 영역 어디에 올려두어도
+      // 휠 스크롤이 동작하게 한다.
       _logView.contentViewport.pickingMode = PickingMode.Position;
       _logView.contentContainer.pickingMode = PickingMode.Position;
       _logView.contentViewport.RegisterCallback<GeometryChangedEvent>(_ => RefreshScrollLayout());
-      // Native wheel/keyboard scrolling and the custom thumb share one offset.
+      // 네이티브 휠/키보드 스크롤과 커스텀 썸은 하나의 오프셋을 공유한다.
       _logView.verticalScroller.valueChanged += HandleNativeScrollValueChanged;
       _logView.AddToClassList("chat-log");
       _logView.style.position = Position.Absolute;
@@ -432,8 +431,8 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      // ScrollView owns the content transform. Keep the custom thumb in sync
-      // with its authoritative offset after style/layout recalculation.
+      // ScrollView 가 콘텐츠 변환을 소유한다. 스타일/레이아웃 재계산 뒤에는 그
+      // 기준 오프셋에 맞춰 커스텀 썸을 동기화한다.
       SetScrollOffset(_logView != null ? _logView.scrollOffset.y : _scrollOffsetY);
     }
 
@@ -452,10 +451,10 @@ namespace MultiplayerInfrastructure.UI
 
     private void ApplyInlineStyles()
     {
-      // Layout/width for the root is defined authoritatively in ChatPanelUI.uss
-      // (.chat-root uses a fixed --panel-width). We intentionally do NOT set an
-      // inline width here: an inline width would override the USS rule and, with
-      // flex-start alignment, let the panel resize based on content length.
+      // 루트의 레이아웃/폭은 ChatPanelUI.uss 의 정의를 따른다
+      // (.chat-root 는 고정 --panel-width 사용). 여기서는 의도적으로 인라인 폭을
+      // 지정하지 않는다. 인라인 폭이 USS 규칙을 덮어쓰면 flex-start 정렬에서
+      // 패널이 콘텐츠 길이에 따라 크기가 변하게 된다.
       style.position = Position.Absolute;
       style.left = styleLeft;
       style.right = styleRight;
@@ -464,8 +463,8 @@ namespace MultiplayerInfrastructure.UI
       style.paddingBottom = stylePaddingBottom;
       style.paddingRight = stylePaddingRight;
       style.flexDirection = FlexDirection.Column;
-      // Stretch children (panel/log/input) to the full root width so the chat
-      // width stays constant regardless of message or input text length.
+      // 자식(패널/로그/입력창)을 루트 전체 폭으로 늘려서, 메시지나 입력 텍스트 길이와
+      // 무관하게 채팅 폭이 일정하게 유지되도록 한다.
       style.alignItems = Align.Stretch;
       style.justifyContent = Justify.FlexEnd;
       style.flexGrow = 0;
@@ -491,7 +490,7 @@ namespace MultiplayerInfrastructure.UI
         if (_panel != null)
           _panel.style.display = DisplayStyle.Flex;
         ClearToasts();
-        // When the panel is (re)opened, show the most recent messages.
+        // 패널을 (다시) 열 때는 가장 최근 메시지를 보여준다.
         ScrollToBottom();
       }
       else
@@ -500,7 +499,7 @@ namespace MultiplayerInfrastructure.UI
         AddToClassList("collapsed");
         if (_panel != null)
           _panel.style.display = DisplayStyle.None;
-        // Keep toasts hidden when the panel is closed until new ones arrive.
+        // 패널이 닫혀 있는 동안에는 새 토스트가 도착할 때까지 숨긴 채 둔다.
         if (_toastContainer != null)
         {
           _toastContainer.style.display = DisplayStyle.None;
@@ -599,16 +598,15 @@ namespace MultiplayerInfrastructure.UI
       };
       entry.AddToClassList("chat-log__entry");
       entry.style.whiteSpace = WhiteSpace.Normal;
-      // flexShrink MUST be 0. Inside the vertical ScrollView, a shrinkable
-      // entry lets the content compress to fit the viewport, so the content
-      // never exceeds the viewport height and the log becomes non-scrollable
-      // (the reported "can't scroll history" bug).
+      // flexShrink 는 반드시 0 이어야 한다. 수직 ScrollView 안에서 줄어들 수 있는
+      // 항목은 콘텐츠가 뷰포트에 맞게 압축되게 하므로, 콘텐츠가 뷰포트 높이를 넘지
+      // 않아 로그를 스크롤할 수 없게 된다("히스토리를 스크롤할 수 없음" 버그 보고).
       entry.style.flexShrink = 0;
       entry.style.width = Length.Percent(100);
 
-      // Capture whether the user is currently pinned to (near) the bottom
-      // BEFORE we add the new entry. Only auto-scroll when they were already
-      // at the bottom, so scrolling up to read history is not interrupted.
+      // 새 항목을 추가하기 전에 사용자가 현재 (거의) 아래에 붙어 있는지 먼저 확인한다.
+      // 이미 아래에 있을 때만 자동 스크롤하여, 기록을 읽으려고 위로 스크롤한 상태가
+      // 방해받지 않도록 한다.
       bool stickToBottom = IsScrolledToBottom();
 
       _logContent.Add(entry);
@@ -624,9 +622,9 @@ namespace MultiplayerInfrastructure.UI
     }
 
     /// <summary>
-    /// True when the vertical scroller is at (or very near) the bottom,
-    /// or when the content is not tall enough to scroll at all.
-    /// Used to decide whether new messages should auto-scroll into view.
+    /// 수직 스크롤러가 아래(또는 아래 아주 근처)에 있거나, 콘텐츠가 스크롤할 만큼
+    /// 높지 않을 때 true 이다. 새 메시지를 자동으로 스크롤해 보여줄지 결정하는 데
+    /// 사용한다.
     /// </summary>
     private bool IsScrolledToBottom()
     {
@@ -634,11 +632,11 @@ namespace MultiplayerInfrastructure.UI
         return true;
 
       float range = GetMaximumScrollOffset();
-      // No scrollable range yet: treat as bottom so the first messages show.
+      // 아직 스크롤 범위가 없다. 아래로 취급하여 첫 메시지가 보이게 한다.
       if (range <= Mathf.Epsilon)
         return true;
 
-      // Allow a small threshold so minor offsets still count as "at bottom".
+      // 작은 여유를 두어 사소한 오프셋도 "아래에 있음"으로 취급한다.
       const float bottomThreshold = 4f;
       return _scrollOffsetY >= range - bottomThreshold;
     }
@@ -698,9 +696,9 @@ namespace MultiplayerInfrastructure.UI
       if (_logView == null || _logContent == null || _logContent.childCount == 0)
         return;
 
-      // ScrollTo uses ScrollView's resolved layout. The explicit offsets keep
-      // the custom scrollbar synchronized during the few frames in which a
-      // hidden panel becomes visible and its scroll range is recalculated.
+      // ScrollTo 는 ScrollView 의 확정된 레이아웃을 사용한다. 명시적 오프셋은 숨겨진
+      // 패널이 보이게 되어 스크롤 범위가 다시 계산되는 몇 프레임 동안 커스텀
+      // 스크롤바를 동기화 상태로 유지한다.
       VisualElement lastEntry = _logContent[_logContent.childCount - 1];
       _logView.ScrollTo(lastEntry);
       if (_logView.verticalScroller != null)
@@ -714,7 +712,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       var toastRoot = new VisualElement { pickingMode = PickingMode.Ignore };
-      // Provide spacing between toasts via margin since `gap` is not available on IStyle here.
+      // IStyle 에 `gap` 이 없어 margin 으로 토스트 사이 간격을 만든다.
       toastRoot.style.marginTop = _toasts.Count > 0 ? 6 : 0;
       toastRoot.AddToClassList("chat-toast");
       toastRoot.style.opacity = 1f;

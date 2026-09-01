@@ -260,9 +260,9 @@ namespace TriageTrainer.Entity
         if (CurrentBed != null && CurrentBed.HasParticipants)
           return Array.Empty<IInteract>();
 
-        // Inactive network-spawn prefabs and editor-instantiated patients can be queried
-        // before Awake. Returning an empty list silently makes the patient unusable until
-        // another path happens to rebuild the entries.
+        // 비활성 네트워크 스폰 프리팹과 에디터가 인스턴스화한 환자는 Awake 전에
+        // 조회될 수 있다. 빈 목록을 반환하면 다른 경로가 우연히 항목을 다시 만들기까지
+        // 환자가 조용히 쓸 수 없는 상태로 남는다.
         if (_interacts.Count == 0)
           BuildInteractEntries();
         return _interacts.ToArray();

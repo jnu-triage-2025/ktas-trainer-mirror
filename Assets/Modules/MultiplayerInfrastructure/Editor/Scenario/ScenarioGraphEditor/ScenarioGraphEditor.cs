@@ -78,8 +78,8 @@ namespace MultiplayerInfrastructure.Editor
         new JsonSerializerOptions { IncludeFields = true });
     }
 
-    // Scenario documents are stored as "<identifier>.scenario.json"; node-layout sidecars
-    // are stored as "<identifier>.scenario.editor.json".
+    // 시나리오 문서는 "<identifier>.scenario.json" 으로 저장되며, 노드 레이아웃 사이드카는
+    // "<identifier>.scenario.editor.json" 으로 저장된다.
     private const string ScenarioExtension = ".scenario.json";
     private const string ScenarioEditorExtension = ".scenario.editor.json";
 
@@ -112,8 +112,9 @@ namespace MultiplayerInfrastructure.Editor
     }
 
     /// <summary>
-    /// Ensures a scenario file path uses the ".scenario.json" extension. Paths already
-    /// ending in ".scenario.json" are returned unchanged; a plain ".json" path is upgraded.
+    /// 시나리오 파일 경로가 ".scenario.json" 확장자를 쓰도록 보정한다. 이미
+    /// ".scenario.json" 으로 끝나는 경로는 그대로 반환하고, 순수 ".json" 경로는
+    /// 확장자를 교체한다.
     /// </summary>
     private static string NormalizeScenarioPath(string path)
     {
@@ -130,7 +131,7 @@ namespace MultiplayerInfrastructure.Editor
     }
 
     /// <summary>
-    /// Returns the editor node-layout sidecar path for a scenario file path.
+    /// 시나리오 파일 경로에 대한 에디터 노드 레이아웃 사이드카 경로를 반환한다.
     /// </summary>
     private static string GetEditorSidecarPath(string scenarioPath)
     {
@@ -144,7 +145,7 @@ namespace MultiplayerInfrastructure.Editor
     }
 
     /// <summary>
-    /// Derives the scenario identifier from a ".scenario.json" file path.
+    /// ".scenario.json" 파일 경로에서 시나리오 식별자를 도출한다.
     /// </summary>
     private static string GetScenarioIdentifierFromPath(string path)
     {
@@ -165,8 +166,8 @@ namespace MultiplayerInfrastructure.Editor
     }
 
     /// <summary>
-    /// Opens scenario documents directly from the Project window. Returning false for
-    /// every other TextAsset preserves Unity's normal asset-opening behaviour.
+    /// Project 창에서 시나리오 문서를 직접 연다. 다른 모든 TextAsset 에 대해
+    /// false 를 반환하여 Unity 의 기본 에셋 열기 동작은 그대로 유지한다.
     /// </summary>
     [OnOpenAsset]
     public static bool OpenScenarioTextAsset(int instanceID, int line)
@@ -822,7 +823,7 @@ namespace MultiplayerInfrastructure.Editor
 
     private void OpenCreateNodeMenu()
     {
-      // Open the search window at the center of the editor window for quick node creation.
+      // 빠른 노드 생성을 위해 에디터 창 중앙에 검색 창을 연다.
       var center = position.position + new Vector2(position.width * 0.5f, position.height * 0.5f);
       cachedMousePosition = center;
       SearchWindow.Open(new SearchWindowContext(center), searchWindow);
@@ -838,29 +839,29 @@ namespace MultiplayerInfrastructure.Editor
       var oldData = nodeView.Data;
       var oldPos = nodeView.GetPosition();
 
-      // Create new data with same identifier.
+      // 같은 식별자로 새 데이터를 만든다.
       var newData = ScenarioNodeFactory.Create(newType);
       newData.Identifier = oldData.Identifier;
 
-      // Preserve simple next link if applicable.
+      // 해당하는 경우 단순 next 링크를 보존한다.
       if (newType != ScenarioNodeType.Parallel)
       {
         newData.NextIdentifier = oldData.NextIdentifier;
       }
 
-      // Replace data in graph.
+      // 그래프의 데이터를 교체한다.
       graphData.Nodes[newData.Identifier] = newData;
 
-      // Remove old node view and its edges.
+      // 이전 노드 뷰와 간선을 제거한다.
       graphView.RemoveElement(nodeView);
       nodeViews.Remove(newData.Identifier);
 
-      // Add new node view and position it.
+      // 새 노드 뷰를 추가하고 위치시킨다.
       var newView = graphView.AddNodeView(newData);
       newView.SetPosition(oldPos);
       nodeViews[newData.Identifier] = newView;
 
-      // Rebuild connections based on updated data.
+      // 갱신된 데이터를 기준으로 연결을 다시 만든다.
       graphView.RebuildAllEdges();
       SyncRuntimeHighlight();
       RefreshDefaultEntrypointMarkers();
@@ -1642,7 +1643,7 @@ namespace MultiplayerInfrastructure.Editor
         nodeViews.Clear();
         graphView.ClearGraph();
 
-        // Load editor data
+        // 에디터 데이터 로드
         var editorPath = GetEditorSidecarPath(path);
         ScenarioGraphEditorData editorData = null;
         if (File.Exists(editorPath))
@@ -1750,7 +1751,7 @@ namespace MultiplayerInfrastructure.Editor
         return;
       }
 
-      // If we have a current path, save directly; otherwise fall back to Save As.
+      // 현재 경로가 있으면 직접 저장하고, 없으면 다른 이름으로 저장으로 대체한다.
       if (string.IsNullOrEmpty(currentFilePath))
       {
         SaveGraphToJsonAs();
@@ -1822,7 +1823,7 @@ namespace MultiplayerInfrastructure.Editor
       {
         File.WriteAllText(path, json);
 
-        // Save editor data
+        // 에디터 데이터 저장
         var editorData = new ScenarioGraphEditorData();
         foreach (var pair in nodeViews)
         {
@@ -1926,9 +1927,9 @@ namespace MultiplayerInfrastructure.Editor
         if (node == null || !visibleOutgoing.TryGetValue(node.Identifier, out var targets))
           continue;
 
-        // Keep one entry per rendered output port. Several Choice options may point to
-        // the same retry node, but they still leave the node at different vertical ports
-        // and therefore must remain distinct during crossing reduction.
+      // 표시되는 출력 포트마다 항목을 하나씩 유지한다. 여러 Choice 옵션이 같은
+      // 재시도 노드를 가리킬 수 있지만, 노드를 서로 다른 세로 포트에서 떠나므로
+      // 교차 최소화 중에도 구별되어야 한다.
         targets.AddRange(GetVisibleOutgoingTargets(node)
           .Where(visibleOutgoing.ContainsKey));
 
@@ -1949,9 +1950,9 @@ namespace MultiplayerInfrastructure.Editor
       }
       ReportAutoLayoutProgress(showProgress, 0.12f, "그래프 연결을 분석하는 중...");
 
-      // Parallel.NextIdentifier is a semantic ordering constraint, not a rendered edge.
-      // Keep it in the layering graph so phases remain connected, while excluding it
-      // from crossing reduction and vertical alignment below.
+      // Parallel.NextIdentifier 는 표시되는 간선이 아니라 의미적 순서 제약이다.
+      // 단계들이 연결된 상태로 남도록 레이어링 그래프에는 유지하되, 아래의 교차
+      // 최소화와 수직 정렬에서는 제외한다.
       var constraintOutgoing = visibleOutgoing.ToDictionary(
         pair => pair.Key,
         pair => pair.Value.ToList());
@@ -2143,9 +2144,9 @@ namespace MultiplayerInfrastructure.Editor
         continuationByParallel.Values,
         StringComparer.Ordinal);
 
-      // Moving an earlier continuation also moves every later phase through the
-      // constraint DAG. Revisit the small Parallel set until all branch-depth
-      // constraints are stable; the DAG propagation makes this converge quickly.
+      // 앞선 연속 노드를 옮기면 제약 DAG 를 통해 이후 모든 단계도 함께 이동한다.
+      // 모든 분기 깊이 제약이 안정될 때까지 작은 Parallel 집합을 다시 살피며,
+      // DAG 전파 덕분에 빠르게 수렴한다.
       var maximumPasses = Math.Max(1, continuationByParallel.Count + 1);
       for (var pass = 0; pass < maximumPasses; pass++)
       {
@@ -2198,7 +2199,7 @@ namespace MultiplayerInfrastructure.Editor
           nodeLayer[continuation] = requiredLayer;
           changed = true;
 
-          // Preserve every existing DAG constraint after shifting the continuation.
+          // 연속 노드를 이동한 뒤에도 기존 DAG 제약을 모두 보존한다.
           var propagation = new Queue<string>();
           propagation.Enqueue(continuation);
           while (propagation.Count > 0)
@@ -2235,8 +2236,8 @@ namespace MultiplayerInfrastructure.Editor
           if (!adjacency.ContainsKey(target))
             continue;
 
-          // Weak components include feedback links so a retry loop remains in the
-          // same visual block even though feedback edges are omitted from layering.
+          // 약한 연결 성분은 되먹임 링크를 포함시켜, 되먹임 간선이 레이어링에서
+          // 제외되더라도 재시도 루프가 같은 시각적 블록에 남게 한다.
           adjacency[pair.Key].Add(target);
           adjacency[target].Add(pair.Key);
         }
@@ -2544,9 +2545,9 @@ namespace MultiplayerInfrastructure.Editor
       IReadOnlyDictionary<string, List<string>> forward,
       IReadOnlyDictionary<string, List<string>> incoming)
     {
-      // Build vertical-alignment blocks as part of coordinate assignment. A 1:1 edge
-      // can share a horizontal lane when merging its endpoint blocks preserves every
-      // layer's order and cannot expand the result beyond the densest layer.
+      // 좌표 배정의 일환으로 수직 정렬 블록을 만든다. 1:1 간선은, 양 끝 블록을
+      // 병합해도 모든 레이어의 순서가 보존되고 결과가 가장 조밀한 레이어보다
+      // 커지지 않을 때 수평 레인을 공유할 수 있다.
       var parent = layer.Keys.ToDictionary(id => id, id => id);
       var maximumDepth = Math.Max(0, layers.Values.Max(nodes => nodes.Count) - 1);
 
@@ -2587,15 +2588,15 @@ namespace MultiplayerInfrastructure.Editor
       if (!TryCalculateAlignmentBlockDepths(
             layers, parent, maximumDepth, out var blockDepth))
       {
-        // The unmerged graph always satisfies this constraint, but retain a deterministic
-        // bounded fallback for malformed input.
+        // 병합하지 않은 그래프는 항상 이 제약을 만족하지만, 잘못된 입력에 대비해
+        // 결정적이고 유계인 폴백을 남긴다.
         parent = layer.Keys.ToDictionary(id => id, id => id);
         TryCalculateAlignmentBlockDepths(layers, parent, maximumDepth, out blockDepth);
       }
 
-      // Start each block near the average of its members' centered layer positions.
-      // Then satisfy block ordering in topological order. Nodes in one block receive
-      // exactly one y coordinate, so straight segments are never repaired after layout.
+      // 각 블록을 구성원의 중앙 정렬 레이어 위치 평균 근처에서 시작한다. 그다음
+      // 위상 순서로 블록 순서를 만족시킨다. 한 블록의 노드는 정확히 하나의 y 좌표를
+      // 받으므로, 직선 구간을 배치 후에 수선하는 일이 없다.
       var desiredByBlock = new Dictionary<string, List<float>>();
       foreach (var pair in layers)
       {

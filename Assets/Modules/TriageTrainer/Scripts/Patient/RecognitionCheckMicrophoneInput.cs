@@ -99,8 +99,8 @@ namespace TriageTrainer.Entity
       };
     }
 
-    // Request microphone access before the first scene is shown so gameplay is
-    // not interrupted by the platform permission dialog later.
+    // 첫 씬이 표시되기 전에 마이크 접근 권한을 요청하여, 이후 게임 플레이가
+    // 플랫폼 권한 대화 상자로 중단되지 않게 한다.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void EnsureCreated()
     {

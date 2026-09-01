@@ -40,8 +40,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         _interactionColliderAutoManaged = true;
       }
 
-      // Preserve a collider explicitly authored on the object. Only colliders
-      // created by this helper are recalculated as child display objects change.
+      // 오브젝트에 명시적으로 작성된 콜라이더는 보존한다. 이 헬퍼가 만든
+      // 콜라이더만 자식 표시 오브젝트 변화에 맞춰 다시 계산된다.
       if (!_interactionColliderAutoManaged)
         return;
 

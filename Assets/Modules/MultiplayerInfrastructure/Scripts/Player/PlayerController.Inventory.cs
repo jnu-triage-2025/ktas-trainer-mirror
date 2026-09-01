@@ -43,7 +43,7 @@ namespace MultiplayerInfrastructure.Player
     public ItemSystem.Item HandlingItem = null;
 
     private bool _inventoryVisible;
-    private bool _inventoryRenderRequired = true;  // like a dirty bit
+    private bool _inventoryRenderRequired = true;  // 일종의 dirty bit
     private bool _isCombining = false;             // 자동 조합 재진입 방지 플래그
 
     private void Start_Inventory()
@@ -710,7 +710,7 @@ namespace MultiplayerInfrastructure.Player
     {
       _inventoryRenderRequired = true;
 
-      // Keep the hotbar visuals in sync with inventory mutations
+      // 인벤토리 변경 시 핫바 표시를 동기화한다
       _hotbarUI?.BindInventory(_slots);
 
       // 데이터(_slots)를 코드로 직접 변경(예: /give, 아이템 획득/제거/조합)한 경우에는

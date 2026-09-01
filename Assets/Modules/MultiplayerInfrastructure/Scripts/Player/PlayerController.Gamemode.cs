@@ -48,7 +48,7 @@ namespace MultiplayerInfrastructure.Player
         ApplyPlayerVisibility();
       }
 
-      // Adjust local camera culling: players hide spectators, spectators see spectators.
+      // 로컬 카메라 컬링 조정: 플레이어에게는 관전자가 안 보이고, 관전자에게는 관전자가 보인다.
       if (IsOwner && _camControl != null)
         _camControl.SetSpectatorLayerCulling(IsSpectator);
     }

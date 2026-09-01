@@ -460,12 +460,12 @@ namespace MultiplayerInfrastructure.Entity
     }
 
     /// <summary>
-    /// Derived controls may exclude colliders that move as part of their controlled payload.
+    /// 파생 컨트롤러는 자신이 제어하는 페이로드로 함께 움직이는 콜라이더를 제외할 수 있다.
     /// </summary>
     protected virtual bool ShouldIgnoreMovementBlocker(Collider collider) => false;
 
     /// <summary>
-    /// Enables collision-origin diagnostics for a specific derived controller.
+    /// 특정 파생 컨트롤러에 대해 충돌 원점 진단을 켠다.
     /// </summary>
     protected virtual bool ShouldLogMovementBlockers => false;
 

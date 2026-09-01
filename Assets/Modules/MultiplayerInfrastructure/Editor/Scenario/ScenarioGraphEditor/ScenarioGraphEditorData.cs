@@ -9,7 +9,7 @@ namespace MultiplayerInfrastructure.Editor
     public Dictionary<string, List<SerializableVector2>> EdgeRoutes { get; set; } = new Dictionary<string, List<SerializableVector2>>();
   }
 
-  // Lightweight serializable vector to avoid UnityEngine.Vector2 cycles in System.Text.Json
+  // System.Text.Json 에서 UnityEngine.Vector2 순환 참조를 피하기 위한 가벼운 직렬화 벡터
   public struct SerializableVector2
   {
     public float x;

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace TriageTrainer.Entity.ElectricalLine
 {
   /// <summary>
-  /// Marks the position where an electrical line can be connected.
+  /// 전기 라인을 연결할 수 있는 위치를 나타낸다.
   /// </summary>
   public sealed class ElectricalLineConnectionPoint : LineConnectionPoint
   {

@@ -10,7 +10,8 @@ using UnityEngine.UIElements;
 namespace MultiplayerInfrastructure.UI
 {
   /// <summary>
-  /// MonoBehaviour controller that owns the view, handles overlay lifecycle, and is accessed via Registry.Registry.
+  /// 뷰를 소유하고 오버레이 수명 주기를 처리하며 Registry.Registry 를 통해 접근되는
+  /// MonoBehaviour 컨트롤러이다.
   /// </summary>
   [RequireComponent(typeof(UIDocument))]
   public class InventoryUIController : UIControllerABC, IUIOverlay

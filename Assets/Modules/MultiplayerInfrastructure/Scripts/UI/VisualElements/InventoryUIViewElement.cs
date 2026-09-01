@@ -10,8 +10,8 @@ using UnityEngine.UIElements;
 namespace MultiplayerInfrastructure.UI
 {
   /// <summary>
-  /// Pure view responsible for inventory slot visuals and interactions.
-  /// Intended to be instantiated from UXML; controller owns lifecycle and data binding.
+  /// 인벤토리 슬롯 표시와 상호작용만 담당하는 순수 뷰이다.
+  /// UXML 에서 인스턴스화하는 것을 전제로 하며, 수명 주기와 데이터 바인딩은 컨트롤러가 소유한다.
   /// </summary>
   [UxmlElement]
   public partial class InventoryUIView : VisualElement
@@ -116,7 +116,7 @@ namespace MultiplayerInfrastructure.UI
 
       _boundSlots = slots;
 
-      // Ensure backing buffers cover both the visual grid and incoming data size to avoid out-of-range issues when the counts diverge.
+      // 개수가 어긋났을 때 범위 초과가 발생하지 않도록, 버퍼가 화면 그리드와 들어오는 데이터 크기를 모두 덮게 한다.
       int incomingCount = slots.Count;
       int targetBufferSize = Math.Max(_slotElements.Count, incomingCount);
       EnsureSlotDataCapacity(targetBufferSize);

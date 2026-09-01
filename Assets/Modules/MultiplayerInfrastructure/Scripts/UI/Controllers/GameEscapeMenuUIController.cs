@@ -140,7 +140,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleResumeClicked()
     {
-      // Ensure overlay lifecycle events fire so player controls resume properly
+      // 오버레이 수명 주기 이벤트가 발행되도록 보장하여 플레이어 조작이 올바르게 재개된다
       if (UIOverlayStack.IsTop(this))
         UIOverlayStack.Pop();
       else

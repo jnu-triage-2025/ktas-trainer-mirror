@@ -300,7 +300,7 @@ namespace MultiplayerInfrastructure.UI
       {
         ShowPanel();
 
-        // Treat scenario UI as an overlay so player input/camera lock is paused and cursor is free.
+        // 시나리오 UI 를 오버레이로 취급하여 플레이어 입력/카메라 잠금을 멈추고 커서를 자유롭게 둔다.
         if (!UIOverlayStack.IsTop(this))
           UIOverlayStack.Push(this);
       }
@@ -339,7 +339,7 @@ namespace MultiplayerInfrastructure.UI
       OnScenarioEnded?.Invoke();
       Debug.Log("[DialoguePanelUI] Scenario ended");
 
-      // Remove overlay when scenario ends.
+      // 시나리오가 끝나면 오버레이를 제거한다.
       if (UIOverlayStack.IsTop(this))
         UIOverlayStack.Pop();
     }
@@ -383,7 +383,7 @@ namespace MultiplayerInfrastructure.UI
       EnsureOverlayActive();
       PresentTextNode(speakerName, dialogueContent, portraitIdentifier);
 
-      OnNodeDisplayed?.Invoke(null); // TODO: pass node if needed
+      OnNodeDisplayed?.Invoke(null); // TODO: 필요하면 노드를 전달한다
     }
 
     /// <summary>
@@ -510,7 +510,7 @@ namespace MultiplayerInfrastructure.UI
       EnsureOverlayActive();
       PresentTextNode(speakerName, dialogueContent, portraitIdentifier);
 
-      OnNodeDisplayed?.Invoke(null); // TODO: pass node if needed
+      OnNodeDisplayed?.Invoke(null); // TODO: 필요하면 노드를 전달한다
     }
 
     private void ShowChoices(IReadOnlyList<ScenarioChoiceOption> options)

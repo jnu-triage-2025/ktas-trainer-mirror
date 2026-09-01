@@ -298,7 +298,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         return;
       }
 
-      // Positive distance moves each dash from the monitor toward the patient.
+      // 양수 거리는 각 대시를 모니터에서 환자 쪽으로 이동시킨다.
       _trackingDashDistance = Mathf.Repeat(
         _trackingDashDistance + Time.unscaledDeltaTime * _trackingDashScrollSpeed,
         patternLength);

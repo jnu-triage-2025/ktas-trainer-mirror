@@ -146,8 +146,8 @@ namespace TriageTrainer.Entity.IntravenousLine
 
         controller.TryCompleteConnection(player, _owner);
 
-        // Nearby interactables list may not change (same collider set),
-        // so force hint refresh after attempting completion.
+        // 인접 상호작용 목록은 변하지 않을 수 있다(같은 콜라이더 집합).
+        // 따라서 완료 시도 뒤에는 힌트를 강제로 새로 고친다.
         player.RefreshInteractableHintsNow();
       }
     }

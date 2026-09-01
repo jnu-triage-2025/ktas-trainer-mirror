@@ -49,9 +49,9 @@ namespace MultiplayerInfrastructure.UI
       var root = _uiDocument.rootVisualElement;
       if (root == null)
       {
-        // rootVisualElement is null while the UIDocument is inactive or its panel
-        // has not been created yet (e.g. additive scene load ordering).
-        // Throwing here would abort FishNet's OnStartClient callback chain.
+        // UIDocument 가 비활성이거나 패널이 아직 만들어지지 않은 동안(예: 애디티브
+        // 씬 로드 순서)에는 rootVisualElement 가 null 이다. 여기서 예외를 던지면
+        // FishNet 의 OnStartClient 콜백 체인이 중단된다.
         Debug.LogWarning("[HotbarUIController] rootVisualElement is not ready yet. Skipping hotbar setup.");
         return;
       }

@@ -13,7 +13,7 @@ using UnityEngine;
 namespace TriageTrainer.Editor
 {
   /// <summary>
-  /// Interactive preview for the materials used by LineConnectionService.
+  /// LineConnectionService 가 사용하는 머티리얼의 대화형 미리보기 창이다.
   /// </summary>
   /// <remarks>
   /// 이 창은 미리보기 전용이며, LineConnectionMaterial과 라인 특성(LineWidth, Elasticity 등)은
@@ -92,7 +92,7 @@ namespace TriageTrainer.Editor
     }
 
     /*
-    // Used for /Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBaked.prefab to convert the ProBuilder meshes into baked Mesh assets that PreviewRenderUtility can render without ProBuilder lifecycle callbacks.
+    // /Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBaked.prefab 에 사용한다. ProBuilder 메시를 베이크된 Mesh 에셋으로 변환하여, PreviewRenderUtility 가 ProBuilder 수명 주기 콜백 없이도 렌더링하게 한다.
     private static void BakeRotateGizmo()
     {
       var sourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RotateGizmoPrefabPath);
@@ -102,9 +102,9 @@ namespace TriageTrainer.Editor
         return;
       }
 
-      // ProBuilder meshes do not serialize a usable MeshFilter mesh. Compile
-      // them once into project assets so PreviewRenderUtility needs no
-      // ProBuilder lifecycle callbacks when it renders the prefab.
+      // ProBuilder 메시는 직렬화해도 쓸 수 있는 MeshFilter 메시가 나오지 않는다.
+      // 프로젝트 에셋으로 한 번 구워 두면 PreviewRenderUtility 가 프리팹을 렌더링할 때
+      // ProBuilder 수명 주기 콜백이 필요 없다.
       AssetDatabase.DeleteAsset(BakedRotateGizmoPrefabPath);
       AssetDatabase.DeleteAsset(BakedRotateGizmoMeshDirectory);
       AssetDatabase.CreateFolder("Assets/Modules/TriageTrainer/Editor/Prefabs", "RotateGizmoBakedMeshes");
@@ -196,9 +196,9 @@ namespace TriageTrainer.Editor
 
     private void ApplyPreviewGizmoMaterials(GameObject gizmo)
     {
-      // The source materials use a project shader that PreviewRenderUtility
-      // cannot render, which produces Unity's magenta error material. Keep
-      // each source color but use a preview-safe unlit shader instead.
+      // 원본 머티리얼은 PreviewRenderUtility 가 렌더링하지 못하는 프로젝트 셰이더를
+      // 쓴다. 그대로 두면 Unity 의 마젠타 오류 머티리얼이 나온다. 원본 색은 유지하되
+      // 미리보기에 안전한 언릿 셰이더로 대체한다.
       var shader = Shader.Find("Unlit/Color") ?? Shader.Find("Sprites/Default");
       if (shader == null)
         return;
@@ -243,8 +243,8 @@ namespace TriageTrainer.Editor
       part.hideFlags = HideFlags.HideAndDontSave;
       part.layer = 0;
       part.transform.position = Vector3.zero;
-      // A cube's long side is its local X axis. Align that axis with the
-      // intended world axis instead of using LookRotation (which aligns Z).
+      // 큐브의 긴 변은 로컬 X 축이다. LookRotation(Z 축 정렬) 대신 이 축을
+      // 의도한 월드 축에 맞춘다.
       var rotation = Quaternion.FromToRotation(Vector3.right, direction);
       part.transform.rotation = rotation;
       part.transform.localScale = new Vector3(0.7f, 0.035f, 0.035f);
@@ -297,7 +297,7 @@ namespace TriageTrainer.Editor
 
     private void OnGUI()
     {
-      // Reference the implementation of service
+      // 서비스 구현을 참조한다
       using (new EditorGUI.DisabledScope(true))
         EditorGUILayout.ObjectField("", _serviceImplementation, typeof(MonoScript), false);
       EditorGUILayout.Space(6f);
@@ -341,7 +341,7 @@ namespace TriageTrainer.Editor
         _endPoint = new Vector3(1.8f, 0.15f, 0f);
       }
 
-      // Camera reset button
+      // 카메라 초기화 버튼
       if (GUILayout.Button("Reset Camera", GUILayout.Width(120f)))
       {
         _previewPivot = new Vector3(0.45f, -0.05f, 0f);
@@ -487,8 +487,8 @@ namespace TriageTrainer.Editor
         _previewSkyboxMaterial.SetFloat("_Exposure", 0.8f);
       }
 
-      // Unity can return a managed reference to a missing component here.
-      // Use Unity's overloaded null comparison rather than C#'s ?? operator.
+      // Unity 는 여기서 없는 컴포넌트에 대한 관리 참조를 반환할 수 있다.
+      // C# 의 ?? 연산자 대신 Unity 의 오버로드된 null 비교를 사용한다.
       var skybox = camera.GetComponent<Skybox>();
       if (skybox == null)
         skybox = camera.gameObject.AddComponent<Skybox>();
@@ -619,7 +619,7 @@ namespace TriageTrainer.Editor
       {
         float t = i / (segmentCount - 1f);
         var point = Vector3.Lerp(start, end, t);
-        // Approximate the resting shape produced by the runtime's gravity and slack.
+        // 런타임의 중력과 여유 길이가 만드는 안정 형태를 근사한다.
         point += Vector3.down * (Mathf.Sin(t * Mathf.PI) * (0.18f + _elasticity * 0.42f));
         point += Vector3.forward * (Mathf.Sin(t * Mathf.PI) * 0.08f);
         _lineRenderer.SetPosition(i, point);
@@ -651,9 +651,9 @@ namespace TriageTrainer.Editor
       if (_previewLineMaterial != null)
         DestroyImmediate(_previewLineMaterial);
 
-      // PreviewRenderUtility does not reliably run the project's SRP shaders.
-      // Convert the selected material into a built-in transparent sprite
-      // material while retaining its visible color and line texture.
+      // PreviewRenderUtility 는 프로젝트의 SRP 셰이더를 안정적으로 실행하지 못한다.
+      // 선택한 머티리얼을 빌트인 투명 스프라이트 머티리얼로 변환하되, 보이는 색과
+      // 라인 텍스처는 유지한다.
       var shader = Shader.Find("Sprites/Default") ?? Shader.Find("Unlit/Transparent");
       if (shader == null)
         return _fallbackMaterial;
@@ -700,9 +700,8 @@ namespace TriageTrainer.Editor
       if (_bakedRotateGizmoObject == null && _rotateGizmoParts.Count == 0)
         return;
 
-      // This is camera-local on purpose. The old placement used a lateral
-      // offset larger than the distance in front of the camera, so the Gizmo
-      // was always outside the perspective frustum.
+      // 의도적으로 카메라 로컬 좌표를 쓴다. 이전 배치는 카메라 전방 거리보다 큰
+      // 측면 오프셋을 사용해 기즈모가 항상 원근 절두체 밖에 있었다.
       float depth = _previewDistance * 0.72f;
       float verticalExtent = depth * Mathf.Tan(camera.fieldOfView * Mathf.Deg2Rad * 0.5f);
       float horizontalExtent = verticalExtent * camera.aspect;
@@ -710,8 +709,8 @@ namespace TriageTrainer.Editor
         + camera.transform.right * (horizontalExtent * 0.86f)
         + camera.transform.up * (verticalExtent * 0.76f)
         + camera.transform.forward * depth;
-      // The baked prefab's authored bounds are much larger than the fallback
-      // bars. Reduce its displayed size to one fifth of the previous value.
+      // 베이크된 프리팹의 작성 경계는 폴백 막대보다 훨씬 크다. 표시 크기를
+      // 이전 값의 5분의 1로 줄인다.
       _gizmoScale = depth * 0.015f;
       if (_bakedRotateGizmoObject != null)
       {
@@ -737,9 +736,9 @@ namespace TriageTrainer.Editor
 
     private void DrawGizmoAxisLabel(Rect rect, Vector3 direction, Color color, string label)
     {
-      // Keep labels attached to the gizmo in screen space. Projecting a long
-      // world-space offset makes the labels drift to the edge when the window
-      // becomes narrow because the preview camera's aspect ratio changes.
+      // 라벨을 기즈모에 화면 공간으로 붙여 둔다. 긴 월드 공간 오프셋을 투영하면
+      // 미리보기 카메라의 종횡비가 달라질 때 창이 좁아지며 라벨이 가장자리로
+      // 밀려나기 때문이다.
       Vector2 center = WorldToPreview(_gizmoPosition, rect);
       Vector2 axisEnd = WorldToPreview(_gizmoPosition + direction * _gizmoScale, rect);
       Vector2 screenDirection = axisEnd - center;

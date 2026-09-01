@@ -62,8 +62,9 @@ namespace MultiplayerInfrastructure.Editor.TTS
       if (state != PlayModeStateChange.ExitingEditMode)
         return;
 
-      // Command-line tests and CI cannot answer modal dialogs. Keep validation visible
-      // in the log, but never cancel or recursively restart PlayMode in batch mode.
+      // 커맨드라인 테스트와 CI 는 모달 대화 상자에 답할 수 없다. 검사 결과는
+      // 로그에 보이게 유지하되, 배치 모드에서는 PlayMode 를 취소하거나 재귀적으로
+      // 재시작하지 않는다.
       if (Application.isBatchMode)
       {
         CheckModelsAndWarn();

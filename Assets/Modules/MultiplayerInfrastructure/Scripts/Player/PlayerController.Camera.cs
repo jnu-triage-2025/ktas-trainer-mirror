@@ -19,8 +19,8 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private MainCameraController _camControl;
     private void Awake_Camera()
     {
-      // Camera attachment is deferred to owner check in OnStartClient to avoid other players overwriting
-      // the global main camera target.
+      // 카메라 부착은 OnStartClient 의 소유자 검사로 미룬다. 다른 플레이어가
+      // 전역 메인 카메라 대상을 덮어쓰지 않게 하기 위해서다.
     }
 
     private void OnStartClient_Camera()
@@ -52,7 +52,7 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      // Ensure camera sticks to the local owner's attach point even if other events tried to retarget.
+      // 다른 이벤트가 대상을 바꾸려 해도 카메라가 항상 로컬 소유자의 부착점에 붙어 있게 한다.
       if (_camControl.FollowingCameraHolder != CameraAttachPoint?.PivotTransform)
         _camControl.SetTarget(this);
     }

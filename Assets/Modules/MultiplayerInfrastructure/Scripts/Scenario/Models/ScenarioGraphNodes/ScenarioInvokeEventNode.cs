@@ -15,8 +15,8 @@
     public bool InvokeOnRoleClient { get; set; }
 
     /// <summary>
-    /// Controls when to move to NextIdentifier after invoking the event.
-    /// False: never moves automatically, Immediately: move right after firing, WaitUntilDone: wait for handler completion.
+    /// 이벤트 호출 후 NextIdentifier 로 언제 이동할지 제어한다.
+    /// False: 자동으로 이동하지 않는다, Immediately: 발신 직후 이동한다, WaitUntilDone: 핸들러 완료를 기다린다.
     /// </summary>
     public ScenarioInvokeEventMoveNextBehavior MoveNextBehavior { get; set; } = ScenarioInvokeEventMoveNextBehavior.WaitUntilDone;
   }

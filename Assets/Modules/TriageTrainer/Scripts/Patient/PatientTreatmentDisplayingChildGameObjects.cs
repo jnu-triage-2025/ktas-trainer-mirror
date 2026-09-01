@@ -1,5 +1,5 @@
-﻿// This file is auto-generated.
-// Refer to PatientTreatmentDisplayModel.cs.
+﻿// 이 파일은 자동 생성되었다.
+// PatientTreatmentDisplayModel.cs 를 참고한다.
 using System;
 using UnityEngine;
 

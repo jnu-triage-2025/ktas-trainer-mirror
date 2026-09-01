@@ -7,9 +7,8 @@ using UnityEngine;
 namespace TriageTrainer.Entity.LineConnection
 {
   /// <summary>
-  /// Common endpoint for a physical line. Concrete points own their interaction
-  /// and domain-specific behaviour; this class owns only connection state and
-  /// line presentation configuration.
+  /// 물리적 라인의 공통 종단점이다. 구체적인 포인트가 상호작용과 도메인 고유 동작을 담당하고,
+  /// 이 클래스는 연결 상태와 라인 표시 설정만 담당한다.
   /// </summary>
   public abstract class LineConnectionPoint : MonoBehaviour
   {
@@ -67,8 +66,8 @@ namespace TriageTrainer.Entity.LineConnection
     public bool CanAcceptAdditionalConnection => _allowMultipleConnections || !HasAnyConnection;
 
     /// <summary>
-    /// A line connects only matching concrete point types by default. A point
-    /// that intentionally supports another type must opt in by overriding this.
+    /// 라인은 기본적으로 동일한 구체적 포인트 타입끼리만 연결된다. 다른 타입을 의도적으로
+    /// 지원하려는 포인트는 이 메서드를 재정의하여 명시적으로 허용해야 한다.
     /// </summary>
     public virtual bool CanConnectTo(LineConnectionPoint other) =>
       other != null && other.GetType() == GetType();
@@ -76,8 +75,8 @@ namespace TriageTrainer.Entity.LineConnection
     public virtual bool CanPlayerCompleteConnection(PlayerController player, LineConnectionPoint other) => true;
 
     /// <summary>
-    /// Consumes a point-specific connection requirement after common connection
-    /// validation succeeds. Points without a requirement accept by default.
+    /// 공통 연결 검증이 통과된 뒤 포인트 고유의 연결 요구사항을 소모한다.
+    /// 요구사항이 없는 포인트는 기본적으로 허용한다.
     /// </summary>
     public virtual bool TryConsumeConnectionRequirement(PlayerController player) => true;
 
@@ -165,29 +164,29 @@ namespace TriageTrainer.Entity.LineConnection
       return string.Join("/", names);
     }
 
-    /// <summary>Called by LineConnectionService through a concrete point type branch.</summary>
+    /// <summary>LineConnectionService 가 구체적 포인트 타입 분기를 통해 호출한다.</summary>
     public virtual void ApplyLineMaterial(LineRenderer lineRenderer)
     {
       if (lineRenderer != null && _lineMaterial != null)
         lineRenderer.sharedMaterial = _lineMaterial;
     }
 
-    /// <summary>Called when this point begins a line-connection operation.</summary>
+    /// <summary>이 포인트에서 라인 연결 작업을 시작할 때 호출된다.</summary>
     public virtual void NotifyConnectionStarted() { }
 
-    /// <summary>Called once from the start point after a line is created.</summary>
+    /// <summary>라인이 생성된 후 시작점에서 한 번 호출된다.</summary>
     public virtual void NotifyConnectionCompleted(LineConnectionPoint other) { }
 
-    /// <summary>Called for each endpoint after a line is created.</summary>
+    /// <summary>라인이 생성된 후 각 종단점마다 호출된다.</summary>
     public virtual void NotifyLineConnected(LineConnectionPoint other) { }
 
-    /// <summary>Called for each endpoint when one of its lines is removed.</summary>
+    /// <summary>종단점의 라인 하나가 제거될 때 호출된다.</summary>
     public virtual void NotifyLineDisconnected(LineConnectionPoint other) { }
 
-    /// <summary>Observer-only local lifecycle; must not emit authoritative signals.</summary>
+    /// <summary>관전자 전용 로컬 수명 주기이며, 권한 있는 신호를 발생시켜서는 안 된다.</summary>
     public virtual void NotifyReplicatedLineConnected(LineConnectionPoint other) { }
 
-    /// <summary>Observer-only local lifecycle; must not emit authoritative signals.</summary>
+    /// <summary>관전자 전용 로컬 수명 주기이며, 권한 있는 신호를 발생시켜서는 안 된다.</summary>
     public virtual void NotifyReplicatedLineDisconnected(LineConnectionPoint other) { }
   }
 }

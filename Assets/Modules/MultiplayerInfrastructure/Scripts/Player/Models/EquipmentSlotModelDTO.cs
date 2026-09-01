@@ -16,7 +16,7 @@ namespace MultiplayerInfrastructure.Player
   /// <summary>
   /// 플레이어 장비 슬롯 하나를 나타냅니다.
   /// <see cref="EquipmentSlotType"/> 에 해당하는 아이템만 장착할 수 있으며,
-  /// 내부에 <see cref="InventorySlotModelDTO"/> 를保有하여 아이템을 관리합니다.
+  /// 내부에 <see cref="InventorySlotModelDTO"/> 를 보유하여 아이템을 관리합니다.
   /// </summary>
   [Serializable]
   public class EquipmentSlotModelDTO

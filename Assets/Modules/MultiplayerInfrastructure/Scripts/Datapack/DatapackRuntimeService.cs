@@ -125,8 +125,8 @@ namespace MultiplayerInfrastructure.Datapack
     {
       PrepareRuntimeDatapackFolder();
 
-      // The host's selection is the authoritative session configuration.
-      // On a standalone development scene, an empty selection means all valid packs.
+      // 호스트의 선택이 세션 구성의 기준값이다.
+      // 독립 개발 씬에서 빈 선택은 모든 유효한 팩을 의미한다.
       var selected = Registry.Registry.Get<List<string>>(RegistryType.RuntimeState, RegistryGlobalKeys.SelectedDatapackIds)
         ?? new List<string>(SessionConfigurationService.DatapackIds);
       if (selected != null && selected.Count > 0)
@@ -202,7 +202,7 @@ namespace MultiplayerInfrastructure.Datapack
         Definition = definition
       };
 
-      // Register low-priority definitions first. The last registration wins for aliases.
+      // 우선순위가 낮은 정의를 먼저 등록한다. 별칭은 마지막 등록이 이긴다.
       if (definition.commandAliases != null)
         foreach (var alias in definition.commandAliases)
           if (alias != null && !string.IsNullOrWhiteSpace(alias.name) && !string.IsNullOrWhiteSpace(alias.target))

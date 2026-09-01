@@ -460,7 +460,7 @@ namespace MultiplayerInfrastructure.Command
         return true;
       }
 
-      // Fallback: try identifier, then display name
+      // 폴백: 식별자로 먼저 찾고, 없으면 표시 이름으로 찾는다.
       if (UserDescriptorService.TryGetByIdentifier(playerToken, out descriptor))
         return true;
 

@@ -116,8 +116,8 @@ namespace MultiplayerInfrastructure.FishNetSupports
       if (source == null)
         return;
 
-      // PlayerSpawner subscribes in Awake and only unsubscribes in OnDestroy.
-      // Calling OnDestroy here detaches its spawn callback without editing FishNet source.
+      // PlayerSpawner 는 Awake 에서 구독하고 OnDestroy 에서만 해제한다.
+      // 여기서 OnDestroy 를 호출하면 FishNet 소스를 수정하지 않고도 스폰 콜백을 뗄 수 있다.
       PlayerSpawnerOnDestroyMethod?.Invoke(source, null);
       source.enabled = false;
     }

@@ -308,8 +308,8 @@ namespace TriageTrainer.Entity
     public override void ApplyShownFromNetwork()
     {
       Show();
-      // CareZone listens to the attachment event and immediately scans active
-      // colliders. Make the representation/collider visible before publishing it.
+      // CareZone 이 부착 이벤트를 듣고 즉시 활성 콜라이더를 스캔한다.
+      // 이벤트를 발행하기 전에 표현물/콜라이더를 먼저 보이게 만든다.
       SetAttached(true);
     }
 

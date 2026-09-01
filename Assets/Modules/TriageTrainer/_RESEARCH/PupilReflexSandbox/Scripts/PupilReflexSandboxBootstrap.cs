@@ -4,9 +4,9 @@ using UnityEngine.Rendering;
 namespace TriageTrainer.Tests.PupilReflexSandbox
 {
   /// <summary>
-  /// Builds and configures a standalone direct pupil light reflex sandbox.
-  /// For production integration, disable auto sandbox creation and assign
-  /// anchors from an existing patient prefab.
+  /// 독립 실행형 직접 동공 대사광 반사 샌드박스를 만들고 설정한다.
+  /// 프로덕션에 통합할 때는 자동 샌드박스 생성을 끄고 기존 환자 프리팹에서
+  /// 앵커를 할당한다.
   /// </summary>
   [DisallowMultipleComponent]
   public class PupilReflexSandboxBootstrap : MonoBehaviour

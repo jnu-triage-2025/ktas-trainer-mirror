@@ -40,8 +40,8 @@ namespace MultiplayerInfrastructure.Registry
 
     private void PreloadScenarioGraphs()
     {
-      // Always attempt bulk preload from Resources/Scenario so all available
-      // scenario TextAssets can be discovered even without explicit SO wiring.
+      // 명시적 SO 연결이 없어도 사용 가능한 모든 시나리오 TextAsset 을 발견할 수
+      // 있도록 Resources/Scenario 대량 프리로드를 항상 시도한다.
       // 시작 시에는 TextAsset 인덱스만 만들고, 실제 그래프를 처음 요청할 때
       // 스키마 검증과 역직렬화를 수행해 로딩 정지와 검증 우회를 모두 피한다.
       Registry.IndexScenarioGraphAssetsFromResources();

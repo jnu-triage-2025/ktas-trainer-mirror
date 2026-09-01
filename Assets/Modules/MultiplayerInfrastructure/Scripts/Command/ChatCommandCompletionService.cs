@@ -121,10 +121,9 @@ namespace MultiplayerInfrastructure.Command
     {
       string before = _completionOriginalText.Substring(0, _completionTokenStart);
       string after = _completionOriginalText.Substring(_completionTokenEnd);
-      // Do not add a second separator when the original token is followed by
-      // whitespace (for example, completing "/gi foo" must not produce
-      // "/give  foo"). A trailing space is still added at the end of the
-      // input so the next argument can be typed immediately.
+      // 원본 토큰 뒤에 이미 공백이 있으면 구분자를 두 번 추가하지 않는다
+      // (예: "/gi foo" 를 완성해 "/give  foo" 가 되어서는 안 된다). 대신 입력
+      // 끝에는 항상 공백을 붙여 다음 인수를 바로 입력할 수 있게 한다.
       bool needsSeparator = after.Length == 0 || !char.IsWhiteSpace(after[0]);
       string separator = needsSeparator ? " " : string.Empty;
       string newText = before + candidate + separator + after;
@@ -176,8 +175,8 @@ namespace MultiplayerInfrastructure.Command
       if (firstSpace < 0 || tokenStart < firstSpace)
       {
         // 명령어 이름 자동완성
-        // Command candidates include the leading slash because that slash is
-        // part of the replacement token. Keep it in the filter as well.
+        // 커맨드 후보에는 선행 슬래시가 포함된다. 그 슬래시가 치환 토큰의
+        // 일부이기 때문이다. 필터에도 슬래시를 유지한다.
         partial = "/" + text.Substring(commandNameStart, tokenEnd - commandNameStart);
         tokenStart = 0; // '/' 부터 치환하여 '/command' 형태로 완성
         tokenEnd = firstSpace >= 0 ? firstSpace : text.Length;
@@ -216,10 +215,10 @@ namespace MultiplayerInfrastructure.Command
         }
       }
 
-      // Commands can expose their syntax through IChatCommandUsage without
-      // having to duplicate every literal subcommand in a second API. This
-      // also provides dynamic candidates for the common placeholders used by
-      // the command definitions (item, target, waypoint, and so on).
+      // 커맨드는 IChatCommandUsage 로 자기 구문을 노출할 수 있어, 모든 리터럴
+      // 하위 커맨드를 두 번째 API 에 중복 정의하지 않아도 된다. 또한 커맨드
+      // 정의에서 쓰는 공통 플레이스홀더(item, target, waypoint 등)에 대한
+      // 동적 후보도 여기서 제공한다.
       if (_commandService != null
           && _commandService.TryGetCommand(commandName, out var usageCommand))
       {
@@ -268,9 +267,8 @@ namespace MultiplayerInfrastructure.Command
         if (tokens.Length == 0)
           continue;
 
-        // UsageLine entries are normally prefixed with the command name. A
-        // continuation entry such as "<target>" has no command token and is
-        // not useful for locating a subcommand path.
+        // UsageLine 항목은 보통 커맨드 이름으로 시작한다. "<target>" 같은
+        // 연속 항목에는 커맨드 토큰이 없어 하위 커맨드 경로를 찾는 데 쓸 수 없다.
         if (!string.Equals(tokens[0], command.CommandEntry, StringComparison.OrdinalIgnoreCase))
           continue;
 
@@ -297,10 +295,9 @@ namespace MultiplayerInfrastructure.Command
         {
           currentCandidates.AddRange(GetPlaceholderCandidates(currentToken));
 
-          // Optional positional arguments such as `/give <item> [count]
-          // [target]` may legally skip the count. Offer the following target
-          // candidates at the count position when the user has started typing
-          // a non-numeric token.
+          // `/give <item> [count] [target]` 의 count 처럼 선택 위치 인수는
+          // 건너뛰어도 된다. 사용자가 숫자가 아닌 토큰을 입력하기 시작했다면
+          // count 위치에서 다음 target 후보를 제안한다.
           if (currentCandidates.Count == 0
               && currentToken[0] == '['
               && !string.IsNullOrEmpty(partial)

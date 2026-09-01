@@ -69,7 +69,7 @@ namespace MultiplayerInfrastructure.Commons
       {
         IconSpriteDefinitions.None => null,
         IconSpriteDefinitions.NPCMessage => "message-circle",
-        IconSpriteDefinitions.NPCMessageQuest => "message-circle", // TODO: Replace with actual quest icon
+        IconSpriteDefinitions.NPCMessageQuest => "message-circle", // TODO: 실제 퀘스트 아이콘으로 교체한다
         IconSpriteDefinitions.Undefined => null,
         _ => null
       };

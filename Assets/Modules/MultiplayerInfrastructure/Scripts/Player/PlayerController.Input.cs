@@ -145,8 +145,8 @@ namespace MultiplayerInfrastructure.Player
 
     private void HandleInteractInteractableObject()
     {
-      // Dialogue progression is handled only in HandleDialogueInput.
-      // Guard here to prevent a second TrySelectCurrentOption call in the same frame.
+      // 대화 진행은 HandleDialogueInput 에서만 처리한다.
+      // 같은 프레임에 TrySelectCurrentOption 이 두 번 호출되지 않도록 여기서 막는다.
       if (!_dialoguePanelUIController.IsUnityNull() && UIOverlayStack.IsTop(_dialoguePanelUIController))
       {
         HandleInteractablesSelectionInput();
@@ -271,7 +271,7 @@ namespace MultiplayerInfrastructure.Player
 
     private void HandleHotbarControlInput()
     {
-      // Selection using numkey
+      // 숫자 키로 선택
       HandleHotbarInputNumkey();
 
       // 수정자 키를 누른 채 휠을 굴리면 핫바 선택 대신 카메라 거리(POV)를 조정한다.
@@ -283,7 +283,7 @@ namespace MultiplayerInfrastructure.Player
 
       if (_detector.IsUnityNull())
         return;
-      // Selection using mouse wheel
+      // 마우스 휠로 선택
       if (_detector.InteractableNearbyExists)
         return;
       HandleHotbarInputMouseWheel();
@@ -375,7 +375,7 @@ namespace MultiplayerInfrastructure.Player
       if (!UIOverlayStack.IsTop(_dialoguePanelUIController))
         return;
 
-      // Dialogue advance keys are centralized here so all paths go through PlayerController.Input.
+      // 대화 진행 키를 여기에 집중시켜 모든 경로가 PlayerController.Input 을 거치게 한다.
       if (IsDialogueAdvanceInputDown())
       {
         _dialoguePanelUIController.TrySelectCurrentOption();

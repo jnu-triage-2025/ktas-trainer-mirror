@@ -230,7 +230,7 @@ namespace MultiplayerInfrastructure.Command
         return TryResolveConnectionByClientId(selector, out connection);
       }
 
-      // Fallback order: user identifier first, then display name.
+      // 폴백 순서: 사용자 식별자를 먼저 시도하고, 없으면 표시 이름으로 찾는다.
       if (TryResolveConnectionByUserIdentifier(selector, out connection))
         return true;
 

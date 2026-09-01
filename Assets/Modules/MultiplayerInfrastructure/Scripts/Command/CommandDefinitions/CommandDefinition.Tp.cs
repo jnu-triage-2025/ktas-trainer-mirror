@@ -62,28 +62,28 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      // /tp x y z  (3 coordinates → teleport self; coordinates may be absolute or relative)
+      // /tp x y z  (좌표 3개: 자기 자신으로 순간이동. 좌표는 절대 또는 상대 가능)
       if (args.Length == 3 && AreCoordinateTokens(args))
       {
         HandleSelfToCoordinates(sender, args);
         return;
       }
 
-      // /tp <player> x y z  (last 3 coordinates may be absolute or relative)
+      // /tp <player> x y z  (뒤의 좌표 3개는 절대 또는 상대 가능)
       if (args.Length == 4 && AreCoordinateTokens(args, 1))
       {
         HandlePlayerToCoordinates(sender, args[0], args, 1);
         return;
       }
 
-      // /tp <target>  (1 token — player or waypoint)
+      // /tp <target>  (토큰 1개: 플레이어 또는 웨이포인트)
       if (args.Length == 1)
       {
         HandleSelfToTarget(sender, args[0]);
         return;
       }
 
-      // /tp <a> <b>  (2 tokens — player→player or player→waypoint)
+      // /tp <a> <b>  (토큰 2개: 플레이어→플레이어 또는 플레이어→웨이포인트)
       if (args.Length == 2)
       {
         HandleTwoTokens(sender, args[0], args[1]);
@@ -140,10 +140,10 @@ namespace MultiplayerInfrastructure.Command
       _chat.SendSystemMessage(sender, $"Teleported {name} to ({destination.x:0.##}, {destination.y:0.##}, {destination.z:0.##}).");
     }
 
-    /// /tp <target>  — self → player or self → waypoint
+    /// /tp <target>  — 자기 자신에서 플레이어 또는 웨이포인트로 이동
     private void HandleSelfToTarget(NetworkConnection sender, string targetToken)
     {
-      // Try player first.
+      // 플레이어를 먼저 시도한다.
       if (TryResolveController(targetToken, sender, out var destController, out _))
       {
         if (!TryResolveController(sender, sender, out var selfController, out string selfError))
@@ -158,7 +158,7 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      // Try waypoint.
+      // 웨이포인트를 시도한다.
       if (TryResolveWaypointPosition(targetToken, out Vector3 waypointPos))
       {
         if (!TryResolveController(sender, sender, out var selfController, out string selfError))
@@ -175,10 +175,10 @@ namespace MultiplayerInfrastructure.Command
       _chat.SendSystemMessage(sender, $"Target '{targetToken}' was not found as a player or waypoint.");
     }
 
-    /// /tp <a> <b>  — player→player or player→waypoint
+    /// /tp <a> <b>  — 플레이어에서 플레이어로, 또는 플레이어에서 웨이포인트로 이동
     private void HandleTwoTokens(NetworkConnection sender, string aToken, string bToken)
     {
-      // Resolve subject (a).
+      // 주체(a)를 해석한다.
       if (!TryResolveController(aToken, sender, out var subjectController, out string subjectError))
       {
         _chat.SendSystemMessage(sender, subjectError);
@@ -193,7 +193,7 @@ namespace MultiplayerInfrastructure.Command
 
       string subjectName = ResolveDisplayName(subjectController);
 
-      // Try b as player.
+      // b 를 플레이어로 시도한다.
       if (TryResolveController(bToken, sender, out var destController, out _))
       {
         string destName = ResolveDisplayName(destController);
@@ -202,7 +202,7 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      // Try b as waypoint.
+      // b 를 웨이포인트로 시도한다.
       if (TryResolveWaypointPosition(bToken, out Vector3 waypointPos))
       {
         Teleport(subjectController, waypointPos);
@@ -309,7 +309,7 @@ namespace MultiplayerInfrastructure.Command
         return true;
       }
 
-      // Registry fallback (preloaded waypoints)
+      // Registry 폴백(프리로드된 웨이포인트)
       if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, identifier, out Vector3 regPos))
       {
         position = regPos;
@@ -449,7 +449,7 @@ namespace MultiplayerInfrastructure.Command
         return true;
       }
 
-      // Fallback: user identifier → display name
+      // 폴백: 사용자 식별자 → 표시 이름
       if (Registry.Registry.TryGetEntityByOwnerUserIdentifier(token, out var descFallback)
           && descFallback?.ClientId != null)
       {

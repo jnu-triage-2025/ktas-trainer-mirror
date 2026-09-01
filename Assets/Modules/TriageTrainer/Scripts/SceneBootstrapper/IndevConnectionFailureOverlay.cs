@@ -67,8 +67,8 @@ namespace TriageTrainer.SceneBootstrapper
 
     private void Update()
     {
-      // PlayerController may re-lock the cursor for one or more frames while the
-      // world scene is being unloaded. Keep the terminal screen clickable throughout.
+      // 월드 씬이 언로드되는 동안 PlayerController 가 한 프레임 이상 커서를
+      // 다시 잠글 수 있다. 종료 화면은 그 내내 클릭 가능하게 유지한다.
       if (_failureVisible)
       {
         UnityEngine.Cursor.lockState = CursorLockMode.None;
@@ -197,8 +197,8 @@ namespace TriageTrainer.SceneBootstrapper
         Debug.LogError(dump);
 
       BindDocument();
-      // A rebinding flow may still own the mouse and keep the cursor locked.
-      // The failure screen is a terminal UI, so always restore pointer interaction.
+      // 리바인딩 흐름이 아직 마우스를 소유하여 커서를 잠근 채 둘 수 있다.
+      // 실패 화면은 종단 UI 이므로 항상 포인터 상호작용을 복원한다.
       UnityEngine.Cursor.lockState = CursorLockMode.None;
       UnityEngine.Cursor.visible = true;
       EnsurePointerInput();
@@ -297,9 +297,9 @@ namespace TriageTrainer.SceneBootstrapper
 
     private IEnumerator UnloadWorldScenes()
     {
-      // Keep SystemOverlayScene alive because it owns FishNetSupport and the shared
-      // event system. The failure scene remains active; only world rendering scenes
-      // are removed from the additive session.
+      // SystemOverlayScene 은 FishNetSupport 와 공유 이벤트 시스템을 소유하므로
+      // 살려 둔다. 실패 씬은 활성 상태로 유지하고, 애디티브 세션에서는 월드
+      // 렌더링 씬만 제거한다.
       var scenes = new List<Scene>();
       for (int i = 0; i < SceneManager.sceneCount; i++)
       {

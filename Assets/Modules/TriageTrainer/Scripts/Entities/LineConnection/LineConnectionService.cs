@@ -406,8 +406,7 @@ namespace TriageTrainer.Entity.LineConnection
     }
 
     /// <summary>
-    /// Completes a generic line connection after the start point consumes any
-    /// point-specific requirement it defines.
+    /// 시작점이 정의한 포인트 고유의 요구사항을 소모한 뒤 범용 라인 연결을 완료한다.
     /// </summary>
     public bool TryCompleteConnection(PlayerController player, LineConnectionPoint endPoint)
     {
@@ -759,8 +758,8 @@ namespace TriageTrainer.Entity.LineConnection
     }
 
     /// <summary>
-    /// Creates an authoritative connection without a player interaction or item
-    /// consumption. This is reserved for newly installed CareZone equipment.
+    /// 플레이어 상호작용이나 아이템 소모 없이 권한 있는 연결을 만든다.
+    /// 새로 설치되는 CareZone 장비 전용이다.
     /// </summary>
     public bool TryCreateAutomaticConnection(LineConnectionPoint startPoint, LineConnectionPoint endPoint)
     {
@@ -786,7 +785,7 @@ namespace TriageTrainer.Entity.LineConnection
       return true;
     }
 
-    /// <summary>Removes only the specified automatically managed endpoint pair.</summary>
+    /// <summary>지정한 자동 관리 종단점 쌍만 제거한다.</summary>
     public bool DisconnectAutomaticConnection(LineConnectionPoint first, LineConnectionPoint second)
     {
       if (first == null || second == null || !ContainsAutomaticPair(first, second)
@@ -967,9 +966,9 @@ namespace TriageTrainer.Entity.LineConnection
         endPoint?.UnregisterConnectedLineObject(lineObject);
       }
 
-      // Replicated topology is also rebuilt by editor validation/tests. Destroy emits an
-      // error and leaves the object alive until end-of-frame outside play mode, which can
-      // make a disconnect immediately followed by reconnect observe stale topology.
+      // 복제된 토폴로지는 에디터 검증/테스트에서도 다시 만들어진다. 플레이 모드 밖에서
+      // Destroy 는 오류를 내고 오브젝트를 프레임 끝까지 살려두므로, 연결 해제 직후
+      // 재연결이 오래된 토폴로지를 관찰할 수 있다.
       if (Application.isPlaying)
         Destroy(lineObject);
       else
@@ -1129,10 +1128,10 @@ namespace TriageTrainer.Entity.LineConnection
       LineConnectionPoint endPoint,
       LineRenderer lineRenderer)
     {
-      // A point may override the material for a special-cased line; otherwise the
-      // service owns the material per concrete point type. An explicit override on
-      // either end always outranks the service default, so both ends are checked
-      // before falling back to the per-type material.
+      // 포인트가 특수 케이스 라인의 머티리얼을 재정의할 수도 있다. 그렇지 않으면
+      // 서비스가 구체적 포인트 타입별 머티리얼을 소유한다. 어느 한쪽 끝의 명시적
+      // 재정의는 항상 서비스 기본값보다 우선하므로, 타입별 머티리얼으로 넘어가기
+      // 전에 양쪽 끝을 모두 확인한다.
       var overrideMaterial = GetOverrideMaterial(startPoint) ?? GetOverrideMaterial(endPoint);
       if (overrideMaterial != null)
       {
@@ -1443,7 +1442,7 @@ namespace TriageTrainer.Entity.LineConnection
           continue;
 
         float distanceError = distance - targetLength;
-        // Elasticity reduces constraint stiffness, allowing the line to stretch.
+        // 탄성은 제약 강성을 낮춰 라인이 늘어날 수 있게 한다.
         float stiffness = Mathf.Lerp(1f, 0.1f, _elasticity);
         Vector3 correction = delta * (distanceError / distance) * stiffness;
 
@@ -1541,7 +1540,7 @@ namespace TriageTrainer.Entity.LineConnection
       if (collider is MeshCollider meshCollider && meshCollider.convex)
         return collider.ClosestPoint(point);
 
-      // Fallback for unsupported collider types (eg non-convex MeshCollider).
+      // 지원하지 않는 콜라이더 타입(예: 볼록이 아닌 MeshCollider)용 폴백.
       return collider.bounds.ClosestPoint(point);
     }
   }

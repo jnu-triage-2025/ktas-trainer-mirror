@@ -80,7 +80,7 @@ namespace TriageTrainer.SceneBootstrapper
     {
       using (LoadingScreen.Begin())
       {
-        // Hide FishNet logo/HUD as early as possible, before any scene loading.
+        // 씬 로딩 전에 최대한 일찍 FishNet 로고/HUD 를 숨긴다.
         HideFishNetHud();
 
         if (loadSystemOverlayScene)
@@ -90,7 +90,7 @@ namespace TriageTrainer.SceneBootstrapper
 
         yield return LoadSceneIfNeeded(ConnectionFailureSceneName);
 
-        // Ensure newly-loaded scene objects complete Awake/OnEnable before networking starts.
+        // 새로 로드된 씬 오브젝트가 네트워킹 시작 전에 Awake/OnEnable 을 마치도록 한다.
         yield return null;
 
         var connectionFailureOverlay = FindAnyObjectByType<IndevConnectionFailureOverlay>();

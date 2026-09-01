@@ -4,8 +4,8 @@ using UnityEngine;
 namespace TriageTrainer.Entity.OxyLine
 {
   /// <summary>
-  /// Marks the position where an oxygen line can be connected.
-  /// Connection behavior will be implemented separately.
+  /// 산소 라인을 연결할 수 있는 위치를 나타낸다.
+  /// 연결 동작은 별도로 구현된다.
   /// </summary>
   public sealed class OxyLineConnectionPoint : LineConnectionPoint
   {

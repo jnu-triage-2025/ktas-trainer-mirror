@@ -90,10 +90,10 @@ namespace TriageTrainer.Entity.PatientMonitor
 
       _runtimePanelSettings.targetTexture = _renderTexture;
 
-      // Renderer.material instantiates a Material and may synchronously compile its
-      // shader. In MPPM virtual players on macOS this can enter Unity's native modal
-      // progress backend while a scene is loading and crash the Editor. A property
-      // block applies the per-renderer texture without material instantiation.
+      // Renderer.material 은 Material 인스턴스를 만들고 셰이더를 동기 컴파일할 수
+      // 있다. macOS 의 MPPM 가상 플레이어에서 이것이 씬 로드 중 Unity 네이티브
+      // 모달 진행 백엔드에 진입하여 에디터가 crash 할 수 있다. 프로퍼티 블록은
+      // 머티리얼 인스턴스화 없이 렌더러별 텍스처를 적용한다.
       _originalPropertyBlock = new MaterialPropertyBlock();
       _targetRenderer.GetPropertyBlock(_originalPropertyBlock);
 

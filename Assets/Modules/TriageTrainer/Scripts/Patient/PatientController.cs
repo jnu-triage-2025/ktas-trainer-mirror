@@ -204,7 +204,7 @@ namespace TriageTrainer.Entity
         }
       }
 
-      // Debug/tests can apply without a player. Real player use must own the item.
+      // 디버그/테스트는 플레이어 없이 적용할 수 있다. 실제 플레이어 사용은 아이템을 소유해야만 한다.
       if (sourcePlayer != null && sourcePlayer.CountItemInInventory(itemIdentifier) < 1)
         return false;
 

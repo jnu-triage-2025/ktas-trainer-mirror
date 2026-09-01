@@ -138,8 +138,9 @@ namespace MultiplayerInfrastructure.Scenario
       if (dto.ClientSignalIdentifiers != null)
         return NormalizeSignalSpecification(dto.ClientSignalIdentifiers);
 
-      // The earlier Patient A graph historically used generic client reports for its interaction gates.
-      // Keep only this audited legacy graph compatible; every other undeclared graph defaults to deny.
+      // 이전 Patient A 그래프는 상호작용 게이트에 일반 클라이언트 보고를 사용했다.
+      // 검증을 마친 이 레거시 그래프만 호환을 유지하고, 선언되지 않은 다른 그래프는
+      // 모두 기본적으로 거부한다.
       if (!string.Equals(graphIdentifier, "patient_a_critical", StringComparison.Ordinal))
         return Array.Empty<string>();
 

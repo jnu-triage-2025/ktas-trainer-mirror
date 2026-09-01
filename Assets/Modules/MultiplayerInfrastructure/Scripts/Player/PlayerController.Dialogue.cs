@@ -20,7 +20,7 @@ namespace MultiplayerInfrastructure.Player
 
       if (!_dialoguePanelUIController.IsUnityNull())
       {
-        // Ensure registry has the instance so other systems can resolve it without warnings.
+        // 레지스트리에 인스턴스를 등록해 다른 시스템이 경고 없이 조회할 수 있게 한다.
         Registry.Registry.Register(RegistryType.UI, Registry.Registry.TypeKey<DialoguePanelUIController>(), _dialoguePanelUIController);
       }
 
