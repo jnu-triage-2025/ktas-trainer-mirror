@@ -85,8 +85,29 @@ namespace MultiplayerInfrastructure.Scenario
     private Collider[] _perEntityOverlapBuffer = new Collider[32];
     private float _nextPerEntityPollTime;
 
-    // 새 시나리오 실행마다 중복 방지 상태를 되돌리기 위해 활성 존을 추적한다.
+    /// <summary>
+    /// 새 시나리오 실행마다 중복 방지 상태를 되돌리기 위해 존을 추적한다.
+    ///
+    /// <para>
+    /// 추적은 GameObject 의 활성 상태와 무관해야 한다. <see cref="_disableAfterTrigger"/> 로
+    /// 스스로를 비활성화한 존을 목록에서 제거하면 <see cref="ResetAllForNewScenarioRun"/> 이
+    /// 그 존에 도달할 수 없고, 재활성화하는 코드도 없다. 그 결과 재시작 시 그 존이 담당한
+    /// 신호가 다시 올라가지 않아, 그 신호를 기다리는 게이트가 영구히 막힌다.
+    /// 따라서 Awake 에서 등록하고 OnDestroy 에서만 제거한다.
+    /// </para>
+    /// </summary>
     private static readonly List<ScenarioTriggerZone> LiveZones = new();
+
+    /// <summary>
+    /// 정적 상태를 초기화한다. 도메인 리로드가 비활성인 환경에서는 정적 목록이 플레이 세션
+    /// 사이에 유지되어 파괴된 존 참조가 누적되므로, 세션 시작 시 비운다.
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+      LiveZones.Clear();
+      OnScenarioRequested = null;
+    }
 
     #endregion
 
@@ -110,6 +131,9 @@ namespace MultiplayerInfrastructure.Scenario
       CacheScenarioGraph();
       RegisterToRegistry();
       _zoneCollider = GetComponent<Collider>();
+      // 활성 상태와 무관하게 추적한다. LiveZones 주석의 설명을 참고한다.
+      if (!LiveZones.Contains(this))
+        LiveZones.Add(this);
     }
 
     private void OnEnable()
@@ -122,12 +146,12 @@ namespace MultiplayerInfrastructure.Scenario
     private void OnDisable()
     {
       UnregisterFromRegistry();
-      LiveZones.Remove(this);
     }
 
     private void OnDestroy()
     {
       UnregisterFromRegistry();
+      LiveZones.Remove(this);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -562,6 +586,18 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public static void ResetAllForNewScenarioRun()
     {
+      // Awake 는 처음부터 비활성인 GameObject 에서는 호출되지 않으므로, 그런 존은 LiveZones 에
+      // 등록되지 않는다. 실행 시작 시 씬을 한 번 훑어 누락된 존을 보충한다. 비활성 오브젝트도
+      // 포함해 조회한다.
+      var sceneZones = FindObjectsByType<ScenarioTriggerZone>(
+        FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (int index = 0; index < sceneZones.Length; index++)
+      {
+        var zone = sceneZones[index];
+        if (zone != null && !LiveZones.Contains(zone))
+          LiveZones.Add(zone);
+      }
+
       for (int index = LiveZones.Count - 1; index >= 0; index--)
       {
         var zone = LiveZones[index];
@@ -592,6 +628,12 @@ namespace MultiplayerInfrastructure.Scenario
 
       _hasTriggered = false;
       _lastTriggerTime = float.NegativeInfinity;
+
+      // _disableAfterTrigger 로 스스로를 끈 신호 전용 존은 다시 켜 주어야 다음 실행에서
+      // 진입을 감지할 수 있다. 상태만 초기화하고 GameObject 를 켜지 않으면 존은 영구히
+      // 침묵하며, 그 신호를 기다리는 게이트가 막힌다.
+      if (_disableAfterTrigger && !gameObject.activeSelf)
+        gameObject.SetActive(true);
     }
 
     [ContextMenu("Scenario Trigger/Reset Trigger")]
