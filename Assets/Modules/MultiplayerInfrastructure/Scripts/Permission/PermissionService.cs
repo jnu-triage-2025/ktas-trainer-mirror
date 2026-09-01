@@ -80,19 +80,36 @@ namespace MultiplayerInfrastructure.Permission
     {
       var file = new PermissionsFile
       {
-        roles = new List<string> { "user", "operator" },
+        roles = new List<string> { "user", "instructor", "operator" },
         @default = "user",
         permissions = new Dictionary<string, RoleDefinition>(StringComparer.OrdinalIgnoreCase),
         userRoles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
       };
 
-      // user role: permission 관리 제외한 모든 커맨드
+      // user role: 훈련생이 자기 자신에게만 영향을 주는 커맨드.
+      //
+      // 다른 참가자나 세션 전체에 영향을 주는 커맨드(kick, tp, clean, entitypreset, scenario,
+      // give, timesync)는 여기에 두지 않는다. 기본 role 은 매핑이 없는 모든 접속자에게
+      // 부여되므로, 이 목록에 포함된 권한은 곧 "누구나 실행 가능"을 뜻한다. 훈련 세션을
+      // 임의 접속자가 교란할 수 있게 되므로 운영 권한과 분리한다.
       file.permissions["user"] = new RoleDefinition
       {
         contains = new List<string>(),
         permissions = new List<string>
         {
           "help",
+          "character",
+          "problemsheet",
+        },
+      };
+
+      // instructor role: user 상속 + 훈련 진행에 필요한 세션 제어 커맨드.
+      // 강사·운영 보조가 사용한다.
+      file.permissions["instructor"] = new RoleDefinition
+      {
+        contains = new List<string> { "user" },
+        permissions = new List<string>
+        {
           "gamemode",
           "speed",
           "give",
@@ -100,26 +117,25 @@ namespace MultiplayerInfrastructure.Permission
           "tag",
           "scoreboard",
           "scenario",
-          "problemsheet",
-          "character",
           "title",
           "entitypreset",
           "timesync",
           "tp",
-          "kick",
         },
       };
 
-      // operator role: user 상속 + permission 관리 + log 관리
+      // operator role: instructor 상속 + 권한/서버/로그 관리.
       file.permissions["operator"] = new RoleDefinition
       {
-        contains = new List<string> { "user" },
+        contains = new List<string> { "instructor" },
         permissions = new List<string>
         {
           "permission",
           "gamerule",
           "log",
           "server",
+          "conngate",
+          "kick",
         },
       };
 
@@ -200,14 +216,25 @@ namespace MultiplayerInfrastructure.Permission
 
     /// <summary>
     /// userIdentifier 에게 permissionId 가 허용되는지 확인한다.
-    /// sender == null(서버 콘솔) 또는 host는 항상 허용.
+    /// sender == null(서버 콘솔) 또는 host는 호출부(<c>ChatCommandService</c>)에서 이미 통과시킨다.
+    ///
+    /// <para>
+    /// permissionId 가 비어 있으면 <b>거부</b>한다. 이전 구현은 이 경우 무조건 허용했는데,
+    /// 권한 식별자를 선언하지 않은 커맨드가 곧 "누구나 실행 가능한 커맨드"가 되어 버려서
+    /// 권한 모델이 조용히 무력화되었다. 권한 식별자 누락은 설정 오류로 취급해 거부한다.
+    /// </para>
     /// </summary>
     public static bool HasPermission(string userIdentifier, string permissionId)
     {
       EnsureLoaded();
 
       if (string.IsNullOrWhiteSpace(permissionId))
-        return true;
+      {
+        Debug.LogWarning(
+          "[PermissionService] Denied a command that declares no permission identifier. "
+          + "Every command must declare PermissionIdentifier.");
+        return false;
+      }
 
       string role = GetUserRole(userIdentifier);
       return RoleHasPermission(role, permissionId, new HashSet<string>(StringComparer.OrdinalIgnoreCase));

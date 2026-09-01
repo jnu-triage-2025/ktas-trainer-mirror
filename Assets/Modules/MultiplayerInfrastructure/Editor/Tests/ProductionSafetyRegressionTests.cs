@@ -61,6 +61,93 @@ namespace MultiplayerInfrastructure.Tests
       Assert.That(scores.Count, Is.Zero);
     }
 
+    /// <summary>
+    /// 권한 식별자를 선언하지 않은 커맨드는 거부되어야 한다. 이전 구현은 빈 식별자를 무조건
+    /// 허용했고, 그 결과 데이터팩 별칭이 권한 경계를 우회했다.
+    /// </summary>
+    [Test]
+    public void BlankPermissionIdentifierIsDenied()
+    {
+      Assert.That(Permission.PermissionService.HasPermission("any-user", null), Is.False);
+      Assert.That(Permission.PermissionService.HasPermission("any-user", string.Empty), Is.False);
+      Assert.That(Permission.PermissionService.HasPermission("any-user", "   "), Is.False);
+    }
+
+    /// <summary>
+    /// 기본 role 은 매핑이 없는 모든 접속자에게 부여되므로, 다른 참가자나 세션 전체에
+    /// 영향을 주는 권한을 포함해서는 안 된다.
+    /// </summary>
+    [Test]
+    public void DefaultRoleDoesNotGrantSessionDisruptingPermissions()
+    {
+      MethodInfo buildDefaults = typeof(Permission.PermissionService).GetMethod(
+        "BuildDefaultFile", BindingFlags.Static | BindingFlags.NonPublic);
+      Assert.That(buildDefaults, Is.Not.Null);
+
+      object file = buildDefaults.Invoke(null, null);
+      string defaultRole = (string)file.GetType().GetField("default").GetValue(file);
+      var permissions = (IDictionary)file.GetType().GetField("permissions").GetValue(file);
+
+      Assert.That(defaultRole, Is.EqualTo("user"));
+
+      var effective = new System.Collections.Generic.HashSet<string>(
+        System.StringComparer.OrdinalIgnoreCase);
+      CollectRolePermissions(permissions, defaultRole, effective,
+        new System.Collections.Generic.HashSet<string>(System.StringComparer.OrdinalIgnoreCase));
+
+      foreach (string forbidden in new[]
+        { "kick", "ban", "server", "permission", "tp", "clean", "entitypreset", "gamerule", "conngate" })
+      {
+        Assert.That(effective, Does.Not.Contain(forbidden),
+          $"Default role must not grant '{forbidden}'.");
+      }
+    }
+
+    private static void CollectRolePermissions(
+      IDictionary permissions,
+      string role,
+      System.Collections.Generic.HashSet<string> result,
+      System.Collections.Generic.HashSet<string> visited)
+    {
+      if (string.IsNullOrWhiteSpace(role) || !visited.Add(role) || !permissions.Contains(role))
+        return;
+
+      object definition = permissions[role];
+      var granted = (System.Collections.Generic.List<string>)definition.GetType()
+        .GetField("permissions").GetValue(definition);
+      var inherited = (System.Collections.Generic.List<string>)definition.GetType()
+        .GetField("contains").GetValue(definition);
+
+      if (granted != null)
+      {
+        foreach (string entry in granted)
+          result.Add(entry);
+      }
+
+      if (inherited == null)
+        return;
+
+      foreach (string parent in inherited)
+        CollectRolePermissions(permissions, parent, result, visited);
+    }
+
+    /// <summary>
+    /// 데이터팩 별칭은 고유 권한을 갖지 않으며, 권한 검사를 통과시키는 빈 식별자를
+    /// 다시 도입해서는 안 된다.
+    /// </summary>
+    [Test]
+    public void DatapackAliasDoesNotDeclareBlankPermissionIdentifier()
+    {
+      string source = System.IO.File.ReadAllText(
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Command/DatapackCommandAlias.cs");
+      Assert.That(source, Does.Not.Contain("PermissionIdentifier => string.Empty"));
+      Assert.That(source, Does.Contain("AliasPermissionIdentifier"));
+
+      string dispatcher = System.IO.File.ReadAllText(
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Command/CommandService.cs");
+      Assert.That(dispatcher, Does.Contain("HasAllAliasTargetPermissions"));
+    }
+
     [Test]
     public void LanDiscoveryStopToleratesAlreadyDisposedCancellationSource()
     {

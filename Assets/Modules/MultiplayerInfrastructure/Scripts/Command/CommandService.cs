@@ -156,9 +156,12 @@ namespace MultiplayerInfrastructure.Command
       {
         PermissionService.EnsureLoaded();
         string userIdentifier = ResolveUserIdentifier(sender);
-        string permId = command.PermissionIdentifier;
 
-        bool denied = !PermissionService.HasPermission(userIdentifier, permId);
+        // 데이터팩 별칭은 고유 권한을 갖지 않는다. 별칭이 실행할 대상 커맨드들의 권한을
+        // 모두 보유해야 실행을 허용한다. 이렇게 하지 않으면 별칭이 권한 경계를 우회한다.
+        bool denied = command is DatapackCommandAlias alias
+          ? !HasAllAliasTargetPermissions(userIdentifier, alias)
+          : !PermissionService.HasPermission(userIdentifier, command.PermissionIdentifier);
 
         if (denied)
         {
@@ -169,8 +172,8 @@ namespace MultiplayerInfrastructure.Command
         }
       }
 
-      // Intercept help flags (-h / --help / /? / ?) for every command so that
-      // detailed usage is shown without executing the command itself.
+      // 모든 커맨드에서 도움말 플래그(-h / --help / /? / ?)를 가로채, 커맨드를
+      // 실행하지 않고 상세 사용법을 표시한다.
       if (ChatCommandHelp.IsHelpFlag(args))
       {
         if (!suppressSystemMessages)
@@ -203,6 +206,43 @@ namespace MultiplayerInfrastructure.Command
     public bool TryGetCommand(string name, out IChatCommandModel command)
     {
       return _commands.TryGetValue(name?.ToLowerInvariant() ?? string.Empty, out command);
+    }
+
+    /// <summary>
+    /// 별칭이 실행할 대상 커맨드 전체에 대한 권한을 보유했는지 확인한다.
+    /// 해석할 수 없는 대상 커맨드가 하나라도 있으면 거부한다(알 수 없는 대상은 안전 측으로 판단).
+    /// </summary>
+    private bool HasAllAliasTargetPermissions(string userIdentifier, DatapackCommandAlias alias)
+      => HasAllAliasTargetPermissions(
+        userIdentifier, alias, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+
+    private bool HasAllAliasTargetPermissions(
+      string userIdentifier, DatapackCommandAlias alias, HashSet<string> visitedAliases)
+    {
+      // 별칭이 서로를 가리키는 순환 구조에서 무한 재귀가 발생하지 않게 한다.
+      // 순환은 정상 설정이 아니므로 거부한다.
+      if (!visitedAliases.Add(alias.CommandEntry ?? string.Empty))
+        return false;
+
+      var targets = alias.TargetCommandNames;
+      if (targets == null || targets.Count == 0)
+        return false;
+
+      foreach (string targetName in targets)
+      {
+        string targetKey = targetName?.ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(targetKey) || !_commands.TryGetValue(targetKey, out var target))
+          return false;
+
+        // 별칭이 다른 별칭을 가리키는 경우도 대상 커맨드까지 재귀적으로 검사한다.
+        bool allowed = target is DatapackCommandAlias nested
+          ? HasAllAliasTargetPermissions(userIdentifier, nested, visitedAliases)
+          : PermissionService.HasPermission(userIdentifier, target.PermissionIdentifier);
+        if (!allowed)
+          return false;
+      }
+
+      return true;
     }
 
     /// <summary>
