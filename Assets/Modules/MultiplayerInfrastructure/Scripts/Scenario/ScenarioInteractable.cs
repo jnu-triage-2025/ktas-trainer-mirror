@@ -79,6 +79,16 @@ namespace MultiplayerInfrastructure.Scenario
 
     public static event Action<ScenarioGraph, string, int?> OnScenarioRequested;
 
+    /// <summary>
+    /// 정적 이벤트 구독을 초기화한다. 도메인 리로드가 비활성인 환경에서는 정적 이벤트가
+    /// 플레이 세션 사이에 유지되어, 이전 세션에서 파괴된 컨트롤러의 핸들러가 남아 호출된다.
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+      OnScenarioRequested = null;
+    }
+
     #endregion
 
     #region IInteract.Interact
