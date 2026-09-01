@@ -411,6 +411,10 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void OnDestroy()
     {
+      // 인라인 TTS 사전 합성은 CancellationTokenSource 를 들고 있다. 컨트롤러가 EndScenario 를
+      // 거치지 않고 바로 파괴되는 경로(씬 언로드, 호스트 종료)에서도 토큰을 취소·해제해야
+      // TTS 모듈이 이미 사라진 그래프의 대사를 계속 합성하지 않는다.
+      CancelInlineTTSPrewarm();
       CleanupScenarioActingNpcs();
       CleanupScenarioWaypoints();
       // 이벤트 구독 해제
@@ -437,10 +441,14 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void Update()
     {
-      if (!IsActive || Time.time < _nextDynamicThresholdRefreshTime)
+      // 그래프 존재 여부(HasActiveScenario)로 판정한다. IsActive 는 노드 실행 상태 기반이라
+      // 클라이언트 표시 모드와 즉시 진행 노드 체인 사이에서 false 가 되는데, 그 구간이야말로
+      // 신호 도착 시점 평가가 누락되어 이 안전망이 필요한 구간이다.
+      if (!HasActiveScenario || Time.unscaledTime < _nextDynamicThresholdRefreshTime)
         return;
 
-      _nextDynamicThresholdRefreshTime = Time.time + DynamicThresholdRefreshIntervalSeconds;
+      // timeScale 변경이나 일시정지가 안전망 주기를 늘리거나 멈추지 않도록 unscaled 시간을 쓴다.
+      _nextDynamicThresholdRefreshTime = Time.unscaledTime + DynamicThresholdRefreshIntervalSeconds;
       ScenarioSignalCounters.RefreshDynamicThresholds();
     }
 
@@ -550,13 +558,7 @@ namespace MultiplayerInfrastructure.Scenario
       _state = State.Inactive;
       _activeOptions.Clear();
       _activeQuizNode = null;
-      _branchOptionInterceptor = null;
-      _branchDialogueAdvanceInterceptors.Clear();
-      _branchPromptActive = false;
-      _activeRemoteBranchPromptClients.Clear();
-      _branchDialogueActive = false;
-      _activeRemoteBranchDialogueClients.Clear();
-      _remoteBranchChoiceSelections.Clear();
+      ResetBranchInteractionState();
       ResolveUIControllers();
       ResolveTTSService();
       _ttsService?.ConfigureScenarioVoiceProfiles(graph.TtsVoiceProfiles);
@@ -610,6 +612,12 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+    /// <summary>
+    /// 현재 실행 중인 연출 이벤트 식별자. 같은 이벤트가 역할 범위 노드 표시와 연출 RPC 로
+    /// 동시에 도달해도 두 번 실행되지 않게 한다(중복 실행 시 같은 연출/타이머가 겹친다).
+    /// </summary>
+    private readonly HashSet<string> _runningPresentationEvents = new HashSet<string>(StringComparer.Ordinal);
+
     private IEnumerator ExecutePresentationEvent(string eventIdentifier)
     {
       if (string.IsNullOrWhiteSpace(eventIdentifier)
@@ -619,18 +627,65 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
-      IEnumerator routine = null;
-      try
+      if (!_runningPresentationEvents.Add(eventIdentifier))
       {
-        routine = handler?.Invoke();
-      }
-      catch (Exception ex)
-      {
-        Debug.LogException(ex);
+        // 이미 같은 연출이 진행 중이다. 중복 실행하면 동일 연출이 두 겹으로 재생된다.
+        yield break;
       }
 
-      if (routine != null)
-        yield return StartCoroutine(routine);
+      try
+      {
+        IEnumerator routine = null;
+        try
+        {
+          routine = handler?.Invoke();
+        }
+        catch (Exception ex)
+        {
+          Debug.LogException(ex, this);
+          Debug.LogError(
+            $"[ScenarioController] Presentation event '{eventIdentifier}' threw while constructing its routine.",
+            this);
+        }
+
+        if (routine != null)
+          yield return StartCoroutine(RunPresentationEventRoutine(eventIdentifier, routine));
+      }
+      finally
+      {
+        _runningPresentationEvents.Remove(eventIdentifier);
+      }
+    }
+
+    /// <summary>
+    /// 연출 이벤트 코루틴을 감싸서 실행 도중 발생한 예외를 이벤트 식별자와 함께 보고한다.
+    /// 표시 전용 경로이므로 그래프를 진행시키지는 않지만, 실패를 조용히 삼키지는 않는다.
+    /// </summary>
+    private IEnumerator RunPresentationEventRoutine(string eventIdentifier, IEnumerator routine)
+    {
+      while (true)
+      {
+        bool hasNext;
+        object yielded = null;
+        try
+        {
+          hasNext = routine.MoveNext();
+          if (hasNext)
+            yielded = routine.Current;
+        }
+        catch (Exception ex)
+        {
+          Debug.LogException(ex, this);
+          Debug.LogError(
+            $"[ScenarioController] Presentation event '{eventIdentifier}' threw while running.", this);
+          yield break;
+        }
+
+        if (!hasNext)
+          yield break;
+
+        yield return yielded;
+      }
     }
 
     /// <summary>
@@ -819,11 +874,9 @@ namespace MultiplayerInfrastructure.Scenario
       // 새 시나리오 시작은 이전 실행을 강제 정리한 직후이므로, 대화창 점유 상태를 초기화한다.
       // (이전 실행이 EndScenario 를 거치지 않고 덮어써진 경우, 스테일 점유자가 새 시나리오
       //  자신의 대화 노드를 오탐(충돌)하게 만드는 것을 방지한다.)
-      _branchPromptActive = false;
-      _activeRemoteBranchPromptClients.Clear();
-      _branchDialogueActive = false;
-      _activeRemoteBranchDialogueClients.Clear();
-      _remoteBranchChoiceSelections.Clear();
+      // 인터셉터까지 함께 초기화해야 한다. 이전 실행의 인터셉터가 남아 있으면 새 실행의
+      // 첫 선택/진행 입력이 죽은 브랜치 클로저로 흘러가 입력이 삼켜진다.
+      ResetBranchInteractionState();
       if (!_uiController.IsUnityNull())
         _uiController.ClearDialogueOwner();
 
@@ -924,13 +977,7 @@ namespace MultiplayerInfrastructure.Scenario
       _activeRoleBranchDepthByClientId.Clear();
       // 브랜치 Choice/Quiz 대기 중 종료된 경우 남은 인터셉터/프롬프트 상태를 정리한다.
       // (StopAllCoroutines 로 강제 종료된 프롬프트 코루틴의 finally 가 실행되지 않을 수 있음)
-      _branchOptionInterceptor = null;
-      _branchDialogueAdvanceInterceptors.Clear();
-      _branchPromptActive = false;
-      _activeRemoteBranchPromptClients.Clear();
-      _branchDialogueActive = false;
-      _activeRemoteBranchDialogueClients.Clear();
-      _remoteBranchChoiceSelections.Clear();
+      ResetBranchInteractionState();
 
       ClearOptions();
       _stateStore.Clear();
@@ -1098,6 +1145,29 @@ namespace MultiplayerInfrastructure.Scenario
         DestroyScenarioActingNpc(spawned);
         return false;
       }
+    }
+
+    /// <summary>
+    /// 브랜치 프롬프트/대화 입력 중계 상태를 초기화한다.
+    ///
+    /// <para>
+    /// 시나리오 시작·종료·수동 진입 중단 등 실행 경계마다 호출해야 한다.
+    /// <see cref="StopAllCoroutines"/> 로 강제 종료된 프롬프트 코루틴은 finally 를 거치지 않아
+    /// 인터셉터와 점유 플래그가 남는데, 그 상태에서 다음 실행이 시작되면 첫 입력이 죽은
+    /// 클로저로 흘러가 선택과 대화 진행이 삼켜진다. 초기화 지점이 여러 곳으로 흩어져 있으면
+    /// 어느 한 곳에서 필드가 누락되기 쉬우므로 한 메서드로 모은다.
+    /// </para>
+    /// </summary>
+    private void ResetBranchInteractionState()
+    {
+      _branchOptionInterceptor = null;
+      _branchDialogueAdvanceInterceptors.Clear();
+      _branchPromptActive = false;
+      _activeRemoteBranchPromptClients.Clear();
+      _branchDialogueActive = false;
+      _activeRemoteBranchDialogueClients.Clear();
+      _remoteBranchChoiceSelections.Clear();
+      _runningPresentationEvents.Clear();
     }
 
     private void TrackCleanup(Action undo)
@@ -1498,13 +1568,7 @@ namespace MultiplayerInfrastructure.Scenario
       _parallelAdvanceBlockDepth = 0;
       _activeRoleBranchDepthByClientId.Clear();
 
-      _branchOptionInterceptor = null;
-      _branchDialogueAdvanceInterceptors.Clear();
-      _branchPromptActive = false;
-      _activeRemoteBranchPromptClients.Clear();
-      _branchDialogueActive = false;
-      _activeRemoteBranchDialogueClients.Clear();
-      _remoteBranchChoiceSelections.Clear();
+      ResetBranchInteractionState();
 
       ClearOptions();
       _state = State.Inactive;
@@ -1765,9 +1829,15 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void HandleScenarioRequested(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
     {
-      if (IsActive)
+      // 반드시 HasActiveScenario 로 판정해야 한다. IsActive 는 현재 노드 실행 상태(_state) 기반이라
+      // 클라이언트 표시 모드와 즉시 진행 노드 체인 사이에서는 false 가 될 수 있다. 그 창에서
+      // 요청을 수락하면 StartScenarioInternal 이 StopAllCoroutines 와 신호/타이머/퀘스트 전면
+      // 초기화를 실행하여, 진행 중인 다른 그래프를 덮어쓴다.
+      if (HasActiveScenario)
       {
-        Debug.LogWarning("[ScenarioController] Scenario already active, ignoring request");
+        Debug.LogWarning(
+          $"[ScenarioController] Scenario '{_currentGraph?.Identifier}' is already running; "
+          + $"ignoring request for '{graph?.Identifier}'.");
         return;
       }
 
@@ -2848,7 +2918,7 @@ namespace MultiplayerInfrastructure.Scenario
           }
         }
       }
-      else // Current
+      else // 현재 세션
       {
         if (_scenarioOwnerClientId.HasValue &&
             UserDescriptorService.TryGetByClientId(_scenarioOwnerClientId.Value, out var ownerSession))
@@ -4147,7 +4217,7 @@ namespace MultiplayerInfrastructure.Scenario
           return Mathf.Max(0f, moveDuration);
         case ScenarioMoveMode.BySpeed:
           return moveSpeed > 0f ? distance / moveSpeed : 0f;
-        default: // Instant
+        default: // 즉시(Instant)
           return 0f;
       }
     }
@@ -4604,11 +4674,12 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (string.IsNullOrWhiteSpace(node.EventIdentifier))
       {
-        Debug.LogWarning("[ScenarioController] InvokeEvent node has no eventIdentifier.");
+        ReportInvokeEventFailure(node, "node has no eventIdentifier");
       }
       else if (ScenarioEventIdentifierRegistry.TryGetHandler(node.EventIdentifier, out var handler))
       {
         System.Collections.IEnumerator routine = null;
+        bool constructionFailed = false;
         try
         {
           routine = handler?.Invoke();
@@ -4616,35 +4687,98 @@ namespace MultiplayerInfrastructure.Scenario
         catch (Exception ex)
         {
           Debug.LogException(ex);
+          constructionFailed = true;
         }
 
-        switch (node.MoveNextBehavior)
+        if (constructionFailed)
         {
-          case ScenarioInvokeEventMoveNextBehavior.WaitUntilDone:
-            if (routine != null)
-            {
-              yield return StartCoroutine(routine);
-            }
-            break;
-          case ScenarioInvokeEventMoveNextBehavior.Immediately:
-            if (routine != null)
-            {
-              StartCoroutine(routine);
-            }
-            break;
-          case ScenarioInvokeEventMoveNextBehavior.False:
-            // Do nothing; do not advance.
-            break;
+          // 핸들러 생성 자체가 실패했다면 이벤트의 부수 효과(게이트 무장, 엔티티 스폰,
+          // 활력징후 적용 등)는 전혀 적용되지 않았다. 성공을 전제로 진행하면 이후 노드가
+          // 잘못된 전제에서 실행되므로 실패를 명시적으로 보고한다.
+          ReportInvokeEventFailure(node, "handler threw while constructing its routine");
+        }
+        else
+        {
+          switch (node.MoveNextBehavior)
+          {
+            case ScenarioInvokeEventMoveNextBehavior.WaitUntilDone:
+              if (routine != null)
+              {
+                // 첫 MoveNext 이후에 발생하는 예외까지 포착해야 한다. 감싸지 않으면 코루틴이
+                // 중간에 죽고 노드는 나갈 전이가 없는 상태로 남는다.
+                yield return StartCoroutine(RunInvokeEventRoutine(node, routine));
+              }
+              break;
+            case ScenarioInvokeEventMoveNextBehavior.Immediately:
+              if (routine != null)
+              {
+                StartCoroutine(RunInvokeEventRoutine(node, routine));
+              }
+              break;
+            case ScenarioInvokeEventMoveNextBehavior.False:
+              // 아무것도 하지 않고 진행하지도 않는다.
+              break;
+          }
         }
       }
       else
       {
-        Debug.LogWarning($"[ScenarioController] No handler registered for event '{node.EventIdentifier}'.");
+        ReportInvokeEventFailure(node, "no handler is registered for this event identifier");
       }
 
       if (node.MoveNextBehavior != ScenarioInvokeEventMoveNextBehavior.False)
       {
         Advance();
+      }
+    }
+
+    /// <summary>
+    /// InvokeEvent 핸들러 코루틴을 감싸서, 실행 도중 발생한 예외를 노드 식별자와 함께 보고한다.
+    /// 감싸지 않으면 예외가 코루틴을 조용히 종료시켜 어떤 이벤트가 실패했는지 알 수 없다.
+    /// </summary>
+    private IEnumerator RunInvokeEventRoutine(ScenarioInvokeEventNode node, IEnumerator routine)
+    {
+      while (true)
+      {
+        bool hasNext;
+        object yielded = null;
+        try
+        {
+          hasNext = routine.MoveNext();
+          if (hasNext)
+            yielded = routine.Current;
+        }
+        catch (Exception ex)
+        {
+          Debug.LogException(ex, this);
+          ReportInvokeEventFailure(node, "handler threw while running");
+          yield break;
+        }
+
+        if (!hasNext)
+          yield break;
+
+        yield return yielded;
+      }
+    }
+
+    /// <summary>
+    /// InvokeEvent 노드가 부수 효과를 적용하지 못했음을 콘솔과 세션 로그에 함께 남긴다.
+    /// 임상 단계가 조용히 생략되는 것을 막기 위해, 경고가 아닌 오류로 기록한다.
+    /// </summary>
+    private void ReportInvokeEventFailure(ScenarioInvokeEventNode node, string reason)
+    {
+      string message =
+        $"InvokeEvent '{node?.Identifier}' did not apply its effects (event='{node?.EventIdentifier}'): {reason}. "
+        + "Downstream nodes will run without this event's side effects.";
+      Debug.LogError($"[ScenarioController] {message}", this);
+      try
+      {
+        GameLogService.WriteScenario(message, _currentGraph?.Identifier);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogException(ex, this);
       }
     }
 
@@ -4906,7 +5040,7 @@ namespace MultiplayerInfrastructure.Scenario
               && (_currentGraph?.SkipAbsentRoleBranches == true && IsDeclaredRoleAbsent(branch)
                   || node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Ignore))
           {
-            continue; // skipped branch
+            continue; // 건너뛴 브랜치
           }
 
           if (assignedClientId == null && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
@@ -5299,7 +5433,7 @@ namespace MultiplayerInfrastructure.Scenario
         var branchVisitSequence = RecordNodeVisit(cursor);
         OnNodeChanged?.Invoke(cursor);
 
-        // Send branch dialogues only after their per-screen queue slot is acquired.
+        // 브랜치 대화는 화면별 큐 슬롯을 확보한 뒤에만 보낸다.
         if (_executionMode == ExecutionMode.ServerAuthoritative
             && branchOwnerClientId.HasValue
             && cursor is not ScenarioDialogueNode)
@@ -5595,10 +5729,11 @@ namespace MultiplayerInfrastructure.Scenario
     /// 값이 설정되어 있으면 <see cref="SelectOption"/> 이 전역 진행 대신 이 콜백을 호출한다.
     /// </summary>
     private Action<int> _branchOptionInterceptor;
-    // Branch dialogue input must complete only its branch, never Advance the enclosing main node.
+    // 브랜치 대화 입력은 자기 브랜치만 완료해야 하며, 감싸고 있는 메인 노드를 Advance
+    // 해서는 안 된다.
     private readonly Dictionary<int, Action> _branchDialogueAdvanceInterceptors = new();
 
-    // Branch dialogues share one per-screen queue, independent from Choice and Quiz prompts.
+    // 브랜치 대화는 Choice/Quiz 프롬프트와 별개로 화면마다 하나의 큐를 공유한다.
     private bool _branchDialogueActive;
     private readonly HashSet<int> _activeRemoteBranchDialogueClients = new();
 
@@ -5729,7 +5864,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
-    /// <summary>Serializes branch dialogues per screen and completes them only from player input.</summary>
+    /// <summary>브랜치 대화를 화면별로 직렬화하고, 플레이어 입력으로만 완료한다.</summary>
     private IEnumerator ExecuteDialogueNodeInBranch(ScenarioDialogueNode node, BranchChainContext context)
     {
       // 원격 표시 판정은 다른 브랜치 노드와 동일한 규칙(ShouldPresentBranchLocally)을 따른다.
