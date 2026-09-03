@@ -5327,9 +5327,14 @@ namespace MultiplayerInfrastructure.Scenario
             return;
           }
 
-          threshold = roster.Count;
+          // 한 플레이어가 여러 역할을 맡아도 도착 신호는 플레이어마다 한 번만 발생한다.
+          // 역할 수를 임계치로 사용하면 같은 플레이어가 여러 역할을 맡은 멀티플레이어 세션에서
+          // 절대 충족할 수 없는 카운터가 만들어진다.
+          threshold = roster.Select(entry => entry.PlayerIdentifier)
+            .Distinct(StringComparer.Ordinal)
+            .Count();
           expectedSignals = () => TryGetActiveRoleRoster(out var current, out _)
-            // 한 플레이어가 여러 역할을 맡는 단독 디버그에서는 역할마다 같은 도착 신호가 생긴다.
+            // 한 플레이어가 여러 역할을 맡으면 역할마다 같은 도착 신호가 생긴다.
             // 도착 완료는 역할 수가 아니라 실제 플레이어별 1회 도착으로 판단한다.
             ? current.Select(entry => ScenarioInteractionSignals.Normalize(node.SourceSignalPrefix + entry.PlayerIdentifier))
               .Distinct(StringComparer.Ordinal)
@@ -6103,9 +6108,8 @@ namespace MultiplayerInfrastructure.Scenario
           : (ClientId: clientId, Player: null))
         .Where(each => each.Player != null && !string.IsNullOrWhiteSpace(each.Player.Identifier))
         .ToArray();
-      bool allowSinglePlayerMultipleRoles = ShouldAllowMultipleActiveRolesForSinglePlayer(
-        ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer,
-        activePlayers.Length);
+      bool allowMultipleActiveRoles = ShouldAllowMultipleActiveRoles(
+        ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer);
 
       foreach (var activePlayer in activePlayers)
       {
@@ -6115,7 +6119,7 @@ namespace MultiplayerInfrastructure.Scenario
         var roles = declaredRoles.Where(role => PlayerTagService.HasTag(player.Identifier, role)).ToArray();
         if (roles.Length == 0)
           continue;
-        if (roles.Length > 1 && !allowSinglePlayerMultipleRoles)
+        if (roles.Length > 1 && !allowMultipleActiveRoles)
         {
           error = $"player '{player.Identifier}' has multiple active roles [{string.Join(", ", roles)}]";
           return false;
@@ -6142,8 +6146,8 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
-    private static bool ShouldAllowMultipleActiveRolesForSinglePlayer(bool enabled, int activePlayerCount)
-      => enabled && activePlayerCount == 1;
+    private static bool ShouldAllowMultipleActiveRoles(bool enabled)
+      => enabled;
 
     /// <summary>
     /// 병렬 브랜치 할당용 결정적 난수 생성기를 만든다.

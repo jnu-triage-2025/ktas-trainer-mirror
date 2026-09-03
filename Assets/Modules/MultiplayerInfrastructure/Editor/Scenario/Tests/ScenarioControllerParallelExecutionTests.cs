@@ -214,21 +214,16 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       }
     }
 
-    [TestCase(true, 1, true)]
-    [TestCase(false, 1, false)]
-    [TestCase(true, 0, false)]
-    [TestCase(true, 2, false)]
-    public void MultipleActiveRolesAreAcceptedOnlyForSinglePlayerDebug(
-      bool enabled,
-      int activePlayerCount,
-      bool expected)
+    [TestCase(true, true)]
+    [TestCase(false, false)]
+    public void MultipleActiveRolesFollowTheRoleBranchGameRule(bool enabled, bool expected)
     {
       var shouldAllow = typeof(ScenarioController).GetMethod(
-        "ShouldAllowMultipleActiveRolesForSinglePlayer",
+        "ShouldAllowMultipleActiveRoles",
         BindingFlags.Static | BindingFlags.NonPublic);
 
       Assert.That(shouldAllow, Is.Not.Null);
-      Assert.That(shouldAllow.Invoke(null, new object[] { enabled, activePlayerCount }), Is.EqualTo(expected));
+      Assert.That(shouldAllow.Invoke(null, new object[] { enabled }), Is.EqualTo(expected));
     }
 
     [Test]
