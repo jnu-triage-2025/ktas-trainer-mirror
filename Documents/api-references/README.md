@@ -17,6 +17,7 @@
 
 - [MultiplayerInfrastructure.Chat.ChatService.md](./MultiplayerInfrastructure.Chat.ChatService.md): API 레퍼런스: `MultiplayerInfrastructure.Chat.ChatService`
 - [MultiplayerInfrastructure.Command.ChatCommandExtensions.md](./MultiplayerInfrastructure.Command.ChatCommandExtensions.md): MultiplayerInfrastructure.Command.ChatCommandExtensions
+- [MultiplayerInfrastructure.Command.PlayerTargetResolver.md](./MultiplayerInfrastructure.Command.PlayerTargetResolver.md): API 레퍼런스: `MultiplayerInfrastructure.Command.PlayerTargetResolver`
 - [MultiplayerInfrastructure.Command.TargetSelectorResolver.md](./MultiplayerInfrastructure.Command.TargetSelectorResolver.md): API 레퍼런스: `MultiplayerInfrastructure.Command.TargetSelectorResolver`
 - [MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md](./MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md): MultiplayerInfrastructure.Datapack.DatapackRuntimeService
 - [MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource.md](./MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource.md): API 레퍼런스: `MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource` (엔티티 상태 이벤트 → 시나리오 신호)
