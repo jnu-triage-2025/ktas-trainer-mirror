@@ -70,6 +70,9 @@ namespace MultiplayerInfrastructure.UI
     // 주변 Interactable 상호작용이나 아이템 사용으로 흘러가지 않도록 입력 경로에서 확인한다.
     private int _lastInputConsumedFrame = -1;
 
+    /// <summary>힌트 UI를 끝내 확보하지 못했다는 사실을 이미 보고했는지 여부(로그 반복 방지).</summary>
+    private bool _reportedMissingHintUI;
+
     [SerializeField] private DialogueInputContext _inputContext = DialogueInputContext.None;
     private IReadOnlyList<ScenarioChoiceOption> _pendingChoiceOptions;
     private readonly Queue<TransientDialogueRequest> _transientDialogueQueue = new();
@@ -232,12 +235,35 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void SetInteractableHintUI(InteractableObjectHintUIController hintUI)
     {
-      _interactableHintUI = hintUI;
+      if (hintUI.IsUnityNull())
+        return;
 
-      if (_interactableHintUI != null)
+      _interactableHintUI = hintUI;
+      _reportedMissingHintUI = false;
+      Debug.Log("[DialoguePanelUI] InteractableHintUI connected");
+    }
+
+    /// <summary>
+    /// 힌트 UI 참조를 확보한다. 아직 비어 있으면 레지스트리에서 직접 조회한다.
+    ///
+    /// <para>선택지 확정은 힌트 UI 목록을 거치므로, 이 참조가 비어 있으면 Choice/Quiz 대화창이
+    /// 확정 수단을 갖지 못한 채 입력만 소비하며 영원히 닫히지 않는다. 플레이어 컨트롤러의
+    /// 바인딩이 늦어지는 경우에도 스스로 복구할 수 있도록 여기서 지연 조회한다.</para>
+    /// </summary>
+    private InteractableObjectHintUIController EnsureInteractableHintUI()
+    {
+      if (!_interactableHintUI.IsUnityNull())
+        return _interactableHintUI;
+
+      var resolved = Registry.Registry.Get<InteractableObjectHintUIController>(
+        RegistryType.UI, Registry.Registry.TypeKey<InteractableObjectHintUIController>());
+      if (!resolved.IsUnityNull())
       {
-        Debug.Log("[DialoguePanelUI] InteractableHintUI connected");
+        _interactableHintUI = resolved;
+        _reportedMissingHintUI = false;
       }
+
+      return _interactableHintUI;
     }
 
     private void CacheVisualElements()
@@ -573,6 +599,12 @@ namespace MultiplayerInfrastructure.UI
         var interacts = new List<IInteract>(_currentSelections);
         _interactableHintUI.SetDialogueSelections(interacts);
       }
+      else if (_interactableHintUI.IsUnityNull())
+      {
+        Debug.LogWarning(
+          "[DialoguePanelUI] InteractableHintUI가 없어 선택지를 표시하지 못했습니다. 확정 입력 시 다시 시도합니다.",
+          this);
+      }
 
       SetWaitingForInput(false);
 
@@ -606,18 +638,35 @@ namespace MultiplayerInfrastructure.UI
         // 주변 Interactable 상호작용으로 새는 것을 막는다.
         MarkInputConsumed();
 
-        if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.HasDialogueSelection())
+        var hintUI = EnsureInteractableHintUI();
+        if (!hintUI.IsUnityNull() && hintUI.HasDialogueSelection())
         {
-          _interactableHintUI.ExecuteSelectedDialogueSelection(null);
+          hintUI.ExecuteSelectedDialogueSelection(null);
           return;
         }
 
         // 선택지가 아직 힌트 UI에 반영되지 않았다면(모드 전환 경쟁 등) 다시 표시하고
         // 이번 입력은 흘린다. 여기서 그냥 반환하면 확정 수단이 없어 대화가 멈춘다.
-        if (_pendingChoiceOptions != null)
+        if (!hintUI.IsUnityNull() && _pendingChoiceOptions != null)
         {
           ShowChoices(_pendingChoiceOptions);
+          return;
         }
+
+        // 힌트 UI를 끝내 확보하지 못하면 선택지를 표시할 수단도, 확정할 수단도 없다.
+        // 이 상태를 그대로 두면 대화창이 입력만 소비하며 영원히 닫히지 않고 플레이어 조작까지
+        // 잠기므로, 원인을 로그로 남기고 최소한 입력 잠금은 해제한다.
+        // (선택 결과는 평가 기록에 반영되는 값이므로 임의로 확정하지 않는다.)
+        if (!_reportedMissingHintUI)
+        {
+          _reportedMissingHintUI = true;
+          Debug.LogError(
+            "[DialoguePanelUI] InteractableObjectHintUIController를 찾지 못해 선택지를 표시하거나 확정할 수 없습니다. "
+            + "대화창 입력 잠금만 해제합니다. 씬에 힌트 UI 컨트롤러가 존재하는지 확인해야 합니다.",
+            this);
+        }
+
+        DismissDialogue();
         return;
       }
 
@@ -971,8 +1020,9 @@ namespace MultiplayerInfrastructure.UI
 
     private void EnsureDialogueModeActive()
     {
-      if (!_interactableHintUI.IsUnityNull() && !_interactableHintUI.IsDialogueMode)
-        _interactableHintUI.EnterDialogueMode();
+      var hintUI = EnsureInteractableHintUI();
+      if (!hintUI.IsUnityNull() && !hintUI.IsDialogueMode)
+        hintUI.EnterDialogueMode();
     }
 
     public void EnsureOverlayActive()

@@ -343,14 +343,32 @@ namespace MultiplayerInfrastructure.Scenario
         ScenarioValidatorBlockLogTarget.UnityConsole | ScenarioValidatorBlockLogTarget.SessionLog;
     }
 
+    /// <summary>
+    /// 플레이어 컨트롤러가 확보한 UI/카메라 참조를 등록한다.
+    ///
+    /// <para>비어 있는 인자는 무시한다. 씬 추가 로드 순서에 따라 플레이어가 힌트 UI나 카메라를
+    /// 아직 확보하지 못한 채 이 메서드를 호출할 수 있는데, 그때 null 로 덮어쓰면 이미 확보해 둔
+    /// 참조까지 잃는다. 그 상태에서는 선택지 노드가 힌트 UI 없이 표시되어 확정 수단이 사라지고,
+    /// 대화창이 입력만 잠근 채 닫히지 않는다.</para>
+    /// </summary>
     public void RegisterReferences(
       DialoguePanelUIController uiController,
       MainCameraController camController,
       InteractableObjectHintUIController hintUIController)
     {
-      _uiController = uiController;
-      _camController = camController;
-      _hintUIController = hintUIController;
+      if (!uiController.IsUnityNull())
+        _uiController = uiController;
+      if (!camController.IsUnityNull())
+        _camController = camController;
+      if (!hintUIController.IsUnityNull())
+        _hintUIController = hintUIController;
+
+      ResolveUIControllers();
+
+      // 시나리오 실행 도중에 참조가 늦게 채워졌다면 대화창에도 즉시 반영한다.
+      // (다음 StartScenario 까지 미루면 그 사이의 Choice/Quiz 노드가 확정 불가 상태가 된다.)
+      if (!_uiController.IsUnityNull() && !_hintUIController.IsUnityNull())
+        _uiController.SetInteractableHintUI(_hintUIController);
     }
 
     private void ResolveUIControllers()

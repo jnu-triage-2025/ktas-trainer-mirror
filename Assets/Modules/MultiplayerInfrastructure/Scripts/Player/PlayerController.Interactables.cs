@@ -2,6 +2,7 @@
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Quest;
+using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -21,16 +22,71 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private DialoguePanelUIController _dialoguePanelUIController;
     private ILocalInteractionFocus _focusedInteraction;
 
+    /// <summary>상호작용 힌트/감지기 바인딩이 이미 끝났는지 여부. 재시도 코루틴의 중복 실행을 막는다.</summary>
+    private bool _interactablesBound;
+
     private void OnStartClient_Interactables()
     {
       if (!IsOwner)
         return;
 
+      if (TryBindInteractables())
+        return;
+
+      // 씬을 추가 로드한 뒤 플레이어를 생성하는 구성에서는 OnStartClient 시점에 카메라 컨트롤러가
+      // 아직 레지스트리에 없을 수 있다. 여기서 그냥 포기하면 _interactableHintUI 가 영영 비어,
+      // 선택지 대화창이 확정 수단을 갖지 못한 채 입력만 잠그는 상태가 된다.
+      // 따라서 카메라가 등록될 때까지 이후 프레임에서 바인딩을 다시 시도한다.
+      StartCoroutine(BindInteractablesWhenCameraReady());
+    }
+
+    /// <summary>
+    /// 카메라 컨트롤러가 준비될 때까지 상호작용 바인딩을 재시도한다.
+    /// 성공하거나 소유권을 잃으면 종료한다.
+    /// </summary>
+    private System.Collections.IEnumerator BindInteractablesWhenCameraReady()
+    {
+      const float warnAfterSeconds = 5f;
+      float startedAt = Time.unscaledTime;
+      bool warned = false;
+
+      while (!_interactablesBound && IsOwner)
+      {
+        yield return null;
+        if (TryBindInteractables())
+          yield break;
+
+        if (!warned && Time.unscaledTime - startedAt >= warnAfterSeconds)
+        {
+          warned = true;
+          Debug.LogWarning(
+            "[PlayerController] Camera controller is still not registered; interactables binding keeps retrying.",
+            this);
+        }
+      }
+    }
+
+    /// <summary>
+    /// 카메라 컨트롤러에 붙어 있는 감지기와 힌트 UI를 바인딩한다.
+    /// 카메라 컨트롤러를 아직 찾지 못했다면 false 를 돌려준다(호출부가 재시도한다).
+    /// </summary>
+    private bool TryBindInteractables()
+    {
+      if (_interactablesBound)
+        return true;
+
       if (_camControl == null)
       {
-        Debug.LogWarning("[PlayerController] Camera controller is not ready; skipping interactables initialization.");
-        return;
+        _camControl = MainCameraController.Instance
+          ?? Registry.Registry.Get<MainCameraController>(
+            RegistryType.Service,
+            Registry.Registry.TypeKey<MainCameraController>());
       }
+
+      if (_camControl == null)
+        return false;
+
+      _interactablesBound = true;
 
       // 카메라 컴포넌트
       _detector = _camControl.GetComponent<NearbyInteractablesDetector>();
@@ -58,9 +114,15 @@ namespace MultiplayerInfrastructure.Player
       if (_interactableHintUI != null)
         _interactableHintUI.InteractionClicked += HandleInteractionMenuClicked;
 
+      // 시나리오가 이미 실행 중일 때 늦게 바인딩됐다면, 시나리오 쪽 참조도 여기서 갱신한다.
+      // 다음 StartScenario 까지 기다리면 그 사이의 선택지 노드가 힌트 UI 없이 표시된다.
+      if (!_scenarioController.IsUnityNull())
+        _scenarioController.RegisterReferences(_dialoguePanelUIController, _camControl, _interactableHintUI);
+
       // 순차 퀘스트의 완료 조건이 바뀌면 같은 감지 범위 안에서도 다음 상호작용을 즉시 다시 고른다.
       // 표시 UI만 다시 그리면 CanInteract 결과는 이전 목록에 고정되어 범위를 나갔다 들어와야 갱신된다.
       QuestPresentationService.PresentationChanged += RefreshInteractableHintsNow;
+      return true;
     }
 
     private void OnDestroy()
