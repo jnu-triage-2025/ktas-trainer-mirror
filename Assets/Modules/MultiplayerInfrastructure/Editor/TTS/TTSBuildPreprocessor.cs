@@ -22,7 +22,7 @@ namespace MultiplayerInfrastructure.Editor.TTS
   /// </summary>
   public class TTSBuildPreprocessor : IPreprocessBuildWithReport, IPostprocessBuildWithReport
   {
-    private const string OnnxRuntimePackagePath = "Packages/Microsoft.ML.OnnxRuntime.1.20.1/runtimes";
+    private const string OnnxRuntimePackagePath = "Assets/Packages/Microsoft.ML.OnnxRuntime.1.20.1/runtimes";
     private const string OnnxRuntimeLibraryName = "libonnxruntime.dylib";
 
     public int callbackOrder => 0;
