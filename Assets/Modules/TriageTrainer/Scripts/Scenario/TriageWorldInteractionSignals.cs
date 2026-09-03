@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using FishNet;
 using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
 
@@ -58,8 +59,26 @@ namespace TriageTrainer.Scenario
     public static void RaiseDefibrillatorCartSnapPointDisabled(string pointIdentifier) =>
       Raise("defibrillator_cart_snap_point_disabled", pointIdentifier);
 
+    /// <summary>
+    /// 이 피어에서 월드 신호를 올려야 하는지 여부.
+    ///
+    /// <para>
+    /// 이 클래스의 신호는 모두 서버 권위 상태(환자·침대·장비 결합, 구역 점유, 설치물 표시 등)를
+    /// 각 피어가 로컬로 재구성하는 과정에서 발생한다. 서버도 같은 경로를 실행해 동일한 신호를
+    /// 스스로 올리므로, 클라이언트가 올린 같은 신호는 중복일 뿐이다. 게다가 클라이언트가 올린
+    /// 신호는 그래프가 client-origin 으로 인가한 것만 서버에서 수락되기 때문에, 모든 피어에서
+    /// 올리면 인가받지 못한 신호가 거부되면서 경고와 시스템 메시지만 쌓인다(빌드 클라이언트에서
+    /// 관측됨). 그래서 이 경로는 서버 또는 오프라인 단독 실행에서만 수행한다. 서버가 기록한
+    /// 신호는 미러 RPC 로 모든 클라이언트 로컬 레지스트리에 복제되므로 각 피어의 게이트 판정은
+    /// 그대로 성립한다.
+    /// </para>
+    /// </summary>
+    private static bool IsSignalOriginPeer => InstanceFinder.IsServerStarted || InstanceFinder.IsOffline;
+
     private static void Raise(string name, params string[] identifiers)
     {
+      if (!IsSignalOriginPeer)
+        return;
       if (identifiers.Any(string.IsNullOrWhiteSpace))
         return;
       ScenarioInteractionSignals.Raise(string.Join("_", new[] { name }.Concat(identifiers)));
