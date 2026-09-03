@@ -48,6 +48,7 @@ namespace MultiplayerInfrastructure.Player
     private readonly Dictionary<int, PendingWorldItemDrop> _pendingWorldItemDrops = new();
     private readonly Queue<float> _serverWorldItemDropTimes = new();
     private int _nextWorldItemDropRequestId;
+    private bool _joinMessageBroadcast;
 
     // ── SyncVars ─────────────────────────────────────────────────────────────
     // 서버가 설정하고 모든 클라이언트로 자동 전파됩니다.
@@ -88,7 +89,6 @@ namespace MultiplayerInfrastructure.Player
 
       PlayerGamemodeService.RegisterPlayer(this);
       UserDescriptorService.Register(Owner.ClientId, descriptor);
-      BroadcastConnectionMessage($"{descriptor.DisplayName}가 들어왔습니다.");
       RegisterPlayerEntity();
       OnStartServer_PlayerModel();
       InitializeRunningSpeedMultiplierServer();
@@ -349,6 +349,16 @@ namespace MultiplayerInfrastructure.Player
       // 서버 측 서비스도 즉시 갱신
       UserDescriptorService.UpdateDisplayName(_userIdentifier.Value, normalized);
       Registry.Registry.UpdateEntityDisplayName(_entityIdentifier.Value, normalized);
+      BroadcastJoinMessage(normalized);
+    }
+
+    private void BroadcastJoinMessage(string displayName)
+    {
+      if (_joinMessageBroadcast || string.IsNullOrWhiteSpace(displayName))
+        return;
+
+      _joinMessageBroadcast = true;
+      BroadcastConnectionMessage($"{displayName}가 들어왔습니다.");
     }
 
     private void RegisterPlayerEntity()

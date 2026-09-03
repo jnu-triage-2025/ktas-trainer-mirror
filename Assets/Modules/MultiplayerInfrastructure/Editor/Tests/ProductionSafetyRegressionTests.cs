@@ -46,6 +46,23 @@ namespace MultiplayerInfrastructure.Tests
     }
 
     [Test]
+    public void JoinMessageIsBroadcastOnlyAfterClientDisplayNameIsAccepted()
+    {
+      string source = System.IO.File.ReadAllText(
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.Network.cs");
+
+      int serverStart = source.IndexOf("public override void OnStartServer()", System.StringComparison.Ordinal);
+      int clientNameCommand = source.IndexOf("private void CmdSetDisplayName(string displayName)", System.StringComparison.Ordinal);
+      int joinMessage = source.IndexOf("BroadcastJoinMessage(normalized);", System.StringComparison.Ordinal);
+
+      Assert.That(serverStart, Is.GreaterThanOrEqualTo(0));
+      Assert.That(clientNameCommand, Is.GreaterThan(serverStart));
+      Assert.That(joinMessage, Is.GreaterThan(clientNameCommand));
+      Assert.That(source.Substring(serverStart, clientNameCommand - serverStart),
+        Does.Not.Contain("가 들어왔습니다."));
+    }
+
+    [Test]
     public void ClearSessionStateRemovesObjectivesAndScores()
     {
       var objectives = (IDictionary)typeof(SessionVariableService)
