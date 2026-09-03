@@ -398,6 +398,38 @@ namespace MultiplayerInfrastructure.Player
     public void LockCursor() { ChangeCursorLock(true); }
     public void UnlockCursor() { ChangeCursorLock(false); }
 
+    /// <summary>
+    /// 현재 피어에서 활성화된 모든 플레이어 CharacterController 쌍의 물리 충돌을 무시한다.
+    /// 플레이어는 서로 통과할 수 있지만, 월드·환자·침대 등 다른 Collider와의 충돌은 유지한다.
+    /// </summary>
+    private void IgnoreCollisionsWithActivePlayers()
+    {
+      if (_characterController == null)
+        _characterController = GetComponent<CharacterController>();
+
+      if (_characterController == null)
+        return;
+
+      var players = FindObjectsByType<PlayerController>(
+        FindObjectsInactive.Exclude,
+        FindObjectsSortMode.None);
+
+      foreach (var player in players)
+      {
+        if (player == null || ReferenceEquals(player, this))
+          continue;
+
+        var otherController = player._characterController;
+        if (otherController == null)
+          otherController = player.GetComponent<CharacterController>();
+
+        if (otherController == null)
+          continue;
+
+        Physics.IgnoreCollision(_characterController, otherController, true);
+      }
+    }
+
     private void ChangeCursorLock(bool locking)
     {
       Cursor.lockState = locking ? CursorLockMode.Locked : CursorLockMode.None;

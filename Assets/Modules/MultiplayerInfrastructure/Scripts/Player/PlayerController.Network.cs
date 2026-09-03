@@ -92,6 +92,7 @@ namespace MultiplayerInfrastructure.Player
       RegisterPlayerEntity();
       OnStartServer_PlayerModel();
       InitializeRunningSpeedMultiplierServer();
+      IgnoreCollisionsWithActivePlayers();
       SyncPlayerTagsToObservers();
       SyncQuestStateFlagsToObservers();
     }
@@ -228,6 +229,7 @@ namespace MultiplayerInfrastructure.Player
       UserDescriptorService.Register(Owner.ClientId, descriptor);
       RegisterPlayerEntity();
       OnStartClient_AnyPeer_PlayerModel();
+      IgnoreCollisionsWithActivePlayers();
 
       // 이후 DisplayName 변경(서버 반영) 시 갱신
       _userDisplayName.OnChange += OnDisplayNameChanged;

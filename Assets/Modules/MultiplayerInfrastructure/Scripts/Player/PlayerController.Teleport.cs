@@ -47,6 +47,10 @@ namespace MultiplayerInfrastructure.Player
 
       if (_characterController != null)
         _characterController.enabled = wasEnabled;
+
+      // Collider를 비활성화했다가 다시 켜면 Unity가 IgnoreCollision 상태를 초기화할 수 있다.
+      // 텔레포트 뒤에도 플레이어끼리 겹칠 수 있도록 충돌 무시 상태를 다시 적용한다.
+      IgnoreCollisionsWithActivePlayers();
     }
   }
 }
