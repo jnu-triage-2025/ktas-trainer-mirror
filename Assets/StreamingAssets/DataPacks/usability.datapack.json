@@ -17,6 +17,7 @@
     { "name": "nurse_a", "target": "/tag add @self nurse_a" },
     { "name": "nurse_b", "target": "/tag add @self nurse_b" },
     { "name": "nurse_c", "target": "/tag add @self nurse_c" },
-    { "name": "nurse_d", "target": "/tag add @self nurse_d" }
+    { "name": "nurse_d", "target": "/tag add @self nurse_d" },
+    { "name": "opall", "target": "/permission user set @a operator" }
   ]
 }
