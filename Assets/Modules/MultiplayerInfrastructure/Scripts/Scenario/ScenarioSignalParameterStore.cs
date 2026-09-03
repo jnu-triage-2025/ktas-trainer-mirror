@@ -17,6 +17,8 @@ namespace MultiplayerInfrastructure.Scenario
     public const int MaxStoredEntriesPerPlayer = 128;
     private const char KeySeparator = '\u001f';
     private static readonly Dictionary<string, ScenarioSignalParameter> Values = new(StringComparer.Ordinal);
+    // 신호별 귀속 기록 수. (signal, player) 키 전체를 순회하지 않고 귀속 유무를 판정하기 위해 유지한다.
+    private static readonly Dictionary<string, int> RecordCountBySignal = new(StringComparer.Ordinal);
     private static long _latestSequence;
 
     public static event Action<ScenarioSignalParameter> OnValueRecorded;
@@ -91,6 +93,19 @@ namespace MultiplayerInfrastructure.Scenario
     public static bool TryGetForPlayer(string signalIdentifier, string playerIdentifier, out ScenarioSignalParameter value)
       => Values.TryGetValue(BuildKey(ScenarioInteractionSignals.Normalize(signalIdentifier), NormalizePlayerIdentifier(playerIdentifier)), out value);
 
+    /// <summary>
+    /// 이 신호에 대해 발신자 귀속 기록이 하나라도 남아 있는지 확인한다.
+    /// 저장소 한도 초과나 미러 유실로 귀속이 없는 신호를 구별해, 귀속 기반 판정이
+    /// 진행을 막지 않고 전역 신호 결과로 물러설 수 있게 한다.
+    /// </summary>
+    public static bool HasAnyRecord(string signalIdentifier)
+    {
+      string normalized = ScenarioInteractionSignals.Normalize(signalIdentifier);
+      return !string.IsNullOrWhiteSpace(normalized)
+        && RecordCountBySignal.TryGetValue(normalized, out int count)
+        && count > 0;
+    }
+
     public static IReadOnlyList<ScenarioSignalParameter> GetAll(string signalIdentifier = null)
     {
       string normalized = string.IsNullOrWhiteSpace(signalIdentifier) ? null : ScenarioInteractionSignals.Normalize(signalIdentifier);
@@ -128,6 +143,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (Values.Count == 0)
         return;
       Values.Clear();
+      RecordCountBySignal.Clear();
       OnFlushed?.Invoke();
       GameLogService.WriteSignal("Scenario signal parameters flushed.", "scenario-signal-parameters");
     }
@@ -135,9 +151,15 @@ namespace MultiplayerInfrastructure.Scenario
     private static void Apply(ScenarioSignalParameter value)
     {
       string key = BuildKey(value.SignalIdentifier, value.PlayerIdentifier);
-      if (Values.TryGetValue(key, out var current) && current.Sequence >= value.Sequence)
+      bool isNewKey = !Values.TryGetValue(key, out var current);
+      if (!isNewKey && current.Sequence >= value.Sequence)
         return;
       Values[key] = value;
+      if (isNewKey)
+      {
+        RecordCountBySignal.TryGetValue(value.SignalIdentifier, out int recordCount);
+        RecordCountBySignal[value.SignalIdentifier] = recordCount + 1;
+      }
       OnValueRecorded?.Invoke(value);
       GameLogService.WriteSignal(
         $"Signal parameter recorded: signal={FormatForLog(value.SignalIdentifier)}, "

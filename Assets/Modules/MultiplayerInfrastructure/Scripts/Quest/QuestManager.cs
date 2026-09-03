@@ -1047,9 +1047,11 @@ namespace MultiplayerInfrastructure.Quest
 
         case QuestCompletionCriteriaType.InteractionSignalReceived:
           {
-            var normalized = ScenarioInteractionSignals.Normalize(criteria.SignalId);
-            bool raised = !string.IsNullOrWhiteSpace(normalized)
-                && Registry.Registry.Contains(RegistryType.RuntimeState, normalized);
+            // SignalScope.Owner 조건은 이 퀘스트를 보유한 참여자가 직접 올린 신호만 인정한다.
+            // 귀속을 확인할 수 없으면 ScenarioSignalAttribution 이 전역 판정으로 물러서므로
+            // 진행이 막히지 않는다.
+            bool raised = ScenarioSignalAttribution.IsSatisfied(
+                criteria.SignalId, criteria.SignalScope, playerController?.UserIdentifier);
             int current = raised ? count : 0;
             return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(raised, current, count));
           }
@@ -1088,9 +1090,8 @@ namespace MultiplayerInfrastructure.Quest
           }
         case QuestCompletionCriteriaType.InteractionSignalReceived:
           {
-            var normalized = ScenarioInteractionSignals.Normalize(criteria.SignalId);
-            bool raised = !string.IsNullOrWhiteSpace(normalized)
-                && Registry.Registry.Contains(RegistryType.RuntimeState, normalized);
+            // Global 스코프 퀘스트는 참여자 전원이 함께 달성하는 목표이므로 발신자를 구분하지 않는다.
+            bool raised = ScenarioSignalAttribution.IsRaised(criteria.SignalId);
             int current = raised ? count : 0;
             return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(raised, current, count));
           }

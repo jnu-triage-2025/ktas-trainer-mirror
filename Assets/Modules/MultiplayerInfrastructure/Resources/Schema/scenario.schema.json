@@ -2929,6 +2929,14 @@
             "null"
           ]
         },
+        "SignalScope": {
+          "type": "string",
+          "enum": [
+            "Any",
+            "Owner"
+          ],
+          "default": "Any"
+        },
         "Type": {
           "type": "string",
           "enum": [

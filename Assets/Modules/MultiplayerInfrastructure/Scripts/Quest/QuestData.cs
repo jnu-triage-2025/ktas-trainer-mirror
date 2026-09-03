@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using MultiplayerInfrastructure.Scenario;
 
 namespace MultiplayerInfrastructure.Quest
 {
@@ -152,6 +153,16 @@ namespace MultiplayerInfrastructure.Quest
     public QuestCompletionCriteriaType Type { get; set; } = QuestCompletionCriteriaType.InventoryContains;
     public string ItemId { get; set; }
     public string SignalId { get; set; }
+
+    /// <summary>
+    /// <see cref="QuestCompletionCriteriaType.InteractionSignalReceived"/> 조건을 어느 범위로 판정할지 지정합니다.
+    /// 기본값인 <see cref="ScenarioSignalScope.Any"/>는 누가 올린 신호인지 구분하지 않으므로,
+    /// 여러 참여자가 함께 달성하는 공동 목표에 적합합니다.
+    /// <see cref="ScenarioSignalScope.Owner"/>는 이 퀘스트를 보유한 참여자가 직접 올린 신호만 인정하므로,
+    /// 역할별로 한 사람이 수행해야 하는 목표가 다른 참여자의 행동으로 완료되는 것을 막습니다.
+    /// </summary>
+    public ScenarioSignalScope SignalScope { get; set; } = ScenarioSignalScope.Any;
+
     public string WaypointIdentifier { get; set; }
     public float ReachDistance { get; set; } = DefaultReachDistance;
     public string DisplayTextContent { get; set; }
@@ -173,6 +184,7 @@ namespace MultiplayerInfrastructure.Quest
         Type = Type,
         ItemId = ItemId,
         SignalId = SignalId,
+        SignalScope = SignalScope,
         WaypointIdentifier = WaypointIdentifier,
         ReachDistance = ReachDistance,
         DisplayTextContent = DisplayTextContent,

@@ -222,6 +222,9 @@ namespace MultiplayerInfrastructure.Editor
       foldout.Add(Enum("Type", criterion.Type, value => { criterion.Type = value; Save(source); Refresh(); }));
       foldout.Add(Text("Item ID", criterion.ItemId, value => { criterion.ItemId = Normalize(value); Save(source); }));
       foldout.Add(Text("Signal ID", criterion.SignalId, value => { criterion.SignalId = Normalize(value); Save(source); }));
+      // Owner 로 지정하면 이 퀘스트를 보유한 참여자가 직접 올린 신호만 인정한다.
+      // 역할별로 한 사람이 수행하는 목표에 사용하고, 참여자 전원이 함께 달성하는 공동 목표에는 Any 를 유지한다.
+      foldout.Add(Enum("Signal Scope", criterion.SignalScope, value => { criterion.SignalScope = value; Save(source); }));
       foldout.Add(Text("Waypoint Identifier", criterion.WaypointIdentifier, value => { criterion.WaypointIdentifier = Normalize(value); Save(source); }));
       var distance = new FloatField("Reach Distance") { value = criterion.ReachDistance };
       distance.RegisterValueChangedCallback(evt => { criterion.ReachDistance = evt.newValue; Save(source); });
