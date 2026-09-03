@@ -39,6 +39,18 @@ namespace MultiplayerInfrastructure.Player
     {
       if (!IsOwner)
         return;
+
+      // TutorialScene은 SystemOverlayScene을 추가 로드한 다음 플레이어를 생성한다.
+      // 플레이어의 OnStartClient 시점에 카메라 컨트롤러가 아직 등록되지 않았을 수 있으므로,
+      // 이후 프레임에도 서비스를 다시 찾아 로컬 플레이어 부착점에 바인딩한다.
+      if (_camControl == null)
+      {
+        _camControl = MainCameraController.Instance
+          ?? Registry.Registry.Get<MainCameraController>(
+            RegistryType.Service,
+            Registry.Registry.TypeKey<MainCameraController>());
+      }
+
       if (_camControl == null)
         return;
 
