@@ -359,6 +359,8 @@ namespace MultiplayerInfrastructure.Command
       string key = inner.Replace("_", string.Empty).Replace("-", string.Empty).ToLowerInvariant();
       if (key.Contains("item"))
         return CollectItemIdentifiers();
+      if (key.Contains("role"))
+        return CollectRoleIdentifiers();
       if (key.Contains("target") || key.Contains("player") || key.Contains("user") || key.Contains("name"))
         return CollectPlayersAndSelectors();
       if (key.Contains("waypoint"))
@@ -566,6 +568,23 @@ namespace MultiplayerInfrastructure.Command
       try
       {
         return Registry.Registry.GetAll<object>(RegistryType.ProblemSet).Keys.ToList();
+      }
+      catch
+      {
+        return new List<string>();
+      }
+    }
+
+    /// <summary>권한 서비스에 등록된 모든 role 이름을 반환합니다.</summary>
+    public static List<string> CollectRoleIdentifiers()
+    {
+      try
+      {
+        return Permission.PermissionService.GetRoles()
+          .Where(value => !string.IsNullOrWhiteSpace(value))
+          .Distinct(StringComparer.OrdinalIgnoreCase)
+          .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+          .ToList();
       }
       catch
       {
