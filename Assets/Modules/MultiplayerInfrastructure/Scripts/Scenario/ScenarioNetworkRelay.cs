@@ -974,6 +974,13 @@ namespace MultiplayerInfrastructure.Scenario
     internal static void ClearClientSignalAuthorization()
       => ClientSignalAuthorization.ClearAll();
 
+    /// <summary>
+    /// SignalCounter, SignalListener처럼 그래프 엔진이 계산하는 서버 전용 출력의 실행 주체인지 판정한다.
+    /// 네트워크가 없는 테스트와 단일 플레이 환경에서는 기존 로컬 실행을 유지한다.
+    /// </summary>
+    internal static bool CanEmitServerOwnedSignalOutput()
+      => InstanceFinder.IsServerStarted || InstanceFinder.IsOffline || _instance == null;
+
     private static bool RaiseOnServer(string normalizedSignalId, string parameterJson,
       string playerIdentifier, string playerDisplayName, NetworkConnection sender)
     {

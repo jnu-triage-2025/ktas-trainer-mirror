@@ -47,6 +47,37 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(graph.ClientSignalIdentifiers, Does.Contain("sig.quest_arrival_triage_area"));
       Assert.That(graph.ClientSignalIdentifiers, Does.Contain("sig.arrive_triagearea"));
       Assert.That(graph.ClientSignalIdentifiers, Does.Contain("sig.interact_oxyflow_wall"));
+      Assert.That(graph.ClientSignalIdentifiers, Does.Not.Contain("sig.all_nurses_arrived_patient_a"),
+        "SignalCounter가 계산하는 도착 완료 신호는 client-origin으로 선언하면 안 됩니다.");
+    }
+
+    [Test]
+    public void ScenarioClientSignalsDoNotIncludeServerComputedOutputs()
+    {
+      string scenarioDirectory = Path.Combine(Application.dataPath, "Modules", "TriageTrainer", "Resources", "Scenario");
+      foreach (string path in Directory.GetFiles(scenarioDirectory, "*.scenario.json"))
+      {
+        var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+        var clientSignals = new HashSet<string>();
+        foreach (string signal in graph.ClientSignalIdentifiers)
+          clientSignals.Add(ScenarioInteractionSignals.Normalize(signal));
+
+        foreach (var node in graph.Nodes.Values)
+        {
+          string output = node switch
+          {
+            ScenarioSignalCounterNode counter => counter.OutputSignalIdentifier,
+            ScenarioSignalListenerNode listener => listener.OutputSignalIdentifier,
+            ScenarioEntityStateSignalBindingNode binding => binding.OutputSignalIdentifier,
+            _ => null
+          };
+          if (!string.IsNullOrWhiteSpace(output))
+          {
+            Assert.That(clientSignals, Does.Not.Contain(ScenarioInteractionSignals.Normalize(output)),
+              $"{Path.GetFileName(path)}의 서버 계산 출력 '{output}'은 client-origin 신호일 수 없습니다.");
+          }
+        }
+      }
     }
 
     [Test]

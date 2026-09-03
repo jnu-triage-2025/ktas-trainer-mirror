@@ -1,7 +1,6 @@
 {
   "identifier": "patient_a_critical",
   "clientSignalIdentifiers": [
-    "sig.all_nurses_arrived_patient_a",
     "sig.apply_gauze",
     "sig.apply_plaster_on_gauze",
     "sig.apply_plaster_on_intu",

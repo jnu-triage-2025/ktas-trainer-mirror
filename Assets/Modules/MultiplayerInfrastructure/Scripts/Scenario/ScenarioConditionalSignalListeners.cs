@@ -83,6 +83,12 @@ namespace MultiplayerInfrastructure.Scenario
         // 재진입/중복 디스패치로 이미 제거되었을 수 있으므로 TryGetValue 로 방어한다.
         if (!Listeners.TryGetValue(key, out var listener))
           continue;
+
+        // 리스너 출력은 그래프 엔진이 계산하는 서버 전용 신호다. 클라이언트는 서버가
+        // 미러링한 출력만 받아야 하며, 여기서 다시 서버로 보고하면 권한 검사에서 거부된다.
+        if (!ScenarioNetworkRelay.CanEmitServerOwnedSignalOutput())
+          continue;
+
         if (listener.ConsumeOnce)
           Listeners.Remove(key);
         // Raise 는 OnSignalRegistered 를 동기 발생시키지만, _isDispatching 가드로 재진입이

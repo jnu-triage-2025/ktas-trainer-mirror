@@ -112,6 +112,11 @@ namespace MultiplayerInfrastructure.Scenario
         if (binding.ConsumeOnce && binding.Consumed)
           return;
 
+        // 바인딩 출력은 서버가 검증한 엔티티 상태에서만 생성한다. 클라이언트에서 다시
+        // RaiseAuthoritative 경로로 보내면 서버 전용 출력으로 거부되므로, 서버의 미러를 기다린다.
+        if (!ScenarioNetworkRelay.CanEmitServerOwnedSignalOutput())
+          return;
+
         if (binding.ConsumeOnce)
         {
           // 1회성: 발신 전에 소비 표시를 하고 소스에서 떼어 내 재진입/중복 발신을 막는다.

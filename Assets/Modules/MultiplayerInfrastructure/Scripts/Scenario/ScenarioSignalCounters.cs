@@ -200,6 +200,12 @@ namespace MultiplayerInfrastructure.Scenario
 
     private static void FireIfReady(Counter counter)
     {
+      // 카운터는 각 피어의 RuntimeState 변경을 관찰하지만, 완료 신호는 서버만 계산하여
+      // 발신해야 한다. 클라이언트가 이를 RaiseAuthoritative 경로로 되돌려 보내면 서버 전용
+      // 출력으로 거부되고, 클라이언트 측 게이트도 다음 단계로 진행하지 못한다.
+      if (!ScenarioNetworkRelay.CanEmitServerOwnedSignalOutput())
+        return;
+
       if (counter.ExpectedSignals != null)
       {
         var expected = counter.ExpectedSignals() ?? Array.Empty<string>();
