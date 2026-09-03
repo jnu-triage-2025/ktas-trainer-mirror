@@ -43,12 +43,42 @@ namespace MultiplayerInfrastructure.UI
           return;
         }
 
-        SafeOnOverlayPopped(Stack.Peek());
+        // 같은 오버레이가 스택 중간에 남아 있는 채로 다시 push 되면 항목이 중복된다.
+        // 그 상태에서는 Pop 을 한 번 해도 아래쪽 중복 항목이 최상단으로 올라와
+        // IsTop 이 계속 참으로 남고, 플레이어 입력이 영구히 잠긴다.
+        // (대화창 위에 커맨드 채팅을 연 뒤 다음 대화 노드가 표시되는 경로에서 발생한다.)
+        RemoveFromStack(overlay);
+
+        if (Stack.Count > 0)
+          SafeOnOverlayPopped(Stack.Peek());
       }
 
       Stack.Push(overlay);
       SafeOnOverlayPushed(overlay);
       NotifyStackChangedIfNeeded(previousCount, previousTop);
+    }
+
+    /// <summary>
+    /// 스택에 남아 있는 <paramref name="overlay"/> 항목을 모두 제거한다.
+    /// 최상단 항목이 아닌 중복 항목을 걷어내는 용도이므로 Pop 콜백을 호출하지 않는다.
+    /// (최상단 항목을 실제로 내리는 처리는 호출부가 별도로 수행한다.)
+    /// </summary>
+    private static void RemoveFromStack(IUIOverlay overlay)
+    {
+      if (Stack.Count == 0)
+        return;
+
+      var kept = new List<IUIOverlay>(Stack.Count);
+      while (Stack.Count > 0)
+      {
+        var each = Stack.Pop();
+        if (each == overlay)
+          continue;
+        kept.Add(each);
+      }
+
+      for (int i = kept.Count - 1; i >= 0; i--)
+        Stack.Push(kept[i]);
     }
 
     public static IUIOverlay Pop()
