@@ -348,7 +348,7 @@ namespace TextToSpeechService
 
       if (bgTask.IsFaulted)
       {
-        Debug.LogError($"[TTSService] 초기화 실패: {bgTask.Exception?.GetBaseException().Message}");
+        Debug.LogError($"[TTSService] 초기화 실패: {bgTask.Exception}");
         IsInitializationFailed = true;
         yield break;
       }
