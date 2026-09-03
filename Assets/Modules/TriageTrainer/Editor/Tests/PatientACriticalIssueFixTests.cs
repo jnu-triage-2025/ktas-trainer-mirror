@@ -2213,6 +2213,44 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PatientAMoveWaitsForEveryConnectedPlayerToLeaveTheBed()
+    {
+      var bedObject = new GameObject("PatientBedDismountTrackingTest");
+      try
+      {
+        var bed = bedObject.AddComponent<MovingPatientBedController>();
+        bed.BeginRequiredDismountTracking(new[] { 10, 20 });
+
+        Assert.That(bed.HaveAllRequiredDismountedParticipants, Is.False,
+          "두 명 이상이 접속한 이동 단계에서는 한 명의 완료만으로 다음 단계가 진행되면 안 됩니다.");
+
+        var dismounted = typeof(MovingPatientBedController).GetField(
+          "_dismountedClientIds", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(bed) as HashSet<int>;
+        Assert.That(dismounted, Is.Not.Null);
+        dismounted.Add(10);
+        Assert.That(bed.HaveAllRequiredDismountedParticipants, Is.False);
+
+        dismounted.Add(20);
+        Assert.That(bed.HaveAllRequiredDismountedParticipants, Is.True);
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(bedObject);
+      }
+
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string transferSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/"
+        + "TriageScenarioEventBootstrap.Event.move_patientA_to_treatmentroom.cs"));
+      StringAssert.Contains("BeginRequiredDismountTracking(GetConnectedPlayerClientIds())", transferSource);
+      StringAssert.Contains("!bed.HaveAllRequiredDismountedParticipants", transferSource);
+
+      string bedPrefab = File.ReadAllText(Path.Combine(projectRoot, PatientMovingBedPrefabPath));
+      StringAssert.Contains("_maximumParticipants: 4", bedPrefab,
+        "환자 이동 퀘스트에서 참여자 전원이 침대를 조작할 수 있어야 합니다.");
+    }
+
+    [Test]
     public void PatientAActionInteractionsRestoreDedicatedIconsAfterQuestMarkOverride()
     {
       var patientPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);

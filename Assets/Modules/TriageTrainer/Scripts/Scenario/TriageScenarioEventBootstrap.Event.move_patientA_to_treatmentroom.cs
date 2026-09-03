@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
+using FishNet;
 using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity;
 using UnityEngine;
@@ -58,10 +60,7 @@ namespace TriageTrainer.Scenario
         }
 
         bed.SetMovementInteractionEnabled(true, releaseParticipantsIfDisabled: false);
-        bed.ResetDismountCompletionTracking();
-
-        string allDismountedSignal = bed.DismountCompletionSignal;
-        ScenarioInteractionSignals.Clear(allDismountedSignal);
+        bed.BeginRequiredDismountTracking(GetConnectedPlayerClientIds());
 
         string globalSignal = hasResolvablePoint
           ? $"patient_bed_position_reached_{pointIdentifier}"
@@ -129,7 +128,7 @@ namespace TriageTrainer.Scenario
 
         {
           float dismountStartedAt = Time.time;
-          while (!ScenarioInteractionSignals.IsRaised(allDismountedSignal))
+          while (!bed.HaveAllRequiredDismountedParticipants)
           {
             if (_patientADismountWaitTimeoutSeconds > 0f
                 && Time.time - dismountStartedAt >= _patientADismountWaitTimeoutSeconds)
@@ -173,6 +172,31 @@ namespace TriageTrainer.Scenario
       }
 
       return null;
+    }
+
+    private static IReadOnlyCollection<int> GetConnectedPlayerClientIds()
+    {
+      var clientIds = new List<int>();
+      if (InstanceFinder.IsServerStarted)
+      {
+        var clients = InstanceFinder.ServerManager?.Clients;
+        if (clients != null)
+        {
+          foreach (var pair in clients)
+          {
+            if (pair.Value != null)
+              clientIds.Add((int)pair.Value.ClientId);
+          }
+        }
+      }
+      else
+      {
+        var connection = InstanceFinder.ClientManager?.Connection;
+        if (connection != null)
+          clientIds.Add((int)connection.ClientId);
+      }
+
+      return clientIds;
     }
   }
 }

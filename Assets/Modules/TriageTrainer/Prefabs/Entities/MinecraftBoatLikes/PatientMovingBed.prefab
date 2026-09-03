@@ -498,7 +498,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 5796848331211291605}
   _networkObjectCache: {fileID: 5796848331211291605}
   _defaultControlIcon: {fileID: 0}
-  _maximumParticipants: 1
+  _maximumParticipants: 4
   _moveSpeed: 3.5
   _turnSpeed: 120
   _forwardYawOffsetDegrees: -90
