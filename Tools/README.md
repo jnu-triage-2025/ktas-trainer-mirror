@@ -73,3 +73,10 @@ unity-merge를 즉시 사용 가능한 상태로 구성합니다: 서브모듈 �
 실행 예시 (working directory: 저장소 루트):
 - `./Tools/setup-unity-merge.sh`
 - `Tools\setup-unity-merge.bat`
+
+## 인간 작업자 지침
+### 직접 빌드 시
+```sh
+BUILD_TARGET=StandaloneWindows64 BUILD_SUBTARGET=Player BUILD_NAME=ktas-trainer KEEP_BUILD_OUTPUT=1 Tools/CI/build-unity.sh
+BUILD_TARGET=StandaloneOSX BUILD_SUBTARGET=Player BUILD_NAME=ktas-trainer KEEP_BUILD_OUTPUT=1 Tools/CI/build-unity.sh
+```
