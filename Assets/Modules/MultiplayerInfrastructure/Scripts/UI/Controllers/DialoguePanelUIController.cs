@@ -44,6 +44,7 @@ namespace MultiplayerInfrastructure.UI
     private VisualElement _root;
     private VisualElement _dialoguePanel;
     private DialogueElement _dialogueElement;
+    private DialogueElement _dialogueElementWithClickHandler;
     private Label _speakerNameLabel;
     private Label _dialogueTextLabel;
     private VisualElement _portraitImage;
@@ -208,6 +209,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnDisable()
     {
+      UnregisterDialogueElementClickHandler();
     }
 
     private void Update()
@@ -248,6 +250,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       _dialogueElement = _root.Q<DialogueElement>("dialogue-element");
+      RegisterDialogueElementClickHandler();
       _dialoguePanel = _dialogueElement;
       _speakerNameLabel = _root.Q<Label>("speaker-name");
       _dialogueTextLabel = _root.Q<Label>("dialogue-text");
@@ -264,6 +267,28 @@ namespace MultiplayerInfrastructure.UI
       {
         _dialogueElement.Hide();
       }
+    }
+
+    private void RegisterDialogueElementClickHandler()
+    {
+      if (_dialogueElementWithClickHandler == _dialogueElement)
+        return;
+
+      UnregisterDialogueElementClickHandler();
+      if (_dialogueElement == null)
+        return;
+
+      _dialogueElement.OnDialogueClicked += HandleDialogueClicked;
+      _dialogueElementWithClickHandler = _dialogueElement;
+    }
+
+    private void UnregisterDialogueElementClickHandler()
+    {
+      if (_dialogueElementWithClickHandler == null)
+        return;
+
+      _dialogueElementWithClickHandler.OnDialogueClicked -= HandleDialogueClicked;
+      _dialogueElementWithClickHandler = null;
     }
 
     #endregion
@@ -560,6 +585,11 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void TrySelectCurrentOption()
     {
+      // UI Toolkit ClickEvent와 PlayerController의 레거시 마우스 입력은 같은 프레임에
+      // 모두 발생할 수 있다. 하나의 클릭이 다음 노드를 두 번 진행시키지 않도록 막는다.
+      if (HasConsumedInputThisFrame)
+        return;
+
       // 타이핑 중이면 스킵
       if (_isTyping)
       {
@@ -970,6 +1000,11 @@ namespace MultiplayerInfrastructure.UI
     #endregion
 
     #region DialogueElement Interaction
+
+    private void HandleDialogueClicked()
+    {
+      TrySelectCurrentOption();
+    }
 
     /// <summary>
     /// 패널 토글
