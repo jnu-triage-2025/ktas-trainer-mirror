@@ -39,6 +39,7 @@
           "identifier": "triage-patient-b",
           "type": "InteractionSignalReceived",
           "signalId": "triage_submitted_patient_b",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 남성 환자 중증도 분류",
           "count": 1
         },
@@ -46,6 +47,7 @@
           "identifier": "triage-patient-c",
           "type": "InteractionSignalReceived",
           "signalId": "triage_submitted_patient_c",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 여성 환자 중증도 분류",
           "count": 1
         },
@@ -53,6 +55,7 @@
           "identifier": "triage-patient-dummy-d",
           "type": "InteractionSignalReceived",
           "signalId": "triage_submitted_patient_dummy_d_b",
+          "signalScope": "Owner",
           "displayTextContent": "조금 다친 여성 환자 중증도 분류",
           "count": 1
         }
@@ -200,6 +203,7 @@
           "identifier": "patient-b-strength-checked",
           "type": "InteractionSignalReceived",
           "signalId": "patient_b_strength_checked",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 남성 환자 근력 확인",
           "count": 1
         }
@@ -232,6 +236,7 @@
           "identifier": "select-patient-b",
           "type": "InteractionSignalReceived",
           "signalId": "select_patient_b",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 남성 환자를 모니터링할 환자로 선택",
           "count": 1
         },
@@ -239,6 +244,7 @@
           "identifier": "close-vital-ui-b",
           "type": "InteractionSignalReceived",
           "signalId": "close_vital_ui_b",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 남성 환자 활력징후 확인",
           "count": 1
         }
@@ -289,6 +295,7 @@
           "identifier": "patient-b-pupil-checked",
           "type": "InteractionSignalReceived",
           "signalId": "patient_b_pupil_checked",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 남성 환자 동공반사 확인",
           "count": 1
         },
@@ -296,6 +303,7 @@
           "identifier": "patient-b-iv-secured",
           "type": "InteractionSignalReceived",
           "signalId": "insert_iv_patient_b_right",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 남성 환자 정맥로 확보",
           "count": 1
         }
@@ -345,6 +353,7 @@
           "identifier": "patient-b-oxygen-supplied",
           "type": "InteractionSignalReceived",
           "signalId": "equipment_connected_oxyflowmeter_patient_b",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 남성 환자에게 산소 공급하기",
           "count": 1
         },
@@ -352,6 +361,7 @@
           "identifier": "patient-b-bleeding-controlled",
           "type": "InteractionSignalReceived",
           "signalId": "apply_plaster_on_gauze_patient_b",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 남성 환자 지혈하기",
           "count": 1
         }
@@ -509,6 +519,7 @@
           "identifier": "patient-c-strength-checked",
           "type": "InteractionSignalReceived",
           "signalId": "patient_c_strength_checked",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 여성 환자 근력 확인",
           "count": 1
         }
@@ -541,6 +552,7 @@
           "identifier": "select-patient-c",
           "type": "InteractionSignalReceived",
           "signalId": "select_patient_c",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 여성 환자를 모니터링할 환자로 선택",
           "count": 1
         },
@@ -548,6 +560,7 @@
           "identifier": "close-vital-ui-c",
           "type": "InteractionSignalReceived",
           "signalId": "close_vital_ui_c",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 여성 환자 활력징후 확인",
           "count": 1
         }
@@ -598,6 +611,7 @@
           "identifier": "patient-c-pupil-checked",
           "type": "InteractionSignalReceived",
           "signalId": "patient_c_pupil_checked",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 여성 환자 동공반사 확인",
           "count": 1
         },
@@ -605,6 +619,7 @@
           "identifier": "patient-c-iv-secured",
           "type": "InteractionSignalReceived",
           "signalId": "insert_iv_patient_c_left",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 여성 환자 정맥로 확보",
           "count": 1
         }
@@ -654,6 +669,7 @@
           "identifier": "patient-c-oxygen-supplied",
           "type": "InteractionSignalReceived",
           "signalId": "equipment_connected_oxyflowmeter_patient_c",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 여성 환자에게 산소 공급하기",
           "count": 1
         },
@@ -661,6 +677,7 @@
           "identifier": "patient-c-bleeding-controlled",
           "type": "InteractionSignalReceived",
           "signalId": "apply_plaster_on_gauze_patient_c",
+          "signalScope": "Owner",
           "displayTextContent": "많이 다친 여성 환자 지혈하기",
           "count": 1
         }

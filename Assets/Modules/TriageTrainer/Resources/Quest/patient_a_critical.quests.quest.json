@@ -101,6 +101,7 @@
           "identifier": "assess-vital-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "show_vital_patient_a",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자의 활력징후를 측정하기",
           "count": 1
         },
@@ -108,6 +109,7 @@
           "identifier": "view-vital-monitor-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "close_vital_ui_a",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자의 활력징후를 환자 모니터를 통해 확인하기",
           "count": 1
         }
@@ -167,6 +169,7 @@
           "identifier": "assess-gcs-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "check_avpu_gcs_patient_a",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자의 의식 상태를 사정하기",
           "count": 1
         }
@@ -199,6 +202,7 @@
           "identifier": "stabilize-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "apply_stabilizer_patient_a",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자의 경추를 고정하기",
           "count": 1
         },
@@ -206,6 +210,7 @@
           "identifier": "install-suction-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "connect_wall_component_1",
+          "signalScope": "Owner",
           "displayTextContent": "흡인기를 벽에 설치하기",
           "count": 1
         },
@@ -213,6 +218,7 @@
           "identifier": "connect-yankauer-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "connect_wall_component_and_yankauer",
+          "signalScope": "Owner",
           "displayTextContent": "양커 팁을 흡인기에 연결하기",
           "count": 1
         },
@@ -220,6 +226,7 @@
           "identifier": "suction-mouth-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "suction_patient_a",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자의 구강을 흡인하기",
           "count": 1
         }
@@ -279,6 +286,7 @@
           "identifier": "submit-laryngoscope-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "pass_laryngoscope",
+          "signalScope": "Owner",
           "displayTextContent": "후두경을 조립해 의사에게 전달하기",
           "count": 1
         },
@@ -286,6 +294,7 @@
           "identifier": "submit-et-tube-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "pass_et_tube_ready",
+          "signalScope": "Owner",
           "displayTextContent": "준비한 기관내관을 의사에게 전달하기",
           "count": 1
         },
@@ -293,6 +302,7 @@
           "identifier": "remove-stylet-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "remove_intu_stylet",
+          "signalScope": "Owner",
           "displayTextContent": "삽입된 기관내관에서 스타일렛 제거하기",
           "count": 1
         },
@@ -300,6 +310,7 @@
           "identifier": "submit-syringe-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "pass_syringe",
+          "signalScope": "Owner",
           "displayTextContent": "5cc 주사기를 의사에게 전달하기",
           "count": 1
         },
@@ -307,6 +318,7 @@
           "identifier": "plaster-intubation-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "apply_plaster_on_intu",
+          "signalScope": "Owner",
           "displayTextContent": "기관내관을 플라스터로 고정하기",
           "count": 1
         }
@@ -375,6 +387,7 @@
           "identifier": "install-oxyflowmeter-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "connect_wall_component_2",
+          "signalScope": "Owner",
           "displayTextContent": "산소 유량계를 벽에 설치하기",
           "count": 1
         },
@@ -382,6 +395,7 @@
           "identifier": "attach-tpiece-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "interact_tpiece",
+          "signalScope": "Owner",
           "displayTextContent": "기관내관에 T-piece를 장착하기",
           "count": 1
         },
@@ -389,6 +403,7 @@
           "identifier": "connect-oxygen-line-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "connect_tpiece_and_oxyflow",
+          "signalScope": "Owner",
           "displayTextContent": "T-piece와 벽면 유량계를 산소줄로 연결하기",
           "count": 1
         },
@@ -396,6 +411,7 @@
           "identifier": "set-oxygen-flow-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "interact_oxyflow_wall",
+          "signalScope": "Owner",
           "displayTextContent": "투여 산소량을 10L로 맞추기",
           "count": 1
         }
@@ -455,6 +471,7 @@
           "identifier": "wear-sterile-gloves-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "wear_glove",
+          "signalScope": "Owner",
           "displayTextContent": "멸균장갑 착용하기",
           "count": 1
         },
@@ -462,6 +479,7 @@
           "identifier": "apply-gauze-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "apply_gauze",
+          "signalScope": "Owner",
           "displayTextContent": "출혈 부위에 거즈를 대고 압박하기",
           "count": 1
         },
@@ -469,6 +487,7 @@
           "identifier": "apply-plaster-gauze-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "apply_plaster_on_gauze",
+          "signalScope": "Owner",
           "displayTextContent": "거즈를 플라스터로 고정하기",
           "count": 1
         }
@@ -510,6 +529,7 @@
           "identifier": "patient-a-iv-left",
           "type": "InteractionSignalReceived",
           "signalId": "insert_iv_patient_a_left",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자의 좌측 팔에 정맥로 확보하기",
           "count": 1
         },
@@ -517,6 +537,7 @@
           "identifier": "patient-a-ns-left",
           "type": "InteractionSignalReceived",
           "signalId": "connect_cannula_and_ns1",
+          "signalScope": "Owner",
           "displayTextContent": "좌측 팔에 생리식염수 연결하기",
           "count": 1
         },
@@ -524,6 +545,7 @@
           "identifier": "patient-a-iv-right",
           "type": "InteractionSignalReceived",
           "signalId": "insert_iv_patient_a_right",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자의 우측 팔에 정맥로 확보하기",
           "count": 1
         },
@@ -531,6 +553,7 @@
           "identifier": "patient-a-ps-right",
           "type": "InteractionSignalReceived",
           "signalId": "connect_ps1_right",
+          "signalScope": "Owner",
           "displayTextContent": "우측 팔에 플라즈마 솔루션 연결하기",
           "count": 1
         }
@@ -608,6 +631,7 @@
           "identifier": "submit-central-line-set-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "pass_central_line_set",
+          "signalScope": "Owner",
           "displayTextContent": "C-line set을 의사에게 전달하기",
           "count": 1
         }
@@ -640,6 +664,7 @@
           "identifier": "level1-add-plasma",
           "type": "InteractionSignalReceived",
           "signalId": "connect_ps1_to_lv1",
+          "signalScope": "Owner",
           "displayTextContent": "Level 1 rapid infuser에 플라즈마 솔루션 연결하기",
           "count": 1
         },
@@ -647,6 +672,7 @@
           "identifier": "level1-add-blood",
           "type": "InteractionSignalReceived",
           "signalId": "connect_blood_to_lv1",
+          "signalScope": "Owner",
           "displayTextContent": "Level 1 rapid infuser에 혈액백 연결하기",
           "count": 1
         },
@@ -654,6 +680,7 @@
           "identifier": "level1-connect-cline",
           "type": "InteractionSignalReceived",
           "signalId": "connect_cline_to_lv1",
+          "signalScope": "Owner",
           "displayTextContent": "Level 1 rapid infuser를 환자의 C-line에 연결하기",
           "count": 1
         }
@@ -736,6 +763,7 @@
           "identifier": "detach-tpiece-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "remove_tpiece",
+          "signalScope": "Owner",
           "displayTextContent": "기관내관에서 T-piece 분리하기",
           "count": 1
         },
@@ -743,6 +771,7 @@
           "identifier": "attach-ambubag-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "connect_ambubag",
+          "signalScope": "Owner",
           "displayTextContent": "기관내관에 앰부백 부착하기",
           "count": 1
         },
@@ -750,6 +779,7 @@
           "identifier": "connect-ambubag-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "connect_o2_to_ambu",
+          "signalScope": "Owner",
           "displayTextContent": "앰부백에 산소 저장낭 연결하기",
           "count": 1
         },
@@ -757,6 +787,7 @@
           "identifier": "start-ambubagging-r1-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "start_ambu_r1",
+          "signalScope": "Owner",
           "displayTextContent": "앰부백으로 산소 공급하기",
           "count": 1
         }
@@ -816,6 +847,7 @@
           "identifier": "start-chest-compression-r1-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "click_to_start_comp",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자에게 가슴압박을 수행하기",
           "count": 1
         }
@@ -848,6 +880,7 @@
           "identifier": "move-defibrillator-cart-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "defibrillator_cart_snap_point_reached_defibrillator_cart_a_defibrillatorcart_to_patient",
+          "signalScope": "Owner",
           "displayTextContent": "제세동 카트를 환자 옆으로 가져오기",
           "count": 1
         },
@@ -855,6 +888,7 @@
           "identifier": "attach-defibrillator-pad-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "interact_patient_chest",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자의 흉부에 제세동 패드 부착하기",
           "count": 1
         }
@@ -887,6 +921,7 @@
           "identifier": "push-epinephrine-r1-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "push_epi_r1",
+          "signalScope": "Owner",
           "displayTextContent": "중심정맥관으로 에피네프린 1mg 투여하기",
           "count": 1
         },
@@ -894,6 +929,7 @@
           "identifier": "push-normal-saline-r1-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "push_ns_r1",
+          "signalScope": "Owner",
           "displayTextContent": "생리식염수 20cc로 루멘 내 잔여 약물 밀어넣기",
           "count": 1
         }
@@ -935,6 +971,7 @@
           "identifier": "start-chest-compression-r2-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "interact_chest",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자에게 가슴압박을 수행하기",
           "count": 1
         }
@@ -967,6 +1004,7 @@
           "identifier": "start-ambubagging-r2-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "start_ambu_r2",
+          "signalScope": "Owner",
           "displayTextContent": "앰부백으로 산소를 공급하기",
           "count": 1
         }
@@ -999,6 +1037,7 @@
           "identifier": "push-epinephrine-r2-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "push_epi_r2",
+          "signalScope": "Owner",
           "displayTextContent": "중심정맥관으로 에피네프린 1mg 투여하기",
           "count": 1
         },
@@ -1006,6 +1045,7 @@
           "identifier": "push-normal-saline-r2-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "push_ns_r2",
+          "signalScope": "Owner",
           "displayTextContent": "생리식염수 20cc로 루멘 내 잔여 약물 밀어넣기",
           "count": 1
         }
@@ -1079,6 +1119,7 @@
           "identifier": "return-triage-area-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "arrive_triagearea_patient_a",
+          "signalScope": "Owner",
           "displayTextContent": "중증도 분류 구역으로 이동하기",
           "count": 1
         }
@@ -1100,6 +1141,7 @@
           "identifier": "remove-clothing-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "remove_patient_clothing",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자의 의복을 제거하고 추가 손상 확인하기",
           "count": 1
         }
@@ -1132,6 +1174,7 @@
           "identifier": "assess-gcs-rosc-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "check_gcs_a_rosc",
+          "signalScope": "Owner",
           "displayTextContent": "남성 환자의 의식 상태를 다시 사정하기",
           "count": 1
         }
