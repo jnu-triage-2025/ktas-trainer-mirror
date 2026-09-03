@@ -1,5 +1,9 @@
 {
   "identifier": "disaster_intro",
+  "clientSignalIdentifiers": [
+    "sig.assess_patient_a_triage",
+    "sig.assess_patient_dummy_d_a_triage"
+  ],
   "defaultEntrypoint": "D001",
   "tags": [
     "access_support",
@@ -199,10 +203,65 @@
     },
     "E001": {
       "identifier": "E001",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "triage_patient_a_patient_dummy_d_a",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "D003_1"
+      "nodeType": "EntityPresetSpawn",
+      "presetIdentifier": "patient_a",
+      "spawnedEntityIdentifier": "patient_a",
+      "positionSourceEntityIdentifier": "scen_b:patient_spawnpoint_b",
+      "positionX": 0,
+      "positionY": 0,
+      "positionZ": 0,
+      "rotationX": 0,
+      "rotationY": -90,
+      "rotationZ": 0,
+      "nextIdentifier": "E001_1"
+    },
+    "E001_1": {
+      "identifier": "E001_1",
+      "nodeType": "EntityPresetSpawn",
+      "presetIdentifier": "patient_dummy_d_a",
+      "spawnedEntityIdentifier": "patient_dummy_d_a",
+      "positionSourceEntityIdentifier": "scen_b:patient_spawnpoint_dummy_d_a",
+      "positionX": 0,
+      "positionY": 0,
+      "positionZ": 0,
+      "rotationX": 0,
+      "rotationY": -90,
+      "rotationZ": 0,
+      "nextIdentifier": "PRESET_A_INTRO"
+    },
+    "PRESET_A_INTRO": {
+      "identifier": "PRESET_A_INTRO",
+      "nodeType": "PatientMedicalStatePreset",
+      "nextIdentifier": "PRESET_DUMMY_INTRO",
+      "targetEntityIdentifier": "patient_a",
+      "transitionMode": "Immediate",
+      "name": "많이 다친 남성 환자",
+      "sex": "Male",
+      "age": 35,
+      "consciousnessGcs": 8,
+      "consciousnessLocLabel": "Stupor",
+      "consciousnessPupillaryResponse": "Normal",
+      "respirationAwRR": 8,
+      "respirationType": "Irregular",
+      "pulseRate": 140,
+      "pulseForceType": "Weak",
+      "bloodPressureSystolic": 70,
+      "bloodPressureDiastolic": 40,
+      "skinColorHue": "Pale",
+      "skinTemperatureType": "Cold",
+      "bodyTemperatureCelsius": 35.9,
+      "spo2": 82,
+      "isCardiacArrest": false,
+      "intendedTriage": "Level1"
+    },
+    "PRESET_DUMMY_INTRO": {
+      "identifier": "PRESET_DUMMY_INTRO",
+      "nodeType": "PatientMedicalStatePreset",
+      "nextIdentifier": "D003_1",
+      "targetEntityIdentifier": "patient_dummy_d_a",
+      "transitionMode": "Immediate",
+      "name": "조금 다친 여성 환자",
+      "intendedTriage": "Level5"
     },
     "D003_1": {
       "identifier": "D003_1",
@@ -233,7 +292,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_patient_a"
+              "registryIdentifier": "sig.assess_patient_a_triage"
             }
           ]
         }
@@ -241,14 +300,25 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "nextIdentifier": "E002"
+      "nextIdentifier": "INFO_A_1"
     },
-    "E002": {
-      "identifier": "E002",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "show_patientA_ui",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "C001"
+    "INFO_A_1": {
+      "identifier": "INFO_A_1",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "외양: 흉부 관통상, 다량의 출혈, 피부 창백하고 차가움\n빈맥\n불규칙한 서호흡\n의식 상태: 대화가 불가능하고 신음소리만 내고 있음",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "INFO_A_2",
+      "playTTS": false
+    },
+    "INFO_A_2": {
+      "identifier": "INFO_A_2",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "활력징후 측정 결과:\n혈압: 70/40mmHg\n맥박: 140회/분 (빠르고 약함)\n호흡수: 8회/분\n체온: 35.9도\nSpO2: 82%",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "C001",
+      "playTTS": false
     },
     "C001": {
       "identifier": "C001",
@@ -257,6 +327,10 @@
       "dialogueContent": "해당 환자의 중증도 분류를 시행하세요.",
       "portraitSpriteIdentifier": null,
       "options": [
+        {
+          "displayText": "KTAS 1(소생)",
+          "nextNodeIdentifier": "N001_3"
+        },
         {
           "displayText": "KTAS 2(긴급)",
           "nextNodeIdentifier": "N001_retry_a"
@@ -272,10 +346,6 @@
         {
           "displayText": "KTAS 5(비응급)",
           "nextNodeIdentifier": "N001_retry_a"
-        },
-        {
-          "displayText": "KTAS 1(소생)",
-          "nextNodeIdentifier": "N001_3"
         }
       ],
       "nextIdentifier": null,
@@ -310,7 +380,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_patient_dummy_d_a"
+              "registryIdentifier": "sig.assess_patient_dummy_d_a_triage"
             }
           ]
         }
@@ -318,14 +388,16 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "nextIdentifier": "E003"
+      "nextIdentifier": "INFO_D_1"
     },
-    "E003": {
-      "identifier": "E003",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "show_patient_dummy_d_a_ui",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "C002"
+    "INFO_D_1": {
+      "identifier": "INFO_D_1",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "외양: 사지에 약간의 타박상\n현재 의식 상태: 원활한 대화 가능\n활력징후 정상\nC/C: 하지 통증",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "C002",
+      "playTTS": false
     },
     "C002": {
       "identifier": "C002",
@@ -380,31 +452,38 @@
       "identifier": "N001_5",
       "nodeType": "Dialogue",
       "speakerName": "System",
-      "dialogueContent": "이제 치료를 위해 이송할 긴급 환자를 클릭하세요.",
+      "dialogueContent": "이제 치료를 위해 이송할 긴급 환자를 선택하세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V004",
+      "nextIdentifier": "C003",
       "playTTS": true
     },
-    "V004": {
-      "identifier": "V004",
-      "nodeType": "Validator",
-      "rootConditions": [
+    "C003": {
+      "identifier": "C003",
+      "nodeType": "Choice",
+      "speakerName": "시스템",
+      "dialogueContent": "치료를 위해 이송할 긴급 환자를 선택하세요.",
+      "portraitSpriteIdentifier": null,
+      "options": [
         {
-          "condition": "RegistryContains",
-          "validationRules": [
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.move_patient_a"
-            }
-          ]
+          "displayText": "많이 다친 남성 환자",
+          "nextNodeIdentifier": "CC_A_Triage"
+        },
+        {
+          "displayText": "조금 다친 여성 환자",
+          "nextNodeIdentifier": "N001_retry_c"
         }
       ],
-      "onFailure": "Ignore",
-      "failureNextIdentifier": null,
-      "waitForCondition": true,
-      "nextIdentifier": "CC_A_Triage"
+      "nextIdentifier": null,
+      "playTTS": true
+    },
+    "N001_retry_c": {
+      "identifier": "N001_retry_c",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "오답입니다. KTAS 1(소생)으로 분류된 환자를 우선 이송해야 합니다.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "C003",
+      "playTTS": true
     },
     "CC_A_Triage": {
       "identifier": "CC_A_Triage",

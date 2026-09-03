@@ -106,17 +106,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private Label cvpValueLabel;
 
     private Label bpmNumericLabel;
-    private Label pvcsNumericLabel;
-    private Label stNumericLabel;
-    private Label prNumericLabel;
-    private Label piNumericLabel;
     private Label spo2NumericLabel;
-    private Label artNumericLabel;
-    private Label cvpNumericLabel;
     private Label nibpNumericLabel;
     private Label t1NumericLabel;
-    private Label t2NumericLabel;
-    private Label deltaTNumericLabel;
 
     private float ecgLastBeatTime;
     private float ecgNextBeatInterval = 1f;
@@ -510,29 +502,13 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void BuildNumericsColumn(VisualElement parent)
     {
-      AddMetricPair(parent,
-        "BPM", "60", ecgColor, 16, out bpmNumericLabel,
-        "PVCs", "0", ecgColor, 11, out pvcsNumericLabel);
+      bpmNumericLabel = AddMetric(parent, "HR (BPM)", "60", ecgColor, 16);
 
-      stNumericLabel = AddMetric(parent, "ST", "I 0.0 II 0.0 III 0.0\naVR 0.0 aVL 0.0 aVF 0.0\nV1 0.0 V2 0.0 V3 0.0\nV4 0.0 V5 0.0 V6 0.0", Color.white, 7);
+      spo2NumericLabel = AddMetric(parent, "SpO2", "99%", plethColor, 18);
 
-      AddMetricPair(parent,
-        "PR", "74", plethColor, 14, out prNumericLabel,
-        "PI", "3.00", plethColor, 11, out piNumericLabel);
+      nibpNumericLabel = AddMetric(parent, "NIBP", "120/82 (95) mmHg", new Color(1f, 0.85f, 0.3f), 12);
 
-      spo2NumericLabel = AddMetric(parent, "%SpO2", "99%", plethColor, 18);
-
-      AddMetricPair(parent,
-        "ART", "120/80 (93) mmHg", artColor, 12, out artNumericLabel,
-        "CVP", "12 mmHg", cvpColor, 12, out cvpNumericLabel);
-
-      AddMetricPair(parent,
-        "NIBP", "120/82 (95) mmHg", new Color(1f, 0.85f, 0.3f), 12, out nibpNumericLabel,
-        "ΔT", "4.2°C", Color.white, 10, out deltaTNumericLabel);
-
-      AddMetricPair(parent,
-        "T1", "36.5°C", Color.white, 12, out t1NumericLabel,
-        "T2", "32.3°C", Color.white, 12, out t2NumericLabel);
+      t1NumericLabel = AddMetric(parent, "Temperature", "36.5°C", Color.white, 12);
     }
 
     private Label AddMetric(VisualElement parent, string title, string initialValue, Color color, int valueFontSize)
@@ -920,21 +896,17 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         return;
       }
 
-      bool hasPatient = patientState?.Descriptor != null;
       var numerics = monitorNumerics;
 
       // 측정 불가(-1) 여부. 측정 불가인 경우 폴백(> 0f) 대신 -?- 로 표시한다.
       bool bpmUnavailable = IsUnavailable(numerics.bpm);
-      bool prUnavailable = IsUnavailable(numerics.pulseRate);
       bool nibpUnavailable = IsUnavailable(monitorNIBP.systolic) || IsUnavailable(monitorNIBP.diastolic);
       // SpO2는 numerics.spo2(> 0f)를 우선하고, 없으면 pleth.spo2로 폴백한다.
       // 두 값이 모두 측정 불가(-1)이면 -?- 로 표시한다.
       bool spo2Unavailable = IsUnavailable(numerics.spo2) && IsUnavailable(monitorPleth.spo2);
 
       float bpmValue = numerics.bpm > 0f ? numerics.bpm : _currentParameters.bpm;
-      float prValue = numerics.pulseRate > 0f ? numerics.pulseRate : monitorPleth.bpm;
       float spo2Value = numerics.spo2 > 0f ? numerics.spo2 : monitorPleth.spo2;
-      float piValue = numerics.perfusionIndex > 0f ? numerics.perfusionIndex : (hasPatient ? 3.0f : 0f);
 
       if (ecgValueLabel != null)
       {
@@ -964,45 +936,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         bpmNumericLabel.text = bpmUnavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(bpmValue)}";
       }
 
-      if (pvcsNumericLabel != null)
-      {
-        pvcsNumericLabel.text = $"{Mathf.RoundToInt(numerics.pvcs)}";
-      }
-
-      if (stNumericLabel != null)
-      {
-        var st = monitorSTLeads;
-        stNumericLabel.text =
-          $"I {st.i:+0.0;-0.0;0.0} II {st.ii:+0.0;-0.0;0.0} III {st.iii:+0.0;-0.0;0.0}\n" +
-          $"aVR {st.avr:+0.0;-0.0;0.0} aVL {st.avl:+0.0;-0.0;0.0} aVF {st.avf:+0.0;-0.0;0.0}\n" +
-          $"V1 {st.v1:+0.0;-0.0;0.0} V2 {st.v2:+0.0;-0.0;0.0} V3 {st.v3:+0.0;-0.0;0.0}\n" +
-          $"V4 {st.v4:+0.0;-0.0;0.0} V5 {st.v5:+0.0;-0.0;0.0} V6 {st.v6:+0.0;-0.0;0.0}";
-      }
-
-      if (prNumericLabel != null)
-      {
-        prNumericLabel.text = prUnavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(prValue)}";
-      }
-
-      if (piNumericLabel != null)
-      {
-        piNumericLabel.text = $"{piValue:0.00}";
-      }
-
       if (spo2NumericLabel != null)
       {
         spo2NumericLabel.text = spo2Unavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(spo2Value)}%";
-      }
-
-      if (artNumericLabel != null)
-      {
-        int map = Mathf.RoundToInt(monitorART.diastolic + (monitorART.systolic - monitorART.diastolic) / 3f);
-        artNumericLabel.text = $"{Mathf.RoundToInt(monitorART.systolic)}/{Mathf.RoundToInt(monitorART.diastolic)} ({map}) mmHg";
-      }
-
-      if (cvpNumericLabel != null)
-      {
-        cvpNumericLabel.text = $"{monitorCVP.mean:0.0} mmHg";
       }
 
       if (nibpNumericLabel != null)
@@ -1023,33 +959,13 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         t1NumericLabel.text = $"{monitorTemperature.t1:0.0}°C";
       }
 
-      if (t2NumericLabel != null)
-      {
-        t2NumericLabel.text = $"{monitorTemperature.t2:0.0}°C";
-      }
-
-      if (deltaTNumericLabel != null)
-      {
-        float deltaT = Mathf.Abs(monitorTemperature.t1 - monitorTemperature.t2);
-        deltaTNumericLabel.text = $"{deltaT:0.0}°C";
-      }
-
       if (_displayViews.Count > 0)
       {
-        string st =
-          $"I {monitorSTLeads.i:+0.0;-0.0;0.0} II {monitorSTLeads.ii:+0.0;-0.0;0.0} III {monitorSTLeads.iii:+0.0;-0.0;0.0}\n" +
-          $"aVR {monitorSTLeads.avr:+0.0;-0.0;0.0} aVL {monitorSTLeads.avl:+0.0;-0.0;0.0} aVF {monitorSTLeads.avf:+0.0;-0.0;0.0}\n" +
-          $"V1 {monitorSTLeads.v1:+0.0;-0.0;0.0} V2 {monitorSTLeads.v2:+0.0;-0.0;0.0} V3 {monitorSTLeads.v3:+0.0;-0.0;0.0}\n" +
-          $"V4 {monitorSTLeads.v4:+0.0;-0.0;0.0} V5 {monitorSTLeads.v5:+0.0;-0.0;0.0} V6 {monitorSTLeads.v6:+0.0;-0.0;0.0}";
         string[] metrics = {
           bpmUnavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(bpmValue)}",
-          $"{Mathf.RoundToInt(numerics.pvcs)}", st,
-          prUnavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(prValue)}", $"{piValue:0.00}",
           spo2Unavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(spo2Value)}%",
-          $"{Mathf.RoundToInt(monitorART.systolic)}/{Mathf.RoundToInt(monitorART.diastolic)} ({Mathf.RoundToInt(monitorART.diastolic + (monitorART.systolic - monitorART.diastolic) / 3f)}) mmHg",
-          $"{monitorCVP.mean:0.0} mmHg",
           nibpUnavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(monitorNIBP.systolic)}/{Mathf.RoundToInt(monitorNIBP.diastolic)} ({Mathf.RoundToInt(monitorNIBP.diastolic + (monitorNIBP.systolic - monitorNIBP.diastolic) / 3f)}) mmHg",
-          $"{Mathf.Abs(monitorTemperature.t1 - monitorTemperature.t2):0.0}°C", $"{monitorTemperature.t1:0.0}°C", $"{monitorTemperature.t2:0.0}°C" };
+          $"{monitorTemperature.t1:0.0}°C" };
         for (int i = 0; i < _displayViews.Count; i++)
         {
           _displayViews[i].SetGraphValues(ecgValueLabel?.text, plethValueLabel?.text, artValueLabel?.text, cvpValueLabel?.text);
@@ -1065,24 +981,14 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       if (artValueLabel != null) artValueLabel.text = UnavailableDisplay;
       if (cvpValueLabel != null) cvpValueLabel.text = UnavailableDisplay;
       if (bpmNumericLabel != null) bpmNumericLabel.text = UnavailableDisplay;
-      if (pvcsNumericLabel != null) pvcsNumericLabel.text = UnavailableDisplay;
-      if (stNumericLabel != null) stNumericLabel.text = UnavailableDisplay;
-      if (prNumericLabel != null) prNumericLabel.text = UnavailableDisplay;
-      if (piNumericLabel != null) piNumericLabel.text = UnavailableDisplay;
       if (spo2NumericLabel != null) spo2NumericLabel.text = UnavailableDisplay;
-      if (artNumericLabel != null) artNumericLabel.text = UnavailableDisplay;
-      if (cvpNumericLabel != null) cvpNumericLabel.text = UnavailableDisplay;
       if (nibpNumericLabel != null) nibpNumericLabel.text = UnavailableDisplay;
       if (t1NumericLabel != null) t1NumericLabel.text = UnavailableDisplay;
-      if (t2NumericLabel != null) t2NumericLabel.text = UnavailableDisplay;
-      if (deltaTNumericLabel != null) deltaTNumericLabel.text = UnavailableDisplay;
 
       for (int i = 0; i < _displayViews.Count; i++)
       {
         _displayViews[i].SetGraphValues(UnavailableDisplay, UnavailableDisplay, UnavailableDisplay, UnavailableDisplay);
         _displayViews[i].SetMetricValues(
-          UnavailableDisplay, UnavailableDisplay, UnavailableDisplay, UnavailableDisplay,
-          UnavailableDisplay, UnavailableDisplay, UnavailableDisplay, UnavailableDisplay,
           UnavailableDisplay, UnavailableDisplay, UnavailableDisplay, UnavailableDisplay);
       }
     }

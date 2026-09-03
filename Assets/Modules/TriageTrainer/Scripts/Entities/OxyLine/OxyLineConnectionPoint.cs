@@ -10,8 +10,8 @@ namespace TriageTrainer.Entity.OxyLine
   /// </summary>
   public sealed class OxyLineConnectionPoint : LineConnectionPoint
   {
-    public const float LineWidth = 0.035f;
-    public const float Elasticity = 0.2f;
+    public const float LineWidth = 0.01f;
+    public const float Elasticity = 0.8f;
     public const string MaterialResourcePath = "Materials/LineConnectionService/OxyLine";
 
     public static Material DefaultMaterial => Resources.Load<Material>(MaterialResourcePath);

@@ -2,7 +2,7 @@
 title: "scenario 재난 초기 대응 및 중증도 분류"
 doc_type: requirement
 status: active
-updated: 2026-04-14
+updated: 2026-09-01
 ---
 
 # scenario 재난 초기 대응 및 중증도 분류
@@ -17,9 +17,26 @@ updated: 2026-04-14
 | 주요 장소 | 응급실 트리아지 구역, 처치 준비 구역 |
 | 리소스 식별자 - 사운드 | 없음 |
 | 리소스 식별자 - 초상화 | 없음 |
-| 리소스 식별자 - 웨이포인트 | wp_triage, wp_preproom, wp_treatmentroom |
+| 리소스 식별자 - 웨이포인트 | wp_triage, wp_preproom, wp_treatmentroom, scen_b:patient_spawnpoint_b, scen_b:patient_spawnpoint_dummy_d_a |
 | 리소스 식별자 - 카메라 타겟 | 없음 |
 | 시작 노드 Identifier | D001 |
+
+## 클라이언트 발신 신호 선언 (2026-09-01)
+
+환자 평가 상호작용은 클라이언트에서 신호를 발신하므로, 멀티플레이 서버 인가를 위해 그래프 루트에 다음을 선언한다.
+
+```json
+"clientSignalIdentifiers": [
+  "sig.assess_patient_a_triage",
+  "sig.assess_patient_dummy_d_a_triage"
+]
+```
+
+- 발신 주체: 환자 프리팹(`PatientTypeA`, `PatientTypeDDummyA`)의 자식에 부착하는 `ScenarioActionInteractable` 컴포넌트
+  - `_displayText`: "환자 활력징후 및 외양 평가 시행하기"
+  - `_requiredRaisedSignals`: `["click_vital_set"]` — 활력징후 측정도구(vital_set) 획득 전에는 상호작용 옵션이 노출되지 않는다
+  - `_completionSignal`: 환자 A는 `assess_patient_a_triage`, 더미 환자는 `assess_patient_dummy_d_a_triage`
+- 이 선언이 없으면 호스트가 아닌 플레이어의 상호작용 신호가 서버에서 거부되어 진행이 멈춘다.
 
 ## 시나리오 본문
 
@@ -207,14 +224,70 @@ updated: 2026-04-14
 
 ---
 
-### [E001] InvokeEventNode
+### [E001] EntityPresetSpawnNode
+
+※ 2026-09-01 변경: 기존 InvokeEvent(`triage_patientA_patientDummyDA`)는 씬에 사전 배치된 오브젝트 활성화 방식이라 씬 구성이 없으면 환자가 나타나지 않았다. `patient_b_c_ct`와 동일한 프리셋 스폰 방식으로 교체한다. 침대는 프리셋의 `childReferences`(`bed_a`/`bed_d_a`, unwrap+link)로 함께 스폰되어 환자가 자동으로 침대에 누운 채 배치된다.
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | E001 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | triage_patientA_patientDummyDA |
-| **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.EntityPresetSpawn |
+| **PresetIdentifier** | 문자열 | patient_a |
+| **SpawnedEntityIdentifier** | 문자열 | patient_a |
+| **PositionSourceEntityIdentifier** | 문자열 | scen_b:patient_spawnpoint_b |
+| **RotationY** | 실수(float) | -90 |
+| **NextIdentifier** | 문자열 | E001_1 |
+
+---
+
+### [E001_1] EntityPresetSpawnNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| **Identifier** | 문자열 | E001_1 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.EntityPresetSpawn |
+| **PresetIdentifier** | 문자열 | patient_dummy_d_a |
+| **SpawnedEntityIdentifier** | 문자열 | patient_dummy_d_a |
+| **PositionSourceEntityIdentifier** | 문자열 | scen_b:patient_spawnpoint_dummy_d_a |
+| **RotationY** | 실수(float) | -90 |
+| **NextIdentifier** | 문자열 | PRESET_A_INTRO |
+
+---
+
+### [PRESET_A_INTRO] PatientMedicalStatePresetNode
+
+※ 수치는 `patient_a_critical`의 `PRESET_A`와 동일하다(같은 환자).
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| **Identifier** | 문자열 | PRESET_A_INTRO |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.PatientMedicalStatePreset |
+| **TargetEntityIdentifier** | 문자열 | patient_a |
+| **TransitionMode** | 문자열 | Immediate |
+| **Name** | 문자열 | 많이 다친 남성 환자 |
+| **Sex / Age** | - | Male / 35 |
+| **ConsciousnessGcs / LocLabel / PupillaryResponse** | - | 8 / Stupor / Normal |
+| **RespirationAwRR / Type** | - | 8 / Irregular |
+| **PulseRate / ForceType** | - | 140 / Weak |
+| **BloodPressure** | - | 70/40mmHg |
+| **SkinColorHue / SkinTemperatureType** | - | Pale / Cold |
+| **BodyTemperatureCelsius / Spo2** | - | 35.9 / 82 |
+| **IsCardiacArrest** | bool | false |
+| **IntendedTriage** | 문자열 | Level1 |
+| **NextIdentifier** | 문자열 | PRESET_DUMMY_INTRO |
+
+---
+
+### [PRESET_DUMMY_INTRO] PatientMedicalStatePresetNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| **Identifier** | 문자열 | PRESET_DUMMY_INTRO |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.PatientMedicalStatePreset |
+| **TargetEntityIdentifier** | 문자열 | patient_dummy_d_a |
+| **TransitionMode** | 문자열 | Immediate |
+| **Name** | 문자열 | 조금 다친 여성 환자 |
+| **IntendedTriage** | 문자열 | Level5 |
 | **NextIdentifier** | 문자열 | D003_1 |
 
 ---
@@ -248,26 +321,43 @@ updated: 2026-04-14
 
 ### [V002] ValidatorNode
 
+※ 2026-09-01 변경: 대기 신호를 환자 클릭(`Click_patientA`)에서 환자 평가 상호작용(`sig.assess_patient_a_triage`)으로 교체한다. 이 신호는 vital_set 획득 후에만 노출되는 환자 프리팹의 "환자 활력징후 및 외양 평가 시행하기" 상호작용이 발신한다.
+
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | V002 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | Click_patientA |
-| **TargetCount** | 정수 | 1 |
+| **Condition** | 문자열 | sig.assess_patient_a_triage (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
-| **FailureNextIdentifier** | 문자열 |  |
-| **NextIdentifier** | 문자열 | E002 |
+| **WaitForCondition** | bool | true |
+| **NextIdentifier** | 문자열 | INFO_A_1 |
 
 ---
 
-### [E002] InvokeEventNode
+### [INFO_A_1] DialogueNode
+
+※ 2026-09-01 변경: 기존 E002(InvokeEvent `show_patientA_ui`)는 씬 패널 미할당으로 기능하지 않아 제거하고, 환자 정보를 Dialogue 노드로 직접 표시한다. `\n`으로 항목을 행 단위 표기한다. 텍스트는 인간 작업자가 수정 가능하다.
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
-| **Identifier** | 문자열 | E002 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | show_patientA_ui |
-| **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
+| **Identifier** | 문자열 | INFO_A_1 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 외양: 흉부 관통상, 다량의 출혈, 피부 창백하고 차가움\n빈맥\n불규칙한 서호흡\n의식 상태: 대화가 불가능하고 신음소리만 내고 있음 |
+| **PlayTTS** | bool | false |
+| **NextIdentifier** | 문자열 | INFO_A_2 |
+
+---
+
+### [INFO_A_2] DialogueNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| **Identifier** | 문자열 | INFO_A_2 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 활력징후 측정 결과:\n혈압: 70/40mmHg\n맥박: 140회/분 (빠르고 약함)\n호흡수: 8회/분\n체온: 35.9도\nSpO2: 82% |
+| **PlayTTS** | bool | false |
 | **NextIdentifier** | 문자열 | C001 |
 
 ---
@@ -288,11 +378,11 @@ updated: 2026-04-14
 
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
+| KTAS 1(소생) | | #88AAFF | N001_3 |
 | KTAS 2(긴급) | | #88AAFF | N001_retry_a |
 | KTAS 3(응급) | | #88AAFF | N001_retry_a |
 | KTAS 4(준응급) | | #88AAFF | N001_retry_a |
 | KTAS 5(비응급) | | #88AAFF | N001_retry_a |
-| KTAS 1(소생) | | #88AAFF | N001_3 |
 
 ---
 
@@ -326,26 +416,30 @@ updated: 2026-04-14
 
 ### [V003] ValidatorNode
 
+※ 2026-09-01 변경: V002와 동일한 방식으로 더미 환자의 평가 상호작용 신호를 대기한다.
+
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | V003 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | Click_patientDummyDA |
-| **TargetCount** | 정수 | 1 |
+| **Condition** | 문자열 | sig.assess_patient_dummy_d_a_triage (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
-| **FailureNextIdentifier** | 문자열 |  |
-| **NextIdentifier** | 문자열 | E003 |
+| **WaitForCondition** | bool | true |
+| **NextIdentifier** | 문자열 | INFO_D_1 |
 
 ---
 
-### [E003] InvokeEventNode
+### [INFO_D_1] DialogueNode
+
+※ 2026-09-01 변경: 기존 E003(InvokeEvent `show_patientDummyDA_ui`)을 제거하고 Dialogue 노드로 대체한다. 텍스트는 인간 작업자가 수정 가능하다.
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
-| **Identifier** | 문자열 | E003 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | show_patientDummyDA_ui |
-| **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
+| **Identifier** | 문자열 | INFO_D_1 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 외양: 사지에 약간의 타박상\n현재 의식 상태: 원활한 대화 가능\n활력징후 정상\nC/C: 하지 통증 |
+| **PlayTTS** | bool | false |
 | **NextIdentifier** | 문자열 | C002 |
 
 ---
@@ -415,31 +509,54 @@ updated: 2026-04-14
 
 ### [N001_5] DialogueNode
 
+※ 2026-09-01 변경: 이송 대상 선택을 신호 대기(V004, `Move_patientA`) 방식에서 Choice 노드(C003) 방식으로 교체한다. V004는 제거되었다.
+
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N001_5 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | System |
-| **DialogueContent** | 문자열 | 이제 치료를 위해 이송할 긴급 환자를 클릭하세요. |
+| **DialogueContent** | 문자열 | 이제 치료를 위해 이송할 긴급 환자를 선택하세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 3.0 |
-| **NextIdentifier** | 문자열 | V004 |
+| **NextIdentifier** | 문자열 | C003 |
 
 ---
 
-### [V004] ValidatorNode
+### [C003] ChoiceNode
+
+※ 2026-09-01 신설: 두 환자 중 이송할 긴급 환자를 선택한다. 선택지 표기는 `PatientMedicalStatePreset`의 환자 명명(`Name`)과 동일하게 맞춘다. 정답(많이 다친 남성 환자) 선택 시 CC_A_Triage로 전이하며 A 브랜치 완료 조건이 달성된다. 실제 이송 연출이 필요해지면 정답 경로와 CC_A_Triage 사이에 InvokeEvent 노드를 삽입한다.
+
+| 속성 | 타입 | 설명 |
+| :--- | :--- | :--- |
+| **Identifier** | 문자열 | C003 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Choice |
+| **SpeakerName** | 문자열 | 시스템 |
+| **DialogueContent** | 문자열 | 치료를 위해 이송할 긴급 환자를 선택하세요. |
+| **Options** | ScenarioChoiceOption 목록 | **[하단 C003_Options 표 참조]** |
+| **NextIdentifier** | 문자열 | |
+
+#### [C003_Options] 선택지 목록 (ScenarioChoiceOption)
+
+| DisplayText | NextNodeIdentifier | 비고 |
+| :--- | :--- | :--- |
+| 많이 다친 남성 환자 | CC_A_Triage | 정답 (환자 A, KTAS 1) |
+| 조금 다친 여성 환자 | N001_retry_c | 오답 (더미 환자, KTAS 5) |
+
+---
+
+### [N001_retry_c] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
-| **Identifier** | 문자열 | V004 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | Move_patientA |
-| **TargetCount** | 정수 | 1 |
-| **OnFailure** | ScenarioValidatorOnFailure | Ignore |
-| **FailureNextIdentifier** | 문자열 |  |
-| **NextIdentifier** | 문자열 | CC_A_Triage |
+| **Identifier** | 문자열 | N001_retry_c |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. KTAS 1(소생)으로 분류된 환자를 우선 이송해야 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
+| **NextIdentifier** | 문자열 | C003 |
 
-*(💡참고: CC_A_Triage로 넘어가면서 A 브랜치 완료 조건 달성)*
+*(💡참고: C003에서 "많이 다친 남성 환자" 선택 시 CC_A_Triage로 넘어가면서 A 브랜치 완료 조건 달성)*
 
 ====================================================
 # [병렬 브랜치 2] 플레이어 B/C (환자 처치 담당) 흐름

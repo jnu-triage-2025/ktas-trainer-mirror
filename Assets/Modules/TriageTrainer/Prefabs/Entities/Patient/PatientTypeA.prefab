@@ -70,7 +70,7 @@ MonoBehaviour:
   _connectedLineObjects: []
   _allowMultipleConnections: 0
   connectionService: {fileID: 0}
-  _identifier: ivlineconnectionpoint
+  _identifier: ivlineconnectionpoint_001
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
@@ -80,6 +80,85 @@ MonoBehaviour:
     _enabled: 1
   - _identifier: intravenous_line_disconnect
     _enabled: 1
+--- !u!1 &385028501082225495
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1432123947683213623}
+  - component: {fileID: 4880921421368220181}
+  - component: {fileID: 2539868158454917273}
+  m_Layer: 0
+  m_Name: PatientATriageAssessInteractPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1432123947683213623
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 385028501082225495}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.01, y: 1.224, z: 0.113}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1827749486389943084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &4880921421368220181
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 385028501082225495}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.7, y: 0.7, z: 0.7}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2539868158454917273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 385028501082225495}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
+  _displayText: "\uD658\uC790 \uD65C\uB825\uC9D5\uD6C4 \uBC0F \uC678\uC591 \uD3C9\uAC00
+    \uC2DC\uD589\uD558\uAE30"
+  _displayIcon: {fileID: 0}
+  _displayIcons: []
+  _completionSignal: assess_patient_a_triage
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
+  _requiredRaisedSignals:
+  - click_vital_set
+  _enabled: 1
+  _consumeOnce: 1
+  _activateOnInteract: []
+  _deactivateOnInteract: []
 --- !u!1 &395488033911256930
 GameObject:
   m_ObjectHideFlags: 0
@@ -740,6 +819,7 @@ Transform:
   - {fileID: 7385633622512896465}
   - {fileID: 7284491137240215606}
   - {fileID: 7300000000000000002}
+  - {fileID: 1432123947683213623}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6000008013074765727

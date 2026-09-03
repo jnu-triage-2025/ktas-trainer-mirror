@@ -8,8 +8,8 @@ namespace TriageTrainer.Entity.ElectricalLine
   /// </summary>
   public sealed class ElectricalLineConnectionPoint : LineConnectionPoint
   {
-    public const float LineWidth = 0.025f;
-    public const float Elasticity = 0.05f;
+    public const float LineWidth = 0.02f;
+    public const float Elasticity = 0.5f;
     public const string MaterialResourcePath = "Materials/LineConnectionService/ElectricalLine";
 
     public static Material DefaultMaterial => Resources.Load<Material>(MaterialResourcePath);

@@ -54,16 +54,16 @@ flags: ["refactor-required"]
     2. 측정도구 획득을 기다린다(`sig.click_vital_set`).
     3. Dialogue
       - Speaker: "시스템"
-      - Content: "활력징후 측정도구를 선택한 뒤, 환자를 클릭하면 활력징후가 측정됩니다. 활력징후가 모니터에도 출력됩니다."
+      - Content: "활력징후 측정도구를 선택한 뒤, 환자에게 다가가 활력징후를 사정하십시오. 이후 모니터링할 환자로 해당 환자를 선택하여 모니터에 활력징후를 출력합니다."
       - TTS: true
     4. 측정이 끝나면 모니터 UI를 활성화한다(`activate_vital_monitor_ui_patient_a`).
     5. Dialogue
       - Speaker: "간호사 B"
-      - Content: "환자 활력징후 출력됩니다."
+      - Content: "환자 활력징후 측정합니다."
       - TTS: true
     6. Dialogue
-      - Speaker: "시스템"
-      - Content: "혈압 70/40mmHg, 맥박 140회/분 - 약하고 빠름, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다."
+      - Speaker: "간호사 B"
+      - Content: "혈압 70/40mmHg, 맥박 140회/분으로 약하고 빠름, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다."
       - TTS: true
 - 간호사 C에게도 퀘스트 발행
   - 제목: "의식 상태 사정" (`Quest_Check_GCS_PatientA`)
@@ -76,7 +76,7 @@ flags: ["refactor-required"]
       - TTS: true
     2. Dialogue
       - Speaker: "시스템"
-      - Content: "환자의 의식 상태(AVPU)를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다."
+      - Content: "환자의 의식 상태(AVPU)를 확인합니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다."
       - TTS: true
     3. Dialogue
       - Speaker: "시스템"
@@ -137,9 +137,9 @@ flags: ["refactor-required"]
     - 처리: 아래 단계를 순서대로 마치면 완료 처리
     1. Dialogue
       - Speaker: "시스템"
-      - Content: "기도 확보를 위해 환자의 경추를 고정하고 구강 석션을 진행합니다. 경추고정기, 흡인기, 석션 라인, 앙카우어 팁을 클릭해 획득하세요."
+      - Content: "기도 확보를 위해 환자의 경추를 고정하고 구강 석션을 진행합니다. 경추고정기, 흡인기, 석션 라인, 앙커 팁을 클릭해 획득하세요."
       - TTS: true
-    2. 흡인 체크리스트 UI를 띄우고(`show_suction_checklist_ui`) 네 물품(경추고정기, 흡인기, 석션 라인, 앙카우어 팁) 획득을 기다린다(`sig.cervical_collar`, `sig.click_wall_suction`, `sig.click_suction_line`, `sig.click_yankauer`). 이후 UI를 내린다(`hide_suction_checklist_ui`).
+    2. 흡인 체크리스트 UI를 띄우고(`show_suction_checklist_ui`) 네 물품(경추고정기, 흡인기, 석션 라인, 앙커 팁) 획득을 기다린다(`sig.cervical_collar`, `sig.click_wall_suction`, `sig.click_suction_line`, `sig.click_yankauer`). 이후 UI를 내린다(`hide_suction_checklist_ui`).
     3. Dialogue
       - Speaker: "시스템"
       - Content: "경추 고정기를 환자에게 적용하십시오."
@@ -152,7 +152,7 @@ flags: ["refactor-required"]
       - 처리: 설치 신호(`sig.connect_wall_component_1`) 대기
     5. Dialogue
       - Speaker: "시스템"
-      - Content: "준비된 앙카우어 팁을 흡인기에 연결하십시오."
+      - Content: "준비된 앙커 팁을 흡인기에 연결하십시오."
       - TTS: true
       - 처리: 연결 신호(`sig.connect_wall_component_and_yankauer`) 대기
     6. Dialogue
@@ -1452,7 +1452,7 @@ SPAWN_A
 | **Identifier** | 문자열 | N005_1 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 활력징후 측정도구를 선택한 뒤, 환자를 클릭하면 활력징후가 측정됩니다. 활력징후가 모니터에도 출력됩니다. |
+| **DialogueContent** | 문자열 | 활력징후 측정도구를 선택한 뒤, 환자에게 다가가 활력징후를 사정하십시오. 이후 모니터링할 환자로 해당 환자를 선택하여 모니터에 활력징후를 출력합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V011_1 |
@@ -1504,7 +1504,7 @@ SPAWN_A
 | **Identifier** | 문자열 | D007 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 간호사 B |
-| **DialogueContent** | 문자열 | 환자 활력징후 출력됩니다. |
+| **DialogueContent** | 문자열 | 환자 활력징후 측정합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | N005_4 |
 
@@ -1517,8 +1517,8 @@ SPAWN_A
 | --- | --- | --- |
 | **Identifier** | 문자열 | N005_4 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
-| **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 혈압 70/40mmHg, 맥박 140회/분 - 약하고 빠름, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다. |
+| **SpeakerName** | 문자열 | 간호사 B |
+| **DialogueContent** | 문자열 | 혈압 70/40mmHg, 맥박 140회/분으로 약하고 빠름, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 8.0 |
 | **NextIdentifier** | 문자열 | Q007_1 |
@@ -1603,7 +1603,7 @@ SPAWN_A
 | **Identifier** | 문자열 | N006_1 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 환자의 의식 상태(AVPU)를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다. |
+| **DialogueContent** | 문자열 | 환자의 의식 상태(AVPU)를 확인합니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | N006_2 |
@@ -2035,6 +2035,7 @@ SPAWN_A
 
 - [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_wall_component_1 [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
 -> **2026-07-28 완료. Wall Attached Wall Suction의 Attach Completion Signal에 connect_wall_component_1 추가함
+-> **2026-09-03 결함 수정. 처치실 `WallSuction (9)` 인스턴스가 원점에 남아 있던 `WallSuction (8)` 인스턴스와 프리팹에 직렬화된 Entity Identifier(`wall_suction:WallSuction-(8):…`)를 공유하고 있었다. Registry가 나중에 등록된 원점 인스턴스로 덮어써져 설치 요청이 원점 오브젝트로 해석되었고, 서버 거리 검증(4m)에서 거부되어 신호가 발생하지 않았다. 처치실 인스턴스의 Entity Identifier를 `treatment_room:wall_suction`으로 오버라이드해 해결함. 동일 결함이 있던 `oxyflowmeter (2)`도 `treatment_room:oxyflowmeter`로 오버라이드함(OverworldScene).
 
 ---
 

@@ -18,8 +18,8 @@ namespace TriageTrainer.Entity.IntravenousLine
   [RequireComponent(typeof(SphereCollider))]
   public class IntravenousLineConnectionPoint : LineConnectionPoint, IInteractable
   {
-    public const float LineWidth = 0.015f;
-    public const float Elasticity = 0.21f;
+    public const float LineWidth = 0.01f;
+    public const float Elasticity = 0.9f;
     public const string MaterialResourcePath = "Materials/LineConnectionService/IntravenousLine";
 
     public static Material DefaultMaterial => Resources.Load<Material>(MaterialResourcePath);
