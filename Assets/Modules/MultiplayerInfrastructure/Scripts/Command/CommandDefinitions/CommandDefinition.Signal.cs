@@ -22,6 +22,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("signal player <player> <identifier>", "Show one player's latest value."),
       new UsageLine("signal list [identifier]", "List stored values."),
       new UsageLine("signal flush", "Clear all stored signal parameter values."),
+      new UsageLine("  <player>", "@selector (@a, @p, @r, @s), id:<uuid>, name:<displayName>, or a display name."),
     };
     public string PermissionIdentifier => "scenario";
 
@@ -112,19 +113,24 @@ namespace MultiplayerInfrastructure.Command
         Send(sender, "Usage: /signal player <player> <identifier>");
         return;
       }
-      if (!TryResolvePlayer(args[1], out var playerIdentifier, out string error))
+      if (!PlayerTargetResolver.TryResolve(sender, args[1], out var players, out string error))
       {
         Send(sender, error);
         return;
       }
-      if (!ScenarioSignalParameterStore.TryGetForPlayer(args[2], playerIdentifier, out var value))
+      var lines = new System.Collections.Generic.List<string>();
+      foreach (var player in players)
       {
-        LogQuery(sender, "player", ScenarioInteractionSignals.Normalize(args[2]), $"player={playerIdentifier}, not-found");
-        Send(sender, $"No stored parameter value for player '{args[1]}' and signal '{ScenarioInteractionSignals.Normalize(args[2])}'.");
-        return;
+        if (!ScenarioSignalParameterStore.TryGetForPlayer(args[2], player.Identifier, out var value))
+        {
+          LogQuery(sender, "player", ScenarioInteractionSignals.Normalize(args[2]), $"player={player.Identifier}, not-found");
+          lines.Add($"No stored parameter value for player '{player.DisplayName}' and signal '{ScenarioInteractionSignals.Normalize(args[2])}'.");
+          continue;
+        }
+        LogQuery(sender, "player", value.SignalIdentifier, Format(value));
+        lines.Add(Format(value));
       }
-      LogQuery(sender, "player", value.SignalIdentifier, Format(value));
-      Send(sender, Format(value));
+      Send(sender, string.Join('\n', lines));
     }
 
     private void List(NetworkConnection sender, string[] args)
@@ -168,20 +174,6 @@ namespace MultiplayerInfrastructure.Command
     {
       ScenarioNetworkRelay.FlushSignalParametersAuthoritative();
       Send(sender, "Scenario signal parameter values flushed.");
-    }
-
-    private static bool TryResolvePlayer(string selector, out string playerIdentifier, out string error)
-    {
-      playerIdentifier = null;
-      error = string.Empty;
-      if (UserDescriptorService.TryGetByIdentifier(selector, out var byIdentifier)
-          || UserDescriptorService.TryGetByDisplayName(selector, out byIdentifier))
-      {
-        playerIdentifier = byIdentifier.Identifier;
-        return true;
-      }
-      error = $"Player '{selector}' was not found.";
-      return false;
     }
 
     private static string Format(ScenarioSignalParameter value)

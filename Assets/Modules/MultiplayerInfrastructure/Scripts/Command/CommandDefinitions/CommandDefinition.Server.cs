@@ -21,6 +21,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("ban <player>", "Ban a player by display name and disconnect them."),
       new UsageLine("unban <player>", "Remove a display name from the ban list."),
       new UsageLine("banlist", "Return the current ban list."),
+      new UsageLine("  <player>", "@selector (@a, @p, @r, @s), <clientId>, id:<uuid>, name:<displayName>, or a display name."),
     };
 
     private readonly ChatService _chat;
@@ -72,23 +73,26 @@ namespace MultiplayerInfrastructure.Command
 
     private void Kick(NetworkConnection sender, string[] args, bool ban)
     {
-      if (!TryResolveTarget(args, out var connection, out var descriptor))
+      if (!TryResolveTargets(sender, args, out var targets))
       {
         _chat.SendSystemMessage(sender, $"Usage: /server {(ban ? "ban" : "kick")} <player>");
         return;
       }
 
-      if (ban)
+      foreach ((NetworkConnection connection, UserDescriptor descriptor) in targets)
       {
-        ServerBanService.Ban(descriptor.DisplayName);
-        _chat.SendSystemMessage(sender, $"Banned '{descriptor.DisplayName}'.");
-      }
-      else
-      {
-        _chat.SendSystemMessage(sender, $"Kicked '{descriptor.DisplayName}'.");
-      }
+        if (ban)
+        {
+          ServerBanService.Ban(descriptor.DisplayName);
+          _chat.SendSystemMessage(sender, $"Banned '{descriptor.DisplayName}'.");
+        }
+        else
+        {
+          _chat.SendSystemMessage(sender, $"Kicked '{descriptor.DisplayName}'.");
+        }
 
-      connection.Disconnect(true);
+        connection.Disconnect(true);
+      }
     }
 
     private void Unban(NetworkConnection sender, string[] args)
@@ -113,27 +117,42 @@ namespace MultiplayerInfrastructure.Command
         : "Ban list:\n" + string.Join("\n", names.Select(name => $"- {name}")));
     }
 
-    private static bool TryResolveTarget(string[] args, out NetworkConnection connection, out UserDescriptor descriptor)
+    /// <summary>
+    /// 대상 토큰을 접속 중인 연결로 해석한다. 선택자(@a 등), clientId, id:/name:, 표시 이름을 허용한다.
+    /// </summary>
+    private static bool TryResolveTargets(
+      NetworkConnection sender,
+      string[] args,
+      out List<(NetworkConnection Connection, UserDescriptor Descriptor)> targets)
     {
-      connection = null;
-      descriptor = null;
+      targets = new List<(NetworkConnection, UserDescriptor)>();
       string target = GetTargetText(args);
       if (string.IsNullOrWhiteSpace(target) || InstanceFinder.ServerManager == null)
         return false;
 
       if (int.TryParse(target, out int clientId))
       {
-        if (!InstanceFinder.ServerManager.Clients.TryGetValue(clientId, out connection)
-            || !UserDescriptorService.TryGetByClientId(clientId, out descriptor))
+        if (!InstanceFinder.ServerManager.Clients.TryGetValue(clientId, out NetworkConnection connection)
+            || !UserDescriptorService.TryGetByClientId(clientId, out UserDescriptor descriptor))
           return false;
+
+        targets.Add((connection, descriptor));
         return true;
       }
 
-      if (!UserDescriptorService.TryGetByDisplayName(target, out descriptor)
-          || !UserDescriptorService.TryGetClientId(descriptor.Identifier, out int resolvedClientId)
-          || !InstanceFinder.ServerManager.Clients.TryGetValue(resolvedClientId, out connection))
+      if (!PlayerTargetResolver.TryResolve(sender, target, out var descriptors, out _))
         return false;
-      return true;
+
+      foreach (UserDescriptor descriptor in descriptors)
+      {
+        if (!UserDescriptorService.TryGetClientId(descriptor.Identifier, out int resolvedClientId)
+            || !InstanceFinder.ServerManager.Clients.TryGetValue(resolvedClientId, out NetworkConnection connection))
+          continue;
+
+        targets.Add((connection, descriptor));
+      }
+
+      return targets.Count > 0;
     }
 
     private static string GetTargetText(string[] args)

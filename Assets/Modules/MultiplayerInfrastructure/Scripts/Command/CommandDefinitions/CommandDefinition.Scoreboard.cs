@@ -24,6 +24,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("scoreboard players list [target]", "List scores."),
       new UsageLine("scoreboard players reset <target> [objective]", "Reset score(s)."),
       new UsageLine("scoreboard players operation <target> <objA> <op> <src> <objB>", "Combine two scores."),
+      new UsageLine("  <target>", "@selector (@a, @p, @r, @s), id:<uuid>, name:<displayName>, or a display name."),
     };
     public string PermissionIdentifier => "scoreboard";
 
@@ -185,7 +186,7 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!TryResolveSession(sender, args[0], out var target, out string error))
+      if (!TryResolveSessions(sender, args[0], out var targets, out string error))
       {
         _chat.SendSystemMessage(sender, error);
         return;
@@ -198,57 +199,77 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!SessionVariableService.TryGetScore(target.Identifier, objective, out int value))
+      var lines = new List<string>();
+      foreach (UserDescriptor target in targets)
       {
-        _chat.SendSystemMessage(sender, $"{target.DisplayName} has no score in '{objective}'.");
-        return;
+        lines.Add(SessionVariableService.TryGetScore(target.Identifier, objective, out int value)
+          ? $"{target.DisplayName} {objective} = {value}"
+          : $"{target.DisplayName} has no score in '{objective}'.");
       }
 
-      _chat.SendSystemMessage(sender, $"{target.DisplayName} {objective} = {value}");
+      _chat.SendSystemMessage(sender, string.Join("\n", lines));
     }
 
     private void HandlePlayersSet(NetworkConnection sender, string[] args)
     {
-      if (!TryParseTargetObjectiveValue(sender, args, out var target, out string objective, out int value))
+      if (!TryParseTargetObjectiveValue(sender, args, out var targets, out string objective, out int value))
         return;
 
-      if (!SessionVariableService.SetScore(target.Identifier, objective, value, out string error))
+      var lines = new List<string>();
+      foreach (UserDescriptor target in targets)
       {
-        _chat.SendSystemMessage(sender, error);
-        return;
+        if (!SessionVariableService.SetScore(target.Identifier, objective, value, out string error))
+        {
+          _chat.SendSystemMessage(sender, error);
+          return;
+        }
+
+        lines.Add($"{target.DisplayName} {objective} = {value}");
       }
 
-      _chat.SendSystemMessage(sender, $"{target.DisplayName} {objective} = {value}");
+      _chat.SendSystemMessage(sender, string.Join("\n", lines));
     }
 
     private void HandlePlayersAdd(NetworkConnection sender, string[] args)
     {
-      if (!TryParseTargetObjectiveValue(sender, args, out var target, out string objective, out int value))
+      if (!TryParseTargetObjectiveValue(sender, args, out var targets, out string objective, out int value))
         return;
 
-      if (!SessionVariableService.AddScore(target.Identifier, objective, value, out string error))
+      var lines = new List<string>();
+      foreach (UserDescriptor target in targets)
       {
-        _chat.SendSystemMessage(sender, error);
-        return;
+        if (!SessionVariableService.AddScore(target.Identifier, objective, value, out string error))
+        {
+          _chat.SendSystemMessage(sender, error);
+          return;
+        }
+
+        SessionVariableService.TryGetScore(target.Identifier, objective, out int newValue);
+        lines.Add($"{target.DisplayName} {objective} = {newValue}");
       }
 
-      SessionVariableService.TryGetScore(target.Identifier, objective, out int newValue);
-      _chat.SendSystemMessage(sender, $"{target.DisplayName} {objective} = {newValue}");
+      _chat.SendSystemMessage(sender, string.Join("\n", lines));
     }
 
     private void HandlePlayersRemove(NetworkConnection sender, string[] args)
     {
-      if (!TryParseTargetObjectiveValue(sender, args, out var target, out string objective, out int value))
+      if (!TryParseTargetObjectiveValue(sender, args, out var targets, out string objective, out int value))
         return;
 
-      if (!SessionVariableService.RemoveScore(target.Identifier, objective, value, out string error))
+      var lines = new List<string>();
+      foreach (UserDescriptor target in targets)
       {
-        _chat.SendSystemMessage(sender, error);
-        return;
+        if (!SessionVariableService.RemoveScore(target.Identifier, objective, value, out string error))
+        {
+          _chat.SendSystemMessage(sender, error);
+          return;
+        }
+
+        SessionVariableService.TryGetScore(target.Identifier, objective, out int newValue);
+        lines.Add($"{target.DisplayName} {objective} = {newValue}");
       }
 
-      SessionVariableService.TryGetScore(target.Identifier, objective, out int newValue);
-      _chat.SendSystemMessage(sender, $"{target.DisplayName} {objective} = {newValue}");
+      _chat.SendSystemMessage(sender, string.Join("\n", lines));
     }
 
     private void HandlePlayersList(NetworkConnection sender, string[] args)
@@ -267,21 +288,27 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!TryResolveSession(sender, args[0], out var target, out string error))
+      if (!TryResolveSessions(sender, args[0], out var targets, out string error))
       {
         _chat.SendSystemMessage(sender, error);
         return;
       }
 
-      IReadOnlyDictionary<string, int> scores = SessionVariableService.GetScoresForUser(target.Identifier);
-      if (scores.Count == 0)
+      var blocks = new List<string>();
+      foreach (UserDescriptor target in targets)
       {
-        _chat.SendSystemMessage(sender, $"{target.DisplayName} has no scores.");
-        return;
+        IReadOnlyDictionary<string, int> scores = SessionVariableService.GetScoresForUser(target.Identifier);
+        if (scores.Count == 0)
+        {
+          blocks.Add($"{target.DisplayName} has no scores.");
+          continue;
+        }
+
+        string joined = string.Join("\n", scores.OrderBy(x => x.Key).Select(x => $"- {x.Key}: {x.Value}"));
+        blocks.Add($"Scores for {target.DisplayName}:\n{joined}");
       }
 
-      string joined = string.Join("\n", scores.OrderBy(x => x.Key).Select(x => $"- {x.Key}: {x.Value}"));
-      _chat.SendSystemMessage(sender, $"Scores for {target.DisplayName}:\n{joined}");
+      _chat.SendSystemMessage(sender, string.Join("\n", blocks));
     }
 
     private void HandlePlayersReset(NetworkConnection sender, string[] args)
@@ -292,31 +319,37 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!TryResolveSession(sender, args[0], out var target, out string error))
+      if (!TryResolveSessions(sender, args[0], out var targets, out string error))
       {
         _chat.SendSystemMessage(sender, error);
         return;
       }
 
-      if (args.Length >= 2)
+      var lines = new List<string>();
+      foreach (UserDescriptor target in targets)
       {
-        if (!SessionVariableService.ResetScore(target.Identifier, args[1], out error))
+        if (args.Length >= 2)
+        {
+          if (!SessionVariableService.ResetScore(target.Identifier, args[1], out error))
+          {
+            _chat.SendSystemMessage(sender, error);
+            return;
+          }
+
+          lines.Add($"Reset '{args[1]}' score for {target.DisplayName}.");
+          continue;
+        }
+
+        if (!SessionVariableService.ResetAllScores(target.Identifier, out error))
         {
           _chat.SendSystemMessage(sender, error);
           return;
         }
 
-        _chat.SendSystemMessage(sender, $"Reset '{args[1]}' score for {target.DisplayName}.");
-        return;
+        lines.Add($"Reset all scores for {target.DisplayName}.");
       }
 
-      if (!SessionVariableService.ResetAllScores(target.Identifier, out error))
-      {
-        _chat.SendSystemMessage(sender, error);
-        return;
-      }
-
-      _chat.SendSystemMessage(sender, $"Reset all scores for {target.DisplayName}.");
+      _chat.SendSystemMessage(sender, string.Join("\n", lines));
     }
 
     private void HandlePlayersOperation(NetworkConnection sender, string[] args)
@@ -329,7 +362,7 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!TryResolveSession(sender, args[0], out var target, out string targetError))
+      if (!TryResolveSessions(sender, args[0], out var targets, out string targetError))
       {
         _chat.SendSystemMessage(sender, targetError);
         return;
@@ -345,30 +378,36 @@ namespace MultiplayerInfrastructure.Command
       string operation = args[2];
       string sourceObjective = args[4];
 
-      if (!SessionVariableService.ApplyOperation(
-            target.Identifier,
-            targetObjective,
-            operation,
-            source.Identifier,
-            sourceObjective,
-            out string operationError))
+      var lines = new List<string>();
+      foreach (UserDescriptor target in targets)
       {
-        _chat.SendSystemMessage(sender, operationError);
-        return;
+        if (!SessionVariableService.ApplyOperation(
+              target.Identifier,
+              targetObjective,
+              operation,
+              source.Identifier,
+              sourceObjective,
+              out string operationError))
+        {
+          _chat.SendSystemMessage(sender, operationError);
+          return;
+        }
+
+        SessionVariableService.TryGetScore(target.Identifier, targetObjective, out int newValue);
+        lines.Add($"{target.DisplayName} {targetObjective} = {newValue}");
       }
 
-      SessionVariableService.TryGetScore(target.Identifier, targetObjective, out int newValue);
-      _chat.SendSystemMessage(sender, $"{target.DisplayName} {targetObjective} = {newValue}");
+      _chat.SendSystemMessage(sender, string.Join("\n", lines));
     }
 
     private bool TryParseTargetObjectiveValue(
       NetworkConnection sender,
       string[] args,
-      out UserDescriptor target,
+      out List<UserDescriptor> targets,
       out string objective,
       out int value)
     {
-      target = null;
+      targets = null;
       objective = string.Empty;
       value = 0;
 
@@ -378,7 +417,7 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (!TryResolveSession(sender, args[0], out target, out string error))
+      if (!TryResolveSessions(sender, args[0], out targets, out string error))
       {
         _chat.SendSystemMessage(sender, error);
         return false;
@@ -394,14 +433,14 @@ namespace MultiplayerInfrastructure.Command
       return true;
     }
 
-    private bool TryResolveSession(
+    /// <summary>대상 토큰을 한 명 이상의 세션으로 해석한다. 선택자(@a 등)도 허용한다.</summary>
+    private bool TryResolveSessions(
       NetworkConnection sender,
       string selector,
-      out UserDescriptor session,
+      out List<UserDescriptor> sessions,
       out string error)
     {
-      session = null;
-      error = string.Empty;
+      sessions = null;
 
       if (string.IsNullOrWhiteSpace(selector))
       {
@@ -409,31 +448,25 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (selector.Equals("@self", StringComparison.OrdinalIgnoreCase)
-          || selector.Equals("@s", StringComparison.OrdinalIgnoreCase))
+      return PlayerTargetResolver.TryResolve(sender, selector, out sessions, out error);
+    }
+
+    /// <summary>대상이 정확히 한 명이어야 하는 인자용 해석.</summary>
+    private bool TryResolveSession(
+      NetworkConnection sender,
+      string selector,
+      out UserDescriptor session,
+      out string error)
+    {
+      session = null;
+
+      if (string.IsNullOrWhiteSpace(selector))
       {
-        if (sender == null)
-        {
-          error = "Unable to locate command sender.";
-          return false;
-        }
-
-        if (!UserDescriptorService.TryGetByClientId(sender.ClientId, out session))
-        {
-          error = "Sender session not found.";
-          return false;
-        }
-
-        return true;
-      }
-
-      if (!UserDescriptorService.TryGetByDisplayName(selector, out session))
-      {
-        error = $"Player '{selector}' not found.";
+        error = "Player selector is required.";
         return false;
       }
 
-      return true;
+      return PlayerTargetResolver.TryResolveSingle(sender, selector, out session, out error);
     }
   }
 }

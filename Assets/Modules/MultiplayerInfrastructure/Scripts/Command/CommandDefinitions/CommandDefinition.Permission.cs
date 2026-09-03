@@ -3,7 +3,6 @@ using System.Linq;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Permission;
-using MultiplayerInfrastructure.Session;
 
 namespace MultiplayerInfrastructure.Command
 {
@@ -43,7 +42,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("permission user get <player>",                 "Show a player's current role."),
       new UsageLine("permission user set <player> <role>",          "Assign a role to a player."),
       new UsageLine("permission reset",                             "Reset permissions.json to defaults."),
-      new UsageLine("  <player>", "Display name, id:<uuid>, or name:<displayName>."),
+      new UsageLine("  <player>", "@selector (@a, @p, @r, @s), id:<uuid>, name:<displayName>, or a display name."),
       new UsageLine("  <perm>",   "Permission identifier, e.g. 'scenario', 'tp', '*', 'scenario.*'."),
     };
 
@@ -359,14 +358,15 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!TryResolveUserDescriptor(args[0], sender, out var descriptor, out string error))
+      if (!PlayerTargetResolver.TryResolve(sender, args[0], out var descriptors, out string error))
       {
         _chat.SendSystemMessage(sender, error);
         return;
       }
 
-      string role = PermissionService.GetUserRole(descriptor.Identifier);
-      _chat.SendSystemMessage(sender, $"{descriptor.DisplayName} → role: {role}");
+      var lines = descriptors
+        .Select(descriptor => $"{descriptor.DisplayName} → role: {PermissionService.GetUserRole(descriptor.Identifier)}");
+      _chat.SendSystemMessage(sender, string.Join("\n", lines));
     }
 
     private void HandleUserSet(NetworkConnection sender, string[] args)
@@ -377,20 +377,29 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!TryResolveUserDescriptor(args[0], sender, out var descriptor, out string resolveError))
+      if (!PlayerTargetResolver.TryResolve(sender, args[0], out var descriptors, out string resolveError))
       {
         _chat.SendSystemMessage(sender, resolveError);
         return;
       }
 
       string roleName = args[1];
-      if (!PermissionService.SetUserRole(descriptor.Identifier, roleName, out string error))
+      var applied = new System.Collections.Generic.List<string>();
+
+      foreach (var descriptor in descriptors)
       {
-        _chat.SendSystemMessage(sender, error);
-        return;
+        if (!PermissionService.SetUserRole(descriptor.Identifier, roleName, out string error))
+        {
+          _chat.SendSystemMessage(sender, error);
+          return;
+        }
+
+        applied.Add(descriptor.DisplayName);
       }
 
-      _chat.SendSystemMessage(sender, $"Set role of '{descriptor.DisplayName}' to '{roleName}'.");
+      _chat.SendSystemMessage(sender, applied.Count == 1
+        ? $"Set role of '{applied[0]}' to '{roleName}'."
+        : $"Set role of {applied.Count} players to '{roleName}': {string.Join(", ", applied)}");
     }
 
     // ── /permission reset ─────────────────────────────────────────────────────
@@ -402,74 +411,6 @@ namespace MultiplayerInfrastructure.Command
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private static bool TryResolveUserDescriptor(string playerToken, NetworkConnection sender,
-                                                  out UserDescriptor descriptor, out string error)
-    {
-      descriptor = null;
-      error = string.Empty;
-
-      if (string.IsNullOrWhiteSpace(playerToken))
-      {
-        error = "Player token is required.";
-        return false;
-      }
-
-      // @s / @self → sender
-      if (string.Equals(playerToken, "@s", StringComparison.OrdinalIgnoreCase)
-          || string.Equals(playerToken, "@self", StringComparison.OrdinalIgnoreCase))
-      {
-        if (sender == null)
-        {
-          error = "@s cannot be used from system execution.";
-          return false;
-        }
-
-        if (!UserDescriptorService.TryGetByClientId(sender.ClientId, out descriptor))
-        {
-          error = "Unable to find your user descriptor.";
-          return false;
-        }
-
-        return true;
-      }
-
-      // id:<uuid>
-      if (playerToken.StartsWith("id:", StringComparison.OrdinalIgnoreCase))
-      {
-        string uid = playerToken.Substring("id:".Length);
-        if (!UserDescriptorService.TryGetByIdentifier(uid, out descriptor))
-        {
-          error = $"No player found with identifier '{uid}'.";
-          return false;
-        }
-
-        return true;
-      }
-
-      // name:<displayName>
-      if (playerToken.StartsWith("name:", StringComparison.OrdinalIgnoreCase))
-      {
-        string name = playerToken.Substring("name:".Length);
-        if (!UserDescriptorService.TryGetByDisplayName(name, out descriptor))
-        {
-          error = $"No player found with name '{name}'.";
-          return false;
-        }
-
-        return true;
-      }
-
-      // 폴백: 식별자로 먼저 찾고, 없으면 표시 이름으로 찾는다.
-      if (UserDescriptorService.TryGetByIdentifier(playerToken, out descriptor))
-        return true;
-
-      if (UserDescriptorService.TryGetByDisplayName(playerToken, out descriptor))
-        return true;
-
-      error = $"Player '{playerToken}' not found. Use id:<uuid> or name:<displayName>.";
-      return false;
-    }
 
     private void SendUsage(NetworkConnection sender)
     {
