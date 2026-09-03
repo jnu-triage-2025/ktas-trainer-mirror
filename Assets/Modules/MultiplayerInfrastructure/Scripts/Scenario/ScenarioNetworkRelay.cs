@@ -369,6 +369,42 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>
+    /// 역할 브랜치 표시를 받은 클라이언트 한 명의 대화 UI 만 내린다.
+    /// 브랜치 대화가 autoAdvanceSeconds 로 자동 종료될 때, 다른 참가자의 화면을 건드리지 않고
+    /// 해당 클라이언트의 잔여 대화창만 정리하기 위해 사용한다.
+    /// </summary>
+    public static void DismissAuthoritativePresentationForClient(int clientId, string graphIdentifier)
+    {
+      if (_instance == null || !InstanceFinder.IsServerStarted || string.IsNullOrWhiteSpace(graphIdentifier))
+        return;
+
+      var clients = InstanceFinder.ServerManager?.Clients;
+      if (clients == null)
+        return;
+
+      foreach (var pair in clients)
+      {
+        if (pair.Value != null && pair.Value.ClientId == clientId)
+        {
+          _instance.TargetDismissPresentationUI(pair.Value, graphIdentifier);
+          return;
+        }
+      }
+    }
+
+    [TargetRpc]
+    private void TargetDismissPresentationUI(NetworkConnection conn, string graphIdentifier)
+    {
+      // 호스트의 Controller 는 권위 상태기와 같은 인스턴스다. 서버 실행기가 직접 UI 를
+      // 관리하므로, 뒤늦게 도착한 RPC 로 진행 중인 표시를 되돌리지 않는다.
+      if (InstanceFinder.IsServerStarted)
+        return;
+
+      if (ScenarioController.Instance != null)
+        ScenarioController.Instance.DismissPresentationUI(graphIdentifier);
+    }
+
+    /// <summary>
     /// 서버가 실행한 연출 전용 이벤트를 표시 피어에서도 실행시킨다.
     ///
     /// 역할 브랜치 밖의 일반 InvokeEvent 노드는 그래프를 순회하는 권위 피어에서만 실행된다.

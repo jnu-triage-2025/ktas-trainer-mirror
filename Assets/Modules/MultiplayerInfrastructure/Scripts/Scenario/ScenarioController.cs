@@ -801,6 +801,15 @@ namespace MultiplayerInfrastructure.Scenario
       SelectOption(index);
     }
 
+    /// <summary>
+    /// 표시 전용 피어가 서버에 진행/선택 입력을 보낼 자격이 있는지 판정한다.
+    /// 역할 브랜치로 이 피어에만 전달된 노드는 owner 여부와 무관하게 당사자가 응답해야 한다.
+    /// </summary>
+    private bool CanSubmitPresentationInput()
+    {
+      return _currentPresentationNodeRoleScoped || IsLocalScenarioOwner();
+    }
+
     private bool IsLocalScenarioOwner()
     {
       if (!_scenarioOwnerClientId.HasValue)
@@ -1186,6 +1195,7 @@ namespace MultiplayerInfrastructure.Scenario
       _activeRemoteBranchDialogueClients.Clear();
       _remoteBranchChoiceSelections.Clear();
       _runningPresentationEvents.Clear();
+      _mainDialogueSurfaceActive = false;
     }
 
     private void TrackCleanup(Action undo)
@@ -1266,7 +1276,9 @@ namespace MultiplayerInfrastructure.Scenario
     {
       if (_executionMode == ExecutionMode.ClientPresentation)
       {
-        if (_currentGraph != null && _currentNode != null)
+        // 서버는 시나리오 owner(또는 역할 브랜치를 배정받은 당사자)의 입력만 수용한다.
+        // 그 밖의 피어가 보내는 요청은 반드시 기각되므로 아예 보내지 않는다.
+        if (_currentGraph != null && _currentNode != null && CanSubmitPresentationInput())
           ScenarioNetworkRelay.RequestAdvance(_currentGraph.Identifier, _currentNode.Identifier);
         return;
       }
@@ -1312,7 +1324,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       if (_executionMode == ExecutionMode.ClientPresentation)
       {
-        if (_currentGraph != null && _currentNode != null)
+        if (_currentGraph != null && _currentNode != null && CanSubmitPresentationInput())
           ScenarioNetworkRelay.RequestChoiceSelection(_currentGraph.Identifier, _currentNode.Identifier, index);
         if (_currentPresentationNodeRoleScoped && !_uiController.IsUnityNull())
           _uiController.DismissPresentationNode();
@@ -1606,9 +1618,56 @@ namespace MultiplayerInfrastructure.Scenario
       StartInlineTTSPrewarm(_currentGraph);
     }
 
+    /// <summary>
+    /// 메인 체인의 대화 계열 노드가 현재 대화창을 점유하고 있는지 여부.
+    /// 브랜치 체인이 띄운 대화는 이 플래그로 추적하지 않으므로, 메인 체인이 다른 노드로
+    /// 넘어갔다는 이유만으로 브랜치 대화를 잘못 내리지 않는다.
+    /// </summary>
+    private bool _mainDialogueSurfaceActive;
+
+    /// <summary>대화창 UI를 실제로 점유하는 노드인지 판정한다.</summary>
+    private static bool PresentsDialogueSurface(IScenarioNode node)
+    {
+      return node is ScenarioDialogueNode
+          || node is ScenarioChoiceNode
+          || node is ScenarioQuizNode
+          || node is ScenarioDisinteractableDialogueNode;
+    }
+
+    /// <summary>
+    /// 메인 체인이 대화창을 쓰지 않는 노드로 넘어갈 때, 직전 대화 노드가 남긴 표시를 내린다.
+    /// 브랜치 대화/프롬프트가 진행 중이면 그 표시를 빼앗지 않도록 건너뛴다.
+    /// </summary>
+    private void DismissStaleMainDialogueSurface()
+    {
+      if (!_mainDialogueSurfaceActive)
+        return;
+
+      _mainDialogueSurfaceActive = false;
+
+      if (_branchDialogueActive
+          || _branchPromptActive
+          || _activeRemoteBranchDialogueClients.Count > 0
+          || _activeRemoteBranchPromptClients.Count > 0)
+        return;
+
+      if (!_uiController.IsUnityNull()
+          && (_uiController.IsWaitingForInput || _uiController.IsTyping || _uiController.HasActiveSelections))
+      {
+        _uiController.DismissPresentationNode();
+      }
+
+      // 서버 권위 실행에서는 각 표시 피어의 화면에도 같은 정리가 필요하다.
+      // 서버가 자동 진행한 경우 클라이언트는 스스로 내릴 계기가 없다.
+      if (_executionMode == ExecutionMode.ServerAuthoritative && _currentGraph != null)
+        ScenarioNetworkRelay.DismissAuthoritativePresentation(_currentGraph.Identifier);
+    }
+
     /// <summary>대화창 계열 UI 를 내리고 입력 대기 상태를 푼다.</summary>
     private void DismissDialogueSurfaces()
     {
+      _mainDialogueSurfaceActive = false;
+
       if (_uiController.IsUnityNull())
         return;
 
@@ -1879,6 +1938,14 @@ namespace MultiplayerInfrastructure.Scenario
       }
       catch { /* 로그 실패는 노드 실행에 영향 없음 */ }
       OnNodeChanged?.Invoke(node);
+
+      // 대화창을 쓰지 않는 노드로 넘어왔다면 직전 대화 노드가 남긴 표시를 먼저 내린다.
+      // Advance 자체는 UI를 건드리지 않으므로, autoAdvanceSeconds 로 자동 진행한 대화는
+      // 다음 대화 노드가 나올 때까지 화면에 남고 오버레이가 플레이어 입력을 계속 잠근다.
+      if (!PresentsDialogueSurface(node))
+        DismissStaleMainDialogueSurface();
+      else
+        _mainDialogueSurfaceActive = true;
 
       if (_executionMode == ExecutionMode.ServerAuthoritative)
         ScenarioNetworkRelay.PresentAuthoritativeNode(_currentGraph?.Identifier, node.Identifier);
@@ -5946,7 +6013,33 @@ namespace MultiplayerInfrastructure.Scenario
         }
 
         _branchDialogueAdvanceInterceptors[dialogueOwnerClientId] = advanceBranchDialogue;
-        yield return new WaitUntil(() => advanceRequested || _currentGraph == null);
+
+        // 브랜치 대화도 메인 체인의 Dialogue 노드와 동일하게 autoAdvanceSeconds 를 지킨다.
+        // 이 처리를 빠뜨리면 자동으로 닫히도록 작성한 대사가 플레이어 입력을 받을 때까지
+        // 화면에 남고, 같은 화면의 다음 브랜치 대화까지 순서 대기에 묶인다.
+        float autoAdvanceSeconds = !node.InteractionRequired && node.AutoAdvanceSeconds.HasValue
+          ? node.AutoAdvanceSeconds.Value
+          : 0f;
+
+        if (autoAdvanceSeconds > 0f)
+        {
+          double deadline = Time.realtimeSinceStartupAsDouble + autoAdvanceSeconds;
+          while (!advanceRequested
+                 && _currentGraph != null
+                 && Time.realtimeSinceStartupAsDouble < deadline)
+          {
+            yield return null;
+          }
+
+          // 타이머 만료로 진행하는 경우에는 표시한 대화창을 여기서 직접 내린다.
+          // (플레이어 입력으로 진행했다면 대화창이 이미 스스로 닫혀 있다.)
+          if (!advanceRequested && _currentGraph != null)
+            DismissBranchDialoguePresentation(remoteDialogue, context.OwnerClientId);
+        }
+        else
+        {
+          yield return new WaitUntil(() => advanceRequested || _currentGraph == null);
+        }
       }
       finally
       {
@@ -5959,6 +6052,26 @@ namespace MultiplayerInfrastructure.Scenario
         else
           _branchDialogueActive = false;
       }
+    }
+
+    /// <summary>
+    /// 자동 진행으로 끝난 브랜치 대화의 표시를 내린다.
+    /// 로컬 표시는 이 인스턴스의 대화창을, 원격 표시는 배정된 클라이언트 화면을 대상으로 한다.
+    /// </summary>
+    private void DismissBranchDialoguePresentation(bool remoteDialogue, int? ownerClientId)
+    {
+      if (remoteDialogue)
+      {
+        if (ownerClientId.HasValue && _currentGraph != null)
+        {
+          ScenarioNetworkRelay.DismissAuthoritativePresentationForClient(
+            ownerClientId.Value, _currentGraph.Identifier);
+        }
+        return;
+      }
+
+      if (!_uiController.IsUnityNull())
+        _uiController.DismissDialogue();
     }
 
     /// <summary>
