@@ -1,5 +1,14 @@
 {
   "identifier": "disaster_intro",
+  "clientSignalIdentifiers": [
+    "sig.click_vital_set",
+    "sig.click_normal_saline_1000ml",
+    "sig.click_plasma_solution_1000ml",
+    "sig.click_intravenous_set",
+    "sig.click_blood_bag",
+    "sig.click_patient_a",
+    "sig.click_patient_dummy_d_a"
+  ],
   "defaultEntrypoint": "D001",
   "tags": [
     "access_support",

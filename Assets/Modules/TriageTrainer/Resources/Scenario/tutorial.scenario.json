@@ -1,5 +1,15 @@
 {
   "identifier": "tutorial",
+  "clientSignalIdentifiers": [
+    "sig.tutorial_player_moved",
+    "sig.tutorial.quest.delivery.storage.reached",
+    "sig.tutorial_delivery_package",
+    "sig.tutorial-decoy-package-on-pickuped",
+    "sig.click_handy_clock",
+    "sig.tutorial_hat_talk_start",
+    "sig.tutorial.crafting.clock.submitted",
+    "sig.tutorial.delivery.package.submitted"
+  ],
   "tags": [],
   "questDefinitionIncludes": [
     "tutorial.quests.quest",

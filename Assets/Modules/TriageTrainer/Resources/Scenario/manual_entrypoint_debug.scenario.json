@@ -1,5 +1,8 @@
 {
   "identifier": "manual_entrypoint_debug",
+  "clientSignalIdentifiers": [
+    "sig.phase_one_done"
+  ],
   "defaultEntrypoint": "intro_print",
   "tags": [],
   "nodes": {

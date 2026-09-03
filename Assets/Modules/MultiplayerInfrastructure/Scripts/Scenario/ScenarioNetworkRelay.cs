@@ -1121,9 +1121,13 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
       if (!ClientSignalAuthorization.CanRaise(
-            sender.ClientId, descriptor.Identifier, normalizedSignalId, out string authorizationError))
+            sender.ClientId, descriptor.Identifier, normalizedSignalId, out string authorizationError,
+            out var raiseRejection))
       {
-        ReportRejectedInput(normalizedSignalId, parameterJson, authorizationError, sender);
+        if (raiseRejection == ScenarioClientSignalRejection.Undeclared)
+          ReportIgnoredInput(normalizedSignalId, authorizationError);
+        else
+          ReportRejectedInput(normalizedSignalId, parameterJson, authorizationError, sender);
         return;
       }
 
@@ -1141,13 +1145,20 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      string authorizationError = null;
       if (sender == null || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
-          || string.IsNullOrWhiteSpace(descriptor.Identifier)
-          || !ClientSignalAuthorization.CanClear(sender.ClientId, normalizedSignalId, out authorizationError))
+          || string.IsNullOrWhiteSpace(descriptor.Identifier))
       {
         ReportRejectedInput(normalizedSignalId, null,
-          authorizationError ?? "발신 플레이어를 서버 세션에서 확인할 수 없습니다.", sender);
+          "발신 플레이어를 서버 세션에서 확인할 수 없습니다.", sender);
+        return;
+      }
+      if (!ClientSignalAuthorization.CanClear(sender.ClientId, normalizedSignalId,
+            out string authorizationError, out var clearRejection))
+      {
+        if (clearRejection == ScenarioClientSignalRejection.Undeclared)
+          ReportIgnoredInput(normalizedSignalId, authorizationError);
+        else
+          ReportRejectedInput(normalizedSignalId, null, authorizationError, sender);
         return;
       }
 
@@ -1304,6 +1315,23 @@ namespace MultiplayerInfrastructure.Scenario
         chat.SendSystemMessage(sender, message);
     }
 
+    /// <summary>
+    /// 활성 시나리오가 선언하지 않은 client-origin 신호를 기록만 하고 무시한다.
+    ///
+    /// <para>
+    /// 아이템 획득, 환자 클릭, 존 진입 같은 일상적인 상호작용은 게이트로 쓰이지 않을 때에도
+    /// 신호를 올린다. 이런 신호가 거부되는 것은 인가 정책이 의도대로 동작한 결과이지 결함이 아니므로,
+    /// 경고를 남기거나 발신자에게 시스템 메시지를 보내지 않는다. 다만 선언 누락을 추적할 수 있도록
+    /// 게임 로그에는 그대로 남긴다.
+    /// </para>
+    /// </summary>
+    private static void ReportIgnoredInput(string normalizedSignalId, string reason)
+    {
+      GameLogService.WriteSignal(
+        $"Signal ignored: signal={ScenarioSignalParameterStore.FormatForLog(normalizedSignalId)}, reason={ScenarioSignalParameterStore.FormatForLog(reason)}",
+        ScenarioSignalParameterStore.FormatForLog(normalizedSignalId));
+    }
+
     private static void ReportStorageLimit(string normalizedSignalId, string playerIdentifier,
       string error, NetworkConnection sender)
     {
@@ -1331,6 +1359,28 @@ namespace MultiplayerInfrastructure.Scenario
     {
       ScenarioInteractionSignals.UnregisterLocal(normalizedSignalId);
     }
+  }
+
+  /// <summary>
+  /// client-origin 신호가 거부된 이유의 분류. 보고 수준을 정하는 데 사용한다.
+  /// </summary>
+  public enum ScenarioClientSignalRejection
+  {
+    /// <summary>거부되지 않았다.</summary>
+    None,
+
+    /// <summary>
+    /// 서버가 검증한 gameplay 상태에서만 발생할 수 있는 신호를 클라이언트가 올리려 했다.
+    /// 코드 결함이거나 위조 시도이므로 경고와 발신자 통지를 유지한다.
+    /// </summary>
+    ServerOnlySignal,
+
+    /// <summary>
+    /// 활성 시나리오가 이 신호를 client-origin 으로 선언하지 않았다.
+    /// 게이트로 쓰이지 않는 일상적인 상호작용(아이템 획득, 존 진입 등)에서 정상적으로 발생하므로
+    /// 정책이 의도대로 동작한 결과이며 결함이 아니다.
+    /// </summary>
+    Undeclared
   }
 
   /// <summary>
@@ -1368,6 +1418,13 @@ namespace MultiplayerInfrastructure.Scenario
       if (graph == null)
         return;
 
+      // 서버 전용으로 분류하는 대상은 "그래프 엔진이 서버에서 스스로 계산해 내보내는" 출력뿐이다.
+      // 아이템 제출과 ActingNpc 상호작용의 완료 신호는 그래프가 식별자를 지정할 뿐이고, 실제 발신은
+      // 제출 UI(ItemSubmissionInteractable.NotifySubmissionCompleted)와 상호작용 디스패치
+      // (ScenarioActingNpcSignalInteract.Interact)가 조작한 클라이언트에서 수행한다. 이 둘을 서버 전용으로
+      // 분류하면 호스트가 아닌 플레이어는 해당 단계를 영영 완료할 수 없다. 게다가 제출 검증과 아이템 소모
+      // 자체가 클라이언트 권위이므로, 서버 전용 분류가 실제로 막아 주는 위조도 없다. 그래서 이 둘은
+      // client-origin 으로 두고, 허용 여부는 그래프의 client signal 선언이 정하도록 한다.
       foreach (var node in graph.Nodes.Values)
       {
         switch (node)
@@ -1381,15 +1438,8 @@ namespace MultiplayerInfrastructure.Scenario
           case ScenarioEntityStateSignalBindingNode binding:
             AddServerOnly(binding.OutputSignalIdentifier);
             break;
-          case ScenarioItemSubmissionConfigNode submission:
-            AddServerOnly(submission.CompletionSignalIdentifier);
-            break;
         }
       }
-
-      foreach (var actingNpc in graph.ActingNpcs ?? Array.Empty<ScenarioActingNpcDefinition>())
-        foreach (var interaction in actingNpc?.Interactions ?? Array.Empty<ScenarioActingNpcInteractionDefinition>())
-          AddServerOnly(interaction?.CompletionSignalIdentifier);
 
       foreach (var signal in graph.ClientSignalIdentifiers ?? Array.Empty<string>())
         AddExpected(signal);
@@ -1427,20 +1477,27 @@ namespace MultiplayerInfrastructure.Scenario
     public void Revoke(int clientId) => _capabilities.Remove(clientId);
 
     public bool CanRaise(int clientId, string playerIdentifier, string normalizedSignalId, out string error)
+      => CanRaise(clientId, playerIdentifier, normalizedSignalId, out error, out _);
+
+    public bool CanRaise(int clientId, string playerIdentifier, string normalizedSignalId, out string error,
+      out ScenarioClientSignalRejection rejection)
     {
       if (HasCapability(clientId, normalizedSignalId, requireClear: false))
       {
         error = null;
+        rejection = ScenarioClientSignalRejection.None;
         return true;
       }
       if (_serverOnlySignals.Contains(normalizedSignalId))
       {
         error = "서버 검증 gameplay 상태에서만 발생할 수 있는 신호입니다.";
+        rejection = ScenarioClientSignalRejection.ServerOnlySignal;
         return false;
       }
       if (_expectedRaises.Contains(normalizedSignalId))
       {
         error = null;
+        rejection = ScenarioClientSignalRejection.None;
         return true;
       }
 
@@ -1449,22 +1506,30 @@ namespace MultiplayerInfrastructure.Scenario
         if (normalizedSignalId.StartsWith(prefix, StringComparison.Ordinal))
         {
           error = null;
+          rejection = ScenarioClientSignalRejection.None;
           return true;
         }
       }
 
       error = "활성 시나리오가 이 client-origin 신호를 기대하지 않으며 capability도 없습니다.";
+      rejection = ScenarioClientSignalRejection.Undeclared;
       return false;
     }
 
     public bool CanClear(int clientId, string normalizedSignalId, out string error)
+      => CanClear(clientId, normalizedSignalId, out error, out _);
+
+    public bool CanClear(int clientId, string normalizedSignalId, out string error,
+      out ScenarioClientSignalRejection rejection)
     {
       if (HasCapability(clientId, normalizedSignalId, requireClear: true))
       {
         error = null;
+        rejection = ScenarioClientSignalRejection.None;
         return true;
       }
       error = "client-origin signal clear는 명시적인 clear capability 없이는 허용되지 않습니다.";
+      rejection = ScenarioClientSignalRejection.Undeclared;
       return false;
     }
 

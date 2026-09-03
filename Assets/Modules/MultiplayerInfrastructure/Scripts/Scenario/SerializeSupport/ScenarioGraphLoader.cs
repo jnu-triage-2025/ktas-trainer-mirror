@@ -82,7 +82,7 @@ namespace MultiplayerInfrastructure.Scenario
       graph.ActiveRoleTags = NormalizeTags(dto.ActiveRoleTags);
       graph.SkipAbsentRoleBranches = dto.SkipAbsentRoleBranches ?? false;
       graph.ChecklistItemSetsByPlayerTag = ConvertChecklistItemSetsByPlayerTag(dto.ChecklistItemSetsByPlayerTag);
-      graph.ClientSignalIdentifiers = ResolveClientSignalIdentifiers(dto, graph.Identifier);
+      graph.ClientSignalIdentifiers = ResolveClientSignalIdentifiers(dto);
       graph.ClientSignalPrefixes = NormalizeSignalSpecification(dto.ClientSignalPrefixes);
       graph.QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(dto.QuestDefinitionIncludes);
       graph.ActingNpcs = ConvertActingNpcs(dto.ActingNpcs);
@@ -133,27 +133,12 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
-    private static IReadOnlyList<string> ResolveClientSignalIdentifiers(ScenarioGraphDTO dto, string graphIdentifier)
+    private static IReadOnlyList<string> ResolveClientSignalIdentifiers(ScenarioGraphDTO dto)
     {
-      if (dto.ClientSignalIdentifiers != null)
-        return NormalizeSignalSpecification(dto.ClientSignalIdentifiers);
-
-      // 이전 Patient A 그래프는 상호작용 게이트에 일반 클라이언트 보고를 사용했다.
-      // 검증을 마친 이 레거시 그래프만 호환을 유지하고, 선언되지 않은 다른 그래프는
-      // 모두 기본적으로 거부한다.
-      if (!string.Equals(graphIdentifier, "patient_a_critical", StringComparison.Ordinal))
-        return Array.Empty<string>();
-
-      return dto.Nodes?.Values
-        .OfType<ScenarioValidatorNodeDTO>()
-        .SelectMany(node => node.RootConditions ?? new List<ScenarioValidatorNodeDTO.ScenarioValidatorRootConditionDTO>())
-        .SelectMany(root => root.ValidationRules ?? new List<ScenarioValidatorNodeDTO.ScenarioValidatorRuleDTO>())
-        .Where(rule => string.Equals(rule.RegistryType, nameof(RegistryType.RuntimeState), StringComparison.OrdinalIgnoreCase))
-        .Select(rule => rule.RegistryIdentifier)
-        .Where(value => !string.IsNullOrWhiteSpace(value))
-        .Select(ScenarioInteractionSignals.Normalize)
-        .Distinct(StringComparer.Ordinal)
-        .ToArray() ?? Array.Empty<string>();
+      // client-origin 인가는 시나리오 JSON의 명시적인 선언만 사용한다. Validator 조건에서
+      // 추론하면 서버 전용 출력과 클라이언트 입력을 구별할 수 없어, 새 그래프의 선언 누락을
+      // 감추거나 의도하지 않은 신호 위조를 허용하게 된다.
+      return NormalizeSignalSpecification(dto.ClientSignalIdentifiers);
     }
 
     private static IReadOnlyList<string> NormalizeSignalSpecification(IEnumerable<string> values)

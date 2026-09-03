@@ -1,5 +1,8 @@
 {
   "identifier": "triage_zone_headcount_debug",
+  "clientSignalPrefixes": [
+    "sig.enter_triage_zone_"
+  ],
   "defaultEntrypoint": "intro_print",
   "tags": [],
   "nodes": {

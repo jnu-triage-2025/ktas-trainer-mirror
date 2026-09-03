@@ -265,7 +265,24 @@ namespace TriageTrainer.Tests
       Assert.That(checklistPaperGrant, Is.Not.Null);
       Assert.That(checklistPaperGrant.CommandLine, Is.EqualTo("give-if-missing checklist_paper @a"));
       Assert.That(checklistPaperGrant.NextIdentifier, Is.EqualTo("SPAWN_B"));
-      Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
+      // sig.interact_oxyflow_wall_* 는 설치된 산소 유량계를 클릭한 클라이언트에서만 발신된다
+      // (WallAttachedOxyflowmeter.Interact). 이 신호가 서버에 도달하지 못하면
+      // PatientCareDescriptionZone 이 산소 라인을 만들지 못해 환자 B/C 산소 처치가 진행되지 않으므로
+      // client-origin 접두사로 선언한다.
+      Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[]
+      {
+        "sig.quest_arrival_triage_area_",
+        "sig.interact_oxyflow_wall_"
+      }));
+      // 환자 모니터 선택(select_patient_*)도 상호작용한 클라이언트에서만 발신된다
+      // (PatientController.RaisePatientInteractionSignals).
+      Assert.That(graph.ClientSignalIdentifiers, Is.EqualTo(new[]
+      {
+        "sig.patient_b_pupil_checked",
+        "sig.patient_c_pupil_checked",
+        "sig.select_patient_b",
+        "sig.select_patient_c"
+      }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
       Assert.That(graph.ActingNpcs.Single().PresetIdentifier, Is.EqualTo("npc_doctor_preset"));

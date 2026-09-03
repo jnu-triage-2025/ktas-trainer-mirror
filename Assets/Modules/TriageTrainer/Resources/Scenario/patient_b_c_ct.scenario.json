@@ -2,10 +2,13 @@
   "identifier": "patient_b_c_ct",
   "clientSignalIdentifiers": [
     "sig.patient_b_pupil_checked",
-    "sig.patient_c_pupil_checked"
+    "sig.patient_c_pupil_checked",
+    "sig.select_patient_b",
+    "sig.select_patient_c"
   ],
   "clientSignalPrefixes": [
-    "sig.quest_arrival_triage_area_"
+    "sig.quest_arrival_triage_area_",
+    "sig.interact_oxyflow_wall_"
   ],
   "defaultEntrypoint": "GIVE_CHECKLIST_PAPER_IF_MISSING",
   "tags": [

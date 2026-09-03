@@ -1,5 +1,8 @@
 {
   "identifier": "iv_signal_debug",
+  "clientSignalIdentifiers": [
+    "sig.iv_connect_start_point00"
+  ],
   "defaultEntrypoint": "flow1_intro_print",
   "tags": [],
   "nodes": {

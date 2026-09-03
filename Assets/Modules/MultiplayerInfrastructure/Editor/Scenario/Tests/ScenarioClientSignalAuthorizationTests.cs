@@ -40,6 +40,16 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void PatientAClientSignalsAreLoadedFromExplicitScenarioDeclaration()
+    {
+      var graph = LoadScenario("patient_a_critical");
+
+      Assert.That(graph.ClientSignalIdentifiers, Does.Contain("sig.quest_arrival_triage_area"));
+      Assert.That(graph.ClientSignalIdentifiers, Does.Contain("sig.arrive_triagearea"));
+      Assert.That(graph.ClientSignalIdentifiers, Does.Contain("sig.interact_oxyflow_wall"));
+    }
+
+    [Test]
     public void ExplicitPrefixAuthorizesOnlyItsDeclaredNamespace()
     {
       var graph = new ScenarioGraph { Identifier = "player-zone" };
