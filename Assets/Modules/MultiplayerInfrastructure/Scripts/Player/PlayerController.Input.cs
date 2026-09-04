@@ -100,6 +100,11 @@ namespace MultiplayerInfrastructure.Player
       if (UIOverlayStack.IsEmpty())
         return false;
 
+      // 대화는 Escape로 취소해도 시나리오 진행 결과를 제출하지 않는다. 여기서 Pop 하면
+      // 대화 UI만 사라진 채 시나리오가 다음 입력을 기다리는 불일치 상태가 된다.
+      if (!_dialoguePanelUIController.IsUnityNull() && UIOverlayStack.IsTop(_dialoguePanelUIController))
+        return true;
+
       UIOverlayStack.Pop();
       return true;
     }

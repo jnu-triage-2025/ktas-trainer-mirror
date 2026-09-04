@@ -391,8 +391,7 @@ namespace MultiplayerInfrastructure.UI
       Debug.Log("[DialoguePanelUI] Scenario ended");
 
       // 시나리오가 끝나면 오버레이를 제거한다.
-      if (UIOverlayStack.IsTop(this))
-        UIOverlayStack.Pop();
+      UIOverlayStack.Remove(this);
     }
 
     /// <summary>
@@ -411,8 +410,7 @@ namespace MultiplayerInfrastructure.UI
         _interactableHintUI.ExitDialogueMode();
 
       HidePanel();
-      if (UIOverlayStack.IsTop(this))
-        UIOverlayStack.Pop();
+      UIOverlayStack.Remove(this);
     }
 
     /// <summary>
@@ -442,8 +440,7 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void DisplayDisinteractableDialogue(string speakerName, string dialogueContent, string portraitIdentifier)
     {
-      if (UIOverlayStack.IsTop(this))
-        UIOverlayStack.Pop();
+      UIOverlayStack.Remove(this);
 
       if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
         _interactableHintUI.ExitDialogueMode();
@@ -483,6 +480,9 @@ namespace MultiplayerInfrastructure.UI
     public void HideDisinteractableDialogue()
     {
       Hide();
+      // 비상호작용 안내를 표시할 때 문서 루트 전체의 픽킹을 끈다.
+      // 패널만 복구하면 루트의 Ignore 상태가 남아 이후 UI 입력이 막힌다.
+      RestoreInteractivePresentation();
     }
 
     /// <summary>
@@ -746,8 +746,7 @@ namespace MultiplayerInfrastructure.UI
       if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
         _interactableHintUI.ExitDialogueMode();
       HidePanel();
-      if (UIOverlayStack.IsTop(this))
-        UIOverlayStack.Pop();
+      UIOverlayStack.Remove(this);
 
       // ScenarioController에 선택 전달
       if (!_currentController.IsUnityNull())
@@ -1009,8 +1008,7 @@ namespace MultiplayerInfrastructure.UI
       ClearSelections();
       Hide();
 
-      if (UIOverlayStack.IsTop(this))
-        UIOverlayStack.Pop();
+      UIOverlayStack.Remove(this);
 
       // interaction-required 대화가 닫힌 뒤에는 월드 상호작용 힌트를 즉시 다시 보이도록
       // 일반 모드로 복귀한다. 이후 다음 Dialogue/Choice 표시 시 다시 Dialogue 모드로 전환된다.
@@ -1044,6 +1042,18 @@ namespace MultiplayerInfrastructure.UI
 
     public void OnOverlayPopped()
     {
+      // UIOverlayStack.Clear(), 강제 제거 등 정상 진행 입력 이외의 경로에서도
+      // 보이는 패널·선택지·포인터 상태가 남지 않도록 표시 상태를 복구한다.
+      _isTyping = false;
+      _isWaitingForInput = false;
+      _inputContext = DialogueInputContext.None;
+      _pendingChoiceOptions = null;
+      _currentDialogueInteractionRequired = false;
+      ClearSelections();
+      if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
+        _interactableHintUI.ExitDialogueMode();
+      Hide();
+      RestoreInteractivePresentation();
       OverlayPopped?.Invoke();
     }
 

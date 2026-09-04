@@ -97,5 +97,24 @@ namespace MultiplayerInfrastructure.Tests.UI
       Assert.That(UIOverlayStack.IsTop(inventory), Is.True);
       Assert.That(UIOverlayStack.IsEmpty(), Is.False);
     }
+
+    [Test]
+    public void RemovingAnOverlayBuriedBelowAnotherOverlayDoesNotLeaveItToBlockInput()
+    {
+      var dialogue = new FakeOverlay("dialogue");
+      var chat = new FakeOverlay("chat");
+
+      UIOverlayStack.Push(dialogue);
+      UIOverlayStack.Push(chat);
+
+      Assert.That(UIOverlayStack.Remove(dialogue), Is.True);
+      Assert.That(dialogue.PoppedCount, Is.EqualTo(1));
+      Assert.That(UIOverlayStack.IsTop(chat), Is.True);
+
+      UIOverlayStack.Pop();
+
+      Assert.That(UIOverlayStack.IsEmpty(), Is.True,
+        "종료된 대화창이 채팅 아래에 남으면 채팅을 닫은 뒤 월드 입력이 잠긴다.");
+    }
   }
 }

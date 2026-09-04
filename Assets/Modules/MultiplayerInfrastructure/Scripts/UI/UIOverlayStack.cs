@@ -105,6 +105,55 @@ namespace MultiplayerInfrastructure.UI
       return overlay;
     }
 
+    /// <summary>
+    /// 스택의 어느 위치에 있든 지정한 오버레이를 제거한다.
+    ///
+    /// 대화창 위에 채팅처럼 다른 오버레이가 열린 상태에서 대화 시나리오가 끝날 수 있다.
+    /// 이때 최상단만 Pop 하면 숨겨진 대화창 항목이 스택에 남아 이후 입력을 계속 막으므로,
+    /// 종료 주체가 자기 항목을 명시적으로 제거할 수 있어야 한다.
+    /// </summary>
+    /// <returns>지정한 오버레이를 실제로 제거했으면 true.</returns>
+    public static bool Remove(IUIOverlay overlay)
+    {
+      if (overlay == null)
+        return false;
+
+      int previousCount = Stack.Count;
+      IUIOverlay previousTop = Stack.Count > 0 ? Stack.Peek() : null;
+      PruneDeadOverlays();
+
+      if (Stack.Count == 0)
+        return false;
+
+      bool removedTop = Stack.Peek() == overlay;
+      bool removed = false;
+      var kept = new List<IUIOverlay>(Stack.Count);
+      while (Stack.Count > 0)
+      {
+        var each = Stack.Pop();
+        if (each == overlay)
+        {
+          removed = true;
+          continue;
+        }
+
+        kept.Add(each);
+      }
+
+      for (int i = kept.Count - 1; i >= 0; i--)
+        Stack.Push(kept[i]);
+
+      if (!removed)
+        return false;
+
+      SafeOnOverlayPopped(overlay);
+      if (removedTop && Stack.Count > 0)
+        SafeOnOverlayPushed(Stack.Peek());
+
+      NotifyStackChangedIfNeeded(previousCount, previousTop);
+      return true;
+    }
+
     public static void Clear()
     {
       int previousCount = Stack.Count;
