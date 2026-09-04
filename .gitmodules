@@ -10,3 +10,6 @@
 [submodule "Tools/fluent-korean"]
 	path = Tools/fluent-korean
 	url = https://github.com/snflkd/fluent-korean
+[submodule "Tools/kilo-goal-plugin"]
+	path = Tools/kilo-goal-plugin
+	url = https://github.com/ShapeLayer/kilo-goal-plugin.git
