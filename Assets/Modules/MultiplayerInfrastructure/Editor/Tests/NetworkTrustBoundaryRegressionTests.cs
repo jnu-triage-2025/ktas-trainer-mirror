@@ -25,6 +25,17 @@ namespace MultiplayerInfrastructure.Editor.Tests
       Assert.That(result.Length, Is.LessThanOrEqualTo(524));
     }
 
+    [Test]
+    public void PlayerSystemMessagesAreBroadcastWithThePlayerNamePrefix()
+    {
+      string source = File.ReadAllText(
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Chat/ChatService.cs");
+
+      Assert.That(source, Does.Contain("ReceiveChatObserversRpc(FormatPlayerSystemMessage(conn, message))"));
+      Assert.That(source, Does.Contain("return $\"({GetDisplayName(conn)}) {message}\";"));
+      Assert.That(source, Does.Not.Contain("TargetReceiveSystemMessage"));
+    }
+
     [TestCase("Assets/Modules/TriageTrainer/Scripts/Entities/Stretcher/StretcherController.cs")]
     [TestCase("Assets/Modules/MultiplayerInfrastructure/Scripts/Entity/MinecraftBoatLikeControl.cs")]
     public void VehicleInputRpcRejectsNonFiniteValues(string path)

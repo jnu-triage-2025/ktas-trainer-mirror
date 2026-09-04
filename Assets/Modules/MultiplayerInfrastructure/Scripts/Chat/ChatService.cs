@@ -167,12 +167,6 @@ namespace MultiplayerInfrastructure.Chat
       TryExecuteCommandInternal(commandLine, sender, out _);
     }
 
-    [TargetRpc]
-    private void TargetReceiveSystemMessage(NetworkConnection conn, string message)
-    {
-      _uiController.AppendMessage($"<color=#FFD700>[System]</color> {message}", showToastWhenHidden: true);
-    }
-
     /// <summary>
     /// CPR 디버그 Escape 규칙을 서버와 모든 관찰 클라이언트에 동일하게 적용한다.
     /// 게임룰 명령은 서버에서만 실행되지만 Escape 입력은 각 소유 클라이언트가 판정하므로,
@@ -386,11 +380,16 @@ namespace MultiplayerInfrastructure.Chat
 
     public void SendSystemMessage(NetworkConnection conn, string message)
     {
-      // 시스템 권한 실행 중에는 메시지를 대상 플레이어에게 보내지 않고 서버 로그로만 기록한다.
+      // 시스템 권한 실행 중에는 메시지를 플레이어 채팅창에 전파하지 않고 서버 로그로만 기록한다.
       if (conn != null && _systemExecutionContextDepth == 0)
-        TargetReceiveSystemMessage(conn, message);
+        ReceiveChatObserversRpc(FormatPlayerSystemMessage(conn, message));
       else
         Debug.Log($"[System] {message}");
+    }
+
+    private string FormatPlayerSystemMessage(NetworkConnection conn, string message)
+    {
+      return $"({GetDisplayName(conn)}) {message}";
     }
 
     public bool TryDispatchScenario(string scenarioIdentifier, IEnumerable<NetworkConnection> targets, out string error)
