@@ -39,7 +39,7 @@ namespace MultiplayerInfrastructure.Audio
       soundObject.transform.position = position;
       var source = soundObject.AddComponent<AudioSource>();
       source.spatialBlend = Mathf.Clamp01(spatialBlend);
-      source.PlayOneShot(clip, Mathf.Clamp01(volume));
+      source.PlayOneShot(clip, Mathf.Clamp01(volume) * AudioVolumeSettings.SfxVolume);
       Destroy(soundObject, clip.length);
       return true;
     }

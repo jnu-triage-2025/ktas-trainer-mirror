@@ -8,6 +8,7 @@ using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Transporting;
 using MultiplayerInfrastructure.Camera;
+using MultiplayerInfrastructure.Audio;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Command;
 using MultiplayerInfrastructure.InteractableEntity;
@@ -2698,11 +2699,12 @@ namespace MultiplayerInfrastructure.Scenario
       // 효과음은 TTS용 AudioSource 를 재사용한다(전용 SFX 소스가 없을 경우 PlayClipAtPoint 폴백).
       if (_ttsAudioSource != null)
       {
-        _ttsAudioSource.PlayOneShot(clip);
+        _ttsAudioSource.PlayOneShot(clip, AudioVolumeSettings.SfxVolume);
       }
       else
       {
-        AudioSource.PlayClipAtPoint(clip, UnityEngine.Camera.main != null ? UnityEngine.Camera.main.transform.position : Vector3.zero);
+        AudioSource.PlayClipAtPoint(clip, UnityEngine.Camera.main != null ? UnityEngine.Camera.main.transform.position : Vector3.zero,
+          AudioVolumeSettings.SfxVolume);
       }
 
       if (node.WaitUntilFinished)
@@ -5412,6 +5414,12 @@ namespace MultiplayerInfrastructure.Scenario
           node,
           ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer);
         var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+        // SelfAll 은 피어마다 자기 자신을 배정하므로 모든 피어가 같은 브랜치를 각자 실행한다.
+        // 그 밖의 배정 방식은 한 브랜치를 피어 한 곳에서만 실행하므로, 그 브랜치가 부르는
+        // 이벤트는 나머지 피어에 따로 전달해야 메인 체인 이벤트와 같은 범위로 적용된다.
+        // 서버 권위 실행은 서버가 그래프를 단독으로 돌기 때문에 이 전달이 필요 없다.
+        bool replicateBranchEvents = _executionMode != ExecutionMode.ServerAuthoritative
+                                     && node.AllocationType != ScenarioParallelAllocationType.SelfAll;
 
         // activeRoleTags 기반 그래프는 플레이어/태그 등록이 완료되기 전에 첫 Parallel에
         // 도달할 수 있다. 이때 빈 roster를 "모든 역할 부재"로 해석하면 skipAbsentRoleBranches가
@@ -5506,7 +5514,13 @@ namespace MultiplayerInfrastructure.Scenario
           // 전역 Advance 에서 1회 총 2회 실행되는 것을 방지한다.
           var tracker = new BranchCompletionTracker();
           runningTrackers.Add(tracker);
-          var routine = RunTrackedBranch(branchNode, branch.CompletionConditionIdentifier, node.NextIdentifier, assignedClientId, tracker);
+          var routine = RunTrackedBranch(
+            branchNode,
+            branch.CompletionConditionIdentifier,
+            node.NextIdentifier,
+            assignedClientId,
+            tracker,
+            replicateBranchEvents);
           if (!sequenceRoleBranches)
           {
             runningCoroutines.Add(StartCoroutine(routine));
@@ -5602,11 +5616,12 @@ namespace MultiplayerInfrastructure.Scenario
         yield return routines[index];
     }
 
-    private IEnumerator RunTrackedBranch(IScenarioNode branchNode, string completionCondition, string joinNodeIdentifier, int? assignedClientId, BranchCompletionTracker tracker)
+    private IEnumerator RunTrackedBranch(IScenarioNode branchNode, string completionCondition, string joinNodeIdentifier, int? assignedClientId, BranchCompletionTracker tracker, bool replicateEventsToPeers)
     {
       try
       {
-        yield return ExecuteBranch(branchNode, completionCondition, joinNodeIdentifier, assignedClientId);
+        yield return ExecuteBranch(
+          branchNode, completionCondition, joinNodeIdentifier, assignedClientId, replicateEventsToPeers);
       }
       finally
       {
@@ -5913,7 +5928,7 @@ namespace MultiplayerInfrastructure.Scenario
       AppendSystemChatMessage(message);
     }
 
-    private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
+    private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId, bool replicateEventsToPeers)
     {
       // _scenarioOwnerClientId는 전역 시나리오 입력 권한을 나타내는 상태다. 병렬 코루틴이
       // 이를 임시로 교체하면 A 브랜치가 yield한 사이 B 브랜치가 owner를 덮어써, Quest/이동 등
@@ -5921,7 +5936,8 @@ namespace MultiplayerInfrastructure.Scenario
       // branchOwnerClientId로만 전달하고, 역할별 표현은 TargetRpc 경로에서 처리한다.
       // 브랜치의 시작 노드부터 NextIdentifier 체인을 끝까지(또는 완료조건 라벨까지) 실행한다.
       // 완료조건/합류 라벨 도달은 전역 Advance/EndScenario를 건드리지 않는 브랜치 완료다.
-      yield return RunBranchChain(node, completionCondition, joinNodeIdentifier, branchOwnerClientId);
+      yield return RunBranchChain(
+        node, completionCondition, joinNodeIdentifier, branchOwnerClientId, replicateEventsToPeers);
     }
 
     /// <summary>
@@ -5935,13 +5951,14 @@ namespace MultiplayerInfrastructure.Scenario
       IScenarioNode startNode,
       string completionLabel,
       string joinNodeIdentifier = null,
-      int? branchOwnerClientId = null)
+      int? branchOwnerClientId = null,
+      bool replicateEventsToPeers = false)
     {
       var cursor = startNode;
       int guard = 0;
       const int maxNodes = 10000; // 순환 방지 안전장치.
       // 브랜치 체인별 실행 컨텍스트(동시 실행되는 다른 브랜치와 상태를 공유하지 않는다).
-      var chainContext = new BranchChainContext(branchOwnerClientId);
+      var chainContext = new BranchChainContext(branchOwnerClientId, replicateEventsToPeers);
 
       while (cursor != null)
       {
@@ -6039,12 +6056,62 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>브랜치 체인 단위의 실행 컨텍스트. 선택 결과에 따른 다음 노드 오버라이드를 전달한다.</summary>
     private sealed class BranchChainContext
     {
-      public BranchChainContext(int? ownerClientId) => OwnerClientId = ownerClientId;
+      public BranchChainContext(int? ownerClientId, bool replicateEventsToPeers = false)
+      {
+        OwnerClientId = ownerClientId;
+        ReplicateEventsToPeers = replicateEventsToPeers;
+      }
 
       public int? OwnerClientId { get; }
 
+      /// <summary>
+      /// 이 체인이 피어 한 곳에서만 실행되는 역할 브랜치인지 여부. 참이면 이 체인이 부르는
+      /// InvokeEvent 를 나머지 피어에도 전달해, 메인 체인 이벤트와 같은 범위로 적용되게 한다.
+      /// </summary>
+      public bool ReplicateEventsToPeers { get; }
+
       /// <summary>Choice/Quiz 등 선택 결과가 다음 노드를 결정하는 경우 설정된다.</summary>
       public string NextOverride;
+    }
+
+    /// <summary>
+    /// 역할 브랜치가 실행한 이벤트를 나머지 피어에서도 실행하도록 알린다.
+    /// <see cref="ScenarioInvokeEventNode.InvokeOnRoleClient"/> 로 표시 전용이라고 선언한 이벤트는
+    /// 담당자 화면에서만 재생되어야 하므로 전달하지 않는다.
+    /// </summary>
+    private void ReplicateBranchEventToPeers(ScenarioInvokeEventNode node, BranchChainContext context)
+    {
+      if (node == null
+          || context == null
+          || !context.ReplicateEventsToPeers
+          || node.InvokeOnRoleClient
+          || _currentGraph == null
+          || string.IsNullOrWhiteSpace(node.EventIdentifier))
+        return;
+
+      ScenarioNetworkRelay.PublishBranchEventToPeers(
+        _currentGraph.Identifier, node.EventIdentifier, GetLocalClientId());
+    }
+
+    /// <summary>
+    /// 다른 피어의 역할 브랜치가 실행한 이벤트를 이 피어에서도 실행한다.
+    /// <see cref="ScenarioNetworkRelay"/> 가 서버를 거쳐 전달한다.
+    /// </summary>
+    /// <remarks>
+    /// 발신 피어는 이미 브랜치 안에서 같은 핸들러를 실행했으므로 건너뛴다. 그래프 순회는
+    /// 각 피어가 그대로 담당하며, 이 경로는 이벤트 핸들러만 실행하고 커서를 옮기지 않는다.
+    /// </remarks>
+    public void RunBranchEventFromPeer(string graphIdentifier, string eventIdentifier, int originClientId)
+    {
+      if (_currentGraph == null
+          || string.IsNullOrWhiteSpace(eventIdentifier)
+          || !string.Equals(_currentGraph.Identifier, graphIdentifier, StringComparison.Ordinal))
+        return;
+
+      if (GetLocalClientId() == originClientId)
+        return;
+
+      StartCoroutine(ExecutePresentationEvent(eventIdentifier));
     }
 
     private bool ShouldPresentBranchLocally(BranchChainContext context)
@@ -6079,6 +6146,11 @@ namespace MultiplayerInfrastructure.Scenario
             // TargetPresentRoleNode가 배정 클라이언트에서 표시용 핸들러를 실행한다.
             break;
           }
+          // 담당자 한 명만 도는 역할 브랜치의 이벤트는, 표시 전용으로 선언된 것을 제외하고
+          // 나머지 피어에도 전달한다. 이벤트 핸들러는 서버에서만 성립하는 처리(퀘스트 상태
+          // 플래그, 라인 연결, 조건부 신호 리스너 출력)와 모든 피어에 보여야 하는 표현을 함께
+          // 담고 있어서, 담당자 피어에서만 돌면 그 처리가 어디에도 적용되지 않는다.
+          ReplicateBranchEventToPeers(invoke, context);
           // WaitUntilDone/Immediately 모두 실행기 말미에 전역 Advance 를 호출하지만,
           // RunWithGlobalAdvanceSuppressed 가 각 MoveNext 순간에만 이를 억제한다.
           if (invoke.MoveNextBehavior == ScenarioInvokeEventMoveNextBehavior.WaitUntilDone)
