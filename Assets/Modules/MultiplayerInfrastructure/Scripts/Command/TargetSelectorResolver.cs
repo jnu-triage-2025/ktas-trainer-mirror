@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FishNet;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Session;
@@ -457,8 +458,29 @@ namespace MultiplayerInfrastructure.Command
 
     private static List<PlayerInfo> GetAllPlayerInfos()
     {
+      var result = new List<PlayerInfo>();
+      var clients = InstanceFinder.ServerManager?.Clients;
+      if (clients != null)
+      {
+        foreach (var pair in clients)
+        {
+          var connection = pair.Value;
+          if (connection?.FirstObject == null
+              || !connection.FirstObject.TryGetComponent<PlayerController>(out var player)
+              || player == null)
+          {
+            continue;
+          }
+
+          result.Add(new PlayerInfo(connection, player));
+        }
+      }
+
+      if (result.Count > 0)
+        return result;
+
+      // 오프라인 실행이나 연결 초기화 전에는 서버 연결 목록이 없으므로 씬 검색으로 폴백한다.
       var found = UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
-      var result = new List<PlayerInfo>(found.Length);
 
       foreach (var player in found)
       {
