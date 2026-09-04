@@ -10,6 +10,9 @@
     public const float TimeDisplayHudSortOrder = 2.6f;
     // 마이크 수집 표시 HUD. 우측 하단에 표시되는 비차단 HUD.
     public const float MicrophoneCaptureIndicatorSortOrder = 2.7f;
+    // 접속자 목록 오버레이. 키를 누르고 있는 동안에만 나타나는 비차단 HUD 이므로
+    // 다른 HUD 보다는 위에, QuestPanel(4) 이상의 모달 문서보다는 아래에 둔다.
+    public const float PlayerListOverlaySortOrder = 2.9f;
     public const float TitleUISortOrder = 5f;
     public const float InventoryUISortOrder = 6f;
     public const float EscapeMenuUISortOrder = 7f;

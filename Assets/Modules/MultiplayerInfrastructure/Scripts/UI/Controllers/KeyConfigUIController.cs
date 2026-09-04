@@ -42,6 +42,8 @@ namespace MultiplayerInfrastructure.UI
       new KeyBindingEntry("map",            "지도",           KeyCode.M),
       new KeyBindingEntry("chat",           "채팅",           KeyCode.Return),
       new KeyBindingEntry("camera_distance_modifier", "POV 조정 수정자", KeyCode.LeftAlt),
+      new KeyBindingEntry(DefaultsKeyConfiguration.ShowPlayerListActionId, "접속자 목록 보기",
+        DefaultsKeyConfiguration.ShowPlayerList),
     };
 
     // 기본(초기) 바인딩 복원용 복사본 — 런타임에 자동 생성됩니다
