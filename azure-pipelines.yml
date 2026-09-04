@@ -222,7 +222,7 @@ stages:
           # self-hosted agent always refreshes its latest build.
           enabled: true
           agentMode: ${{ parameters.agentMode }}
-          host: windows
+          host: macos
           buildTarget: StandaloneWindows64
           buildSubtarget: Player
           buildName: $(buildName)
@@ -235,7 +235,7 @@ stages:
           displayName: 'Build Windows dedicated server'
           enabled: ${{ parameters.buildWindowsDedicatedServer }}
           agentMode: ${{ parameters.agentMode }}
-          host: windows
+          host: macos
           buildTarget: StandaloneWindows64
           buildSubtarget: Server
           buildName: $(buildName)-server
