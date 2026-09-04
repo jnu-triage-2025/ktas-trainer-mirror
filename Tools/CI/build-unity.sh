@@ -20,7 +20,6 @@ case "$(printf '%s' "${BUILD_SUBTARGET}" | tr '[:upper:]' '[:lower:]')" in
 esac
 
 project_path="${CI_PROJECT_DIR:-$(pwd)}"
-log_path="${project_path}/${BUILD_PATH}/unity-${BUILD_TARGET}-${BUILD_SUBTARGET}.log"
 
 find_unity_executable() {
   if [[ -n "${UNITY_EXECUTABLE:-}" ]]; then
@@ -63,8 +62,12 @@ if [[ -z "${build_identifier}" ]]; then
   build_identifier="$(git -C "${project_path}" rev-parse --short=7 HEAD)"
 fi
 
-log_path="${build_directory}/unity-${BUILD_TARGET}-${BUILD_SUBTARGET}.log"
-mkdir -p "${build_directory}"
+if [[ -n "${UNITY_LOG_ARTIFACT_PATH:-}" ]]; then
+  log_path="${project_path}/${UNITY_LOG_ARTIFACT_PATH}"
+else
+  log_path="${build_directory}/unity-${BUILD_TARGET}-${BUILD_SUBTARGET}.log"
+fi
+mkdir -p "${build_directory}" "$(dirname "${log_path}")"
 
 # CI agents discard the player to keep the workspace small. Set
 # KEEP_BUILD_OUTPUT=1 when the build output itself is the deliverable,
