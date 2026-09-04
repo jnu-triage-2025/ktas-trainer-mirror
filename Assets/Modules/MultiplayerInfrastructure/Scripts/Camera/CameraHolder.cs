@@ -50,7 +50,6 @@ namespace MultiplayerInfrastructure.Camera
     [Header("References")]
     [Tooltip("현재 부착되어 추종 중인 부착점의 피벗 Transform. 런타임에 결정됩니다.")]
     [SerializeField] private Transform _followingPivot;
-    [SerializeField] private MainGameplayCameraObject _cameraObject;
     [SerializeField] private string _spectatorLayerName = "Spectator";
 
     [Header("State")]
@@ -361,19 +360,23 @@ namespace MultiplayerInfrastructure.Camera
 
     private void EnsureCamera()
     {
-      if (_cameraObject.IsUnityNull())
+      // 씬 전환 도중에는 일반 카메라만 먼저 발견될 수 있다. MainCamera 태그 카메라가
+      // 뒤늦게 생성되면 기존 폴백을 계속 사용하지 않고 즉시 교체해야 한다.
+      UnityEngine.Camera taggedCamera = UnityEngine.Camera.main;
+      if (!taggedCamera.IsUnityNull())
       {
-        MainGameplayCameraObject[] cameraObjects = Object.FindObjectsByType<MainGameplayCameraObject>(
-          FindObjectsInactive.Include,
-          FindObjectsSortMode.InstanceID);
-        if (cameraObjects.Length == 1)
-          _cameraObject = cameraObjects[0];
+        SetResolvedCamera(taggedCamera);
+        return;
       }
 
-      UnityEngine.Camera resolvedCamera = _cameraObject.IsUnityNull()
-        ? null
-        : _cameraObject.GetComponent<UnityEngine.Camera>();
+      if (!_camera.IsUnityNull())
+        return;
 
+      SetResolvedCamera(ResolveFallbackCamera());
+    }
+
+    private void SetResolvedCamera(UnityEngine.Camera resolvedCamera)
+    {
       if (_camera != resolvedCamera)
       {
         _camera = resolvedCamera;
@@ -385,6 +388,58 @@ namespace MultiplayerInfrastructure.Camera
         _baseCullingMask = _camera.cullingMask;
         _baseMaskInitialized = true;
       }
+    }
+
+    /// <summary>
+    /// MainCamera 태그를 찾지 못했을 때의 카메라 폴백입니다.
+    /// 1. MainCameraGameObject 컴포넌트가 붙은 카메라
+    /// 2. Hierarchy에서 가장 먼저 발견되는 카메라
+    /// </summary>
+    private static UnityEngine.Camera ResolveFallbackCamera()
+    {
+      UnityEngine.Camera markedCamera = FindFirstCameraInHierarchy(requireMarker: true);
+      return !markedCamera.IsUnityNull()
+        ? markedCamera
+        : FindFirstCameraInHierarchy(requireMarker: false);
+    }
+
+    private static UnityEngine.Camera FindFirstCameraInHierarchy(bool requireMarker)
+    {
+      for (int sceneIndex = 0; sceneIndex < UnityEngine.SceneManagement.SceneManager.sceneCount; sceneIndex++)
+      {
+        UnityEngine.SceneManagement.Scene scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(sceneIndex);
+        if (!scene.isLoaded)
+          continue;
+
+        GameObject[] roots = scene.GetRootGameObjects();
+        for (int rootIndex = 0; rootIndex < roots.Length; rootIndex++)
+        {
+          UnityEngine.Camera camera = FindFirstCameraInHierarchy(roots[rootIndex].transform, requireMarker);
+          if (!camera.IsUnityNull())
+            return camera;
+        }
+      }
+
+      return null;
+    }
+
+    private static UnityEngine.Camera FindFirstCameraInHierarchy(Transform transform, bool requireMarker)
+    {
+      if (!requireMarker || transform.GetComponent<MainCameraGameObject>() != null)
+      {
+        UnityEngine.Camera camera = transform.GetComponent<UnityEngine.Camera>();
+        if (!camera.IsUnityNull())
+          return camera;
+      }
+
+      for (int childIndex = 0; childIndex < transform.childCount; childIndex++)
+      {
+        UnityEngine.Camera camera = FindFirstCameraInHierarchy(transform.GetChild(childIndex), requireMarker);
+        if (!camera.IsUnityNull())
+          return camera;
+      }
+
+      return null;
     }
   }
 }

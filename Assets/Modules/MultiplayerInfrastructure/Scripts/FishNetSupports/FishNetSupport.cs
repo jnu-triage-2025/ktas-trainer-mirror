@@ -109,7 +109,8 @@ namespace MultiplayerInfrastructure.FishNetSupports
       if (!autoStartFromRegistryWhenNoBootstrapper)
         return;
 
-      if (FindAnyObjectByType<UnitySceneSupports.IngameScene.IngameSceneBootstrapper>() != null)
+      if (FindAnyObjectByType<UnitySceneSupports.IngameScene.IngameSceneBootstrapper>() != null
+          || FindAnyObjectByType<TriageTrainer.SceneBootstrapper.TutorialSceneBootstrapper>() != null)
         return;
 
       StartCoroutine(HandleSessionInformationAlreadyConfiguredRoutine());
