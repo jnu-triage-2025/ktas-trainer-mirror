@@ -28,16 +28,68 @@ namespace TriageTrainer.Scenario
         TryAttachPatientToBed(_patientAObject, moveTarget, "patientA-transfer");
       }
 
+      // 수동 이송을 확인할 수 없는 상황(침대 구성 오류, 대기 시간 초과)에서는 무한 대기 대신
+      // 프로그램 이동으로 대체한다. 이 이벤트는 메인 흐름에서 WaitUntilDone 으로 실행되므로,
+      // 여기서 멈추면 네 명의 세션 전체가 멈춘다.
+      bool fallBackToAutomaticTransfer = !_waitForManualPatientATransfer;
+
       if (_waitForManualPatientATransfer)
       {
         var bed = moveTarget != null ? moveTarget.GetComponent<MovingPatientBedController>() : null;
         if (bed == null)
         {
-          Debug.LogError("[TriageScenarioEventBootstrap] E005: patient A bed target has no MovingPatientBedController. Waiting indefinitely.");
-          while (true)
-            yield return null;
+          Debug.LogError(
+            "[TriageScenarioEventBootstrap] E005: patient A bed target has no MovingPatientBedController. "
+            + "Falling back to the automatic transfer.");
+          fallBackToAutomaticTransfer = true;
         }
+        else
+        {
+          yield return WaitForManualPatientATransfer(bed, completed => fallBackToAutomaticTransfer = !completed);
+        }
+      }
 
+      if (!fallBackToAutomaticTransfer)
+        yield break;
+
+      // 수동 이송을 확인하지 못해 대체하는 경우에는 수동 진입과 같은 방법으로 침대를 처치실 정박
+      // 포인트에 붙인다. 정박은 서버가 침대 정박 신호를 올리므로 뒤따르는 처치 구역 신호도 그대로
+      // 이어진다. 씬에 처치실 지점(_patientATreatmentRoomPoint)이 비어 있어도 동작한다.
+      if (_waitForManualPatientATransfer
+          && moveTarget != null
+          && moveTarget.GetComponent<MovingPatientBedController>() != null)
+      {
+        PlacePatientABedAtTreatmentPoint(ResolvePatientACurrentBed() ?? moveTarget);
+        yield break;
+      }
+
+      if (_patientATreatmentMoveDurationSeconds > 0f)
+      {
+        yield return MoveToIfPresent(moveTarget, _patientATreatmentRoomPoint, _patientATreatmentMoveDurationSeconds);
+      }
+      else
+      {
+        SnapToIfPresent(moveTarget, _patientATreatmentRoomPoint);
+      }
+
+#if UNITY_EDITOR
+      Debug.Log("[EmitSystemMessage] 환자 A를 처치 구역으로 이동시켰습니다.");
+#endif
+    }
+
+    /// <summary>
+    /// 플레이어가 침대를 밀어 정박 포인트에 붙일 때까지 기다린다.
+    /// </summary>
+    /// <param name="onFinished">
+    /// 정박을 확인했으면 true, 확인할 수 없어 호출자가 프로그램 이동으로 대체해야 하면 false 를 전달한다.
+    /// 구성 오류(침대 식별자와 포인트 모두 없음)와 <see cref="_patientATransferWaitTimeoutSeconds"/> 초과가
+    /// 후자에 해당한다. 어느 경우든 무한 대기하지 않는다.
+    /// </param>
+    private IEnumerator WaitForManualPatientATransfer(
+      MovingPatientBedController bed,
+      System.Action<bool> onFinished)
+    {
+      {
         // 지정한 포인트가 씬에 없으면 특정 포인트 신호를 영원히 기다리게 되므로, 목표 안내는 시나리오의
         // 목표 지점 마크에 맡기고 통과 판정은 "이 침대가 허용된 스냅 포인트 어딘가에 정박했는가"로 완화한다.
         string pointIdentifier = _patientATreatmentPositioningPointIdentifier?.Trim();
@@ -76,9 +128,9 @@ namespace TriageTrainer.Scenario
         {
           Debug.LogError(
             "[TriageScenarioEventBootstrap] E005: patient A bed has no identifier and no reachable "
-            + "positioning point, so the transfer can never be confirmed. Waiting indefinitely.");
-          while (true)
-            yield return null;
+            + "positioning point, so the transfer can never be confirmed. Falling back to the automatic transfer.");
+          onFinished?.Invoke(false);
+          yield break;
         }
 
         // 이전 실행의 잔류 신호를 제거하여 자동 통과를 방지한다.
@@ -91,7 +143,8 @@ namespace TriageTrainer.Scenario
 
         EmitSystemMessage("환자 베드를 처치실 위치까지 이동시키세요.");
 
-        float startedAt = Time.time;
+        // 대기 시간 초과는 시간 배율이나 일시정지와 무관하게 판정해야 하므로 unscaled 시간을 쓴다.
+        float startedAt = Time.unscaledTime;
         while (true)
         {
           // 베드가 스냅 범위에 들어온 즉시 목표 포인트로 강제 스냅을 시도한다.
@@ -109,11 +162,18 @@ namespace TriageTrainer.Scenario
             break;
 
           if (_patientATransferWaitTimeoutSeconds > 0f
-              && Time.time - startedAt >= _patientATransferWaitTimeoutSeconds)
+              && Time.unscaledTime - startedAt >= _patientATransferWaitTimeoutSeconds)
           {
-            Debug.LogError("[TriageScenarioEventBootstrap] E005: timed out waiting for patient A bed positioning signal.");
-            while (true)
-              yield return null;
+            // 예전에는 여기서도 무한 대기했다. 시간 초과를 선언해 두고도 세션이 멈추면 선언의
+            // 의미가 없으므로, 밀고 있던 플레이어를 풀어 준 뒤 프로그램 이동으로 대체한다.
+            string message =
+              $"E005: timed out after {_patientATransferWaitTimeoutSeconds:0.#}s waiting for the patient A bed "
+              + "positioning signal. Falling back to the automatic transfer (미수행 기록).";
+            Debug.LogError($"[TriageScenarioEventBootstrap] {message}");
+            EmitSystemMessage("환자 베드 이동이 시간 안에 확인되지 않아 처치실 위치로 자동 이동합니다.");
+            bed.ForceReleaseAllParticipants();
+            onFinished?.Invoke(false);
+            yield break;
           }
 
           yield return null;
@@ -128,21 +188,8 @@ namespace TriageTrainer.Scenario
         // 플레이어는 다음 단계를 수행할 수 없으므로 서버 권위로 함께 풀어 준다.
         bed.ForceReleaseAllParticipants();
 
-        yield break;
+        onFinished?.Invoke(true);
       }
-
-      if (_patientATreatmentMoveDurationSeconds > 0f)
-      {
-        yield return MoveToIfPresent(moveTarget, _patientATreatmentRoomPoint, _patientATreatmentMoveDurationSeconds);
-      }
-      else
-      {
-        SnapToIfPresent(moveTarget, _patientATreatmentRoomPoint);
-      }
-
-#if UNITY_EDITOR
-      Debug.Log("[EmitSystemMessage] 환자 A를 처치 구역으로 이동시켰습니다.");
-#endif
     }
 
     /// <summary>씬에 배치된 침대 정박 포인트를 식별자로 찾는다. 없으면 null 을 돌려준다.</summary>

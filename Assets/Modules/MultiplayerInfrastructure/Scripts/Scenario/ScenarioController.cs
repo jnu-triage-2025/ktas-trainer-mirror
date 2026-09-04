@@ -2074,6 +2074,18 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      // 채팅 명령 시작과 같은 기준으로, 역할 로스터를 구성할 수 없는 세션은 시작하지 않는다.
+      // 트리거 존이나 NPC 상호작용으로 시작하는 경로에서도 원인이 시작 시점에 드러나야 한다.
+      if (!TryValidateActiveRoleRosterForStart(graph, out string rosterError))
+      {
+        string message =
+          $"Scenario '{graph?.Identifier}' cannot start: {rosterError}. "
+          + "Check the role tags with '/tag show @a' and fix them before starting.";
+        Debug.LogError($"[ScenarioController] {message}", this);
+        AppendSystemChatMessage(message);
+        return;
+      }
+
       StartScenario(graph, startNodeIdentifier, ownerClientId);
     }
 
@@ -5629,7 +5641,18 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
-    private IEnumerator ExecuteServerInternalSignalNode(ScenarioServerInternalSignalNode node)
+    /// <summary>
+    /// 서버 내부 신호 노드를 실행한다.
+    /// </summary>
+    /// <param name="context">
+    /// 역할 브랜치 안에서 실행될 때의 체인 컨텍스트. 메인 체인 호출은 null 이다.
+    /// 호환 실행 경로에서 역할 브랜치는 담당 피어 한 곳에서만 돌고 내부 신호 레지스트리는 피어마다
+    /// 따로 있으므로, 브랜치가 올린 Resolve 는 <see cref="ReplicateBranchInternalSignalToPeers"/> 로
+    /// 나머지 피어에도 전달해야 다른 담당자의 브랜치가 기다리는 Register 가 풀린다.
+    /// </param>
+    private IEnumerator ExecuteServerInternalSignalNode(
+      ScenarioServerInternalSignalNode node,
+      BranchChainContext context = null)
     {
       _state = State.ExecutingInvokeEvent;
 
@@ -5652,11 +5675,39 @@ namespace MultiplayerInfrastructure.Scenario
 
             if (node.WaitForResolution)
             {
+              // 게이트 타임아웃은 시간 배율과 무관하게 만료되어야 하므로 unscaled 시간을 쓴다.
+              float deadline = node.WaitTimeoutSeconds is > 0f
+                ? Time.unscaledTime + node.WaitTimeoutSeconds.Value
+                : float.PositiveInfinity;
               while (!resolved)
               {
-                if (_currentGraph == null)
+                // 담당자가 이탈해 취소된 브랜치의 대기는 조건과 무관하게 끝내야 한다. 이 확인이
+                // 없으면 브랜치 취소가 waitMode: All 합류를 살리지 못하고 무한 대기로 되돌아간다.
+                if (_currentGraph == null || IsBranchGateReleased(context))
                 {
                   yield break;
+                }
+
+                if (Time.unscaledTime >= deadline)
+                {
+                  // Resolve 를 올릴 담당자가 이탈한 경우처럼 조건을 만들 사람이 사라지면 이 대기는
+                  // 영원히 끝나지 않는다. 타임아웃이 선언된 노드는 미수행으로 기록하고 진행한다.
+                  // 남겨 둔 대기자는 뒤늦게 온 Resolve 를 삼켜 다음 Register 를 굶기므로 함께 지운다.
+                  ScenarioInteractionSignals.ClearInternal(targetId, signalId);
+                  string message =
+                    $"Server internal signal wait '{node.Identifier}' ({targetId}::{signalId}) timed out after "
+                    + $"{node.WaitTimeoutSeconds.Value}s in graph '{_currentGraph.Identifier}'; continuing (미수행 기록).";
+                  Debug.LogWarning($"[ScenarioController] {message}", this);
+                  try
+                  {
+                    GameLogService.WriteScenario(message, _currentGraph.Identifier);
+                  }
+                  catch (Exception ex)
+                  {
+                    Debug.LogException(ex, this);
+                  }
+                  AppendSystemChatMessage(message);
+                  break;
                 }
 
                 yield return null;
@@ -5667,6 +5718,7 @@ namespace MultiplayerInfrastructure.Scenario
           }
         case ScenarioServerInternalSignalOperationType.Resolve:
           ScenarioInteractionSignals.ResolveInternal(targetId, signalId);
+          ReplicateBranchInternalSignalToPeers(targetId, signalId, context);
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported server internal signal operation: {node.Operation}");
@@ -6114,6 +6166,53 @@ namespace MultiplayerInfrastructure.Scenario
       StartCoroutine(ExecutePresentationEvent(eventIdentifier));
     }
 
+    /// <summary>
+    /// 역할 브랜치가 올린 서버 내부 신호 Resolve 를 나머지 피어에도 전달한다.
+    ///
+    /// <para>
+    /// 내부 신호 레지스트리는 피어마다 따로 있는 프로세스 로컬 저장소다. 호환 실행 경로에서
+    /// Register 를 기다리는 브랜치와 Resolve 를 올리는 브랜치가 서로 다른 담당자에게 배정되면,
+    /// 전달 없이는 기다리는 쪽 피어의 레지스트리가 영원히 비어 있어 병렬 합류가 막힌다.
+    /// 메인 체인의 Resolve 는 모든 피어가 각자 실행하므로 전달하지 않는다. 그 경우까지 전달하면
+    /// 피어 수만큼 pending 이 쌓여 뒤따르는 Register 가 잘못 즉시 풀린다.
+    /// </para>
+    /// </summary>
+    private void ReplicateBranchInternalSignalToPeers(
+      string targetIdentifier, string signalIdentifier, BranchChainContext context)
+    {
+      if (context == null
+          || !context.ReplicateEventsToPeers
+          || _currentGraph == null
+          || string.IsNullOrWhiteSpace(signalIdentifier))
+        return;
+
+      ScenarioNetworkRelay.PublishBranchInternalSignalToPeers(
+        _currentGraph.Identifier, targetIdentifier, signalIdentifier, GetLocalClientId());
+    }
+
+    /// <summary>
+    /// 다른 피어의 역할 브랜치가 올린 서버 내부 신호 Resolve 를 이 피어의 레지스트리에도 반영한다.
+    /// <see cref="ScenarioNetworkRelay"/> 가 서버를 거쳐 전달한다.
+    /// </summary>
+    /// <remarks>
+    /// 발신 피어는 이미 브랜치 안에서 같은 Resolve 를 실행했으므로 건너뛴다. 기다리는 Register 가
+    /// 없는 피어에서는 pending 으로 남지만, 내부 신호 상태는 시나리오 시작과 종료 때 모두 비워지므로
+    /// 다음 실행으로 새지 않는다.
+    /// </remarks>
+    public void ResolveBranchInternalSignalFromPeer(
+      string graphIdentifier, string targetIdentifier, string signalIdentifier, int originClientId)
+    {
+      if (_currentGraph == null
+          || string.IsNullOrWhiteSpace(signalIdentifier)
+          || !string.Equals(_currentGraph.Identifier, graphIdentifier, StringComparison.Ordinal))
+        return;
+
+      if (GetLocalClientId() == originClientId)
+        return;
+
+      ScenarioInteractionSignals.ResolveInternal(targetIdentifier, signalIdentifier);
+    }
+
     private bool ShouldPresentBranchLocally(BranchChainContext context)
     {
       if (_executionMode != ExecutionMode.ServerAuthoritative || !context.OwnerClientId.HasValue)
@@ -6229,7 +6328,7 @@ namespace MultiplayerInfrastructure.Scenario
           yield return ExecuteCameraTargetNode(cameraTarget);
           break;
         case ScenarioServerInternalSignalNode internalSignal:
-          yield return ExecuteServerInternalSignalNode(internalSignal);
+          yield return ExecuteServerInternalSignalNode(internalSignal, context);
           break;
         case ScenarioEntityPresetSpawnNode entityPresetSpawn:
           ExecuteEntityPresetSpawnNode(entityPresetSpawn);
@@ -6689,7 +6788,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
-    private List<int> GetActivePlayerIds()
+    private static List<int> GetActivePlayerIds()
     {
       var ids = new List<int>();
 
@@ -6748,10 +6847,39 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     private bool TryGetActiveRoleRoster(out List<ActiveRoleRosterEntry> roster, out string error)
+      => TryBuildActiveRoleRoster(_currentGraph, GetActivePlayerIds(), out roster, out error);
+
+    /// <summary>
+    /// 시나리오를 시작하기 전에 활성 역할 로스터를 구성할 수 있는지 검사한다.
+    ///
+    /// <para>
+    /// 같은 역할 태그를 두 명이 갖는 것처럼 로스터 자체를 만들 수 없는 설정 오류는, 시작 뒤 첫
+    /// ByRole 병렬에 닿았을 때 모든 브랜치가 건너뛰어지는 형태로 드러난다. 그 시점에는 경고만
+    /// 남고 흐름은 아무도 수행하지 않은 단계의 신호를 기다리며 멈추므로, 시작 명령 단계에서
+    /// 거부할 수 있도록 판정을 미리 제공한다. 활성 역할을 선언하지 않은 그래프는 항상 통과한다.
+    /// </para>
+    /// </summary>
+    /// <returns>로스터를 구성할 수 있으면 true. false 이면 <paramref name="error"/> 에 사유가 담긴다.</returns>
+    public static bool TryValidateActiveRoleRosterForStart(ScenarioGraph graph, out string error)
+    {
+      error = null;
+      bool declaresRoles = graph?.ActiveRoleTags != null
+                           && graph.ActiveRoleTags.Any(role => !string.IsNullOrWhiteSpace(role));
+      if (!declaresRoles)
+        return true;
+
+      return TryBuildActiveRoleRoster(graph, GetActivePlayerIds(), out _, out error);
+    }
+
+    private static bool TryBuildActiveRoleRoster(
+      ScenarioGraph graph,
+      IReadOnlyList<int> clientIds,
+      out List<ActiveRoleRosterEntry> roster,
+      out string error)
     {
       roster = new List<ActiveRoleRosterEntry>();
       error = null;
-      var declaredRoles = _currentGraph?.ActiveRoleTags?
+      var declaredRoles = graph?.ActiveRoleTags?
         .Where(role => !string.IsNullOrWhiteSpace(role))
         .Distinct(StringComparer.Ordinal)
         .ToArray() ?? Array.Empty<string>();
@@ -6762,7 +6890,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       var holderByRole = new Dictionary<string, ActiveRoleRosterEntry>(StringComparer.Ordinal);
-      var activePlayers = GetActivePlayerIds()
+      var activePlayers = (clientIds ?? Array.Empty<int>())
         .Select(clientId => UserDescriptorService.TryGetByClientId(clientId, out var player)
           ? (ClientId: clientId, Player: player)
           : (ClientId: clientId, Player: null))

@@ -204,7 +204,8 @@ namespace MultiplayerInfrastructure.Chat
       NetworkConnection conn,
       string scenarioIdentifier,
       int ownerClientId,
-      bool allowMultipleRoleBranchesForSinglePlayer)
+      bool allowMultipleRoleBranchesForSinglePlayer,
+      string entrypointIdentifier)
     {
       if (!Registry.Registry.TryGetScenarioGraph(scenarioIdentifier, out ScenarioGraph graph, out string error))
       {
@@ -222,6 +223,15 @@ namespace MultiplayerInfrastructure.Chat
       ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer = allowMultipleRoleBranchesForSinglePlayer;
       int? owner = ownerClientId >= 0 ? ownerClientId : (int?)null;
       ScenarioController.Instance.StartScenario(graph, null, owner);
+
+      // 진입 지점이 지정되면 처음부터 다시 밟지 않고 그 지점으로 바로 옮긴다. 접속이 끊겼다가 다시
+      // 들어온 참가자를 나머지 인원이 진행 중인 단계에 합류시키는 용도다. 시작 직후라 비울 상태가
+      // 없으므로 clearState 는 기본값(true)을 그대로 쓴다.
+      if (string.IsNullOrWhiteSpace(entrypointIdentifier))
+        return;
+
+      if (!ScenarioController.Instance.TryEnterManualEntrypoint(entrypointIdentifier, true, out string entryError))
+        Debug.LogWarning($"[ChatService] Manual entry '{entrypointIdentifier}' after scenario start was rejected: {entryError}");
     }
 
     [ObserversRpc(BufferLast = true)]
@@ -393,6 +403,21 @@ namespace MultiplayerInfrastructure.Chat
     }
 
     public bool TryDispatchScenario(string scenarioIdentifier, IEnumerable<NetworkConnection> targets, out string error)
+      => TryDispatchScenario(scenarioIdentifier, targets, null, out error);
+
+    /// <summary>
+    /// 대상에게 시나리오를 시작시킨다.
+    /// </summary>
+    /// <param name="entrypointIdentifier">
+    /// 지정하면 대상 피어는 시작 직후 이 ManualEntrypoint 로 바로 옮겨 간다. 접속이 끊겼다가 다시
+    /// 들어온 참가자를 진행 중인 단계에 합류시키는 용도이므로, 대상별 독립 상태기를 도는 호환 실행
+    /// 경로에서만 쓸 수 있다. 서버 권위 실행은 그래프가 하나뿐이라 <c>/scenario enter</c> 로 옮긴다.
+    /// </param>
+    public bool TryDispatchScenario(
+      string scenarioIdentifier,
+      IEnumerable<NetworkConnection> targets,
+      string entrypointIdentifier,
+      out string error)
     {
       error = string.Empty;
 
@@ -402,7 +427,9 @@ namespace MultiplayerInfrastructure.Chat
         return false;
       }
 
-      if (!Registry.Registry.PreloadScenarioGraph(scenarioIdentifier, validateWithSchema: true))
+      if (!Registry.Registry.PreloadScenarioGraph(scenarioIdentifier, validateWithSchema: true)
+          || !Registry.Registry.TryGetScenarioGraph(scenarioIdentifier, out ScenarioGraph graph, out _)
+          || graph == null)
       {
         error = $"Scenario '{scenarioIdentifier}' is not registered.";
         return false;
@@ -421,12 +448,53 @@ namespace MultiplayerInfrastructure.Chat
         return false;
       }
 
+      // 역할 태그가 중복 부여된 세션은 시작해도 첫 ByRole 병렬에서 모든 브랜치가 건너뛰어져,
+      // 아무도 수행하지 않은 단계의 신호를 기다리다 멈춘다. 원인과 증상이 멀리 떨어져 있어
+      // 운영자가 찾기 어려우므로 시작 자체를 거부하고 바로잡을 명령을 안내한다.
+      if (!ScenarioController.TryValidateActiveRoleRosterForStart(graph, out string rosterError))
+      {
+        error = $"Scenario '{scenarioIdentifier}' cannot start: {rosterError}. "
+                + "Check the role tags with '/tag show @a' and fix them with '/tag remove' or '/tag change' before starting.";
+        return false;
+      }
+
+      bool hasEntrypoint = !string.IsNullOrWhiteSpace(entrypointIdentifier);
+      if (hasEntrypoint
+          && !ScenarioController.TryFindManualEntrypoint(graph, entrypointIdentifier, out _))
+      {
+        var available = ScenarioController.CollectManualEntrypointIdentifiers(graph);
+        error = available.Count == 0
+          ? $"Scenario '{scenarioIdentifier}' declares no manual entrypoint."
+          : $"Manual entrypoint '{entrypointIdentifier}' not found. Available: {string.Join(", ", available)}";
+        return false;
+      }
+
+      // 진입 지점을 지정한 시작은 다시 들어온 참가자만을 대상으로 한다. 이미 그래프를 돌고 있는
+      // 서버(호스트) 자신을 대상에 넣으면 호스트의 진행과 서버 측 신호 상태가 통째로 초기화되어
+      // 나머지 인원의 진행까지 잃는다.
+      if (hasEntrypoint
+          && ScenarioController.Instance != null
+          && ScenarioController.Instance.HasActiveScenario)
+      {
+        var localConnection = InstanceFinder.ClientManager?.Connection;
+        int removed = localConnection != null
+          ? resolvedTargets.RemoveAll(target => target.ClientId == localConnection.ClientId)
+          : 0;
+        if (removed > 0 && resolvedTargets.Count == 0)
+        {
+          error = "The host is already running a scenario; a re-entry start must target the rejoined player only.";
+          return false;
+        }
+      }
+
       // G-8 P3: Relay가 있는 현재 구성에서는 서버가 그래프를 한 번만 실행한다.
       // TargetRpc는 더 이상 각 클라이언트의 독립 상태기를 시작하는 데 쓰이지 않고,
       // 표시 전용 세션 준비에만 사용된다. Relay가 없는 레거시 씬은 하위호환을 위해
       // 기존 대상별 로컬 실행 경로를 유지한다.
+      // 진입 지점이 지정된 시작은 대상별 상태기가 필요하므로 서버 권위 실행을 시도하지 않는다.
       int ownerId = resolvedTargets[0].ClientId >= 0 ? (int)resolvedTargets[0].ClientId : -1;
-      if (ScenarioNetworkRelay.TryStartAuthoritativeScenario(scenarioIdentifier, ownerId, resolvedTargets))
+      if (!hasEntrypoint
+          && ScenarioNetworkRelay.TryStartAuthoritativeScenario(scenarioIdentifier, ownerId, resolvedTargets))
         return true;
 
       foreach (var target in resolvedTargets)
@@ -436,7 +504,8 @@ namespace MultiplayerInfrastructure.Chat
           target,
           scenarioIdentifier,
           targetOwnerId,
-          ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer);
+          ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer,
+          hasEntrypoint ? entrypointIdentifier.Trim() : string.Empty);
       }
 
       return true;

@@ -704,6 +704,7 @@ namespace MultiplayerInfrastructure.Scenario
           SignalIdentifier = dto.SignalIdentifier,
           Operation = ParseServerInternalSignalOperation(dto.Operation),
           WaitForResolution = dto.WaitForResolution ?? true,
+          WaitTimeoutSeconds = (dto.WaitTimeoutSeconds is > 0f) ? dto.WaitTimeoutSeconds : null,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -1930,6 +1931,7 @@ namespace MultiplayerInfrastructure.Scenario
           SignalIdentifier = node.SignalIdentifier,
           Operation = node.Operation.ToString(),
           WaitForResolution = node.WaitForResolution,
+          WaitTimeoutSeconds = (node.WaitTimeoutSeconds is > 0f) ? node.WaitTimeoutSeconds : null,
           NextIdentifier = node.NextIdentifier
         };
 

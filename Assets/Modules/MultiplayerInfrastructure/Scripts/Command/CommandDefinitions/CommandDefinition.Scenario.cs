@@ -20,6 +20,7 @@ namespace MultiplayerInfrastructure.Command
     {
       new UsageLine("scenario list", "List available scenarios."),
       new UsageLine("scenario execute <target> <scenario>", "Start a scenario for targets."),
+      new UsageLine("scenario execute <target> <scenario> [entrypoint]", "Start for a rejoined player and jump straight to a ManualEntrypoint (re-add the role tag first)."),
       new UsageLine("scenario exe <target> <scenario>", "Alias for scenario execute."),
       new UsageLine("scenario exec <target> <scenario>", "Alias for scenario execute."),
       new UsageLine("scenario signal <signal> [clear]", "Raise (or clear) a signal."),
@@ -173,12 +174,15 @@ namespace MultiplayerInfrastructure.Command
               && !string.Equals(args[0], "exe", StringComparison.OrdinalIgnoreCase)
               && !string.Equals(args[0], "exec", StringComparison.OrdinalIgnoreCase)))
       {
-        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute|exe|exec <target> <scenario_id> | /scenario enter <entrypoint> [clear-state=true|false] | /scenario end | /scenario restart [entrypoint] | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic] | /scenario validatorlog [<console|chat|session> <on|off>]");
+        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute|exe|exec <target> <scenario_id> [entrypoint] | /scenario enter <entrypoint> [clear-state=true|false] | /scenario end | /scenario restart [entrypoint] | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic] | /scenario validatorlog [<console|chat|session> <on|off>]");
         return;
       }
 
       string targetSelector = args[1];
-      string scenarioId = string.Join(' ', args[2..]).Trim();
+      string scenarioId = args[2].Trim();
+      // 네 번째 인자는 선택적인 ManualEntrypoint 별칭이다. 접속이 끊겼다가 다시 들어온 참가자를
+      // 진행 중인 단계에 합류시킬 때 쓴다(예: /scenario execute name:홍길동 patient_a_critical arrest).
+      string entrypointId = args.Length > 3 ? string.Join(' ', args[3..]).Trim() : null;
       if (string.IsNullOrWhiteSpace(scenarioId))
       {
         _chat.SendSystemMessage(sender, "Scenario identifier is required.");
@@ -191,13 +195,14 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!_chat.TryDispatchScenario(scenarioId, targets, out string execError))
+      if (!_chat.TryDispatchScenario(scenarioId, targets, entrypointId, out string execError))
       {
         _chat.SendSystemMessage(sender, execError);
         return;
       }
 
-      _chat.SendSystemMessage(sender, $"Scenario '{scenarioId}' dispatched to {targets.Count} target(s).");
+      string entryText = string.IsNullOrWhiteSpace(entrypointId) ? string.Empty : $" at entrypoint '{entrypointId}'";
+      _chat.SendSystemMessage(sender, $"Scenario '{scenarioId}' dispatched to {targets.Count} target(s){entryText}.");
     }
 
     private void ExecuteEnterCommand(NetworkConnection sender, string[] args)
