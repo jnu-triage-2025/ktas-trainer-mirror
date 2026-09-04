@@ -19,6 +19,8 @@ parameters:
     type: string
   - name: windowsAgentPool
     type: string
+  - name: macAgentPool
+    type: string
 
 jobs:
   - job: ${{ parameters.jobName }}
@@ -31,13 +33,18 @@ jobs:
         ${{ else }}:
           name: ${{ parameters.windowsAgentPool }}
       ${{ if eq(parameters.host, 'macos') }}:
-        vmImage: 'macos-latest'
+        ${{ if eq(parameters.agentMode, 'hosted') }}:
+          vmImage: 'macos-latest'
+        ${{ else }}:
+          name: ${{ parameters.macAgentPool }}
     variables:
       CI_PROJECT_DIR: '$(Build.SourcesDirectory)'
       BUILD_NAME: ${{ parameters.buildName }}
       BUILD_PATH: ${{ parameters.buildPath }}
       BUILD_TARGET: ${{ parameters.buildTarget }}
       BUILD_SUBTARGET: ${{ parameters.buildSubtarget }}
+      KEEP_BUILD_OUTPUT: '1'
+      PRUNE_BUILD_OUTPUT: '1'
       UNITY_LOG_ARTIFACT_PATH: artifacts/unity-${{ parameters.buildTarget }}-${{ parameters.buildSubtarget }}.log
     steps:
       - checkout: self

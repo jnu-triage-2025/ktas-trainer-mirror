@@ -55,6 +55,8 @@ variables:
     value: 'Build'
   - name: windowsAgentPool
     value: 'windowsAgentPool'
+  - name: macAgentPool
+    value: 'macAgentPool'
 
 stages:
   - stage: Mirror
@@ -216,6 +218,7 @@ stages:
           buildName: $(buildName)
           buildPath: $(buildPath)
           windowsAgentPool: $(windowsAgentPool)
+          macAgentPool: $(macAgentPool)
       - template: Tools/CI/azure-templates/unity-build-job.yml
         parameters:
           jobName: BuildWindowsDedicatedServer
@@ -228,6 +231,7 @@ stages:
           buildName: $(buildName)-server
           buildPath: $(buildPath)
           windowsAgentPool: $(windowsAgentPool)
+          macAgentPool: $(macAgentPool)
       - template: Tools/CI/azure-templates/unity-build-job.yml
         parameters:
           jobName: BuildMacosClient
@@ -240,6 +244,7 @@ stages:
           buildName: $(buildName)
           buildPath: $(buildPath)
           windowsAgentPool: $(windowsAgentPool)
+          macAgentPool: $(macAgentPool)
       - template: Tools/CI/azure-templates/unity-build-job.yml
         parameters:
           jobName: BuildMacosDedicatedServer
@@ -252,3 +257,4 @@ stages:
           buildName: $(buildName)-server
           buildPath: $(buildPath)
           windowsAgentPool: $(windowsAgentPool)
+          macAgentPool: $(macAgentPool)

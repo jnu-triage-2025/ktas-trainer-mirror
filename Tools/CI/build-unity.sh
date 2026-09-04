@@ -8,6 +8,7 @@ set -euo pipefail
 # 'Player' builds the normal client; 'Server' builds the dedicated headless server.
 : "${BUILD_SUBTARGET:=Player}"
 : "${KEEP_BUILD_OUTPUT:=0}"
+: "${PRUNE_BUILD_OUTPUT:=0}"
 
 case "$(printf '%s' "${BUILD_SUBTARGET}" | tr '[:upper:]' '[:lower:]')" in
   player) BUILD_SUBTARGET='Player' ;;
@@ -57,6 +58,11 @@ case "${build_directory}" in
     ;;
 esac
 
+build_identifier="$(git -C "${project_path}" tag --points-at HEAD --sort=refname | head -n 1)"
+if [[ -z "${build_identifier}" ]]; then
+  build_identifier="$(git -C "${project_path}" rev-parse --short=7 HEAD)"
+fi
+
 log_path="${build_directory}/unity-${BUILD_TARGET}-${BUILD_SUBTARGET}.log"
 mkdir -p "${build_directory}"
 
@@ -78,3 +84,10 @@ esac
   -standaloneBuildSubtarget "${BUILD_SUBTARGET}" \
   -executeMethod GitLabBuild.Build \
   -logFile "${log_path}"
+
+case "$(printf '%s' "${PRUNE_BUILD_OUTPUT}" | tr '[:upper:]' '[:lower:]')" in
+  1 | true | yes)
+    find "${build_directory}" -mindepth 1 -maxdepth 1 -type d -name 'Build-*' \
+      ! -name "Build-${build_identifier}" -exec rm -rf -- {} +
+    ;;
+esac

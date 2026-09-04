@@ -45,6 +45,14 @@ $logPath = if ($logArtifactPath) {
     Join-Path $buildPath "unity-$($env:BUILD_TARGET)-$($env:BUILD_SUBTARGET).log"
 }
 
+$buildIdentifier = (& git -C $projectPath tag --points-at HEAD --sort=refname | Select-Object -First 1).Trim()
+if ([string]::IsNullOrWhiteSpace($buildIdentifier)) {
+    $buildIdentifier = (& git -C $projectPath rev-parse --short=7 HEAD).Trim()
+}
+if ($buildIdentifier -notmatch '^[A-Za-z0-9._/-]+$') {
+    throw "Could not determine a safe build identifier from Git: '$buildIdentifier'."
+}
+
 if ([string]::IsNullOrWhiteSpace($env:UNITY_EXECUTABLE)) {
     $versionFile = Join-Path $projectPath 'ProjectSettings/ProjectVersion.txt'
     $version = (Select-String -Path $versionFile -Pattern '^m_EditorVersion: (.+)$').Matches[0].Groups[1].Value
@@ -82,6 +90,15 @@ try {
     $unityExitCode = $LASTEXITCODE
     if ($null -ne $unityExitCode -and $unityExitCode -ne 0) {
         throw "Unity build failed with exit code $unityExitCode. See $logPath."
+    }
+
+    if ($env:PRUNE_BUILD_OUTPUT -and @('1', 'true', 'yes') -contains $env:PRUNE_BUILD_OUTPUT.Trim().ToLowerInvariant()) {
+        $buildDirectories = Get-ChildItem -LiteralPath $buildPath -Directory -Filter 'Build-*' -ErrorAction SilentlyContinue
+        foreach ($directory in $buildDirectories) {
+            if ($directory.Name -ne "Build-$buildIdentifier") {
+                Remove-Item -LiteralPath $directory.FullName -Recurse -Force
+            }
+        }
     }
 }
 finally {
