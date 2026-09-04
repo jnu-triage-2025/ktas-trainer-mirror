@@ -2074,6 +2074,18 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      // 채팅 명령 시작과 같은 기준으로, 역할 로스터를 구성할 수 없는 세션은 시작하지 않는다.
+      // 트리거 존이나 NPC 상호작용으로 시작하는 경로에서도 원인이 시작 시점에 드러나야 한다.
+      if (!TryValidateActiveRoleRosterForStart(graph, out string rosterError))
+      {
+        string message =
+          $"Scenario '{graph?.Identifier}' cannot start: {rosterError}. "
+          + "Check the role tags with '/tag show @a' and fix them before starting.";
+        Debug.LogError($"[ScenarioController] {message}", this);
+        AppendSystemChatMessage(message);
+        return;
+      }
+
       StartScenario(graph, startNodeIdentifier, ownerClientId);
     }
 
@@ -6689,7 +6701,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
-    private List<int> GetActivePlayerIds()
+    private static List<int> GetActivePlayerIds()
     {
       var ids = new List<int>();
 
@@ -6748,10 +6760,39 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     private bool TryGetActiveRoleRoster(out List<ActiveRoleRosterEntry> roster, out string error)
+      => TryBuildActiveRoleRoster(_currentGraph, GetActivePlayerIds(), out roster, out error);
+
+    /// <summary>
+    /// 시나리오를 시작하기 전에 활성 역할 로스터를 구성할 수 있는지 검사한다.
+    ///
+    /// <para>
+    /// 같은 역할 태그를 두 명이 갖는 것처럼 로스터 자체를 만들 수 없는 설정 오류는, 시작 뒤 첫
+    /// ByRole 병렬에 닿았을 때 모든 브랜치가 건너뛰어지는 형태로 드러난다. 그 시점에는 경고만
+    /// 남고 흐름은 아무도 수행하지 않은 단계의 신호를 기다리며 멈추므로, 시작 명령 단계에서
+    /// 거부할 수 있도록 판정을 미리 제공한다. 활성 역할을 선언하지 않은 그래프는 항상 통과한다.
+    /// </para>
+    /// </summary>
+    /// <returns>로스터를 구성할 수 있으면 true. false 이면 <paramref name="error"/> 에 사유가 담긴다.</returns>
+    public static bool TryValidateActiveRoleRosterForStart(ScenarioGraph graph, out string error)
+    {
+      error = null;
+      bool declaresRoles = graph?.ActiveRoleTags != null
+                           && graph.ActiveRoleTags.Any(role => !string.IsNullOrWhiteSpace(role));
+      if (!declaresRoles)
+        return true;
+
+      return TryBuildActiveRoleRoster(graph, GetActivePlayerIds(), out _, out error);
+    }
+
+    private static bool TryBuildActiveRoleRoster(
+      ScenarioGraph graph,
+      IReadOnlyList<int> clientIds,
+      out List<ActiveRoleRosterEntry> roster,
+      out string error)
     {
       roster = new List<ActiveRoleRosterEntry>();
       error = null;
-      var declaredRoles = _currentGraph?.ActiveRoleTags?
+      var declaredRoles = graph?.ActiveRoleTags?
         .Where(role => !string.IsNullOrWhiteSpace(role))
         .Distinct(StringComparer.Ordinal)
         .ToArray() ?? Array.Empty<string>();
@@ -6762,7 +6803,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       var holderByRole = new Dictionary<string, ActiveRoleRosterEntry>(StringComparer.Ordinal);
-      var activePlayers = GetActivePlayerIds()
+      var activePlayers = (clientIds ?? Array.Empty<int>())
         .Select(clientId => UserDescriptorService.TryGetByClientId(clientId, out var player)
           ? (ClientId: clientId, Player: player)
           : (ClientId: clientId, Player: null))
