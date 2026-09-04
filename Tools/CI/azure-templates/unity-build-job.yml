@@ -25,6 +25,9 @@ parameters:
 jobs:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.displayName }}
+    # Windows and macOS build jobs are independent and start together after
+    # the Build stage begins; only the stage dependency on Test is shared.
+    dependsOn: []
     condition: and(succeeded(), ${{ eq(parameters.enabled, true) }})
     pool:
       ${{ if eq(parameters.host, 'windows') }}:
