@@ -43,6 +43,27 @@ namespace TriageTrainer.Entity
 
     public string ReposedTargetIdentifier => _reposedTargetIdentifier.Value;
 
+    /// <summary>
+    /// FishNet 이 이 인스턴스를 네트워크로 초기화했는지(= 스폰이 끝났는지). 스폰 전에는 false 다.
+    /// </summary>
+    private bool IsFishNetNetworkInitialized =>
+      NetworkObject != null
+      && (NetworkObject.IsServerInitialized || NetworkObject.IsClientInitialized);
+
+    /// <summary>
+    /// 서버 권위 SyncVar 에 값을 기록해도 되는 컨텍스트인지.
+    ///
+    /// <para>
+    /// 프리셋 스폰은 <c>ServerManager.Spawn</c> <b>이전</b>에 식별자를 주입한다. 그 시점의 인스턴스는
+    /// 아직 NetworkManager 를 갖지 않아 <c>IsServerStarted</c> 가 false 이므로, 서버 여부만으로
+    /// 게이트하면 값이 SyncVar 에 기록되지 않는다. FishNet 은 네트워크 초기화 전 쓰기를 초깃값으로
+    /// 받아 스폰 페이로드에 실어 보내므로 이 구간의 쓰기를 허용해야 한다.
+    /// </para>
+    /// </summary>
+    private bool CanWriteAuthoritativeSyncVar =>
+      !IsFishNetNetworkInitialized
+      || (NetworkObject != null && NetworkObject.NetworkManager != null && IsServerStarted);
+
     private string EffectiveBedIdentifier =>
       !string.IsNullOrWhiteSpace(_runtimeIdentifierSync.Value) ? _runtimeIdentifierSync.Value
       : !string.IsNullOrWhiteSpace(_entityRuntimeIdentifier) ? _entityRuntimeIdentifier
@@ -258,15 +279,19 @@ namespace TriageTrainer.Entity
     /// </summary>
     public void SetReposedTargetByIdentifier(string patientIdentifier)
     {
-      if (!IsServerStarted)
+      string normalized = string.IsNullOrWhiteSpace(patientIdentifier)
+        ? string.Empty
+        : patientIdentifier.Trim();
+
+      // 스폰 전에는 ServerRpc 를 보낼 수 없다. 이 구간의 쓰기는 초깃값이 되어 스폰 페이로드로
+      // 복제되므로, 사전 결합(프리셋의 부모 링크 등)도 원격 피어에서 그대로 재구성된다.
+      if (CanWriteAuthoritativeSyncVar)
       {
-        CmdSetReposedTarget(patientIdentifier ?? string.Empty);
+        _reposedTargetIdentifier.Value = normalized;
         return;
       }
 
-      _reposedTargetIdentifier.Value = string.IsNullOrWhiteSpace(patientIdentifier)
-        ? string.Empty
-        : patientIdentifier.Trim();
+      CmdSetReposedTarget(normalized);
     }
 
     [ServerRpc(RequireOwnership = false)]
