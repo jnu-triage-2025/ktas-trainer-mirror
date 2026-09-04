@@ -51,6 +51,20 @@ namespace MultiplayerInfrastructure.Scenario
     private static readonly Dictionary<int, Queue<float>> LineTopologyUpdateTimesByClient = new();
     private static readonly Dictionary<int, Queue<float>> LineTopologySnapshotTimesByClient = new();
     private static readonly ScenarioClientSignalAuthorization ClientSignalAuthorization = new();
+
+    /// <summary>
+    /// 이번 그래프 실행에서 이미 진단을 남긴 미선언 client-origin 신호들.
+    ///
+    /// <para>
+    /// 미선언 신호는 상호작용을 반복할 때마다 다시 올라오므로, 발신마다 경고를 남기면 콘솔과
+    /// 세션 로그가 같은 문장으로 뒤덮여 정작 다른 진단을 읽을 수 없게 된다. 그래서 신호 식별자별로
+    /// 한 번만 남기고, 그 이후의 같은 신호는 조용히 무시한다. 이 집합은
+    /// <see cref="ConfigureClientSignalAuthorization"/> 와 <see cref="ClearClientSignalAuthorization"/>,
+    /// 그리고 서버 수명주기(<see cref="OnStartServer"/> / <see cref="OnStopServer"/>)에서 비운다.
+    /// 따라서 시나리오를 다시 시작하면 같은 신호가 다시 한 번 보고된다.
+    /// </para>
+    /// </summary>
+    private static readonly HashSet<string> ReportedUndeclaredClientSignals = new(StringComparer.Ordinal);
     private long _lineTopologyVersion;
     private readonly List<ActingNpcConfiguration> _actingNpcConfigurations = new List<ActingNpcConfiguration>();
     private readonly List<NpcControlState> _npcControlStates = new List<NpcControlState>();
@@ -484,6 +498,7 @@ namespace MultiplayerInfrastructure.Scenario
       LineTopologyUpdateTimesByClient.Clear();
       LineTopologySnapshotTimesByClient.Clear();
       ClientSignalAuthorization.ClearScenario();
+      ReportedUndeclaredClientSignals.Clear();
       InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
     }
 
@@ -512,6 +527,7 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioSignalParameterStore.FlushLocal();
       SignalUpdateTimesByPlayer.Clear();
       ClientSignalAuthorization.ClearAll();
+      ReportedUndeclaredClientSignals.Clear();
       base.OnStopServer();
     }
 
@@ -1005,10 +1021,18 @@ namespace MultiplayerInfrastructure.Scenario
       => ClientSignalAuthorization.Revoke(clientId);
 
     internal static void ConfigureClientSignalAuthorization(ScenarioGraph graph)
-      => ClientSignalAuthorization.ConfigureScenario(graph);
+    {
+      ClientSignalAuthorization.ConfigureScenario(graph);
+      // 선언 목록이 그래프마다 다르므로, 이전 실행에서 보고한 신호를 그대로 두면 새 그래프에서
+      // 같은 신호가 미선언 상태여도 진단이 나오지 않는다. 실행이 바뀔 때마다 억제 상태를 비운다.
+      ReportedUndeclaredClientSignals.Clear();
+    }
 
     internal static void ClearClientSignalAuthorization()
-      => ClientSignalAuthorization.ClearAll();
+    {
+      ClientSignalAuthorization.ClearAll();
+      ReportedUndeclaredClientSignals.Clear();
+    }
 
     /// <summary>
     /// SignalCounter, SignalListener처럼 그래프 엔진이 계산하는 서버 전용 출력의 실행 주체인지 판정한다.
@@ -1168,7 +1192,7 @@ namespace MultiplayerInfrastructure.Scenario
             out var raiseRejection))
       {
         if (raiseRejection == ScenarioClientSignalRejection.Undeclared)
-          ReportIgnoredInput(normalizedSignalId, authorizationError);
+          ReportUndeclaredClientSignalRaise(normalizedSignalId, authorizationError, sender, descriptor.Identifier);
         else
           ReportRejectedInput(normalizedSignalId, parameterJson, authorizationError, sender);
         return;
@@ -1364,7 +1388,7 @@ namespace MultiplayerInfrastructure.Scenario
     /// <para>
     /// 아이템 획득, 환자 클릭, 존 진입 같은 일상적인 상호작용은 게이트로 쓰이지 않을 때에도
     /// 신호를 올린다. 이런 신호가 거부되는 것은 인가 정책이 의도대로 동작한 결과이지 결함이 아니므로,
-    /// 경고를 남기거나 발신자에게 시스템 메시지를 보내지 않는다. 다만 선언 누락을 추적할 수 있도록
+    /// 발신자에게 시스템 메시지를 보내지 않는다. 다만 선언 누락을 추적할 수 있도록
     /// 게임 로그에는 그대로 남긴다.
     /// </para>
     /// </summary>
@@ -1373,6 +1397,48 @@ namespace MultiplayerInfrastructure.Scenario
       GameLogService.WriteSignal(
         $"Signal ignored: signal={ScenarioSignalParameterStore.FormatForLog(normalizedSignalId)}, reason={ScenarioSignalParameterStore.FormatForLog(reason)}",
         ScenarioSignalParameterStore.FormatForLog(normalizedSignalId));
+    }
+
+    /// <summary>
+    /// 그래프가 선언하지 않아 거부된 client-origin raise 를 운영자가 볼 수 있는 진단으로 남긴다.
+    ///
+    /// <para>
+    /// 이 거부는 호스트에서 재현되지 않는다. 호스트가 올리는 신호는
+    /// <see cref="RaiseAuthoritative"/> 의 서버 분기에서 허용 목록을 거치지 않고 바로 기록되는 반면,
+    /// 원격 클라이언트의 같은 신호만 <see cref="CmdRaiseScenarioSignal"/> 를 거쳐 여기로 온다.
+    /// 그래서 선언을 빠뜨리면 호스트로 확인할 때는 정상으로 보이고 나머지 참가자만 막히며,
+    /// 그 신호를 기다리는 게이트에는 타임아웃이 없으므로 결과는 세션 정지다.
+    /// 침묵을 없애는 것이 목적이므로 거부 자체는 그대로 유지하고 진단만 추가한다.
+    /// </para>
+    ///
+    /// <para>
+    /// 같은 신호가 반복 발신될 때 로그가 폭주하지 않도록, 그래프 실행 한 번당 신호별로 한 번만 남긴다.
+    /// 억제 상태(<see cref="ReportedUndeclaredClientSignals"/>)는 시나리오가 바뀌거나 끝날 때 비워진다.
+    /// </para>
+    /// </summary>
+    private static void ReportUndeclaredClientSignalRaise(
+      string normalizedSignalId, string reason, NetworkConnection sender, string playerIdentifier)
+    {
+      if (!ReportedUndeclaredClientSignals.Add(normalizedSignalId))
+        return;
+
+      string signalTag = ScenarioSignalParameterStore.FormatForLog(normalizedSignalId);
+      string clientText = sender != null ? sender.ClientId.ToString() : "unknown";
+      string playerText = ScenarioSignalParameterStore.FormatForLog(
+        string.IsNullOrWhiteSpace(playerIdentifier) ? "unknown" : playerIdentifier);
+      string graphText = ScenarioSignalParameterStore.FormatForLog(
+        ScenarioController.Instance?.CurrentGraph?.Identifier ?? "none");
+
+      string message =
+        $"Undeclared client signal ignored: signal={signalTag}, client={clientText}, player={playerText}, "
+        + $"graph={graphText}, reason={ScenarioSignalParameterStore.FormatForLog(reason)}. "
+        + "Declare this signal in the graph's clientSignalIdentifiers, or cover it with one of its "
+        + "clientSignalPrefixes; otherwise only the host can raise it and every remote participant "
+        + "stays blocked at the gate that waits for it. "
+        + "(Reported once per signal for each scenario run.)";
+
+      Debug.LogWarning($"[ScenarioNetworkRelay] {message}");
+      GameLogService.WriteSignal(message, signalTag);
     }
 
     private static void ReportStorageLimit(string normalizedSignalId, string playerIdentifier,
