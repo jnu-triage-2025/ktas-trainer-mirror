@@ -601,7 +601,13 @@ namespace TriageTrainer.Scenario
     }
 
     private void HandleScenarioStartedForFlagScope()
-      => PatientACriticalQuestStateFlags.ArmFor(_questStateFlagScopeController?.CurrentGraph?.Identifier);
+    {
+      PatientACriticalQuestStateFlags.ArmFor(_questStateFlagScopeController?.CurrentGraph?.Identifier);
+      // 일회성 상호작용은 수행 표시를 되돌리지 않으면 재시작이나 수동 진입으로 되돌아간 단계에서
+      // 다시 열리지 않는다. 그 결과 완료 신호를 기다리는 게이트가 영원히 막히므로,
+      // 새 실행이 시작될 때마다 표시를 지운다.
+      ScenarioActionInteractable.ResetAllCompletionsForNewScenarioRun();
+    }
 
     private void HandleScenarioEndedForFlagScope()
       => PatientACriticalQuestStateFlags.Disarm();

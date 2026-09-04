@@ -46,6 +46,49 @@ namespace TriageTrainer.Scenario
 
     private bool _completed;
 
+    /// <summary>
+    /// 살아 있는 모든 인스턴스. 새 시나리오 실행마다 수행 표시를 되돌리기 위해 추적한다.
+    ///
+    /// <para>
+    /// 추적은 GameObject 의 활성 상태와 무관해야 한다. 수행 뒤 스스로 숨겨진 오브젝트를 목록에서
+    /// 빼면 <see cref="ResetAllCompletionsForNewScenarioRun"/> 이 그 인스턴스에 닿지 못하고,
+    /// 되돌아간 단계의 일회성 상호작용이 영영 다시 열리지 않는다. 그래서 Awake 에서 등록하고
+    /// OnDestroy 에서만 제거한다. (<c>ScenarioTriggerZone.LiveZones</c> 와 같은 이유다.)
+    /// </para>
+    /// </summary>
+    private static readonly List<ScenarioActionInteractable> LiveInstances = new();
+
+    /// <summary>
+    /// 정적 상태를 초기화한다. 도메인 리로드가 비활성인 환경에서는 정적 목록이 플레이 세션
+    /// 사이에 유지되어 파괴된 인스턴스 참조가 누적되므로, 세션 시작 시 비운다.
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics() => LiveInstances.Clear();
+
+    private void Awake() => LiveInstances.Add(this);
+
+    private void OnDestroy() => LiveInstances.Remove(this);
+
+    /// <summary>
+    /// 새 시나리오 실행을 시작할 때 모든 인스턴스의 "이미 수행함" 표시를 지운다.
+    ///
+    /// <para>
+    /// <see cref="_consumeOnce"/> 상호작용은 한 번 수행하면 다시 노출되지 않는다. 시나리오를
+    /// 재시작하거나 수동 진입점으로 앞 단계를 다시 재생하면 그 단계의 상호작용을 아무도 수행할 수
+    /// 없고, 그 완료 신호를 기다리는 게이트가 영원히 열리지 않는다.
+    /// </para>
+    ///
+    /// <para>
+    /// 노출 기준값인 <see cref="_enabled"/> 는 건드리지 않는다. 노출 판정을 퀘스트 상태 플래그 풀에
+    /// 맡긴 시나리오에서 이 값을 함께 켜면 단계 밖 상호작용이 열리기 때문이다.
+    /// </para>
+    /// </summary>
+    public static void ResetAllCompletionsForNewScenarioRun()
+    {
+      for (int i = 0; i < LiveInstances.Count; i++)
+        LiveInstances[i]?.ResetCompletionForScenario();
+    }
+
     public IInteract[] Interacts => new IInteract[] { this };
     public string DisplayText => _displayText;
     public string CompletionSignal => _completionSignal;
