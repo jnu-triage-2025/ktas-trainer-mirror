@@ -51,7 +51,7 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 543940734885712351}
   _networkObjectCache: {fileID: 543940734885712351}
-  detectionRedius: 1.3
+  detectionRedius: 2.6
   detectionOffset: {x: 0, y: 1, z: 0}
   interactionLayerMask:
     serializedVersion: 2

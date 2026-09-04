@@ -21,7 +21,7 @@ namespace MultiplayerInfrastructure.Camera
   {
     [Header("Detection Settings")]
     [SerializeField, Min(.5f)]
-    private float detectionRedius = 1.3f;
+    private float detectionRedius = 2.6f;
 
     [SerializeField] private Vector3 detectionOffset = new Vector3(0f, 1f, 0f);
     [SerializeField] private LayerMask interactionLayerMask = ~0;
