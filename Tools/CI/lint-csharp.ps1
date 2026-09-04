@@ -5,6 +5,8 @@ $ErrorActionPreference = 'Stop'
 
 $projectRoot = (Get-Location).Path
 $solutionPath = Join-Path $projectRoot 'ktas-trainer.sln'
+$artifactsPath = Join-Path $projectRoot 'artifacts'
+New-Item -ItemType Directory -Path $artifactsPath -Force | Out-Null
 $formatTarget = $solutionPath
 if (-not (Test-Path -LiteralPath $formatTarget -PathType Leaf)) {
     $projectPath = $projectRoot
@@ -33,8 +35,8 @@ if (-not (Test-Path -LiteralPath $formatTarget -PathType Leaf)) {
     $unityRuntimePath = Join-Path $projectPath 'Temp/azure-unity-runtime'
     $unityLocalAppData = Join-Path $unityRuntimePath 'LocalAppData'
     $unityTempPath = Join-Path $unityRuntimePath 'Temp'
-    $unityLogPath = Join-Path $projectPath 'artifacts/unity-project-generation.log'
-    New-Item -ItemType Directory -Path $unityLocalAppData, $unityTempPath, (Split-Path -Parent $unityLogPath) -Force | Out-Null
+    $unityLogPath = Join-Path $artifactsPath 'unity-project-generation.log'
+    New-Item -ItemType Directory -Path $unityLocalAppData, $unityTempPath -Force | Out-Null
     $env:LOCALAPPDATA = $unityLocalAppData
     $env:TEMP = $unityTempPath
     $env:TMP = $unityTempPath
@@ -47,12 +49,29 @@ if (-not (Test-Path -LiteralPath $formatTarget -PathType Leaf)) {
         '-logFile',
         $unityLogPath
     )
-    $unityProcess = Start-Process -FilePath $unityExecutable `
-        -ArgumentList $unityArguments `
-        -WorkingDirectory $projectPath `
-        -Wait `
-        -PassThru
+    $runUnityProjectGeneration = {
+        Start-Process -FilePath $unityExecutable `
+            -ArgumentList $unityArguments `
+            -WorkingDirectory $projectPath `
+            -Wait `
+            -PassThru
+    }
+
+    $unityProcess = & $runUnityProjectGeneration
     if ($unityProcess.ExitCode -ne 0) {
+        # Bee outputs are derived cache files. A prior interrupted Unity run can
+        # leave an incomplete IL post-processing assembly set behind.
+        $beeCachePath = Join-Path $projectPath 'Library/Bee'
+        if (Test-Path -LiteralPath $beeCachePath -PathType Container) {
+            Write-Host "Unity project generation failed; clearing the Bee compilation cache and retrying once."
+            Remove-Item -LiteralPath $beeCachePath -Recurse -Force
+            $unityProcess = & $runUnityProjectGeneration
+        }
+    }
+    if ($unityProcess.ExitCode -ne 0) {
+        if (Test-Path -LiteralPath $unityLogPath -PathType Leaf) {
+            Get-Content -LiteralPath $unityLogPath -Tail 200
+        }
         throw "Unity project generation failed with exit code $($unityProcess.ExitCode). See $unityLogPath."
     }
 }
