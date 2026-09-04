@@ -98,7 +98,16 @@ namespace MultiplayerInfrastructure.UI
       // PlayerController.Input 에서 처리한다. UI 이벤트는 포커스 이동을 막고,
       // 사용자가 편집을 시작했거나 다른 탐색 키를 눌렀을 때 완성 세션에 알리는 역할만 한다.
       if (keyCode != KeyCode.Tab)
-        _completionService?.ResetSession();
+        ResetCompletionSession();
+    }
+
+    /// <summary>
+    /// Tab 순환 세션을 끝내고 후보 목록 오버레이도 함께 닫는다.
+    /// </summary>
+    private void ResetCompletionSession()
+    {
+      _completionService?.ResetSession();
+      _chatPanel?.HideCompletionCandidates();
     }
 
     private void EnsureStyleSheet(VisualElement ve)
@@ -145,7 +154,7 @@ namespace MultiplayerInfrastructure.UI
     {
       Open();
       ResolveCompletionService();
-      _completionService?.ResetSession();
+      ResetCompletionSession();
       _chatPanel?.PushInput("/");
     }
     public void Close()
@@ -166,7 +175,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       string text = _chatPanel.ConsumeInput();
-      _completionService?.ResetSession();
+      ResetCompletionSession();
       OnSubmitted?.Invoke(text);
       Close();
     }
@@ -177,7 +186,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       OnCancelled?.Invoke();
-      _completionService?.ResetSession();
+      ResetCompletionSession();
       Close();
     }
 
@@ -198,8 +207,25 @@ namespace MultiplayerInfrastructure.UI
         _chatPanel.InputText,
         _chatPanel.CursorPosition);
 
-      if (result.HasValue)
-        _chatPanel.ApplyInput(result.Value.text, result.Value.cursorPos);
+      if (!result.HasValue)
+      {
+        _chatPanel.HideCompletionCandidates();
+        return;
+      }
+
+      _chatPanel.ApplyInput(result.Value.text, result.Value.cursorPos);
+      // 후보가 하나뿐이면 더 넘길 곳이 없으므로 목록을 띄우지 않는다.
+      var candidates = _completionService.ActiveCandidates;
+      if (candidates == null || candidates.Count < 2)
+      {
+        _chatPanel.HideCompletionCandidates();
+        return;
+      }
+
+      _chatPanel.ShowCompletionCandidates(
+        candidates,
+        _completionService.ActiveCandidateIndex,
+        _completionService.ActiveTokenStart);
     }
 
     public void HandleHistoryPreviousKey()
@@ -208,7 +234,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       _chatPanel?.RecallPreviousInput();
-      _completionService?.ResetSession();
+      ResetCompletionSession();
     }
 
     public void HandleHistoryNextKey()
@@ -217,7 +243,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       _chatPanel?.RecallNextInput();
-      _completionService?.ResetSession();
+      ResetCompletionSession();
     }
 
     public void OnOverlayPushed()
@@ -243,7 +269,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void HidePanel()
     {
-      _completionService?.ResetSession();
+      ResetCompletionSession();
       _chatPanel?.SetOpen(false);
       _chatPanel?.ClearInput();
       // 닫힌 채팅도 수신 메시지 토스트를 표시해야 한다. 문서는 남기되 전체
@@ -253,7 +279,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void HideImmediately()
     {
-      _completionService?.ResetSession();
+      ResetCompletionSession();
       EnsurePanel();
       _chatPanel?.SetOpen(false);
       _chatPanel?.ClearInput();

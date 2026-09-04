@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using MultiplayerInfrastructure.Command;
 using MultiplayerInfrastructure.Definitions;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -13,6 +14,8 @@ namespace MultiplayerInfrastructure.UI
     private const float ToastVisibleSeconds = 3.5f;
     private const float ToastFadeSeconds = 0.75f;
     private const int MaxInputHistoryEntries = 100;
+    /// <summary>후보 목록 오버레이가 한 번에 보여 주는 최대 행 수.</summary>
+    private const int MaxCompletionRows = 8;
 
     private readonly Queue<VisualElement> _logEntries = new();
     private readonly List<ToastEntry> _toasts = new();
@@ -26,6 +29,9 @@ namespace MultiplayerInfrastructure.UI
     private ReusableVerticalScrollbar _reusableScrollbar;
     private TextField _inputField;
     private VisualElement _textInputElement;
+    private TextElement _inputTextElement;
+    private VisualElement _completionOverlay;
+    private VisualElement _completionList;
     private VisualElement _toastPanel;
     private VisualElement _toastContainer;
     private VisualElement _panel;
@@ -221,6 +227,8 @@ namespace MultiplayerInfrastructure.UI
       var inputRow = new VisualElement();
       inputRow.AddToClassList("chat-input-row");
       inputRow.style.width = Length.Percent(100);
+      // 후보 목록은 입력 행을 기준으로 절대 배치하므로 기준 위치가 필요하다.
+      inputRow.style.position = Position.Relative;
       _panel.Add(inputRow);
 
       var inputBg = new VisualElement();
@@ -257,6 +265,8 @@ namespace MultiplayerInfrastructure.UI
       _inputField.style.color = StyleColorText;
 
       _textInputElement = _inputField.Q("unity-text-input");
+      // 후보 목록을 캐럿이 있는 열에 맞추려면 입력창과 같은 글꼴로 폭을 재야 한다.
+      _inputTextElement = _textInputElement as TextElement ?? _textInputElement?.Q<TextElement>();
       _textInputElement.style.backgroundColor = Color.clear;
       _textInputElement.style.borderTopWidth = 0;
       _textInputElement.style.borderBottomWidth = 0;
@@ -265,6 +275,9 @@ namespace MultiplayerInfrastructure.UI
 
       inputBg.Add(_inputField);
       _inputField.RegisterCallback<KeyDownEvent>(HandleInputKeyDown);
+
+      // 입력 행 위에 겹쳐 그리므로 입력창을 만든 뒤에 마지막 자식으로 붙인다.
+      BuildCompletionOverlay(inputRow);
 
       _toastPanel = new VisualElement
       {
@@ -518,6 +531,174 @@ namespace MultiplayerInfrastructure.UI
       _inputField.selectIndex = _inputField.cursorIndex;
     }
 
+    // ── 자동완성 후보 목록 오버레이 ─────────────────────────────────────
+
+    /// <summary>
+    /// 후보 목록을 담을 컨테이너를 입력 행 위쪽에 절대 배치로 만든다. 목록이 로그
+    /// 영역을 가리면서 입력 줄 바로 위에 겹쳐 보이도록 하기 위해서다.
+    /// </summary>
+    private void BuildCompletionOverlay(VisualElement inputRow)
+    {
+      _completionOverlay = new VisualElement
+      {
+        name = "chat-completion-overlay",
+        pickingMode = PickingMode.Ignore
+      };
+      _completionOverlay.AddToClassList("chat-completion-overlay");
+      _completionOverlay.style.position = Position.Absolute;
+      // 입력 행의 위쪽 모서리에 바닥을 맞춰 캐럿이 있는 줄 바로 위에 놓는다.
+      _completionOverlay.style.bottom = Length.Percent(100);
+      _completionOverlay.style.left = 0;
+      _completionOverlay.style.display = DisplayStyle.None;
+      _completionOverlay.style.flexDirection = FlexDirection.Column;
+      _completionOverlay.style.alignItems = Align.FlexStart;
+      _completionOverlay.style.marginBottom = 2;
+      inputRow.Add(_completionOverlay);
+
+      _completionList = new VisualElement
+      {
+        name = "chat-completion-list",
+        pickingMode = PickingMode.Ignore
+      };
+      _completionList.AddToClassList("chat-completion-list");
+      _completionList.style.flexDirection = FlexDirection.Column;
+      _completionList.style.backgroundColor = StyleColorBackground;
+      _completionList.style.paddingTop = 4;
+      _completionList.style.paddingBottom = 4;
+      _completionList.style.paddingLeft = 8;
+      _completionList.style.paddingRight = 8;
+      _completionList.style.borderTopWidth = 1;
+      _completionList.style.borderBottomWidth = 1;
+      _completionList.style.borderLeftWidth = 1;
+      _completionList.style.borderRightWidth = 1;
+      _completionList.style.borderTopColor = new Color(1f, 1f, 1f, 0.08f);
+      _completionList.style.borderBottomColor = new Color(1f, 1f, 1f, 0.08f);
+      _completionList.style.borderLeftColor = new Color(1f, 1f, 1f, 0.08f);
+      _completionList.style.borderRightColor = new Color(1f, 1f, 1f, 0.08f);
+      _completionList.style.borderTopLeftRadius = 6;
+      _completionList.style.borderTopRightRadius = 6;
+      _completionList.style.borderBottomLeftRadius = 6;
+      _completionList.style.borderBottomRightRadius = 6;
+      _completionOverlay.Add(_completionList);
+    }
+
+    /// <summary>
+    /// 자동완성 후보를 입력창 위에 겹쳐 표시한다. 목록은 <paramref name="anchorColumn"/>
+    /// 이 가리키는 글자 위치에 맞춰 가로로 정렬되므로, 완성 중인 낱말 바로 위에 놓인다.
+    /// </summary>
+    /// <param name="candidates">표시할 후보 목록.</param>
+    /// <param name="selectedIndex">현재 입력창에 채워져 있는 후보의 인덱스.</param>
+    /// <param name="anchorColumn">완성 중인 토큰이 시작하는 글자 위치.</param>
+    public void ShowCompletionCandidates(
+      IReadOnlyList<ChatCommandCompletionService.CompletionCandidate> candidates,
+      int selectedIndex,
+      int anchorColumn)
+    {
+      if (_completionOverlay == null || _completionList == null)
+        return;
+
+      if (candidates == null || candidates.Count == 0)
+      {
+        HideCompletionCandidates();
+        return;
+      }
+
+      _completionList.Clear();
+
+      // 후보가 많으면 선택된 항목이 항상 보이도록 창을 밀어 가며 잘라 낸다.
+      int visibleCount = Mathf.Min(candidates.Count, MaxCompletionRows);
+      int first = Mathf.Clamp(selectedIndex - visibleCount + 1, 0, candidates.Count - visibleCount);
+      for (int i = first; i < first + visibleCount; i++)
+        _completionList.Add(BuildCompletionRow(candidates[i], i == selectedIndex));
+
+      if (candidates.Count > visibleCount)
+      {
+        var more = new Label($"... {candidates.Count - visibleCount} more");
+        more.AddToClassList("chat-completion-more");
+        more.style.color = new Color(1f, 1f, 1f, 0.45f);
+        more.style.fontSize = 11;
+        _completionList.Add(more);
+      }
+
+      _completionOverlay.style.left = MeasureColumnOffset(anchorColumn);
+      _completionOverlay.style.display = DisplayStyle.Flex;
+    }
+
+    /// <summary>후보 목록 오버레이를 숨긴다.</summary>
+    public void HideCompletionCandidates()
+    {
+      if (_completionOverlay == null)
+        return;
+
+      _completionList?.Clear();
+      _completionOverlay.style.display = DisplayStyle.None;
+    }
+
+    private VisualElement BuildCompletionRow(
+      ChatCommandCompletionService.CompletionCandidate candidate,
+      bool isSelected)
+    {
+      var row = new VisualElement { pickingMode = PickingMode.Ignore };
+      row.AddToClassList("chat-completion-row");
+      row.style.flexDirection = FlexDirection.Row;
+      row.style.alignItems = Align.Center;
+      row.style.paddingLeft = 4;
+      row.style.paddingRight = 4;
+      if (isSelected)
+      {
+        row.AddToClassList("chat-completion-row--selected");
+        row.style.backgroundColor = new Color(0.35f, 0.82f, 0.5f, 0.28f);
+      }
+
+      var label = new Label(candidate.Text);
+      label.AddToClassList("chat-completion-row__label");
+      label.style.color = isSelected ? new Color(0.85f, 1f, 0.9f) : StyleColorText;
+      label.style.fontSize = 12;
+      label.style.marginRight = 10;
+      row.Add(label);
+
+      if (!string.IsNullOrEmpty(candidate.Description))
+      {
+        var description = new Label(candidate.Description);
+        description.AddToClassList("chat-completion-row__description");
+        description.style.color = new Color(1f, 1f, 1f, 0.45f);
+        description.style.fontSize = 11;
+        row.Add(description);
+      }
+
+      return row;
+    }
+
+    /// <summary>
+    /// 입력 행의 왼쪽 끝을 기준으로, 입력 문자열의 <paramref name="column"/> 번째
+    /// 글자가 그려지는 가로 위치를 구한다. 글꼴 폭을 잴 수 없으면 입력창의 글자
+    /// 시작 위치를 그대로 사용한다.
+    /// </summary>
+    private float MeasureColumnOffset(int column)
+    {
+      float textOrigin = 0f;
+      if (_textInputElement != null && _completionOverlay?.parent != null)
+      {
+        Rect input = _textInputElement.worldBound;
+        Rect row = _completionOverlay.parent.worldBound;
+        if (!float.IsNaN(input.x) && !float.IsNaN(row.x))
+          textOrigin = input.x - row.x;
+      }
+
+      string text = _inputField?.text ?? string.Empty;
+      column = Mathf.Clamp(column, 0, text.Length);
+      if (column == 0 || _inputTextElement == null)
+        return Mathf.Max(0f, textOrigin);
+
+      float width = _inputTextElement
+        .MeasureTextSize(text.Substring(0, column), 0f, MeasureMode.Undefined, 0f, MeasureMode.Undefined)
+        .x;
+      if (float.IsNaN(width))
+        width = 0f;
+
+      return Mathf.Max(0f, textOrigin + width);
+    }
+
     public void ApplyInput(string text, int cursorPos)
     {
       if (_inputField == null)
@@ -546,6 +727,7 @@ namespace MultiplayerInfrastructure.UI
     {
       _inputField?.SetValueWithoutNotify(string.Empty);
       ResetHistoryCursor();
+      HideCompletionCandidates();
     }
 
     public void RecallPreviousInput()
@@ -817,10 +999,24 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleInputKeyDown(KeyDownEvent evt)
     {
-      if (evt.keyCode == KeyCode.Tab)
+      // UI Toolkit 은 키 입력 한 번마다 KeyDownEvent 를 두 번 보낸다. 첫 이벤트에는
+      // keyCode 만 채워져 있고, 이어지는 이벤트에는 입력된 문자만 채워진 채 keyCode
+      // 가 KeyCode.None 이다. 두 번째 이벤트를 그대로 넘기면 컨트롤러가 "Tab 이 아닌
+      // 키"로 해석해서, Tab 을 누를 때마다 순환 세션이 즉시 폐기된다. 그래서 탭 문자
+      // 이벤트는 KeyCode.Tab 으로 되돌려 준다.
+      KeyCode keyCode = evt.keyCode;
+      if (keyCode == KeyCode.None && evt.character == '\t')
+        keyCode = KeyCode.Tab;
+
+      if (keyCode == KeyCode.Tab)
         evt.StopPropagation();
 
-      InputKeyPressed?.Invoke(evt.keyCode);
+      // 문자만 담긴 이벤트는 어떤 키를 눌렀는지 알려 주지 못하므로 전달하지 않는다.
+      // 편집이 일어났는지는 같은 입력에 대해 먼저 도착한 keyCode 이벤트로 판단한다.
+      if (keyCode == KeyCode.None)
+        return;
+
+      InputKeyPressed?.Invoke(keyCode);
     }
 
     private void AddInputHistory(string text)
