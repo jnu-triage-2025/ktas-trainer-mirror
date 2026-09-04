@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -242,6 +243,48 @@ namespace TextToSpeechService
       return sb.ToString();
     }
 
-    public void Dispose() { /* ONNX 세션은 GC에서 해제됨 */ }
+    /// <summary>
+    /// ONNX 세션을 네이티브 메모리까지 해제한다.
+    ///
+    /// 세션을 들고 있는 <see cref="Supertonic.TextToSpeech"/> 는 Supertone의 MIT 배포본을
+    /// 그대로 둔 파일이라 IDisposable을 구현하지 않는다. 그 파일을 고치는 대신 여기서
+    /// 리플렉션으로 IDisposable 필드를 찾아 해제한다. 배포본의 필드 구성이 달라지면
+    /// 해제할 대상이 없을 뿐, 예외로 번지지는 않는다.
+    /// </summary>
+    public void Dispose()
+    {
+      if (_disposed)
+        return;
+      _disposed = true;
+
+      DisposeDisposableFields(_tts);
+      GC.SuppressFinalize(this);
+    }
+
+    private bool _disposed;
+
+    private static void DisposeDisposableFields(object owner)
+    {
+      if (owner == null)
+        return;
+
+      var fields = owner.GetType().GetFields(
+        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+      foreach (var field in fields)
+      {
+        if (!typeof(IDisposable).IsAssignableFrom(field.FieldType))
+          continue;
+
+        try
+        {
+          (field.GetValue(owner) as IDisposable)?.Dispose();
+        }
+        catch (Exception)
+        {
+          // 이미 해제되었거나 해제할 수 없는 필드는 건너뛴다.
+        }
+      }
+    }
   }
 }

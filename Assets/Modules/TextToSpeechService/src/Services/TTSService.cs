@@ -160,6 +160,8 @@ namespace TextToSpeechService
 
     private void Awake()
     {
+      TTSEngineSwitch.DisabledChanged -= HandleEngineSwitchChanged;
+      TTSEngineSwitch.DisabledChanged += HandleEngineSwitchChanged;
       TryStartInitialization();
     }
 
@@ -192,6 +194,14 @@ namespace TextToSpeechService
       if (IsReady || IsInitializationFailed || _initializationRunning)
         return;
 
+      // 설정에서 꺼 둔 상태라면 모델을 적재조차 하지 않는다.
+      if (TTSEngineSwitch.IsDisabled)
+        return;
+
+      // 비활성 상태에서는 코루틴을 시작할 수 없다. 다시 활성화될 때 OnEnable이 이어서 시도한다.
+      if (!isActiveAndEnabled)
+        return;
+
       string sa = Application.streamingAssetsPath;
       string onnxDir = TTSCore.GetOnnxDir(sa);
 
@@ -210,19 +220,104 @@ namespace TextToSpeechService
 
     private void OnDestroy()
     {
+      TTSEngineSwitch.DisabledChanged -= HandleEngineSwitchChanged;
+      CancelQueuedSynthesis();
+      ReleaseCoresDeferred();
+    }
+
+    // =========================================================================
+    // 엔진 스위치 (설정에서의 TTS 비활성화)
+    // =========================================================================
+
+    private void HandleEngineSwitchChanged(bool disabled)
+    {
+      if (disabled)
+      {
+        Debug.Log("[TTSService] TTS 엔진을 비활성화합니다. ONNX 세션과 음성 캐시를 메모리에서 내립니다.");
+        UnloadEngine();
+        return;
+      }
+
+      Debug.Log("[TTSService] TTS 엔진을 다시 활성화합니다. 초기화를 새로 시작합니다.");
+      TryStartInitialization();
+    }
+
+    /// <summary>
+    /// 적재한 것을 모두 메모리에서 내린다. 실행 중인 코루틴은 강제로 멈추지 않는다.
+    /// 각 코루틴이 스위치를 보고 스스로 빠져나가야, 그 코루틴을 기다리던 호출자도 함께 풀린다.
+    /// </summary>
+    private void UnloadEngine()
+    {
+      IsReady = false;
+      _initializationRunning = false;
+
+      CancelQueuedSynthesis();
+      ReleaseCoresDeferred();
+
+      foreach (var clip in _clipCache.Values)
+        if (clip != null)
+          Destroy(clip);
+      _clipCache.Clear();
+
+      _segmentMap.Clear();
+      _transcripts = Array.Empty<SpeechTranscript>();
+
+      // 방금 파괴한 AudioClip이 쓰던 메모리를 바로 돌려받는다.
+      Resources.UnloadUnusedAssets();
+    }
+
+    /// <summary>
+    /// 아직 시작하지 않은 합성 요청을 모두 취소한다.
+    ///
+    /// 취소한 요청은 진행 중 목록에서도 지운다. 남겨 두면 엔진을 다시 켠 뒤의 같은 대사 요청이
+    /// 취소된 작업을 그대로 물려받아 결과를 꺼내다가 터진다.
+    /// </summary>
+    private void CancelQueuedSynthesis()
+    {
       lock (_inlineSynthesisQueueLock)
       {
         foreach (var request in _inlinePlaybackQueue)
+        {
           request.Completion.TrySetCanceled();
+          _inlineSynthesisTasks.Remove(request.CacheKey);
+        }
         foreach (var request in _inlinePrewarmQueue)
+        {
           request.Completion.TrySetCanceled();
+          _inlineSynthesisTasks.Remove(request.CacheKey);
+        }
         _inlinePlaybackQueue.Clear();
         _inlinePrewarmQueue.Clear();
       }
-      _core?.Dispose();
-      foreach (var vc in _voiceCores.Values)
-        vc?.Dispose();
+    }
+
+    /// <summary>
+    /// ONNX 세션을 해제한다. 추론이 진행 중일 때 해제하면 네이티브 쪽에서 터지므로
+    /// 합성 락을 잡을 수 있을 때까지 기다렸다가 백그라운드에서 해제한다.
+    /// (메인 스레드가 합성이 끝날 때까지 멈춰 서면 화면이 그대로 굳는다.)
+    /// </summary>
+    private void ReleaseCoresDeferred()
+    {
+      var cores = new List<TTSCore>();
+      if (_core != null)
+        cores.Add(_core);
+      _core = null;
+
+      foreach (var voiceCore in _voiceCores.Values)
+        if (voiceCore != null)
+          cores.Add(voiceCore);
       _voiceCores.Clear();
+
+      if (cores.Count == 0)
+        return;
+
+      var synthesisLock = _synthesisLock;
+      Task.Run(() =>
+      {
+        lock (synthesisLock)
+          foreach (var core in cores)
+            core.Dispose();
+      });
     }
 
     // =========================================================================
@@ -264,6 +359,13 @@ namespace TextToSpeechService
       // ── 2. 사전 합성(baked) WAV 로드 (UnityWebRequest) ─────────────────────
       foreach (var transcript in _transcripts)
       {
+        // 적재 도중에 설정에서 엔진을 껐다면, 여기까지 올린 클립도 도로 내린다.
+        if (TTSEngineSwitch.IsDisabled)
+        {
+          UnloadEngine();
+          yield break;
+        }
+
         var segments = _segmentMap[transcript.Identifier];
         for (int i = 0; i < segments.Count; i++)
         {
@@ -301,6 +403,10 @@ namespace TextToSpeechService
       {
         lock (_synthesisLock)
         {
+          // 락을 기다리는 동안 설정에서 엔진을 껐다면 모델을 적재하지 않는다.
+          if (TTSEngineSwitch.IsDisabled)
+            return;
+
           // 초기화가 한 번 중단된 뒤 다시 시작되었을 때, 앞선 시도가 남긴 코어를 그대로 쓴다.
           // 캐시에 이미 담긴 AudioClip이 그 코어의 SampleRate로 만들어졌고,
           // ONNX 세션을 중복 적재하면 메모리만 낭비되기 때문이다.
@@ -345,6 +451,19 @@ namespace TextToSpeechService
       });
 
       yield return new WaitUntil(() => bgTask.IsCompleted);
+
+      if (TTSEngineSwitch.IsDisabled)
+      {
+        UnloadEngine();
+        yield break;
+      }
+
+      if (_core == null)
+      {
+        // 껐다가 바로 다시 켠 경우다. 새로 시작된 초기화가 상태를 잡고 있으므로 이 시도는 물러난다.
+        _initializationRunning = false;
+        yield break;
+      }
 
       if (bgTask.IsFaulted)
       {
@@ -393,6 +512,9 @@ namespace TextToSpeechService
       Dictionary<string, string> overrideVariables = null,
       string voiceIdentifier = null)
     {
+      if (TTSEngineSwitch.IsDisabled)
+        return new List<AudioClip>();
+
       if (!_segmentMap.TryGetValue(identifier, out var segments))
         throw new ArgumentException($"[TTSService] 알 수 없는 identifier: {identifier}");
 
@@ -433,6 +555,9 @@ namespace TextToSpeechService
       Dictionary<string, string> overrideVariables = null,
       string voiceIdentifier = null)
     {
+      if (TTSEngineSwitch.IsDisabled)
+        return null;
+
       return StartCoroutine(
         PlaySequentially(GetClips(identifier, overrideVariables, voiceIdentifier), audioSource));
     }
@@ -458,6 +583,9 @@ namespace TextToSpeechService
       string nodeIdentifier = null,
       string voiceIdentifier = null)
     {
+      if (TTSEngineSwitch.IsDisabled)
+        return null;
+
       return StartCoroutine(PlayTextCoroutine(text, audioSource, scenarioIdentifier, nodeIdentifier, voiceIdentifier));
     }
 
@@ -472,6 +600,9 @@ namespace TextToSpeechService
       string voiceIdentifier = null,
       CancellationToken cancellationToken = default)
     {
+      if (TTSEngineSwitch.IsDisabled)
+        return null;
+
       return StartCoroutine(PrepareInlineTextCoroutine(
         text, scenarioIdentifier, nodeIdentifier, voiceIdentifier, cancellationToken));
     }
@@ -483,7 +614,7 @@ namespace TextToSpeechService
       string voiceIdentifier,
       CancellationToken cancellationToken)
     {
-      if (string.IsNullOrWhiteSpace(text))
+      if (TTSEngineSwitch.IsDisabled || string.IsNullOrWhiteSpace(text))
         yield break;
 
       string cacheKey = MakeCacheKey(voiceIdentifier, text);
@@ -499,7 +630,10 @@ namespace TextToSpeechService
       }
 
       if (!IsReady && !IsInitializationFailed)
-        yield return new WaitUntil(() => IsReady || IsInitializationFailed);
+        yield return new WaitUntil(() => IsReady || IsInitializationFailed || TTSEngineSwitch.IsDisabled);
+
+      if (TTSEngineSwitch.IsDisabled)
+        yield break;
 
       var core = ResolveCore(voiceIdentifier);
       if (core == null)
@@ -527,7 +661,7 @@ namespace TextToSpeechService
       string text, AudioSource audioSource, string scenarioIdentifier, string nodeIdentifier,
       string voiceIdentifier)
     {
-      if (string.IsNullOrWhiteSpace(text))
+      if (TTSEngineSwitch.IsDisabled || string.IsNullOrWhiteSpace(text))
         yield break;
 
       string cacheKey = MakeCacheKey(voiceIdentifier, text);
@@ -569,7 +703,10 @@ namespace TextToSpeechService
       // baked까지 없으면 즉석 합성이 필요하므로 초기화가 끝날 때까지 대기한다.
       // 모델 누락 등으로 초기화 자체가 실패한 경우 영원히 대기하지 않도록 한다.
       if (!IsReady && !IsInitializationFailed)
-        yield return new WaitUntil(() => IsReady || IsInitializationFailed);
+        yield return new WaitUntil(() => IsReady || IsInitializationFailed || TTSEngineSwitch.IsDisabled);
+
+      if (TTSEngineSwitch.IsDisabled)
+        yield break;
 
       var core = ResolveCore(voiceIdentifier);
       if (core == null)
@@ -624,6 +761,9 @@ namespace TextToSpeechService
 
     private IEnumerator PrepareVariableCoroutine(string text, Action onDone, string voiceIdentifier)
     {
+      if (TTSEngineSwitch.IsDisabled)
+      { onDone?.Invoke(); yield break; }
+
       string cacheKey = MakeCacheKey(voiceIdentifier, text);
       if (_clipCache.ContainsKey(cacheKey))
       { onDone?.Invoke(); yield break; }
@@ -658,6 +798,12 @@ namespace TextToSpeechService
       Action onDone,
       string voiceIdentifier)
     {
+      if (TTSEngineSwitch.IsDisabled)
+      {
+        onDone?.Invoke();
+        yield break;
+      }
+
       if (!_segmentMap.TryGetValue(identifier, out var segments))
       {
         Debug.LogWarning($"[TTSService] PrepareTranscriptVariables: 알 수 없는 identifier: {identifier}");
@@ -749,6 +895,10 @@ namespace TextToSpeechService
     private AudioClip SynthesizeClip(string text, string voiceIdentifier = null)
     {
       var core = ResolveCore(voiceIdentifier);
+      // 엔진이 내려간 직후라면 합성할 코어가 없다. 호출자는 null 클립을 건너뛴다.
+      if (core == null)
+        return null;
+
       var (synthLang, synthStep, synthSpeed) = ResolveParams(voiceIdentifier);
       float[] wav;
       lock (_synthesisLock)
@@ -1002,6 +1152,8 @@ namespace TextToSpeechService
       {
         if (clip == null)
           continue;
+        if (TTSEngineSwitch.IsDisabled)
+          yield break;
         src.clip = clip;
         src.Play();
         yield return new WaitForSeconds(clip.length);

@@ -3815,9 +3815,18 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
-      // TTSService가 준비될 때까지 대기(모델 누락 등으로 초기화가 실패한 경우 영구 대기하지 않는다)
-      if (!_ttsService.IsReady && !_ttsService.IsInitializationFailed)
-        yield return new WaitUntil(() => _ttsService.IsReady || _ttsService.IsInitializationFailed);
+      // TTSService가 준비될 때까지 대기
+      // (모델 누락으로 초기화가 실패했거나 설정에서 엔진을 꺼 둔 경우 영구 대기하지 않는다)
+      if (!_ttsService.IsReady && !_ttsService.IsInitializationFailed && !_ttsService.IsEngineDisabled)
+        yield return new WaitUntil(
+          () => _ttsService.IsReady || _ttsService.IsInitializationFailed || _ttsService.IsEngineDisabled);
+
+      if (_ttsService.IsEngineDisabled)
+      {
+        // 사용자가 설정에서 TTS를 껐다. 음성 없이 다음 노드로 진행한다.
+        Advance();
+        yield break;
+      }
 
       if (!_ttsService.IsReady)
       {
@@ -3828,7 +3837,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       // 동적 캐싱이 진행 중이면 완료될 때까지 대기
       if (_ttsService.IsDynamicCacheDirty)
-        yield return new WaitUntil(() => !_ttsService.IsDynamicCacheDirty);
+        yield return new WaitUntil(() => !_ttsService.IsDynamicCacheDirty || _ttsService.IsEngineDisabled);
 
       var variables = node.Variables != null && node.Variables.Count > 0
           ? node.Variables
@@ -3850,7 +3859,7 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private void PrewarmTTSCache()
     {
-      if (_ttsService == null || _currentGraph == null)
+      if (_ttsService == null || _currentGraph == null || _ttsService.IsEngineDisabled)
         return;
 
       foreach (var node in _currentGraph.Nodes.Values)
@@ -3877,7 +3886,7 @@ namespace MultiplayerInfrastructure.Scenario
     /// </param>
     private void PlayInlineTTS(string nodeIdentifier, string text, string voiceIdentifier = null)
     {
-      if (_ttsService == null || _ttsAudioSource == null)
+      if (_ttsService == null || _ttsAudioSource == null || _ttsService.IsEngineDisabled)
         return;
       if (string.IsNullOrWhiteSpace(text))
         return;
@@ -3894,7 +3903,7 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private void StartInlineTTSPrewarm(ScenarioGraph graph)
     {
-      if (_ttsService == null || graph == null)
+      if (_ttsService == null || graph == null || _ttsService.IsEngineDisabled)
         return;
       CancelInlineTTSPrewarm();
       _inlineTTSPrewarmCancellation = new CancellationTokenSource();
@@ -3915,7 +3924,7 @@ namespace MultiplayerInfrastructure.Scenario
       var queuedTexts = new HashSet<string>(StringComparer.Ordinal);
       foreach (var node in graph.Nodes.Values)
       {
-        if (cancellationToken.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested || _ttsService.IsEngineDisabled)
           yield break;
 
         string text;

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using MultiplayerInfrastructure.Audio;
+using MultiplayerInfrastructure.TTS;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -20,6 +21,7 @@ namespace MultiplayerInfrastructure.UI
     private DropdownField _outputDeviceField;
     private DropdownField _inputDeviceField;
     private SliderInt _masterVolumeField;
+    private Toggle _ttsDisabledField;
     private Label _outputRoutingNote;
     private bool _audioFormInitializing;
 
@@ -46,11 +48,14 @@ namespace MultiplayerInfrastructure.UI
         _inputDeviceField.UnregisterValueChangedCallback(HandleInputDeviceChanged);
       if (_masterVolumeField != null)
         _masterVolumeField.UnregisterValueChangedCallback(HandleMasterVolumeChanged);
+      if (_ttsDisabledField != null)
+        _ttsDisabledField.UnregisterValueChangedCallback(HandleTTSDisabledChanged);
 
       _audioScroll = null;
       _outputDeviceField = null;
       _inputDeviceField = null;
       _masterVolumeField = null;
+      _ttsDisabledField = null;
       _outputRoutingNote = null;
       _audioTabContent = null;
       _outputDevices.Clear();
@@ -82,11 +87,14 @@ namespace MultiplayerInfrastructure.UI
           _inputDeviceField.UnregisterValueChangedCallback(HandleInputDeviceChanged);
         if (_masterVolumeField != null)
           _masterVolumeField.UnregisterValueChangedCallback(HandleMasterVolumeChanged);
+        if (_ttsDisabledField != null)
+          _ttsDisabledField.UnregisterValueChangedCallback(HandleTTSDisabledChanged);
 
         _audioScroll.Content.Clear();
         _outputDeviceField = null;
         _inputDeviceField = null;
         _masterVolumeField = null;
+        _ttsDisabledField = null;
         _outputRoutingNote = null;
 
         var settings = AudioDevicePreferenceService.GetOrCreateInstance().CurrentSettings;
@@ -94,6 +102,7 @@ namespace MultiplayerInfrastructure.UI
         BuildVolumeSection();
         BuildOutputSection(settings);
         BuildInputSection(settings);
+        BuildSpeechSection();
         BuildAudioActions();
       }
       finally
@@ -152,6 +161,26 @@ namespace MultiplayerInfrastructure.UI
 
       if (_inputDevices.Count == 0)
         AddAudioNote(section, "쓸 수 있는 마이크를 찾지 못했습니다. 마이크를 연결하고 권한을 허용한 뒤 새로 고침을 눌러 주세요.");
+    }
+
+    /// <summary>
+    /// 음성 안내(TTS)를 아예 끌 수 있게 합니다.
+    ///
+    /// 음성 합성은 이 컴퓨터에서 직접 돌아가는 신경망이라 CPU와 메모리를 제법 씁니다.
+    /// 사양이 빠듯한 기기에서는 꺼 두는 편이 낫습니다.
+    /// </summary>
+    private void BuildSpeechSection()
+    {
+      var section = AddAudioSection(
+        "음성 합성(TTS)",
+        "TTS 엔진을 비활성화하여 컴퓨터의 부하를 낮출 수 있습니다.");
+
+      _ttsDisabledField = new Toggle { value = TTSEnginePreference.IsDisabled };
+      _ttsDisabledField.RegisterValueChangedCallback(HandleTTSDisabledChanged);
+      AddRow(section, "TTS 엔진 비활성화", _ttsDisabledField);
+
+      AddAudioNote(section,
+        "끄면 이미 올라와 있는 음성 모델까지 메모리에서 내립니다. 대사는 자막으로만 나옵니다.");
     }
 
     /// <summary>
@@ -232,6 +261,17 @@ namespace MultiplayerInfrastructure.UI
 
       AudioVolumePreferenceService.GetOrCreateInstance().SetVolume(volume);
       SetStatusText($"전체 볼륨을 {change.newValue}%로 저장했습니다.");
+    }
+
+    private void HandleTTSDisabledChanged(ChangeEvent<bool> change)
+    {
+      if (_audioFormInitializing)
+        return;
+
+      TTSEnginePreference.SetDisabled(change.newValue);
+      SetStatusText(change.newValue
+        ? "TTS 엔진을 껐습니다. 올라와 있던 음성 모델을 메모리에서 내립니다."
+        : "TTS 엔진을 켰습니다. 음성이 필요한 시점에 모델을 다시 불러옵니다.");
     }
 
     private void ApplyDeviceSelection(AudioDeviceKind kind, DropdownField field, List<AudioDeviceDescriptor> devices)

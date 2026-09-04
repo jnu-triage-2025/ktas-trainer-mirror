@@ -39,6 +39,12 @@ namespace MultiplayerInfrastructure.TTS
       }
     }
 
+    /// <summary>
+    /// 설정에서 TTS 엔진을 꺼 둔 상태인지 여부.
+    /// true면 <see cref="IsReady"/> 를 기다려도 참이 되지 않으므로 음성 없이 진행해야 한다.
+    /// </summary>
+    public bool IsEngineDisabled => TTSEngineSwitch.IsDisabled;
+
     /// <summary>내부 TTS 엔진 초기화 완료 여부.</summary>
     public bool IsReady => _core != null && _core.IsReady;
 
