@@ -5188,12 +5188,15 @@ namespace MultiplayerInfrastructure.Scenario
 
           case ScenarioValidatorWaitTimeoutBehavior.WarnAndKeepWaiting:
             ReportValidatorWaitTimeoutWarning(node);
-            yield return new WaitUntil(() => EvaluateValidator(node));
+            // 경고 뒤에도 담당자가 연결을 끊거나 시나리오가 끝나면 이 브랜치를
+            // 완료 처리해야 한다. 이 조건을 빼면 타임아웃 이후의 이탈은 WaitMode.All
+            // 합류를 영구적으로 막는다.
+            yield return new WaitUntil(() => EvaluateValidator(node) || IsBranchGateReleased(context));
             yield break;
 
           case ScenarioValidatorWaitTimeoutBehavior.KeepWaiting:
           default:
-            yield return new WaitUntil(() => EvaluateValidator(node));
+            yield return new WaitUntil(() => EvaluateValidator(node) || IsBranchGateReleased(context));
             yield break;
         }
       }
@@ -5232,8 +5235,10 @@ namespace MultiplayerInfrastructure.Scenario
       var timeout = node.WaitTimeoutSeconds;
       if (timeout is > 0f)
       {
-        float deadline = Time.time + timeout.Value;
-        yield return new WaitUntil(() => EvaluateValidator(node) || Time.time >= deadline || IsBranchGateReleased(context));
+        // 게이트 타임아웃은 시간 배율과 무관하게 만료되어야 한다. 일시정지 중
+        // Time.time은 멈추므로, 이를 기준으로 하면 예외 복구가 영구히 지연된다.
+        float deadline = Time.unscaledTime + timeout.Value;
+        yield return new WaitUntil(() => EvaluateValidator(node) || Time.unscaledTime >= deadline || IsBranchGateReleased(context));
       }
       else
       {
