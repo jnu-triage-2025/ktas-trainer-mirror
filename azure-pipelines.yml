@@ -157,6 +157,14 @@ stages:
               }
               & .\Tools\CI\lint-csharp.ps1
             displayName: 'Run dotnet format'
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Unity project-generation log'
+            condition: always()
+            continueOnError: true
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/unity-project-generation.log'
+              ArtifactName: unity-project-generation-artifacts
+              publishLocation: 'Container'
 
   - stage: Test
     displayName: 'Unity tests'

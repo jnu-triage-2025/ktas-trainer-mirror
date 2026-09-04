@@ -5,6 +5,8 @@ $ErrorActionPreference = 'Stop'
 
 $projectRoot = (Get-Location).Path
 $solutionPath = Join-Path $projectRoot 'ktas-trainer.sln'
+$artifactsPath = Join-Path $projectRoot 'artifacts'
+New-Item -ItemType Directory -Path $artifactsPath -Force | Out-Null
 $formatTarget = $solutionPath
 if (-not (Test-Path -LiteralPath $formatTarget -PathType Leaf)) {
     $projectPath = $projectRoot
@@ -33,8 +35,8 @@ if (-not (Test-Path -LiteralPath $formatTarget -PathType Leaf)) {
     $unityRuntimePath = Join-Path $projectPath 'Temp/azure-unity-runtime'
     $unityLocalAppData = Join-Path $unityRuntimePath 'LocalAppData'
     $unityTempPath = Join-Path $unityRuntimePath 'Temp'
-    $unityLogPath = Join-Path $projectPath 'artifacts/unity-project-generation.log'
-    New-Item -ItemType Directory -Path $unityLocalAppData, $unityTempPath, (Split-Path -Parent $unityLogPath) -Force | Out-Null
+    $unityLogPath = Join-Path $artifactsPath 'unity-project-generation.log'
+    New-Item -ItemType Directory -Path $unityLocalAppData, $unityTempPath -Force | Out-Null
     $env:LOCALAPPDATA = $unityLocalAppData
     $env:TEMP = $unityTempPath
     $env:TMP = $unityTempPath
@@ -53,6 +55,9 @@ if (-not (Test-Path -LiteralPath $formatTarget -PathType Leaf)) {
         -Wait `
         -PassThru
     if ($unityProcess.ExitCode -ne 0) {
+        if (Test-Path -LiteralPath $unityLogPath -PathType Leaf) {
+            Get-Content -LiteralPath $unityLogPath -Tail 200
+        }
         throw "Unity project generation failed with exit code $($unityProcess.ExitCode). See $unityLogPath."
     }
 }
