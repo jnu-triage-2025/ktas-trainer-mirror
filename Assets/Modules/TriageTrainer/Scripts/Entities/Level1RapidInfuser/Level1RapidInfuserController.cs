@@ -291,6 +291,21 @@ namespace TriageTrainer.Entity
       : !string.IsNullOrWhiteSpace(_entityIdentifier) ? _entityIdentifier
       : _registeredIdentifier;
 
+    /// <summary>
+    /// 서버 권위 SyncVar 에 값을 기록해도 되는 컨텍스트인지.
+    ///
+    /// <para>
+    /// 프리셋 스폰은 <c>ServerManager.Spawn</c> <b>이전</b>에 식별자를 주입한다. 그 시점의 인스턴스는
+    /// 아직 NetworkManager 를 갖지 않아 <c>IsServerStarted</c> 가 false 이므로, 서버 여부만으로
+    /// 게이트하면 값이 SyncVar 에 기록되지 않는다. FishNet 은 네트워크 초기화 전 쓰기를 초깃값으로
+    /// 받아 스폰 페이로드에 실어 보내므로 이 구간의 쓰기를 허용해야 한다.
+    /// </para>
+    /// </summary>
+    private bool CanWriteAuthoritativeSyncVar =>
+      NetworkObject == null
+      || !(NetworkObject.IsServerInitialized || NetworkObject.IsClientInitialized)
+      || (NetworkObject.NetworkManager != null && IsServerStarted);
+
     private void Awake()
     {
       Awake_MinecraftBoatLikeControl();
@@ -368,7 +383,10 @@ namespace TriageTrainer.Entity
         UnregisterEntity();
 
       _entityIdentifier = value;
-      if (IsServerStarted)
+      // 스폰 전(네트워크 미초기화)에는 초깃값으로 기록되어 스폰 페이로드에 담기고, 스폰 후에는
+      // 서버만 권위 값을 갱신한다. 프리셋 스폰은 ServerManager.Spawn 이전에 식별자를 주입하므로
+      // 서버 여부만으로 게이트하면 이 값이 원격 피어에 영영 복제되지 않는다.
+      if (CanWriteAuthoritativeSyncVar)
         _runtimeIdentifier.Value = value;
       RegisterEntity();
     }

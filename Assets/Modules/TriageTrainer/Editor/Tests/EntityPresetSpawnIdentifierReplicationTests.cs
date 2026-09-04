@@ -1,7 +1,10 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using FishNet.Object.Synchronizing;
+using MultiplayerInfrastructure.Registry;
 using NUnit.Framework;
 using TriageTrainer.Entity;
+using TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,6 +29,11 @@ namespace TriageTrainer.Tests
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBMale.prefab";
     private const string MovingBedPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/MinecraftBoatLikes/PatientMovingBed.prefab";
+    private const string PresetRegistryPath =
+      "Assets/Modules/TriageTrainer/ScriptableObjects/EntityPreset Registry Requirements SO.asset";
+    private const string PatientAPrefabPath =
+      "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeA.prefab";
+    private const string DefibrillatorPadChildName = "defibrillatorpad_subclavicle_A";
 
     private static readonly Vector3 IsolatedSpawnPosition = new Vector3(14000f, 0f, 14000f);
 
@@ -94,6 +102,131 @@ namespace TriageTrainer.Tests
       {
         Object.DestroyImmediate(bedObject);
       }
+    }
+
+    /// <summary>
+    /// 제세동 패드처럼 이름으로 지정한 자식 표시를 켜고 끄는 경로는 서버에서 관찰자로 복제되지만,
+    /// 복제 여부와 무관하게 호출한 피어에서는 즉시 반영돼야 한다. 복제를 덧붙이면서 로컬 적용이
+    /// 사라지면 호스트에서도 표시가 바뀌지 않으므로 그 동작을 고정한다.
+    /// </summary>
+    [Test]
+    public void NamedChildToggleAppliesLocallyOnTheCallingPeer()
+    {
+      var patientObject = InstantiateIsolated(PatientAPrefabPath);
+      try
+      {
+        var patient = patientObject.GetComponent<PatientController>();
+        Assert.That(patient, Is.Not.Null);
+
+        var pad = FindDescendant(patientObject.transform, DefibrillatorPadChildName);
+        Assert.That(pad, Is.Not.Null,
+          $"'{DefibrillatorPadChildName}' 자식이 환자 A 프리팹에 있어야 이 검사가 의미를 가진다");
+        Assert.That(pad.gameObject.activeSelf, Is.False,
+          "제세동 패드는 초기 숨김 목록에 있으므로 Awake 직후에는 꺼져 있어야 한다");
+
+        Assert.That(patient.SetNamedChildActive(DefibrillatorPadChildName, true), Is.True);
+        Assert.That(pad.gameObject.activeSelf, Is.True);
+
+        Assert.That(patient.SetNamedChildActive(DefibrillatorPadChildName, false), Is.True);
+        Assert.That(pad.gameObject.activeSelf, Is.False);
+
+        Assert.That(patient.SetNamedChildActive("no_such_child", true), Is.False);
+      }
+      finally
+      {
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    private static Transform FindDescendant(Transform root, string childName)
+    {
+      foreach (var child in root.GetComponentsInChildren<Transform>(true))
+      {
+        if (child != null && string.Equals(child.name, childName, System.StringComparison.Ordinal))
+          return child;
+      }
+
+      return null;
+    }
+
+    /// <summary>
+    /// 등록된 모든 엔티티 프리셋을 훑어, 복제용 런타임 식별자 SyncVar 를 가진 자가 등록 컴포넌트가
+    /// 스폰 전 주입을 그 SyncVar 까지 반영하는지 확인한다. 개별 클래스마다 테스트를 늘리지 않아도
+    /// 새로 추가된 프리셋과 수신자가 자동으로 이 검사 대상에 들어온다.
+    ///
+    /// <para>
+    /// 식별자용 SyncVar 가 없는 수신자(예: ObserversRpc 로 구성을 복제하는 <c>Npc</c>)는 복제 방식이
+    /// 다르므로 검사 대상에서 제외한다.
+    /// </para>
+    /// </summary>
+    [Test]
+    public void EveryPresetReceiverWithAnIdentifierSyncVarReplicatesTheInjectedIdentifier()
+    {
+      var presetRegistry = AssetDatabase.LoadAssetAtPath<EntityPresetRegistryRequirementsSO>(PresetRegistryPath);
+      Assert.That(presetRegistry, Is.Not.Null, $"preset registry '{PresetRegistryPath}' must exist");
+      Assert.That(presetRegistry.entityPresetRegistryRequirements, Is.Not.Null.And.Not.Empty);
+
+      var inspectedPrefabs = new HashSet<GameObject>();
+      var coveredReceivers = new List<string>();
+
+      foreach (var requirement in presetRegistry.entityPresetRegistryRequirements)
+      {
+        if (requirement.prefab == null || !inspectedPrefabs.Add(requirement.prefab))
+          continue;
+
+        // 인스턴스화 비용을 피하기 위해 프리팹 자산에서 먼저 수신자와 SyncVar 유무를 판별한다.
+        if (requirement.prefab.GetComponentInChildren<ISpawnedEntityIdentifierReceiver>(true)
+            is not MonoBehaviour prefabReceiver)
+          continue;
+
+        var syncVarField = FindRuntimeIdentifierSyncVarField(prefabReceiver.GetType());
+        if (syncVarField == null)
+          continue;
+
+        string injected = $"{requirement.identifier}__replication_probe";
+        var instance = Object.Instantiate(requirement.prefab, IsolatedSpawnPosition, Quaternion.identity);
+        try
+        {
+          var receiver = instance.GetComponentInChildren<ISpawnedEntityIdentifierReceiver>(true);
+          receiver.ApplySpawnedEntityIdentifier(injected);
+
+          var syncVar = syncVarField.GetValue(receiver) as SyncVar<string>;
+          Assert.That(syncVar, Is.Not.Null);
+          Assert.That(syncVar.Value, Is.EqualTo(injected),
+            $"preset '{requirement.identifier}' 의 수신자 {prefabReceiver.GetType().Name} 는 스폰 전 주입값을 "
+            + $"'{syncVarField.Name}' 에 기록해야 원격 피어가 같은 식별자로 엔티티를 등록한다");
+          coveredReceivers.Add(prefabReceiver.GetType().Name);
+        }
+        finally
+        {
+          Object.DestroyImmediate(instance);
+          Registry.UnregisterEntity(injected);
+        }
+      }
+
+      Assert.That(coveredReceivers, Is.Not.Empty,
+        "식별자 SyncVar 를 가진 프리셋 수신자를 한 건도 찾지 못했다면 이 검사가 무력화된 것이다");
+    }
+
+    /// <summary>
+    /// 수신자 타입에서 복제용 런타임 식별자 SyncVar 필드를 찾는다. 클래스마다 이름이
+    /// <c>_runtimeIdentifier</c> 또는 <c>_runtimeIdentifierSync</c> 로 갈리므로 접두사로 판별한다.
+    /// </summary>
+    private static FieldInfo FindRuntimeIdentifierSyncVarField(System.Type receiverType)
+    {
+      for (var type = receiverType; type != null; type = type.BaseType)
+      {
+        foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+        {
+          if (field.FieldType == typeof(SyncVar<string>)
+              && field.Name.StartsWith("_runtimeIdentifier", System.StringComparison.Ordinal))
+          {
+            return field;
+          }
+        }
+      }
+
+      return null;
     }
 
     private static GameObject InstantiateIsolated(string prefabPath)

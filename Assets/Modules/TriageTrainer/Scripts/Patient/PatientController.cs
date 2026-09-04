@@ -125,7 +125,20 @@ namespace TriageTrainer.Entity
       GetPatientState()?.InitializeRuntimeReferences(this);
     }
 
+    /// <summary>
+    /// 이름으로 찾은 자식 오브젝트의 활성 상태를 바꾼다(예: 제세동 패드 표시).
+    /// 네트워크 전파는 <see cref="PatientController"/> 의 NamedChildDisplay 파셜이 담당한다.
+    /// </summary>
     public bool SetNamedChildActive(string childName, bool active)
+    {
+      bool applied = ApplyNamedChildActiveLocal(childName, active);
+      if (applied)
+        PublishNamedChildActive(childName, active);
+
+      return applied;
+    }
+
+    private bool ApplyNamedChildActiveLocal(string childName, bool active)
     {
       if (string.IsNullOrWhiteSpace(childName))
         return false;
