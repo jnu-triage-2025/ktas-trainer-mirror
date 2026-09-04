@@ -226,12 +226,19 @@ namespace MultiplayerInfrastructure.Chat
 
       // 진입 지점이 지정되면 처음부터 다시 밟지 않고 그 지점으로 바로 옮긴다. 접속이 끊겼다가 다시
       // 들어온 참가자를 나머지 인원이 진행 중인 단계에 합류시키는 용도다. 시작 직후라 비울 상태가
-      // 없으므로 clearState 는 기본값(true)을 그대로 쓴다.
-      if (string.IsNullOrWhiteSpace(entrypointIdentifier))
-        return;
-
-      if (!ScenarioController.Instance.TryEnterManualEntrypoint(entrypointIdentifier, true, out string entryError))
+      // 없으므로 clearState 는 기본값(true)을 그대로 쓴다. 세계 상태는 서버에 이미 살아 있으므로
+      // 준비 체인은 돌리지 않는다.
+      if (!string.IsNullOrWhiteSpace(entrypointIdentifier)
+          && !ScenarioController.Instance.TryEnterManualEntrypoint(
+            entrypointIdentifier, true, out string entryError, runSetupChain: false))
+      {
         Debug.LogWarning($"[ChatService] Manual entry '{entrypointIdentifier}' after scenario start was rejected: {entryError}");
+      }
+
+      // 시작과 수동 진입은 이 피어의 로컬 신호를 비운다. 서버에 이미 올라가 있는 신호를 받아 와야
+      // 다른 참가자가 먼저 끝낸 단계를 기다리는 게이트가 타임아웃 없이 열린다. 서버(호스트)는
+      // 자기 레지스트리가 곧 원본이라 요청할 것이 없다.
+      ScenarioNetworkRelay.RequestRaisedSignalSnapshot();
     }
 
     [ObserversRpc(BufferLast = true)]
@@ -459,6 +466,32 @@ namespace MultiplayerInfrastructure.Chat
       }
 
       bool hasEntrypoint = !string.IsNullOrWhiteSpace(entrypointIdentifier);
+
+      // 호환 실행 경로에서는 대상으로 지정된 피어만 그래프를 돌린다. 역할 보유자가 대상에서 빠지면
+      // 그 역할의 브랜치는 어디에서도 실행되지 않아 나머지 인원의 게이트가 타임아웃으로만 넘어간다.
+      // 처음 시작할 때는 역할 보유자 전원이 대상에 포함되어야 한다. 진입 지점을 지정한 재합류 시작은
+      // 한 명만을 대상으로 하므로 이 검사에서 제외한다.
+      if (!hasEntrypoint
+          && ScenarioController.TryGetActiveRoleHolderClientIds(graph, out var roleHolderClientIds))
+      {
+        var targetClientIds = new HashSet<int>(resolvedTargets.Select(target => (int)target.ClientId));
+        var missing = roleHolderClientIds
+          .Where(clientId => !targetClientIds.Contains(clientId))
+          .Select(clientId => UserDescriptorService.TryGetByClientId(clientId, out var descriptor)
+                              && descriptor != null
+                              && !string.IsNullOrWhiteSpace(descriptor.DisplayName)
+            ? descriptor.DisplayName
+            : $"client {clientId}")
+          .ToList();
+        if (missing.Count > 0)
+        {
+          error = $"Scenario '{scenarioIdentifier}' cannot start: players holding a declared role are not targeted "
+                  + $"[{string.Join(", ", missing)}]. Start it for every participant with '@a', "
+                  + "or use '/scenario execute <target> <scenario> <entrypoint>' to re-join a single player.";
+          return false;
+        }
+      }
+
       if (hasEntrypoint
           && !ScenarioController.TryFindManualEntrypoint(graph, entrypointIdentifier, out _))
       {

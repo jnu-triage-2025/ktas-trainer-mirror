@@ -482,6 +482,77 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioTriggerZone.OnScenarioRequested += HandleScenarioRequested;
       if (InstanceFinder.ServerManager != null)
         InstanceFinder.ServerManager.OnRemoteConnectionState += HandleRemoteConnectionState;
+      PlayerQuestStateFlagService.FlagsChanged += HandleQuestStateFlagsChangedForRoleSnapshot;
+      PlayerTagService.TagAdded += HandleRoleTagAddedForFlagRestore;
+    }
+
+    // ── 역할별 퀘스트 상태 플래그 스냅샷 ─────────────────────────────────────
+    // 재접속한 참가자는 새 UUID 를 받으므로 이전에 받은 퀘스트 상태 플래그가 없다. 플래그는
+    // 상호작용 노출을 좌우하기 때문에, 복원하지 않으면 그 역할의 단계는 전부 닫힌 채 게이트
+    // 타임아웃으로만 넘어간다. 서버는 역할별로 마지막 플래그 집합을 기억해 두었다가, 운영자가
+    // 재접속자에게 같은 역할 태그를 다시 부여하는 순간 그대로 돌려준다.
+
+    /// <summary>역할 태그 → 그 역할 보유자가 마지막으로 갖고 있던 플래그 집합.</summary>
+    private readonly Dictionary<string, HashSet<string>> _questStateFlagsByRole =
+      new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+
+    private void HandleQuestStateFlagsChangedForRoleSnapshot(string identifier)
+    {
+      if (!InstanceFinder.IsServerStarted
+          || _currentGraph?.ActiveRoleTags == null
+          || string.IsNullOrWhiteSpace(identifier))
+        return;
+
+      var flags = PlayerQuestStateFlagService.GetFlags(identifier);
+      foreach (var role in _currentGraph.ActiveRoleTags)
+      {
+        if (string.IsNullOrWhiteSpace(role) || !PlayerTagService.HasTag(identifier, role))
+          continue;
+
+        // 빈 집합은 기록하지 않는다. 접속 종료 정리와 시나리오 시작 초기화가 만드는 빈 집합으로
+        // 스냅샷을 덮어쓰면, 정작 복원해야 할 순간에 돌려줄 것이 없다. 단계 도중 플래그가 모두
+        // 내려가는 경우는 정상 흐름에 없으므로 마지막 비어 있지 않은 집합을 유지한다.
+        if (flags.Count == 0)
+          continue;
+
+        _questStateFlagsByRole[role] = new HashSet<string>(flags, StringComparer.Ordinal);
+      }
+    }
+
+    private void HandleRoleTagAddedForFlagRestore(string identifier, string tag)
+    {
+      if (!InstanceFinder.IsServerStarted
+          || _currentGraph?.ActiveRoleTags == null
+          || string.IsNullOrWhiteSpace(identifier)
+          || string.IsNullOrWhiteSpace(tag)
+          || !_currentGraph.ActiveRoleTags.Contains(tag)
+          || !_questStateFlagsByRole.TryGetValue(tag, out var flags)
+          || flags == null
+          || flags.Count == 0)
+        return;
+
+      int restored = 0;
+      foreach (var flag in flags.ToArray())
+      {
+        if (PlayerQuestStateFlagService.Set(identifier, flag))
+          restored++;
+      }
+
+      if (restored == 0)
+        return;
+
+      string message =
+        $"Restored {restored} quest state flag(s) of role '{tag}' to player '{identifier}' "
+        + $"in graph '{_currentGraph.Identifier}'.";
+      Debug.Log($"[ScenarioController] {message}", this);
+      try
+      {
+        GameLogService.WriteScenario(message, _currentGraph.Identifier);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogException(ex, this);
+      }
     }
 
     private void OnDestroy()
@@ -497,6 +568,8 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioTriggerZone.OnScenarioRequested -= HandleScenarioRequested;
       if (InstanceFinder.ServerManager != null)
         InstanceFinder.ServerManager.OnRemoteConnectionState -= HandleRemoteConnectionState;
+      PlayerQuestStateFlagService.FlagsChanged -= HandleQuestStateFlagsChangedForRoleSnapshot;
+      PlayerTagService.TagAdded -= HandleRoleTagAddedForFlagRestore;
 
       if (_instance == this)
       {
@@ -1012,6 +1085,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 받은 인원의 브랜치가 시작하자마자 취소된 것으로 처리된다. 실행 경계마다 반드시 비운다.
       _cancelledBranchClientIds.Clear();
       _reportedIncompleteInitialRoleRoster = false;
+      _questStateFlagsByRole.Clear();
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioInteractionSignals.ClearAllRaisedSignals();
@@ -1110,6 +1184,7 @@ namespace MultiplayerInfrastructure.Scenario
     private void EndScenarioInternal(bool endAuthoritativePresentation)
     {
       CancelInlineTTSPrewarm();
+      _questStateFlagsByRole.Clear();
       CompleteNodeVisit(_activeMainNodeVisitSequence);
       CompleteOpenNodeVisits();
       _activeMainNodeVisitSequence = 0;
@@ -1631,7 +1706,13 @@ namespace MultiplayerInfrastructure.Scenario
     /// true 면 지금까지 쌓인 시나리오 상태(상태값·신호·카운터·타이머·발행된 퀘스트)를 먼저 비운다.
     /// </param>
     /// <param name="error">실패했을 때 사용자에게 보여줄 사유.</param>
-    public bool TryEnterManualEntrypoint(string entrypointIdentifier, bool clearState, out string error)
+    /// <param name="runSetupChain">
+    /// false 면 진입 지점의 준비 체인(<c>manualEnterSetupIdentifier</c>)을 건너뛴다. 재접속한 참가자를
+    /// 진행 중인 세션에 합류시킬 때 쓴다. 세계 상태는 서버에 이미 살아 있고, 준비 체인의 환자 상태·침대
+    /// 배치는 서버 권위라 클라이언트에서 돌려도 무시되거나 표시만 어긋난다.
+    /// </param>
+    public bool TryEnterManualEntrypoint(
+      string entrypointIdentifier, bool clearState, out string error, bool runSetupChain = true)
     {
       error = string.Empty;
 
@@ -1688,20 +1769,21 @@ namespace MultiplayerInfrastructure.Scenario
       }
       catch { /* 로그 실패는 진입 처리에 영향 없음 */ }
 
-      StartCoroutine(ManualEntryRoutine(entrypoint));
+      StartCoroutine(ManualEntryRoutine(entrypoint, runSetupChain));
       return true;
     }
 
     /// <summary>
     /// 준비 체인을 먼저 돌린 뒤 ManualEntrypoint 노드부터 본 흐름을 이어간다.
     /// </summary>
-    private IEnumerator ManualEntryRoutine(ScenarioManualEntrypointNode entrypoint)
+    private IEnumerator ManualEntryRoutine(ScenarioManualEntrypointNode entrypoint, bool runSetupChain = true)
     {
       // 준비 체인이 도는 동안에도 커서는 이미 이 노드다. 체인이 대기하는 사이 들어온 진행 요청이
       // 스킵 이전 노드의 next 로 흘러가 본 흐름과 준비 체인이 겹쳐 도는 것을 막는다.
       _currentNode = entrypoint;
 
-      if (!string.IsNullOrWhiteSpace(entrypoint.ManualEnterSetupIdentifier)
+      if (runSetupChain
+          && !string.IsNullOrWhiteSpace(entrypoint.ManualEnterSetupIdentifier)
           && _currentGraph != null
           && _currentGraph.TryGetNode(entrypoint.ManualEnterSetupIdentifier, out var setupStart))
       {
@@ -6871,6 +6953,27 @@ namespace MultiplayerInfrastructure.Scenario
       return TryBuildActiveRoleRoster(graph, GetActivePlayerIds(), out _, out error);
     }
 
+    /// <summary>
+    /// 그래프가 선언한 활성 역할을 보유한 접속자의 클라이언트 식별자를 모은다.
+    /// 시작 명령의 대상이 역할 보유자 전원을 포함하는지 검사하는 데 쓴다. 호환 실행 경로에서는
+    /// 대상으로 지정된 피어만 그래프를 돌리므로, 빠진 역할의 브랜치는 어디에서도 실행되지 않는다.
+    /// </summary>
+    /// <returns>그래프가 활성 역할을 선언하지 않았거나 로스터를 만들 수 없으면 false.</returns>
+    public static bool TryGetActiveRoleHolderClientIds(ScenarioGraph graph, out List<int> clientIds)
+    {
+      clientIds = new List<int>();
+      if (!TryBuildActiveRoleRoster(graph, GetActivePlayerIds(), out var roster, out _))
+        return false;
+
+      foreach (var entry in roster)
+      {
+        if (!clientIds.Contains(entry.ClientId))
+          clientIds.Add(entry.ClientId);
+      }
+
+      return true;
+    }
+
     private static bool TryBuildActiveRoleRoster(
       ScenarioGraph graph,
       IReadOnlyList<int> clientIds,
@@ -7898,7 +8001,7 @@ namespace MultiplayerInfrastructure.Scenario
 
         targets = new List<NetworkConnection> { ownerConnection };
       }
-      else if (!TargetSelectorResolver.TryResolveTargets(ownerConnection, targetSelector, out targets, out var targetError))
+      else if (!PlayerTargetResolver.TryResolveConnections(ownerConnection, targetSelector, out targets, out var targetError))
       {
         result = targetError;
         return false;

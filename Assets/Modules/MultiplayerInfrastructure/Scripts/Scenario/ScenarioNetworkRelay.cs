@@ -50,6 +50,9 @@ namespace MultiplayerInfrastructure.Scenario
     private static readonly Dictionary<string, Queue<float>> SignalUpdateTimesByPlayer = new(StringComparer.Ordinal);
     private static readonly Dictionary<int, Queue<float>> LineTopologyUpdateTimesByClient = new();
     private static readonly Dictionary<int, Queue<float>> LineTopologySnapshotTimesByClient = new();
+    private static readonly Dictionary<int, Queue<float>> RaisedSignalSnapshotTimesByClient = new();
+    /// <summary>한 번의 신호 스냅샷에 담는 신호 수의 상한. 운영 시나리오의 신호 수는 수십 개 수준이다.</summary>
+    private const int MaxRaisedSignalSnapshotEntries = 512;
     private static readonly ScenarioClientSignalAuthorization ClientSignalAuthorization = new();
 
     /// <summary>
@@ -497,6 +500,7 @@ namespace MultiplayerInfrastructure.Scenario
       SignalUpdateTimesByPlayer.Clear();
       LineTopologyUpdateTimesByClient.Clear();
       LineTopologySnapshotTimesByClient.Clear();
+      RaisedSignalSnapshotTimesByClient.Clear();
       ClientSignalAuthorization.ClearScenario();
       ReportedUndeclaredClientSignals.Clear();
       InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
@@ -1475,6 +1479,68 @@ namespace MultiplayerInfrastructure.Scenario
       }
       bool accepted = ProcessLineTopologyChange(first, second, connected, sender);
       TargetLineTopologyRequestCompleted(sender, requestId, first, second, connected, accepted);
+    }
+
+    /// <summary>
+    /// 서버에 지금 올라가 있는 시나리오 신호 전체를 이 피어의 레지스트리에 받아 온다.
+    ///
+    /// <para>
+    /// 신호는 발생 시점에만 미러링되므로, 시나리오가 진행 중일 때 접속하거나 다시 들어온 피어는
+    /// 그 전에 올라간 신호를 갖고 있지 않다. 호환 실행 경로에서 게이트는 각 피어의 로컬
+    /// 레지스트리를 폴링하기 때문에, 이 스냅샷이 없으면 이미 끝난 단계를 기다리는 게이트가
+    /// 타임아웃까지 열리지 않는다. 시나리오 시작과 수동 진입은 로컬 신호를 비우므로 그 뒤에 요청한다.
+    /// </para>
+    /// </summary>
+    public static void RequestRaisedSignalSnapshot()
+    {
+      if (_instance != null && InstanceFinder.IsClientStarted && !InstanceFinder.IsServerStarted)
+        _instance.CmdRequestRaisedSignalSnapshot();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdRequestRaisedSignalSnapshot(NetworkConnection sender = null)
+    {
+      if (sender == null || !sender.IsValid || !TryConsumeRaisedSignalSnapshotQuota(sender.ClientId))
+        return;
+
+      // 실행 중인 시나리오가 없으면 남아 있는 신호는 이전 회차의 잔재이므로 보내지 않는다.
+      if (ScenarioController.Instance == null || !ScenarioController.Instance.HasActiveScenario)
+        return;
+
+      var signals = ScenarioInteractionSignals
+        .GetRaisedSignalsWithPrefix(ScenarioInteractionSignals.Prefix)
+        .Take(MaxRaisedSignalSnapshotEntries)
+        .ToArray();
+      TargetMirrorRaisedSignalSnapshot(sender, signals);
+    }
+
+    [TargetRpc]
+    private void TargetMirrorRaisedSignalSnapshot(NetworkConnection connection, string[] signals)
+    {
+      if (signals == null)
+        return;
+
+      foreach (var signal in signals)
+      {
+        if (IsValidClientSignal(signal))
+          ScenarioInteractionSignals.RegisterLocal(signal);
+      }
+    }
+
+    private static bool TryConsumeRaisedSignalSnapshotQuota(int clientId)
+    {
+      float now = Time.realtimeSinceStartup;
+      if (!RaisedSignalSnapshotTimesByClient.TryGetValue(clientId, out var times))
+      {
+        times = new Queue<float>();
+        RaisedSignalSnapshotTimesByClient.Add(clientId, times);
+      }
+      while (times.Count > 0 && now - times.Peek() >= SignalUpdateWindowSeconds)
+        times.Dequeue();
+      if (times.Count >= MaxLineTopologySnapshotsPerPlayerPerWindow)
+        return false;
+      times.Enqueue(now);
+      return true;
     }
 
     [ServerRpc(RequireOwnership = false)]

@@ -13,6 +13,12 @@ namespace MultiplayerInfrastructure.Tag
   /// </summary>
   public static class PlayerTagService
   {
+    /// <summary>
+    /// 서버에서 태그가 실제로 추가되었을 때 (플레이어 식별자, 태그) 를 전달한다.
+    /// 재접속한 참가자에게 역할을 다시 부여하는 순간을 관찰해 그 역할의 진행 상태를 복원하는 데 쓴다.
+    /// </summary>
+    public static event System.Action<string, string> TagAdded;
+
     private static bool IsServerMutationAllowed()
     {
       if (InstanceFinder.IsServerStarted)
@@ -78,6 +84,7 @@ namespace MultiplayerInfrastructure.Tag
       {
         tags.Add(tag);
         SyncOwnerPlayerTags(identifier);
+        TagAdded?.Invoke(identifier, tag);
       }
     }
 
