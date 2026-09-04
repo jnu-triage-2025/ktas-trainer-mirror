@@ -52,6 +52,10 @@ namespace TriageTrainer.Entity
     }
 
     private const float VolumeThreshold = 0.02f;
+
+    // 음량 게이지가 가득 차는 기준 음량이다. 임계치의 10배로 두어, 확인이 진행되기 시작하는
+    // 지점이 게이지의 10% 부근에 놓이고 보통 크기의 말소리가 중간 이상을 채우게 한다.
+    private const float GaugeFullScaleVolume = VolumeThreshold * 10f;
     private const float RequiredDurationSeconds = 1f;
     private const int SampleCount = 256;
     private static RecognitionCheckMicrophoneInput _instance;
@@ -232,6 +236,7 @@ namespace TriageTrainer.Entity
       for (int i = 0; i < _samples.Length; i++)
         sum += _samples[i] * _samples[i];
       float rms = Mathf.Sqrt(sum / _samples.Length);
+      MicrophoneCaptureIndicatorUIController.SetGaugeLevel(rms / GaugeFullScaleVolume);
       _aboveThresholdSeconds = rms >= VolumeThreshold
         ? _aboveThresholdSeconds + Time.unscaledDeltaTime
         : 0f;
