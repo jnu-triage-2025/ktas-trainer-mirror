@@ -65,7 +65,6 @@ namespace TriageTrainer.Scenario
              "수동 진입은 침대를 밀고 오는 과정이 없으므로, 이 포인트로 바로 붙입니다.")]
     [SerializeField] private string _patientAManualEntryBedSnapPointIdentifier = "zone_a:bed_snap_point";
     [SerializeField, Min(0f)] private float _patientATransferWaitTimeoutSeconds = 0f;
-    [SerializeField, Min(0f)] private float _patientADismountWaitTimeoutSeconds = 0f;
 
     [SerializeField] private string _patientAVitalMonitorEntityIdentifier = "patientA_monitor";
     [SerializeField] private string[] _patientAVitalMonitorAliases = { "patientA_monitor", "patient_a_monitor", "monitorA" };

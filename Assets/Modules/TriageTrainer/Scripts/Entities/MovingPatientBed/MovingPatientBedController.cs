@@ -120,7 +120,6 @@ namespace TriageTrainer.Entity
     private readonly Dictionary<string, float> _lastNoticeByInteractor = new(StringComparer.Ordinal);
     private readonly HashSet<string> _attachedItemIdentifiers = new(StringComparer.Ordinal);
     private readonly HashSet<int> _dismountedClientIds = new();
-    private readonly HashSet<int> _requiredDismountClientIds = new();
     private readonly List<MonoBehaviour> _patientAttachPointOccupants = new();
 
     private ChatUIController _chatUI;
@@ -176,19 +175,6 @@ namespace TriageTrainer.Entity
     public MovingPatientBedPositioningPoint LatchedPositioningPoint => _latchedPositioningPoint;
     public int RequiredInteractorCount => Mathf.Max(Weight, ReposedTarget?.Weight ?? 0);
     public string DismountCompletionSignal => _dismountCompletionSignal?.Trim();
-    public bool HaveAllRequiredDismountedParticipants
-    {
-      get
-      {
-        foreach (int clientId in _requiredDismountClientIds)
-        {
-          if (!_dismountedClientIds.Contains(clientId))
-            return false;
-        }
-
-        return true;
-      }
-    }
 
     protected override void OnServerParticipantEntered(int clientId, PlayerController player, int handle)
     {
@@ -206,25 +192,6 @@ namespace TriageTrainer.Entity
     public void ResetDismountCompletionTracking()
     {
       _dismountedClientIds.Clear();
-      _requiredDismountClientIds.Clear();
-    }
-
-    /// <summary>
-    /// 현재 이동 단계에 참여해야 하는 플레이어를 고정하고, 각 플레이어가 침대 조작을 종료했는지 추적한다.
-    /// 빈 집합은 오프라인 실행이나 접속 플레이어가 아직 없는 준비 단계에서 추가 대기를 만들지 않는다.
-    /// </summary>
-    public void BeginRequiredDismountTracking(IEnumerable<int> requiredClientIds)
-    {
-      _dismountedClientIds.Clear();
-      _requiredDismountClientIds.Clear();
-      if (requiredClientIds == null)
-        return;
-
-      foreach (int clientId in requiredClientIds)
-      {
-        if (clientId >= 0)
-          _requiredDismountClientIds.Add(clientId);
-      }
     }
 
     protected override void OnServerParticipantExited(int clientId, PlayerController player, int handle)

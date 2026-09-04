@@ -2213,37 +2213,26 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void PatientAMoveWaitsForEveryConnectedPlayerToLeaveTheBed()
+    public void PatientAMoveCompletesAsSoonAsAnyoneSnapsTheBed()
     {
-      var bedObject = new GameObject("PatientBedDismountTrackingTest");
-      try
-      {
-        var bed = bedObject.AddComponent<MovingPatientBedController>();
-        bed.BeginRequiredDismountTracking(new[] { 10, 20 });
-
-        Assert.That(bed.HaveAllRequiredDismountedParticipants, Is.False,
-          "두 명 이상이 접속한 이동 단계에서는 한 명의 완료만으로 다음 단계가 진행되면 안 됩니다.");
-
-        var dismounted = typeof(MovingPatientBedController).GetField(
-          "_dismountedClientIds", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(bed) as HashSet<int>;
-        Assert.That(dismounted, Is.Not.Null);
-        dismounted.Add(10);
-        Assert.That(bed.HaveAllRequiredDismountedParticipants, Is.False);
-
-        dismounted.Add(20);
-        Assert.That(bed.HaveAllRequiredDismountedParticipants, Is.True);
-      }
-      finally
-      {
-        UnityEngine.Object.DestroyImmediate(bedObject);
-      }
-
       string projectRoot = Directory.GetParent(Application.dataPath).FullName;
       string transferSource = File.ReadAllText(Path.Combine(projectRoot,
         "Assets/Modules/TriageTrainer/Scripts/Scenario/"
         + "TriageScenarioEventBootstrap.Event.move_patientA_to_treatmentroom.cs"));
-      StringAssert.Contains("BeginRequiredDismountTracking(GetConnectedPlayerClientIds())", transferSource);
-      StringAssert.Contains("!bed.HaveAllRequiredDismountedParticipants", transferSource);
+
+      // 정박 신호를 확인한 뒤에는 어떤 추가 대기도 두지 않는다. 누가 침대를 밀었는지,
+      // 나머지 플레이어가 침대에서 내렸는지를 조건으로 삼으면 한 명이 단독으로 이송을
+      // 끝냈을 때 진행이 멈춘다.
+      StringAssert.Contains("bed.ForceReleaseAllParticipants();", transferSource,
+        "이송 완료 시점에 침대를 잡고 있던 플레이어의 조종 상태를 풀어 주어야 합니다.");
+      StringAssert.DoesNotContain("HaveAllRequiredDismountedParticipants", transferSource,
+        "하차 여부를 이송 완료 조건으로 삼으면 스냅만으로 진행되지 않습니다.");
+      StringAssert.DoesNotContain("BeginRequiredDismountTracking", transferSource);
+      StringAssert.DoesNotContain("GetConnectedPlayerClientIds", transferSource);
+      StringAssert.DoesNotContain("_patientADismountWaitTimeoutSeconds", transferSource);
+
+      // 정박 판정 자체는 특정 포인트 신호와 침대 범위 신호 가운데 하나만 올라와도 통과한다.
+      StringAssert.Contains("if (reached)", transferSource);
 
       string bedPrefab = File.ReadAllText(Path.Combine(projectRoot, PatientMovingBedPrefabPath));
       StringAssert.Contains("_maximumParticipants: 4", bedPrefab,

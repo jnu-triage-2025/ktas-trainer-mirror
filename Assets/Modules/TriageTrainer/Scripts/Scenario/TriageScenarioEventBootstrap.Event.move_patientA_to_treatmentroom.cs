@@ -1,6 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using FishNet;
 using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity;
 using UnityEngine;
@@ -60,7 +58,6 @@ namespace TriageTrainer.Scenario
         }
 
         bed.SetMovementInteractionEnabled(true, releaseParticipantsIfDisabled: false);
-        bed.BeginRequiredDismountTracking(GetConnectedPlayerClientIds());
 
         string globalSignal = hasResolvablePoint
           ? $"patient_bed_position_reached_{pointIdentifier}"
@@ -126,19 +123,10 @@ namespace TriageTrainer.Scenario
         if (hasResolvablePoint)
           bed.TryForceSnapToPositioningPoint(pointIdentifier);
 
-        {
-          float dismountStartedAt = Time.time;
-          while (!bed.HaveAllRequiredDismountedParticipants)
-          {
-            if (_patientADismountWaitTimeoutSeconds > 0f
-                && Time.time - dismountStartedAt >= _patientADismountWaitTimeoutSeconds)
-            {
-              Debug.LogWarning("[TriageScenarioEventBootstrap] 하차 대기 타임아웃: 강제 진행합니다.");
-              break;
-            }
-            yield return null;
-          }
-        }
+        // 침대가 정박한 시점에 이송을 완료로 처리한다. 누가 밀었는지, 다른 플레이어가
+        // 침대에서 내렸는지는 진행 조건으로 삼지 않는다. 다만 조종 상태로 침대에 묶여 있는
+        // 플레이어는 다음 단계를 수행할 수 없으므로 서버 권위로 함께 풀어 준다.
+        bed.ForceReleaseAllParticipants();
 
         yield break;
       }
@@ -172,31 +160,6 @@ namespace TriageTrainer.Scenario
       }
 
       return null;
-    }
-
-    private static IReadOnlyCollection<int> GetConnectedPlayerClientIds()
-    {
-      var clientIds = new List<int>();
-      if (InstanceFinder.IsServerStarted)
-      {
-        var clients = InstanceFinder.ServerManager?.Clients;
-        if (clients != null)
-        {
-          foreach (var pair in clients)
-          {
-            if (pair.Value != null)
-              clientIds.Add((int)pair.Value.ClientId);
-          }
-        }
-      }
-      else
-      {
-        var connection = InstanceFinder.ClientManager?.Connection;
-        if (connection != null)
-          clientIds.Add((int)connection.ClientId);
-      }
-
-      return clientIds;
     }
   }
 }
