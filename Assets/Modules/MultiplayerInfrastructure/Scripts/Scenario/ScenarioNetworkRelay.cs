@@ -1080,6 +1080,62 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
+    /// <summary>
+    /// 플레이어 퀘스트 상태 플래그 변경을 서버로 올린다.
+    ///
+    /// <para>
+    /// 호환 실행 경로에서 병렬 역할 브랜치는 배정된 클라이언트에서만 실행된다. 그 브랜치가 부르는
+    /// 상호작용 개방 이벤트가 플래그 풀을 건드리므로, 담당자가 호스트가 아니면 변경이 서버에
+    /// 닿지 못한다. 기록과 복제는 서버가 하고, 클라이언트는 요청만 올린다.
+    /// </para>
+    /// </summary>
+    /// <returns>서버에 요청을 보냈거나 이미 서버 컨텍스트여서 위임이 필요 없으면 false 가 아닌 값.</returns>
+    internal static bool RequestQuestStateFlagChange(
+      Quest.PlayerQuestStateFlagService.QuestStateFlagScope scope,
+      string[] targets,
+      string flag,
+      bool value)
+    {
+      if (_instance == null || !InstanceFinder.IsClientStarted || InstanceFinder.IsServerStarted
+          || string.IsNullOrWhiteSpace(flag))
+        return false;
+
+      _instance.CmdApplyQuestStateFlag((byte)scope, targets ?? Array.Empty<string>(), flag, value);
+      return true;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdApplyQuestStateFlag(byte scope, string[] targets, string flag, bool value,
+      NetworkConnection sender = null)
+    {
+      if (sender == null || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
+          || descriptor == null || string.IsNullOrWhiteSpace(descriptor.Identifier))
+      {
+        Debug.LogWarning(
+          "[ScenarioNetworkRelay] Rejected quest state flag change from an unknown sender.");
+        return;
+      }
+
+      if (!Enum.IsDefined(typeof(Quest.PlayerQuestStateFlagService.QuestStateFlagScope), scope))
+      {
+        Debug.LogWarning($"[ScenarioNetworkRelay] Rejected quest state flag change with unknown scope {scope}.");
+        return;
+      }
+
+      // 실행 중인 콘텐츠가 어휘를 선언했다면 그 안의 플래그만 받는다. 어휘를 선언하지 않는
+      // 콘텐츠까지 막으면 기존 동작이 바뀌므로, 선언이 없을 때만 통과시킨다.
+      var knownFlags = Quest.PlayerQuestStateFlagService.KnownFlags;
+      if (knownFlags.Count > 0 && !knownFlags.Contains(flag))
+      {
+        Debug.LogWarning(
+          $"[ScenarioNetworkRelay] Rejected undeclared quest state flag '{flag}' from client {sender.ClientId}.");
+        return;
+      }
+
+      Quest.PlayerQuestStateFlagService.ApplyRelayed(
+        (Quest.PlayerQuestStateFlagService.QuestStateFlagScope)scope, targets, flag, value);
+    }
+
     /// <summary>신호를 권위적으로 내린다(사이클 반복 등에서 재설정).</summary>
     public static void ClearAuthoritative(string normalizedSignalId)
     {

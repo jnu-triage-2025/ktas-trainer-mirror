@@ -53,14 +53,83 @@ namespace MultiplayerInfrastructure.Quest
     /// </summary>
     public static bool CanMutate => InstanceFinder.IsServerStarted || InstanceFinder.IsOffline;
 
-    private static bool IsMutationAllowed()
+    /// <summary>서버로 위임할 변경 요청의 대상 지정 방식.</summary>
+    internal enum QuestStateFlagScope : byte
     {
-      if (CanMutate)
+      /// <summary>UserDescriptor.Identifier 한 명.</summary>
+      Identifier = 0,
+
+      /// <summary>역할 태그 하나를 보유한 모든 플레이어.</summary>
+      Tag = 1,
+
+      /// <summary>역할 태그 중 하나라도 보유한 모든 플레이어.</summary>
+      AnyTag = 2,
+
+      /// <summary>접속한 모든 플레이어.</summary>
+      All = 3,
+    }
+
+    /// <summary>
+    /// 서버가 아닌 피어에서 발생한 변경을 서버로 넘긴다.
+    ///
+    /// <para>
+    /// 병렬 역할 브랜치는 배정된 클라이언트에서만 실행된다. 그 브랜치가 여는 상호작용 플래그를
+    /// 여기서 조용히 버리면, 담당자가 호스트가 아닌 순간 그 단계의 상호작용이 어느 피어에도
+    /// 열리지 않아 다음 게이트가 영원히 막힌다. 그래서 클라이언트 컨텍스트에서는 무시하지 않고
+    /// 서버에 요청을 올려, 기록과 복제는 그대로 서버 권위로 남긴다.
+    /// </para>
+    /// </summary>
+    private static bool Relay(QuestStateFlagScope scope, string[] targets, string flag, bool value)
+    {
+      if (Scenario.ScenarioNetworkRelay.RequestQuestStateFlagChange(scope, targets, flag.Trim(), value))
         return true;
 
       Debug.LogWarning(
-        "[PlayerQuestStateFlagService] Flag mutation attempted outside server context. Ignored.");
+        "[PlayerQuestStateFlagService] Flag mutation attempted outside server context "
+        + $"and could not be relayed to the server (scope={scope}, flag='{flag}'). Ignored.");
       return false;
+    }
+
+    private static string[] ToArray(IReadOnlyList<string> values)
+    {
+      var result = new string[values.Count];
+      for (int i = 0; i < values.Count; i++)
+        result[i] = values[i];
+      return result;
+    }
+
+    /// <summary>
+    /// 중계기가 서버에서 호출하는 적용 진입점. 권위 검사는 호출자(<c>ServerRpc</c>)가 마친 뒤이며,
+    /// 대상 판정은 서버의 세션/태그 상태로 여기서 다시 수행한다.
+    /// </summary>
+    internal static void ApplyRelayed(QuestStateFlagScope scope, string[] targets, string flag, bool value)
+    {
+      if (!CanMutate || string.IsNullOrWhiteSpace(flag))
+        return;
+
+      switch (scope)
+      {
+        case QuestStateFlagScope.Identifier:
+          if (targets != null && targets.Length > 0)
+          {
+            if (value)
+              Set(targets[0], flag);
+            else
+              Unset(targets[0], flag);
+          }
+          break;
+        case QuestStateFlagScope.Tag:
+          if (targets != null && targets.Length > 0)
+            SetForTag(targets[0], flag, value);
+          break;
+        case QuestStateFlagScope.AnyTag:
+          if (targets != null && targets.Length > 0)
+            SetForAnyTag(targets, flag, value);
+          break;
+        case QuestStateFlagScope.All:
+          SetForAll(flag, value);
+          break;
+      }
     }
 
     private static HashSet<string> GetOrCreateFlagSet(string identifier)
@@ -113,12 +182,14 @@ namespace MultiplayerInfrastructure.Quest
     // ── Public API ────────────────────────────────────────────────────────
 
     /// <summary>플래그 하나를 플레이어의 풀에 넣는다. 이미 있으면 아무 일도 하지 않는다.</summary>
-    /// <returns>실제로 추가되었으면 true.</returns>
+    /// <returns>실제로 추가되었으면 true(서버에 위임한 경우 요청을 보냈으면 true).</returns>
     public static bool Set(string identifier, string flag)
     {
-      if (!IsMutationAllowed()
-          || string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(flag))
+      if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(flag))
         return false;
+
+      if (!CanMutate)
+        return Relay(QuestStateFlagScope.Identifier, new[] { identifier }, flag, true);
 
       if (!GetOrCreateFlagSet(identifier).Add(flag.Trim()))
         return false;
@@ -128,12 +199,14 @@ namespace MultiplayerInfrastructure.Quest
     }
 
     /// <summary>플래그 하나를 플레이어의 풀에서 뺀다.</summary>
-    /// <returns>실제로 제거되었으면 true.</returns>
+    /// <returns>실제로 제거되었으면 true(서버에 위임한 경우 요청을 보냈으면 true).</returns>
     public static bool Unset(string identifier, string flag)
     {
-      if (!IsMutationAllowed()
-          || string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(flag))
+      if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(flag))
         return false;
+
+      if (!CanMutate)
+        return Relay(QuestStateFlagScope.Identifier, new[] { identifier }, flag, false);
 
       if (!GetOrCreateFlagSet(identifier).Remove(flag.Trim()))
         return false;
@@ -146,8 +219,13 @@ namespace MultiplayerInfrastructure.Quest
     /// <returns>실제로 상태가 바뀐 플레이어 수.</returns>
     public static int SetForTag(string tag, string flag, bool value = true)
     {
-      if (string.IsNullOrWhiteSpace(tag))
+      if (string.IsNullOrWhiteSpace(tag) || string.IsNullOrWhiteSpace(flag))
         return 0;
+
+      // 역할 브랜치는 배정된 클라이언트에서만 실행되므로, 이 호출이 원격 클라이언트에서
+      // 출발할 수 있다. 대상 판정은 서버의 세션/태그 상태로 다시 해야 정확하다.
+      if (!CanMutate)
+        return Relay(QuestStateFlagScope.Tag, new[] { tag }, flag, value) ? 1 : 0;
 
       int changed = 0;
       foreach (var pair in UserDescriptorService.GetAll())
@@ -167,8 +245,11 @@ namespace MultiplayerInfrastructure.Quest
     /// <summary>지정한 역할 태그 중 하나라도 보유한 플레이어에게 플래그를 적용하거나 해제한다.</summary>
     public static int SetForAnyTag(IReadOnlyList<string> tags, string flag, bool value = true)
     {
-      if (tags == null || tags.Count == 0)
+      if (tags == null || tags.Count == 0 || string.IsNullOrWhiteSpace(flag))
         return 0;
+
+      if (!CanMutate)
+        return Relay(QuestStateFlagScope.AnyTag, ToArray(tags), flag, value) ? 1 : 0;
 
       int changed = 0;
       foreach (var pair in UserDescriptorService.GetAll())
@@ -198,6 +279,12 @@ namespace MultiplayerInfrastructure.Quest
     /// <summary>접속한 모든 플레이어에게 플래그를 적용하거나 해제한다.</summary>
     public static int SetForAll(string flag, bool value = true)
     {
+      if (string.IsNullOrWhiteSpace(flag))
+        return 0;
+
+      if (!CanMutate)
+        return Relay(QuestStateFlagScope.All, Array.Empty<string>(), flag, value) ? 1 : 0;
+
       int changed = 0;
       foreach (var pair in UserDescriptorService.GetAll())
       {

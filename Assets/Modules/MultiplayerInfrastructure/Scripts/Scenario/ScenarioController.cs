@@ -291,11 +291,31 @@ namespace MultiplayerInfrastructure.Scenario
       if (_currentGraph == null
           || (!string.Equals(_currentGraph.Identifier, "patient_a_critical", StringComparison.Ordinal)
               && !string.Equals(_currentGraph.Identifier, "patient_b_c_ct", StringComparison.Ordinal))
-          || !_activeRoleBranchDepthByClientId.ContainsKey(senderClientId)
           || ScenarioInteractionSignals.IsRaised(normalizedSignal))
         return false;
 
-      return true;
+      // 호환 실행 경로에서는 피어마다 자기 커서로 같은 그래프를 돈다. 그래서 서버 피어의 역할
+      // 브랜치 표는 "서버 플레이어가 지금 어느 브랜치에 있는가"일 뿐, 원격 담당자의 진행과
+      // 무관하다. 서버 플레이어의 브랜치가 먼저 끝나면 표가 비어 버려, 정작 담당자가 모니터를
+      // 닫지 못하고 화면이 그대로 남는다. 표를 먼저 보고, 없으면 그래프가 선언한 활성 역할을
+      // 실제로 보유했는지로 판정한다(둘 다 서버가 검증할 수 있는 사실이다).
+      return _activeRoleBranchDepthByClientId.ContainsKey(senderClientId)
+             || IsActiveRoleHolder(senderClientId);
+    }
+
+    /// <summary>현재 그래프가 선언한 활성 역할 가운데 하나를 이 클라이언트가 보유하는지 판정한다.</summary>
+    private bool IsActiveRoleHolder(int clientId)
+    {
+      if (!TryGetActiveRoleRoster(out var roster, out _))
+        return false;
+
+      for (int index = 0; index < roster.Count; index++)
+      {
+        if (roster[index].ClientId == clientId)
+          return true;
+      }
+
+      return false;
     }
     public IReadOnlyList<int> GetNodeVisitOrders(string graphIdentifier, string nodeIdentifier)
     {
