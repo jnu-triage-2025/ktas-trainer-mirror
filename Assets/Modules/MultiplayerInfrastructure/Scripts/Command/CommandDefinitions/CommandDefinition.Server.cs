@@ -21,7 +21,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("ban <player>", "Ban a player by display name and disconnect them."),
       new UsageLine("unban <player>", "Remove a display name from the ban list."),
       new UsageLine("banlist", "Return the current ban list."),
-      new UsageLine("  <player>", "@selector (@a, @p, @r, @s), <clientId>, id:<uuid>, name:<displayName>, or a display name."),
+      new UsageLine("  <player>", PlayerTargetResolver.ShortSyntaxHint + "."),
     };
 
     private readonly ChatService _chat;
@@ -130,23 +130,12 @@ namespace MultiplayerInfrastructure.Command
       if (string.IsNullOrWhiteSpace(target) || InstanceFinder.ServerManager == null)
         return false;
 
-      if (int.TryParse(target, out int clientId))
-      {
-        if (!InstanceFinder.ServerManager.Clients.TryGetValue(clientId, out NetworkConnection connection)
-            || !UserDescriptorService.TryGetByClientId(clientId, out UserDescriptor descriptor))
-          return false;
-
-        targets.Add((connection, descriptor));
-        return true;
-      }
-
       if (!PlayerTargetResolver.TryResolve(sender, target, out var descriptors, out _))
         return false;
 
       foreach (UserDescriptor descriptor in descriptors)
       {
-        if (!UserDescriptorService.TryGetClientId(descriptor.Identifier, out int resolvedClientId)
-            || !InstanceFinder.ServerManager.Clients.TryGetValue(resolvedClientId, out NetworkConnection connection))
+        if (!PlayerTargetResolver.TryGetConnection(descriptor, out NetworkConnection connection))
           continue;
 
         targets.Add((connection, descriptor));

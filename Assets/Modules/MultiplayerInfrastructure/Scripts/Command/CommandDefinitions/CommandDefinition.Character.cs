@@ -4,7 +4,6 @@ using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.Session;
 
 namespace MultiplayerInfrastructure.Command
 {
@@ -17,7 +16,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("character list", "List available character models."),
       new UsageLine("character set <model>", "Apply a model to yourself."),
       new UsageLine("character set <target> <model>", "Apply a model to a target."),
-      new UsageLine("  <target>", "@s, <clientId>, fish:<id>, id:<user>, name:<name>."),
+      new UsageLine("  <target>", PlayerTargetResolver.ShortSyntaxHint + "."),
       new UsageLine("  <model>", "Registered player model identifier."),
     };
 
@@ -159,152 +158,13 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (playerIdentifier.StartsWith('@'))
-      {
-        if (!TargetSelectorResolver.TryResolveTargets(sender, playerIdentifier, out var targets, out error))
-          return false;
-
-        if (targets.Count != 1)
-        {
-          error = $"Target selector matched {targets.Count} targets; expected 1.";
-          return false;
-        }
-
-        if (!TryResolveControllerByConnection(targets[0], out controller))
-        {
-          error = "Target is invalid.";
-          return false;
-        }
-
-        return true;
-      }
-
-      if (string.Equals(playerIdentifier, "@self", StringComparison.OrdinalIgnoreCase)
-          || string.Equals(playerIdentifier, "@s", StringComparison.OrdinalIgnoreCase))
-      {
-        if (!TryResolveControllerByConnection(sender, out controller))
-        {
-          error = "Unable to locate your target.";
-          return false;
-        }
-
-        return true;
-      }
-
-      if (TryResolveConnectionBySelector(playerIdentifier, out var targetConnection)
-          && TryResolveControllerByConnection(targetConnection, out controller))
-      {
-        return true;
-      }
-
-      error = $"Target '{playerIdentifier}' was not found.";
-      return false;
-    }
-
-    private static bool TryResolveConnectionBySelector(string selector, out NetworkConnection connection)
-    {
-      connection = null;
-      if (string.IsNullOrWhiteSpace(selector))
-        return false;
-
-      if (selector.StartsWith("fish:", StringComparison.OrdinalIgnoreCase))
-      {
-        string rawClientId = selector.Substring("fish:".Length);
-        return TryResolveConnectionByClientId(rawClientId, out connection);
-      }
-
-      if (selector.StartsWith("id:", StringComparison.OrdinalIgnoreCase))
-      {
-        string userIdentifier = selector.Substring("id:".Length);
-        return TryResolveConnectionByUserIdentifier(userIdentifier, out connection);
-      }
-
-      if (selector.StartsWith("name:", StringComparison.OrdinalIgnoreCase))
-      {
-        string displayName = selector.Substring("name:".Length);
-        return TryResolveConnectionByDisplayName(displayName, out connection);
-      }
-
-      if (int.TryParse(selector, out _))
-      {
-        return TryResolveConnectionByClientId(selector, out connection);
-      }
-
-      // 폴백 순서: 사용자 식별자를 먼저 시도하고, 없으면 표시 이름으로 찾는다.
-      if (TryResolveConnectionByUserIdentifier(selector, out connection))
-        return true;
-
-      return TryResolveConnectionByDisplayName(selector, out connection);
-    }
-
-    private static bool TryResolveConnectionByClientId(string rawClientId, out NetworkConnection connection)
-    {
-      connection = null;
-      if (!int.TryParse(rawClientId, out int clientId))
-        return false;
-
-      return TryGetConnectionByClientId(clientId, out connection);
-    }
-
-    private static bool TryResolveConnectionByUserIdentifier(string userIdentifier, out NetworkConnection connection)
-    {
-      connection = null;
-      if (!Registry.Registry.TryGetEntityByOwnerUserIdentifier(userIdentifier, out var descriptor) || descriptor == null)
-        return false;
-
-      if (descriptor.ClientId == null)
-        return false;
-
-      return TryGetConnectionByClientId(descriptor.ClientId.Value, out connection);
-    }
-
-    private static bool TryResolveConnectionByDisplayName(string displayName, out NetworkConnection connection)
-    {
-      connection = null;
-      if (!UserDescriptorService.TryGetByDisplayName(displayName, out var descriptor))
-        return false;
-
-      if (!UserDescriptorService.TryGetClientId(descriptor.Identifier, out int clientId))
-        return false;
-
-      return TryGetConnectionByClientId(clientId, out connection);
-    }
-
-    private static bool TryGetConnectionByClientId(int clientId, out NetworkConnection connection)
-    {
-      connection = null;
-
-      var clients = FishNet.InstanceFinder.ServerManager?.Clients;
-      if (clients == null)
-        return false;
-
-      foreach (var pair in clients)
-      {
-        if (pair.Value != null && pair.Value.ClientId == clientId)
-        {
-          connection = pair.Value;
-          return true;
-        }
-      }
-
-      return false;
+      return PlayerTargetResolver.TryResolveSingleController(sender, playerIdentifier, out controller, out error);
     }
 
     private static bool TryResolveControllerByConnection(NetworkConnection connection, out PlayerController controller)
-    {
-      controller = null;
-      if (connection == null || connection.FirstObject == null)
-        return false;
-
-      return connection.FirstObject.TryGetComponent(out controller);
-    }
+      => PlayerTargetResolver.TryGetController(connection, out controller);
 
     private static string ResolveDisplayName(NetworkConnection connection)
-    {
-      if (connection != null && UserDescriptorService.TryGetByClientId(connection.ClientId, out var descriptor))
-        return descriptor.DisplayName;
-
-      return connection?.ClientId.ToString() ?? "Unknown";
-    }
+      => PlayerTargetResolver.DescribeConnection(connection);
   }
 }

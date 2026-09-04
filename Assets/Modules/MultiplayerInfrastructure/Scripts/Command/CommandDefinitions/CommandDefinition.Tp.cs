@@ -1,6 +1,4 @@
-﻿using System;
-using FishNet;
-using FishNet.Connection;
+﻿using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Permission;
 using MultiplayerInfrastructure.Player;
@@ -36,7 +34,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("tp <player1> <player2>",  "Teleport player1 to player2."),
       new UsageLine("tp <waypoint>",           "Teleport yourself to waypoint."),
       new UsageLine("tp <player> <waypoint>",  "Teleport player to waypoint."),
-      new UsageLine("  <player>",              "@s, @a, @p, @r, <clientId>, fish:<id>, id:<user>, name:<name>."),
+      new UsageLine("  <player>",              PlayerTargetResolver.ShortSyntaxHint + "."),
       new UsageLine("  <waypoint>",            "Registered waypoint identifier."),
     };
 
@@ -333,7 +331,7 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (conn.FirstObject == null || !conn.FirstObject.TryGetComponent(out controller))
+      if (!PlayerTargetResolver.TryGetController(conn, out controller))
       {
         error = "Unable to locate your player object.";
         return false;
@@ -345,176 +343,10 @@ namespace MultiplayerInfrastructure.Command
     /// token → PlayerController (selector, name, id 등 모두 지원)
     private static bool TryResolveController(string token, NetworkConnection sender,
                                               out PlayerController controller, out string error)
-    {
-      controller = null;
-      error = string.Empty;
-
-      if (string.IsNullOrWhiteSpace(token))
-      {
-        error = "Target token is empty.";
-        return false;
-      }
-
-      // @-selector
-      if (token.StartsWith('@'))
-      {
-        if (!TargetSelectorResolver.TryResolveTargets(sender, token, out var targets, out error))
-          return false;
-
-        if (targets.Count != 1)
-        {
-          error = $"Selector '{token}' matched {targets.Count} targets; expected exactly 1.";
-          return false;
-        }
-
-        if (targets[0] == null || targets[0].FirstObject == null
-            || !targets[0].FirstObject.TryGetComponent(out controller))
-        {
-          error = "Resolved target has no player object.";
-          return false;
-        }
-
-        return true;
-      }
-
-      // fish:<clientId>
-      if (token.StartsWith("fish:", StringComparison.OrdinalIgnoreCase))
-      {
-        string rawId = token.Substring("fish:".Length);
-        if (!int.TryParse(rawId, out int fishId))
-        {
-          error = "Invalid FishNet client id after 'fish:'.";
-          return false;
-        }
-
-        var conn = FindConnectionByClientId(fishId);
-        if (conn == null)
-        {
-          error = $"No player found for fish id '{fishId}'.";
-          return false;
-        }
-
-        if (conn.FirstObject == null || !conn.FirstObject.TryGetComponent(out controller))
-        {
-          error = "Target has no player object.";
-          return false;
-        }
-
-        return true;
-      }
-
-      // id:<userIdentifier>
-      if (token.StartsWith("id:", StringComparison.OrdinalIgnoreCase))
-      {
-        string uid = token.Substring("id:".Length);
-        if (!Registry.Registry.TryGetEntityByOwnerUserIdentifier(uid, out var desc) || desc?.ClientId == null)
-        {
-          error = $"No player found for identifier '{uid}'.";
-          return false;
-        }
-
-        var conn = FindConnectionByClientId(desc.ClientId.Value);
-        if (conn == null || conn.FirstObject == null || !conn.FirstObject.TryGetComponent(out controller))
-        {
-          error = "Target has no player object.";
-          return false;
-        }
-
-        return true;
-      }
-
-      // name:<displayName>
-      if (token.StartsWith("name:", StringComparison.OrdinalIgnoreCase))
-      {
-        string displayName = token.Substring("name:".Length);
-        return TryResolveControllerByDisplayName(displayName, out controller, out error);
-      }
-
-      // numeric → clientId
-      if (int.TryParse(token, out int numericId))
-      {
-        var conn = FindConnectionByClientId(numericId);
-        if (conn == null)
-        {
-          error = $"No player found for client id '{numericId}'.";
-          return false;
-        }
-
-        if (conn.FirstObject == null || !conn.FirstObject.TryGetComponent(out controller))
-        {
-          error = "Target has no player object.";
-          return false;
-        }
-
-        return true;
-      }
-
-      // 폴백: 사용자 식별자 → 표시 이름
-      if (Registry.Registry.TryGetEntityByOwnerUserIdentifier(token, out var descFallback)
-          && descFallback?.ClientId != null)
-      {
-        var conn = FindConnectionByClientId(descFallback.ClientId.Value);
-        if (conn != null && conn.FirstObject != null && conn.FirstObject.TryGetComponent(out controller))
-          return true;
-      }
-
-      return TryResolveControllerByDisplayName(token, out controller, out error);
-    }
-
-    private static bool TryResolveControllerByDisplayName(string displayName,
-                                                           out PlayerController controller, out string error)
-    {
-      controller = null;
-      error = string.Empty;
-
-      if (!UserDescriptorService.TryGetByDisplayName(displayName, out var descriptor))
-      {
-        error = $"No player found with name '{displayName}'.";
-        return false;
-      }
-
-      if (!UserDescriptorService.TryGetClientId(descriptor.Identifier, out int clientId))
-      {
-        error = $"Could not resolve client id for player '{displayName}'.";
-        return false;
-      }
-
-      var conn = FindConnectionByClientId(clientId);
-      if (conn == null || conn.FirstObject == null || !conn.FirstObject.TryGetComponent(out controller))
-      {
-        error = $"Player '{displayName}' has no active player object.";
-        return false;
-      }
-
-      return true;
-    }
-
-    private static NetworkConnection FindConnectionByClientId(int clientId)
-    {
-      var clients = InstanceFinder.ServerManager?.Clients;
-      if (clients == null)
-        return null;
-
-      foreach (var kvp in clients)
-      {
-        if (kvp.Value != null && kvp.Value.ClientId == clientId)
-          return kvp.Value;
-      }
-
-      return null;
-    }
+      => PlayerTargetResolver.TryResolveSingleController(sender, token, out controller, out error);
 
     private static string ResolveDisplayName(PlayerController controller)
-    {
-      if (controller == null)
-        return "Unknown";
-
-      if (controller.Owner != null
-          && UserDescriptorService.TryGetByClientId(controller.Owner.ClientId, out var desc))
-        return desc.DisplayName;
-
-      return controller.name;
-    }
+      => PlayerTargetResolver.DescribeController(controller);
 
     private void SendUsage(NetworkConnection sender)
     {

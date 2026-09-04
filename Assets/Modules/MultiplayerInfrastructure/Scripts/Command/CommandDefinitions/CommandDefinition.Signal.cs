@@ -22,7 +22,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("signal player <player> <identifier>", "Show one player's latest value."),
       new UsageLine("signal list [identifier]", "List stored values."),
       new UsageLine("signal flush", "Clear all stored signal parameter values."),
-      new UsageLine("  <player>", "@selector (@a, @p, @r, @s), id:<uuid>, name:<displayName>, or a display name."),
+      new UsageLine("  <player>", PlayerTargetResolver.ShortSyntaxHint + "."),
     };
     public string PermissionIdentifier => "scenario";
 

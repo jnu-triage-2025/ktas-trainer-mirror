@@ -24,7 +24,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("scoreboard players list [target]", "List scores."),
       new UsageLine("scoreboard players reset <target> [objective]", "Reset score(s)."),
       new UsageLine("scoreboard players operation <target> <objA> <op> <src> <objB>", "Combine two scores."),
-      new UsageLine("  <target>", "@selector (@a, @p, @r, @s), id:<uuid>, name:<displayName>, or a display name."),
+      new UsageLine("  <target>", PlayerTargetResolver.ShortSyntaxHint + "."),
     };
     public string PermissionIdentifier => "scoreboard";
 

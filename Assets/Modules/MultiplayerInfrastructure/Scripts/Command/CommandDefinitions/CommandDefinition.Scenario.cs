@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FishNet;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
-using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Problem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
@@ -31,7 +29,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("scenario conflictpolicy [warn|cancel|panic]", "Get/set concurrent-dialogue conflict policy."),
       new UsageLine("scenario validatorlog", "Show Validator block logging targets."),
       new UsageLine("scenario validatorlog <console|chat|session> <on|off>", "Enable or disable a logging target."),
-      new UsageLine("  <target>", "@s, @a, @n, or fish:<id>."),
+      new UsageLine("  <target>", PlayerTargetResolver.ShortSyntaxHint),
       new UsageLine("  <scenario>", "Registered scenario identifier."),
     };
     public string PermissionIdentifier => "scenario";
@@ -189,7 +187,7 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!TryResolveTargets(sender, targetSelector, out List<NetworkConnection> targets, out string targetError))
+      if (!PlayerTargetResolver.TryResolveConnections(sender, targetSelector, out List<NetworkConnection> targets, out string targetError))
       {
         _chat.SendSystemMessage(sender, targetError);
         return;
@@ -442,214 +440,6 @@ namespace MultiplayerInfrastructure.Command
 
       _chat.SendSystemMessage(sender, $"Available scenarios ({ordered.Count}): {string.Join(", ", ordered)}");
     }
-
-    private bool TryResolveTargets(NetworkConnection sender, string raw, out List<NetworkConnection> targets, out string error)
-    {
-      targets = new List<NetworkConnection>();
-      error = string.Empty;
-
-      if (string.IsNullOrWhiteSpace(raw))
-      {
-        error = "Target selector is required.";
-        return false;
-      }
-
-      if (raw.StartsWith('@'))
-      {
-        return TargetSelectorResolver.TryResolveTargets(sender, raw, out targets, out error);
-      }
-
-      string lowered = raw.ToLowerInvariant();
-
-      if (lowered == "@s")
-      {
-        if (sender == null)
-        {
-          error = "Unable to locate the command executor.";
-          return false;
-        }
-
-        targets.Add(sender);
-      }
-      else if (lowered == "@a")
-      {
-        targets.AddRange(GetAllConnections());
-      }
-      else if (lowered == "@n")
-      {
-        if (!TryGetNearestPlayer(sender, out NetworkConnection nearest, out error))
-          return false;
-
-        if (nearest != null)
-          targets.Add(nearest);
-      }
-      else if (lowered.StartsWith("fish:"))
-      {
-        string idText = raw.Substring("fish:".Length);
-        if (!int.TryParse(idText, out int clientId))
-        {
-          error = "Invalid FishNet target identifier after 'fish:'.";
-          return false;
-        }
-
-        var match = FindConnectionByClientId(clientId);
-        if (match == null)
-        {
-          error = $"No target found for fish id '{clientId}'.";
-          return false;
-        }
-
-        targets.Add(match);
-      }
-      else if (lowered.StartsWith("id:"))
-      {
-        error = "Lookup by descriptor id is not implemented yet.";
-        return false;
-      }
-      else if (lowered.StartsWith("name:"))
-      {
-        error = "Lookup by target name is not implemented yet.";
-        return false;
-      }
-      else
-      {
-        error = "Unknown target selector. Use fish:, id:, name:, @s, @n, or @a.";
-        return false;
-      }
-
-      if (targets.Count == 0)
-      {
-        error = "No targets matched the selector.";
-        return false;
-      }
-
-      targets = targets
-        .Where(t => t != null)
-        .GroupBy(t => (int)t.ClientId)
-        .Select(g => g.First())
-        .ToList();
-
-      if (targets.Count == 0)
-      {
-        error = "No valid targets matched the selector.";
-        return false;
-      }
-
-      return true;
-    }
-
-    private bool TryGetNearestPlayer(NetworkConnection sender, out NetworkConnection target, out string error)
-    {
-      target = null;
-      error = string.Empty;
-
-      var players = GetAllPlayerControllers();
-      if (players.Count == 0)
-      {
-        error = "No targets are connected.";
-        return false;
-      }
-
-      var senderController = FindPlayerController(sender, players);
-      if (senderController == null)
-      {
-        error = "Unable to locate the command executor's target on the server.";
-        return false;
-      }
-
-      var others = players.Where(p => p.Owner != null && p.Owner != sender).ToList();
-      var pool = others.Count > 0 ? others : players;
-
-      PlayerController closest = null;
-      float bestSqr = float.MaxValue;
-      Vector3 origin = senderController.transform.position;
-
-      foreach (var player in pool)
-      {
-        if (player == null || player.Owner == null)
-          continue;
-
-        float sqr = (player.transform.position - origin).sqrMagnitude;
-        if (sqr < bestSqr)
-        {
-          bestSqr = sqr;
-          closest = player;
-        }
-      }
-
-      if (closest == null || closest.Owner == null)
-      {
-        error = "Unable to resolve the nearest target.";
-        return false;
-      }
-
-      target = closest.Owner;
-      return true;
-    }
-
-    private List<NetworkConnection> GetAllConnections()
-    {
-      var result = new List<NetworkConnection>();
-      var clients = InstanceFinder.ServerManager?.Clients;
-
-      if (clients != null)
-      {
-        foreach (var kvp in clients)
-        {
-          if (kvp.Value != null)
-            result.Add(kvp.Value);
-        }
-      }
-
-      return result;
-    }
-
-    private List<PlayerController> GetAllPlayerControllers()
-    {
-      var found = UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
-      var result = new List<PlayerController>(found.Length);
-
-      foreach (var player in found)
-      {
-        if (player != null && player.Owner != null)
-          result.Add(player);
-      }
-
-      return result;
-    }
-
-    private PlayerController FindPlayerController(NetworkConnection connection, List<PlayerController> candidates)
-    {
-      if (connection == null || candidates == null)
-        return null;
-
-      foreach (var player in candidates)
-      {
-        if (player == null)
-          continue;
-
-        if (player.Owner == connection)
-          return player;
-      }
-
-      return null;
-    }
-
-    private NetworkConnection FindConnectionByClientId(int clientId)
-    {
-      var clients = InstanceFinder.ServerManager?.Clients;
-      if (clients == null)
-        return null;
-
-      foreach (var kvp in clients)
-      {
-        var candidate = kvp.Value;
-        if (candidate != null && candidate.ClientId == clientId)
-          return candidate;
-      }
-
-      return null;
-    }
   }
 
   public sealed class CommandDefinition_ScenarioAlias : IChatCommandModel, IChatCommandUsage
@@ -684,7 +474,7 @@ namespace MultiplayerInfrastructure.Command
     {
       new UsageLine("problemsheet list", "List available problem sheets."),
       new UsageLine("problemsheet <target> <problem> [index]", "Open a problem sheet for targets."),
-      new UsageLine("  <target>", "@s, @a, @n, or fish:<id>."),
+      new UsageLine("  <target>", PlayerTargetResolver.ShortSyntaxHint),
       new UsageLine("  <problem>", "Registered problem set identifier."),
       new UsageLine("  [index]", "1-based problem number; opens only that one."),
     };
@@ -754,7 +544,7 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (!TryResolveTargets(sender, playerSelector, out List<NetworkConnection> targets, out string targetError))
+      if (!PlayerTargetResolver.TryResolveConnections(sender, playerSelector, out List<NetworkConnection> targets, out string targetError))
       {
         error = targetError;
         if (!suppressSystemMessages)
@@ -824,193 +614,6 @@ namespace MultiplayerInfrastructure.Command
 
       if (!suppressSystemMessages)
         _chat.SendSystemMessage(sender, $"Available problem sheets ({ordered.Count}): {string.Join(", ", ordered)}");
-    }
-
-    private bool TryResolveTargets(NetworkConnection sender, string raw, out List<NetworkConnection> targets, out string error)
-    {
-      targets = new List<NetworkConnection>();
-      error = string.Empty;
-
-      if (string.IsNullOrWhiteSpace(raw))
-      {
-        error = "Target player selector is required.";
-        return false;
-      }
-
-      string lowered = raw.ToLowerInvariant();
-      if (lowered == "@s")
-      {
-        if (sender == null)
-        {
-          error = "Unable to locate the command executor.";
-          return false;
-        }
-
-        targets.Add(sender);
-      }
-      else if (lowered == "@a")
-      {
-        targets.AddRange(GetAllConnections());
-      }
-      else if (lowered == "@n")
-      {
-        if (!TryGetNearestPlayer(sender, out NetworkConnection nearest, out error))
-          return false;
-
-        if (nearest != null)
-          targets.Add(nearest);
-      }
-      else if (lowered.StartsWith("fish:"))
-      {
-        string idText = raw.Substring("fish:".Length);
-        if (!int.TryParse(idText, out int clientId))
-        {
-          error = "Invalid FishNet player identifier after 'fish:'";
-          return false;
-        }
-
-        var match = FindConnectionByClientId(clientId);
-        if (match == null)
-        {
-          error = $"No player found for fish id '{clientId}'.";
-          return false;
-        }
-
-        targets.Add(match);
-      }
-      else
-      {
-        error = "Unknown target selector. Use fish:, @s, @n, or @a.";
-        return false;
-      }
-
-      if (targets.Count == 0)
-      {
-        error = "No players matched the selector.";
-        return false;
-      }
-
-      targets = targets.Where(t => t != null).GroupBy(t => (int)t.ClientId).Select(g => g.First()).ToList();
-      if (targets.Count == 0)
-      {
-        error = "No valid players matched the selector.";
-        return false;
-      }
-
-      return true;
-    }
-
-    private bool TryGetNearestPlayer(NetworkConnection sender, out NetworkConnection target, out string error)
-    {
-      target = null;
-      error = string.Empty;
-
-      var players = GetAllPlayerControllers();
-      if (players.Count == 0)
-      {
-        error = "No players are connected.";
-        return false;
-      }
-
-      var senderController = FindPlayerController(sender, players);
-      if (senderController == null)
-      {
-        error = "Unable to locate the command executor's player on the server.";
-        return false;
-      }
-
-      var others = players.Where(p => p.Owner != null && p.Owner != sender).ToList();
-      var pool = others.Count > 0 ? others : players;
-
-      PlayerController closest = null;
-      float bestSqr = float.MaxValue;
-      Vector3 origin = senderController.transform.position;
-
-      foreach (var player in pool)
-      {
-        if (player == null || player.Owner == null)
-          continue;
-
-        float sqr = (player.transform.position - origin).sqrMagnitude;
-        if (sqr < bestSqr)
-        {
-          bestSqr = sqr;
-          closest = player;
-        }
-      }
-
-      if (closest == null || closest.Owner == null)
-      {
-        error = "Unable to resolve the nearest player.";
-        return false;
-      }
-
-      target = closest.Owner;
-      return true;
-    }
-
-    private List<NetworkConnection> GetAllConnections()
-    {
-      var result = new List<NetworkConnection>();
-      var clients = InstanceFinder.ServerManager?.Clients;
-
-      if (clients != null)
-      {
-        foreach (var kvp in clients)
-        {
-          if (kvp.Value != null)
-            result.Add(kvp.Value);
-        }
-      }
-
-      return result;
-    }
-
-    private List<PlayerController> GetAllPlayerControllers()
-    {
-      var found = UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
-      var result = new List<PlayerController>(found.Length);
-
-      foreach (var player in found)
-      {
-        if (player != null && player.Owner != null)
-          result.Add(player);
-      }
-
-      return result;
-    }
-
-    private PlayerController FindPlayerController(NetworkConnection connection, List<PlayerController> candidates)
-    {
-      if (connection == null || candidates == null)
-        return null;
-
-      foreach (var player in candidates)
-      {
-        if (player == null)
-          continue;
-
-        if (player.Owner == connection)
-          return player;
-      }
-
-      return null;
-    }
-
-    private NetworkConnection FindConnectionByClientId(int clientId)
-    {
-      var clients = InstanceFinder.ServerManager?.Clients;
-      if (clients == null)
-        return null;
-
-      foreach (var kvp in clients)
-      {
-        var candidate = kvp.Value;
-        if (candidate != null && candidate.ClientId == clientId)
-          return candidate;
-      }
-
-      return null;
     }
   }
 }

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using FishNet;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Session;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Command
@@ -19,7 +19,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("entitypreset spawn <preset> <x> <y> <z>", "Spawn at world coordinates."),
       new UsageLine("entitypreset spawn <preset> <target>", "Spawn at a target's position."),
       new UsageLine("  <preset>", "Registered entity preset identifier."),
-      new UsageLine("  <target>", "@s, <clientId>, fish:<id>, or entity id."),
+      new UsageLine("  <target>", PlayerTargetResolver.ShortSyntaxHint + ", or entity id."),
     };
     public string PermissionIdentifier => "entitypreset";
 
@@ -209,62 +209,18 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (target.StartsWith('@'))
-      {
-        if (!TargetSelectorResolver.TryResolveTargets(sender, target, out var targets, out error))
-          return false;
+      if (PlayerTargetResolver.TryResolveSingleConnection(sender, target, out var connection, out string playerError))
+        return TryResolveConnectionPosition(connection, out position, out error);
 
-        if (targets.Count != 1)
-        {
-          error = $"Target selector matched {targets.Count} targets; expected 1.";
-          return false;
-        }
-
-        return TryResolveConnectionPosition(targets[0], out position, out error);
-      }
-
-      if (string.Equals(target, "@self", StringComparison.OrdinalIgnoreCase)
-          || string.Equals(target, "@s", StringComparison.OrdinalIgnoreCase))
-      {
-        return TryResolveConnectionPosition(sender, out position, out error);
-      }
-
-      if (target.StartsWith("fish:", StringComparison.OrdinalIgnoreCase))
-      {
-        string idText = target.Substring("fish:".Length);
-        if (!int.TryParse(idText, out int clientId))
-        {
-          error = "Invalid FishNet target identifier after 'fish:'";
-          return false;
-        }
-
-        if (!TryGetConnectionByClientId(clientId, out var conn))
-        {
-          error = $"No target found for fish id '{clientId}'.";
-          return false;
-        }
-
-        return TryResolveConnectionPosition(conn, out position, out error);
-      }
-
-      if (int.TryParse(target, out int rawClientId))
-      {
-        if (!TryGetConnectionByClientId(rawClientId, out var conn))
-        {
-          error = $"No target found for client id '{rawClientId}'.";
-          return false;
-        }
-
-        return TryResolveConnectionPosition(conn, out position, out error);
-      }
-
-      if (Registry.Registry.TryGetEntity(target, out var descriptor) && descriptor?.GameObject != null)
+      // 플레이어가 아니어도 레지스트리에 등록된 엔티티라면 그 위치를 쓴다.
+      if (Registry.Registry.TryGetEntity(PlayerNameQuery.Normalize(target), out var descriptor)
+          && descriptor?.GameObject != null)
       {
         position = descriptor.GameObject.transform.position;
         return true;
       }
 
-      error = $"Target '{target}' was not found.";
+      error = playerError;
       return false;
     }
 
@@ -279,13 +235,7 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (connection.FirstObject == null)
-      {
-        error = "Target object is not available.";
-        return false;
-      }
-
-      if (!connection.FirstObject.TryGetComponent<PlayerController>(out var controller) || controller == null)
+      if (!PlayerTargetResolver.TryGetController(connection, out PlayerController controller))
       {
         error = "Target player is not available.";
         return false;
@@ -293,26 +243,6 @@ namespace MultiplayerInfrastructure.Command
 
       position = controller.transform.position;
       return true;
-    }
-
-    private static bool TryGetConnectionByClientId(int clientId, out NetworkConnection connection)
-    {
-      connection = null;
-      var clients = InstanceFinder.ServerManager?.Clients;
-      if (clients == null)
-        return false;
-
-      foreach (var pair in clients)
-      {
-        var candidate = pair.Value;
-        if (candidate != null && candidate.ClientId == clientId)
-        {
-          connection = candidate;
-          return true;
-        }
-      }
-
-      return false;
     }
 
     private void SendUsage(NetworkConnection sender)

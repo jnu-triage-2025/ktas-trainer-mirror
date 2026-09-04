@@ -24,7 +24,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("tag remove <target> <tag>", "Remove a tag from the target."),
       new UsageLine("tag change <target> <from> <to> [--force]", "Rename a tag (--force adds if missing)."),
       new UsageLine("tag show <target>", "List the target's tags."),
-      new UsageLine("  <target>", "@selector (@a, @p, @r, @s), id:<uuid>, name:<displayName>, display name, or entity id."),
+      new UsageLine("  <target>", PlayerTargetResolver.ShortSyntaxHint + ", or entity id."),
     };
     public string PermissionIdentifier => "tag";
 

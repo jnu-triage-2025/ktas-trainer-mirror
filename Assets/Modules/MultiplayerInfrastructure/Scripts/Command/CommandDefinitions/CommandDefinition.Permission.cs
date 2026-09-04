@@ -42,7 +42,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("permission user get <player>",                 "Show a player's current role."),
       new UsageLine("permission user set <player> <role>",          "Assign a role to a player."),
       new UsageLine("permission reset",                             "Reset permissions.json to defaults."),
-      new UsageLine("  <player>", "@selector (@a, @p, @r, @s), id:<uuid>, name:<displayName>, or a display name."),
+      new UsageLine("  <player>", PlayerTargetResolver.ShortSyntaxHint + "."),
       new UsageLine("  <perm>",   "Permission identifier, e.g. 'scenario', 'tp', '*', 'scenario.*'."),
     };
 

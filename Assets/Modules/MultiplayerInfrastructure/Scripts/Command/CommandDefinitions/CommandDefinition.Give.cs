@@ -1,10 +1,7 @@
-﻿using System;
-using FishNet;
-using FishNet.Connection;
+﻿using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.Session;
 
 namespace MultiplayerInfrastructure.Command
 {
@@ -17,7 +14,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("give <item> [count] [target]", "Give an item. Overflow drops in front."),
       new UsageLine("  <item>", "Registered item identifier."),
       new UsageLine("  [count]", "Amount to give. Default: 1."),
-      new UsageLine("  [target]", "@s, <clientId>, fish:<id>. Default: you."),
+      new UsageLine("  [target]", PlayerTargetResolver.ShortSyntaxHint + ". Default: you."),
     };
     public string PermissionIdentifier => "give";
 
@@ -136,6 +133,7 @@ namespace MultiplayerInfrastructure.Command
       target = null;
       error = string.Empty;
 
+      // 대상을 생략하면 실행자 자신에게 지급한다.
       if (string.IsNullOrWhiteSpace(rawTarget))
       {
         if (sender == null)
@@ -148,102 +146,13 @@ namespace MultiplayerInfrastructure.Command
         return true;
       }
 
-      if (rawTarget.StartsWith('@'))
-      {
-        if (!TargetSelectorResolver.TryResolveTargets(sender, rawTarget, out var targets, out error))
-          return false;
-
-        if (targets.Count != 1)
-        {
-          error = $"Target selector matched {targets.Count} targets; expected 1.";
-          return false;
-        }
-
-        target = targets[0];
-        return true;
-      }
-
-      string lowered = rawTarget.ToLowerInvariant();
-      if (lowered == "@s")
-      {
-        if (sender == null)
-        {
-          error = "@s cannot be used from system execution.";
-          return false;
-        }
-
-        target = sender;
-        return true;
-      }
-
-      if (lowered.StartsWith("fish:", StringComparison.Ordinal))
-      {
-        string idText = rawTarget.Substring("fish:".Length);
-        if (!int.TryParse(idText, out int clientId))
-        {
-          error = "Invalid FishNet target identifier after 'fish:'.";
-          return false;
-        }
-
-        target = FindConnectionByClientId(clientId);
-        if (target == null)
-        {
-          error = $"No target found for fish id '{clientId}'.";
-          return false;
-        }
-
-        return true;
-      }
-
-      if (int.TryParse(rawTarget, out int rawClientId))
-      {
-        target = FindConnectionByClientId(rawClientId);
-        if (target == null)
-        {
-          error = $"No target found for client id '{rawClientId}'.";
-          return false;
-        }
-
-        return true;
-      }
-
-      error = "Unknown target selector. Use fish:<id>, <id>, or @s.";
-      return false;
-    }
-
-    private static NetworkConnection FindConnectionByClientId(int clientId)
-    {
-      var clients = InstanceFinder.ServerManager?.Clients;
-      if (clients == null)
-        return null;
-
-      foreach (var kvp in clients)
-      {
-        var candidate = kvp.Value;
-        if (candidate != null && candidate.ClientId == clientId)
-          return candidate;
-      }
-
-      return null;
+      return PlayerTargetResolver.TryResolveSingleConnection(sender, rawTarget, out target, out error);
     }
 
     private static bool TryGetPlayerController(NetworkConnection conn, out PlayerController controller)
-    {
-      controller = null;
-      if (conn == null || conn.FirstObject == null)
-        return false;
-
-      return conn.FirstObject.TryGetComponent(out controller) && controller != null;
-    }
+      => PlayerTargetResolver.TryGetController(conn, out controller);
 
     private static string ResolveTargetDisplayName(NetworkConnection connection)
-    {
-      if (connection != null
-          && UserDescriptorService.TryGetByClientId(connection.ClientId, out var descriptor)
-          && !string.IsNullOrWhiteSpace(descriptor?.DisplayName))
-        return descriptor.DisplayName;
-
-      return $"target {connection?.ClientId.ToString() ?? "Unknown"}";
-    }
+      => PlayerTargetResolver.DescribeConnection(connection);
   }
 }
