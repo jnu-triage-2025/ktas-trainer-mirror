@@ -4360,6 +4360,45 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q_WAIT_INITIAL_A",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V_WAIT_INITIAL_A_OTHERS"
+    },
+    "V_WAIT_INITIAL_A_OTHERS": {
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.close_vital_ui_a"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.check_avpu_gcs_patient_a"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.suction_patient_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
+      "failureNextIdentifier": null,
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 600,
+      "onWaitTimeout": "ForceAdvance",
+      "identifier": "V_WAIT_INITIAL_A_OTHERS",
+      "nodeType": "Validator",
       "nextIdentifier": "CC_A_wait_initial_patient_a"
     },
     "Q_WAIT_INITIAL_B_ADD": {
@@ -6619,6 +6658,45 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q_WAIT_ROSC_C",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V_WAIT_ROSC_C_OTHERS"
+    },
+    "V_WAIT_ROSC_C_OTHERS": {
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.arrive_triagearea_patient_a"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.remove_patient_clothing"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.check_gcs_a_rosc"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
+      "failureNextIdentifier": null,
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 600,
+      "onWaitTimeout": "ForceAdvance",
+      "identifier": "V_WAIT_ROSC_C_OTHERS",
+      "nodeType": "Validator",
       "nextIdentifier": "CC_C_wait_rosc"
     },
     "P_REMOVE_ROSC_WAIT": {
