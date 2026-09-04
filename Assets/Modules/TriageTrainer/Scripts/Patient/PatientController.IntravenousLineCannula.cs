@@ -215,7 +215,10 @@ namespace TriageTrainer.Entity
         string requiredCannulaMessage = IsPatientBC
           ? "20G 캐뉼라가 필요하다."
           : "캐뉼라가 필요하다.";
-        dialogue?.DisplayDialogue("{PLAYER_NAME}", requiredCannulaMessage, null, interactionRequired: true);
+        // 물품 부족 안내는 시나리오 노드가 아니므로 입력과 오버레이를 점유하는 일반 대화창으로
+        // 표시하면 안 된다. 일반 대화창은 다음 입력을 기다린 뒤 시나리오 진행까지 시도하므로,
+        // 안내만 남고 닫히지 않는 것처럼 보일 수 있다. 자동 종료되는 즉석 안내로 표시한다.
+        dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", requiredCannulaMessage);
         return;
       }
 
