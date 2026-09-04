@@ -49,11 +49,25 @@ if (-not (Test-Path -LiteralPath $formatTarget -PathType Leaf)) {
         '-logFile',
         $unityLogPath
     )
-    $unityProcess = Start-Process -FilePath $unityExecutable `
-        -ArgumentList $unityArguments `
-        -WorkingDirectory $projectPath `
-        -Wait `
-        -PassThru
+    $runUnityProjectGeneration = {
+        Start-Process -FilePath $unityExecutable `
+            -ArgumentList $unityArguments `
+            -WorkingDirectory $projectPath `
+            -Wait `
+            -PassThru
+    }
+
+    $unityProcess = & $runUnityProjectGeneration
+    if ($unityProcess.ExitCode -ne 0) {
+        # Bee outputs are derived cache files. A prior interrupted Unity run can
+        # leave an incomplete IL post-processing assembly set behind.
+        $beeCachePath = Join-Path $projectPath 'Library/Bee'
+        if (Test-Path -LiteralPath $beeCachePath -PathType Container) {
+            Write-Host "Unity project generation failed; clearing the Bee compilation cache and retrying once."
+            Remove-Item -LiteralPath $beeCachePath -Recurse -Force
+            $unityProcess = & $runUnityProjectGeneration
+        }
+    }
     if ($unityProcess.ExitCode -ne 0) {
         if (Test-Path -LiteralPath $unityLogPath -PathType Leaf) {
             Get-Content -LiteralPath $unityLogPath -Tail 200
