@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Audio;
+using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -156,6 +157,16 @@ namespace TriageTrainer.Entity
 
     private void EnsureRecording()
     {
+      EnsureRecordingCore();
+      SyncCaptureIndicator();
+    }
+
+    /// <summary>
+    /// 실제로 마이크를 여는 부분이다. 열 수 없는 조건에서는 중간에 빠져나가므로,
+    /// 표시 갱신은 이 메서드를 감싸는 <see cref="EnsureRecording"/> 에서 한 번만 한다.
+    /// </summary>
+    private void EnsureRecordingCore()
+    {
       if (_clip != null || _targets.Count == 0
           || !_permissionRequestCompleted
           || _recordingFailed
@@ -301,6 +312,7 @@ namespace TriageTrainer.Entity
       _clip = null;
       _device = null;
       _aboveThresholdSeconds = 0f;
+      SyncCaptureIndicator();
     }
 
     private bool _permissionRequestCompleted;
@@ -374,6 +386,16 @@ namespace TriageTrainer.Entity
     {
       if (before != ResolveAvailability())
         AvailabilityChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// 마이크에서 실제로 입력을 받아오는 동안에만 화면 우측 하단 표시를 켠다.
+    /// 감시 대상이 있어도 마이크를 열지 못한 상태(권한 거부·장치 없음·녹음 실패)에서는
+    /// 받아오는 입력이 없으므로 켜지 않는다.
+    /// </summary>
+    private void SyncCaptureIndicator()
+    {
+      MicrophoneCaptureIndicatorUIController.SetCapturing(_targets.Count > 0 && _clip != null);
     }
   }
 }
