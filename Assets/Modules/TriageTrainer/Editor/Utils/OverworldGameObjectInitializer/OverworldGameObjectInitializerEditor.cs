@@ -31,6 +31,7 @@ namespace TriageTrainer.Editor.Utils
     private Vector3 doctorCareAreaWaypoint = OverworldGameObjectInitializer.DefaultDoctorCareAreaWaypoint;
     private Vector3 ctPatientBWaypoint = OverworldGameObjectInitializer.DefaultCtPatientBTargetPositionWaypoint;
     private Vector3 ctPatientCWaypoint = OverworldGameObjectInitializer.DefaultCtPatientCTargetPositionWaypoint;
+    private Vector3 ctRoomWaypoint = OverworldGameObjectInitializer.DefaultCtRoomWaypoint;
     private string patientBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientBSpawnWaypointIdentifier;
     private string patientASpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientASpawnWaypointIdentifier;
     private string patientAArrivalWaypointIdentifier = OverworldGameObjectInitializer.PatientAArrivalWaypointIdentifier;
@@ -47,6 +48,7 @@ namespace TriageTrainer.Editor.Utils
       OverworldGameObjectInitializer.DoctorRouteWaypointSetIdentifier;
     private string ctPatientBWaypointIdentifier = OverworldGameObjectInitializer.CtPatientBTargetPositionWaypointIdentifier;
     private string ctPatientCWaypointIdentifier = OverworldGameObjectInitializer.CtPatientCTargetPositionWaypointIdentifier;
+    private string ctRoomWaypointIdentifier = OverworldGameObjectInitializer.CtRoomWaypointIdentifier;
     private Vector3 triageArrivalZoneSize = OverworldGameObjectInitializer.DefaultTriageArrivalZoneSize;
     private Vector3 patientAArrivalZoneSize = OverworldGameObjectInitializer.DefaultPatientAArrivalZoneSize;
     private Vector3 ctPatientTargetZoneSize = OverworldGameObjectInitializer.DefaultCtPatientTargetZoneSize;
@@ -140,6 +142,7 @@ namespace TriageTrainer.Editor.Utils
       DrawWaypointFields("Scenario B Doctor Care Area", ref doctorCareAreaWaypointIdentifier, ref doctorCareAreaWaypoint);
       DrawWaypointFields("CT Patient B", ref ctPatientBWaypointIdentifier, ref ctPatientBWaypoint);
       DrawWaypointFields("CT Patient C", ref ctPatientCWaypointIdentifier, ref ctPatientCWaypoint);
+      DrawWaypointFields("CT Room", ref ctRoomWaypointIdentifier, ref ctRoomWaypoint);
       EditorGUILayout.Space(4f);
       EditorGUILayout.LabelField("Waypoint Sets", EditorStyles.boldLabel);
       DrawFixedWaypointSet(
@@ -225,6 +228,7 @@ namespace TriageTrainer.Editor.Utils
             doctorCareAreaWaypointIdentifier, doctorCareAreaWaypoint,
             ctPatientBWaypointIdentifier, ctPatientBWaypoint,
             ctPatientCWaypointIdentifier, ctPatientCWaypoint,
+            ctRoomWaypointIdentifier, ctRoomWaypoint,
             patientAArrivalZoneSize,
             ParseSignalList(patientAArrivalEnterSignals),
             patientAArrivalPerEntitySignalTemplate,
@@ -289,6 +293,7 @@ namespace TriageTrainer.Editor.Utils
       doctorCareAreaWaypoint = OverworldGameObjectInitializer.DefaultDoctorCareAreaWaypoint;
       ctPatientBWaypoint = OverworldGameObjectInitializer.DefaultCtPatientBTargetPositionWaypoint;
       ctPatientCWaypoint = OverworldGameObjectInitializer.DefaultCtPatientCTargetPositionWaypoint;
+      ctRoomWaypoint = OverworldGameObjectInitializer.DefaultCtRoomWaypoint;
       patientBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientBSpawnWaypointIdentifier;
       patientASpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientASpawnWaypointIdentifier;
       patientAArrivalWaypointIdentifier = OverworldGameObjectInitializer.PatientAArrivalWaypointIdentifier;
@@ -305,6 +310,7 @@ namespace TriageTrainer.Editor.Utils
         OverworldGameObjectInitializer.DoctorRouteWaypointSetIdentifier;
       ctPatientBWaypointIdentifier = OverworldGameObjectInitializer.CtPatientBTargetPositionWaypointIdentifier;
       ctPatientCWaypointIdentifier = OverworldGameObjectInitializer.CtPatientCTargetPositionWaypointIdentifier;
+      ctRoomWaypointIdentifier = OverworldGameObjectInitializer.CtRoomWaypointIdentifier;
       triageArrivalZoneSize = OverworldGameObjectInitializer.DefaultTriageArrivalZoneSize;
       patientAArrivalZoneSize = OverworldGameObjectInitializer.DefaultPatientAArrivalZoneSize;
       ctPatientTargetZoneSize = OverworldGameObjectInitializer.DefaultCtPatientTargetZoneSize;

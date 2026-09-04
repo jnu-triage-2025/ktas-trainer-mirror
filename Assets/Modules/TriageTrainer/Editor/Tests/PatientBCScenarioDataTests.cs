@@ -34,6 +34,36 @@ namespace TriageTrainer.Tests
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyA.prefab";
 
     [Test]
+    public void PatientBCAutoAdvanceIsLimitedToInteractionResultFeedback()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(
+        Path.Combine(Application.dataPath,
+          "Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json")));
+      var automaticFeedbackNodes = new HashSet<string>
+      {
+        "TRIAGE_WRONG", "TRIAGE_RESET_REMOVE", "TRIAGE_REENABLE_B",
+        "A_AVPU_WRONG_A", "A_AVPU_WRONG_P", "A_AVPU_WRONG_U", "A_AVPU_CORRECT",
+        "A_E_WRONG", "A_E_CORRECT", "A_V_WRONG", "A_V_CORRECT", "A_M_WRONG", "A_M_CORRECT",
+        "B_RR_WRONG", "B_RR_CORRECT", "B_BP_WRONG", "B_BP_CORRECT", "B_TEMP_WRONG", "B_TEMP_CORRECT",
+        "D_NASAL_DONE", "D_OXY_REPORT", "D_GAUZE_DONE", "D_PLASTER_DONE",
+        "C_A_AVPU_WRONG_A", "C_A_AVPU_WRONG_P", "C_A_AVPU_WRONG_U", "C_A_AVPU_CORRECT",
+        "C_A_E_WRONG", "C_A_E_CORRECT", "C_A_V_WRONG", "C_A_V_CORRECT", "C_A_M_WRONG", "C_A_M_CORRECT",
+        "C_B_RR_WRONG", "C_B_RR_CORRECT", "C_B_BP_WRONG", "C_B_BP_CORRECT", "C_B_TEMP_WRONG", "C_B_TEMP_CORRECT",
+        "C_D_NASAL_DONE", "C_D_OXY_REPORT", "C_D_GAUZE_DONE", "C_D_PLASTER_DONE"
+      };
+
+      var autoAdvanceNodes = graph.Nodes.Values
+        .OfType<ScenarioDialogueNode>()
+        .Where(node => node.AutoAdvanceSeconds.GetValueOrDefault() > 0f)
+        .ToArray();
+
+      Assert.That(autoAdvanceNodes.Select(node => node.Identifier),
+        Is.EquivalentTo(automaticFeedbackNodes));
+      Assert.That(autoAdvanceNodes.All(node => node.AutoAdvanceSeconds == 4f), Is.True,
+        "자동 진행 피드백은 기본 타이핑 속도로 전체 문장이 출력될 시간을 보장해야 한다.");
+    }
+
+    [Test]
     public void CareZoneRegistersUnattachedEquipmentWithoutActiveColliders()
     {
       var root = new GameObject("CareZoneUnattachedEquipmentTest");
@@ -481,8 +511,11 @@ namespace TriageTrainer.Tests
       Assert.That(transportQuest.Tasks.Select(task => task.Identifier), Is.EqualTo(new[]
       {
         "ct-patient-b",
-        "ct-patient-c"
+        "ct-patient-c",
+        "ct-room"
       }), "침대 마크를 항목별로 붙이려면 CT 이송 항목에도 식별자가 있어야 한다.");
+      Assert.That(transportQuest.Tasks.Single(task => task.Identifier == "ct-room").WaypointIdentifier,
+        Is.EqualTo("ct:ctroom"), "CT실 이동 task는 initializer가 생성하는 waypoint를 가리켜야 한다.");
       Assert.That(transportQuest.PresentationBindings.Select(binding =>
         (binding.CompletionCriteriaIdentifier, binding.EntityIdentifier, binding.InteractionIdentifier)),
         Is.EqualTo(new[]

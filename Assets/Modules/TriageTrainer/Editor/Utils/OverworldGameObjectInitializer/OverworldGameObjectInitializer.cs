@@ -114,6 +114,9 @@ namespace TriageTrainer.Editor.Utils
     public const string CtPatientCTargetPositionWaypointIdentifier = "ct:patient_target_pos_c";
     public static readonly Vector3 DefaultCtPatientCTargetPositionWaypoint = new(-80f, 0.5f, -18.3f);
 
+    public const string CtRoomWaypointIdentifier = "ct:ctroom";
+    public static readonly Vector3 DefaultCtRoomWaypoint = new(-79f, 2f, -22.5f);
+
     // 시나리오 신호 존. 각 존은 감싸는 웨이포인트의 식별자와 위치를 재사용하므로,
     // 박스 크기와 신호 문자열만 개별화한다. 도착은 콜라이더 겹침으로 판정하므로,
     // 실효 허용 오차는 박스 절반 크기에 진입 물체의 절반 크기를 더한 값이다.
@@ -153,6 +156,7 @@ namespace TriageTrainer.Editor.Utils
         DoctorCareAreaWaypointIdentifier, DefaultDoctorCareAreaWaypoint,
         CtPatientBTargetPositionWaypointIdentifier, DefaultCtPatientBTargetPositionWaypoint,
         CtPatientCTargetPositionWaypointIdentifier, DefaultCtPatientCTargetPositionWaypoint,
+        CtRoomWaypointIdentifier, DefaultCtRoomWaypoint,
         DefaultPatientAArrivalZoneSize,
         PatientAArrivalEnterSignals,
         PatientAArrivalPerEntitySignalTemplate,
@@ -184,6 +188,7 @@ namespace TriageTrainer.Editor.Utils
         string doctorCareAreaWaypointIdentifier, Vector3 doctorCareAreaWaypoint,
         string ctPatientBWaypointIdentifier, Vector3 ctPatientBWaypoint,
         string ctPatientCWaypointIdentifier, Vector3 ctPatientCWaypoint,
+        string ctRoomWaypointIdentifier, Vector3 ctRoomWaypoint,
         Vector3 patientAArrivalZoneSize,
         string[] patientAArrivalEnterSignals,
         string patientAArrivalPerEntitySignalTemplate,
@@ -227,6 +232,7 @@ namespace TriageTrainer.Editor.Utils
         perEntityPlayersOnly: true);
       CreateWaypoint(generatedRoot.transform, ctPatientBWaypointIdentifier, ctPatientBWaypoint);
       CreateWaypoint(generatedRoot.transform, ctPatientCWaypointIdentifier, ctPatientCWaypoint);
+      CreateWaypoint(generatedRoot.transform, ctRoomWaypointIdentifier, ctRoomWaypoint);
       CreateScenarioSignalZone(
         generatedRoot.transform,
         ctPatientBWaypointIdentifier,

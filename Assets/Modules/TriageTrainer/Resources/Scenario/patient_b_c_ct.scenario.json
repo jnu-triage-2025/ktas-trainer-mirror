@@ -427,7 +427,7 @@
       "dialogueContent": "트리아지 구역에 응급 환자 세명 이송. 담당자는 지금 바로 와주세요.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M1" }
     },
@@ -508,7 +508,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "ARR_A_REMOVE": {
       "identifier": "ARR_A_REMOVE",
@@ -551,7 +551,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "ARR_B_REMOVE": {
       "identifier": "ARR_B_REMOVE",
@@ -594,7 +594,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "ARR_C_REMOVE": {
       "identifier": "ARR_C_REMOVE",
@@ -637,7 +637,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "ARR_D_REMOVE": {
       "identifier": "ARR_D_REMOVE",
@@ -757,7 +757,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "TRIAGE_EVALUATE_CURRENT": {
       "identifier": "TRIAGE_EVALUATE_CURRENT",
@@ -801,7 +801,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "TRIAGE_COMPLETE_EVENT": {
       "identifier": "TRIAGE_COMPLETE_EVENT",
@@ -831,7 +831,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "TRIAGE_WRONG": {
       "identifier": "TRIAGE_WRONG",
@@ -841,7 +841,7 @@
       "dialogueContent": "(중증도가 잘못 분류된 것 같다. 다시 분류하자..)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "TRIAGE_RESET": {
@@ -859,7 +859,7 @@
       "dialogueContent": "(중증도가 잘못 분류된 것 같다. 다시 분류하자..)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "TRIAGE_RESET_ADD": {
@@ -877,7 +877,7 @@
       "dialogueContent": "(중증도가 잘못 분류된 것 같다. 다시 분류하자..)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "TRIAGE_REENABLE_C": {
@@ -970,7 +970,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "TRIAGE_B_REMOVE": {
       "identifier": "TRIAGE_B_REMOVE",
@@ -1013,7 +1013,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "TRIAGE_C_REMOVE": {
       "identifier": "TRIAGE_C_REMOVE",
@@ -1056,7 +1056,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "TRIAGE_D_REMOVE": {
       "identifier": "TRIAGE_D_REMOVE",
@@ -1167,7 +1167,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "MOVE_A_REMOVE": {
       "identifier": "MOVE_A_REMOVE",
@@ -1216,7 +1216,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "MOVE_B_REMOVE": {
       "identifier": "MOVE_B_REMOVE",
@@ -1265,7 +1265,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "MOVE_C_REMOVE": {
       "identifier": "MOVE_C_REMOVE",
@@ -1314,7 +1314,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "MOVE_D_REMOVE": {
       "identifier": "MOVE_D_REMOVE",
@@ -1380,7 +1380,7 @@
       "dialogueContent": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 IV 확보해 주세요.",
       "dialogueContentTTSPassing": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 아이 브이 확보해 주세요.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
     },
@@ -1392,7 +1392,7 @@
       "dialogueContent": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
       "dialogueContentTTSPassing": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
     },
@@ -1494,7 +1494,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "A_REC1_PLAYER": {
       "identifier": "A_REC1_PLAYER",
@@ -1503,7 +1503,7 @@
       "speakerName": "@s",
       "dialogueContent": "남성분..! 말씀 들리세요?",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_REC1_PATIENT": {
@@ -1513,7 +1513,7 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으.. 아.. 어디지..?",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "F3" }
     },
@@ -1525,7 +1525,7 @@
       "dialogueContent": "(환자는 잠시 눈을 뜨더니 다시 눈을 감는다.)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_REC2_ACT": {
@@ -1556,7 +1556,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "A_REC2_PLAYER": {
       "identifier": "A_REC2_PLAYER",
@@ -1565,7 +1565,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자분..!",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_REC2_PATIENT": {
@@ -1575,7 +1575,7 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으으..! 아..! 왜요..!!",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "F3" }
     },
@@ -1587,7 +1587,7 @@
       "dialogueContent": "(이 환자는 말에 조금 늦게 반응하고 있다.)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_REC3_ACT": {
@@ -1618,7 +1618,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "A_REC3_PLAYER": {
       "identifier": "A_REC3_PLAYER",
@@ -1627,7 +1627,7 @@
       "speakerName": "@s",
       "dialogueContent": "여기가 어딘지 아시겠어요?",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_REC3_PATIENT": {
@@ -1637,7 +1637,7 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으악...! 과장님 제가 분명...!!! 기안 올린거 처리해달라고..!",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "F3" }
     },
@@ -1648,7 +1648,7 @@
       "speakerName": "@s",
       "dialogueContent": "...",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_REC3_NOTE": {
@@ -1659,7 +1659,7 @@
       "dialogueContent": "(이 환자는 무슨 일이 있었는지 기억을 못하는 것 같다.)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_REC4_ACT": {
@@ -1690,7 +1690,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "A_REC4_PLAYER": {
       "identifier": "A_REC4_PLAYER",
@@ -1699,7 +1699,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자분..! 환자분!! 다리 한번 펴보실래요?",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_REC4_PATIENT": {
@@ -1709,7 +1709,7 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으으...! 날 가만히 둬..!!",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "F3" }
     },
@@ -1721,7 +1721,7 @@
       "dialogueContent": "(불평을 하면서도 환자는 다리를 움직인다.)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_RECOG_REMOVE": {
@@ -1751,7 +1751,7 @@
       "speakerName": "@s",
       "dialogueContent": "이 환자의 상태를 정리해보자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_AVPU": {
@@ -1790,7 +1790,7 @@
       "dialogueContent": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. V로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "A_AVPU_WRONG_P": {
@@ -1801,7 +1801,7 @@
       "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "A_AVPU_WRONG_U": {
@@ -1812,7 +1812,7 @@
       "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "A_AVPU_CORRECT": {
@@ -1823,7 +1823,7 @@
       "dialogueContent": "질문에 대답은 하지만 정확한 답변을 하지 못하고 있으니 V로 분류하자.",
       "dialogueContentTTSPassing": "질문에 대답은 하지만 정확한 답변을 하지 못하고 있으니 브이로 분류하자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "A_GCS_E": {
@@ -1862,7 +1862,7 @@
       "dialogueContent": "아니야, 이 환자는 소리에 반응하고 있어. E 3으로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "A_E_CORRECT": {
@@ -1873,7 +1873,7 @@
       "dialogueContent": "맞아, 이 환자는 소리에 반응하고 있어. E 3으로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류하자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "A_GCS_V": {
@@ -1916,7 +1916,7 @@
       "dialogueContent": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "A_V_CORRECT": {
@@ -1927,7 +1927,7 @@
       "dialogueContent": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류하자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "A_GCS_M": {
@@ -1974,7 +1974,7 @@
       "dialogueContent": "아니야, 이 환자는 지시를 따라주었어. M 6으로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 지시를 따라주었어. 엠 식스로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "A_M_CORRECT": {
@@ -1985,7 +1985,7 @@
       "dialogueContent": "맞아, 이 환자는 지시를 따라주었어. M 6으로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 지시를 따라주었어. 엠 식스로 분류하자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "A_GCS_SUM1": {
@@ -1996,7 +1996,7 @@
       "dialogueContent": "E는 3, V는 4.. M은 6이었으니까..",
       "dialogueContentTTSPassing": "이는 쓰리, 브이는 포.. 엠은 식스였으니까..",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_GCS_SUM2": {
@@ -2007,7 +2007,7 @@
       "dialogueContent": "E3 / V4 / M6, GCS 13점입니다.",
       "dialogueContentTTSPassing": "이 쓰리, 브이 포, 엠 식스, 지 씨 에스 13점입니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_STRENGTH_TRANSITION": {
@@ -2017,7 +2017,7 @@
       "speakerName": "@s",
       "dialogueContent": "이제 근력을 확인해 보자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_STRENGTH_Q": {
@@ -2058,7 +2058,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "A_RIGHT_LEG": {
       "identifier": "A_RIGHT_LEG",
@@ -2067,7 +2067,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자분 오른쪽 다리 한번 들어보세요.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_RIGHT_PRESS": {
@@ -2093,7 +2093,7 @@
       "speakerName": "@s",
       "dialogueContent": "눌리지 않는다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_LEFT_LEG": {
@@ -2103,7 +2103,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자분 이번엔 왼쪽 다리 한번 들어보세요.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_LEFT_PRESS": {
@@ -2129,7 +2129,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자의 다리가 맥없이 눌린다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_LEFT_GRADE": {
@@ -2171,7 +2171,7 @@
       "speakerName": "@t=[nurse_c, ???]",
       "dialogueContent": "방금 이쪽 다리 그냥 눌리지 않았나요? 좌측은 3점으로 고치죠.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_LEFT_CORRECT": {
@@ -2181,7 +2181,7 @@
       "speakerName": "@s",
       "dialogueContent": "(3점으로 기록했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_RIGHT_GRADE": {
@@ -2223,7 +2223,7 @@
       "speakerName": "@t=[nurse_c, ???]",
       "dialogueContent": "오른쪽 다리는 정상 근력인 것 같은데요. 우측은 5점으로 고치죠.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_RIGHT_CORRECT": {
@@ -2233,7 +2233,7 @@
       "speakerName": "@s",
       "dialogueContent": "(5점으로 기록했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_FINAL_SUMMARY": {
@@ -2244,7 +2244,7 @@
       "dialogueContent": "이 환자 GCS 13점, Motor Grade 우측 5, 좌측 3 입니다.",
       "dialogueContentTTSPassing": "이 환자 지 씨 에스 13점, 모터 그레이드 우측 5, 좌측 3입니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "A_STRENGTH_WAIT_UPDATE": {
@@ -2319,7 +2319,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "B_RR_PULSE": {
       "identifier": "B_RR_PULSE",
@@ -2360,7 +2360,7 @@
       "speakerName": "@s",
       "dialogueContent": "(호흡수 분당 24회, 맥박 분당 120회였어.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "B_RR_CORRECT": {
@@ -2370,7 +2370,7 @@
       "speakerName": "@s",
       "dialogueContent": "(호흡수 분당 24회, 맥박 분당 120회로 보고하고 기록했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "B_BP": {
@@ -2413,7 +2413,7 @@
       "dialogueContent": "(혈압은 140/86mmHg였어.)",
       "dialogueContentTTSPassing": "(혈압은 140에 86 밀리미터 머큐리였어.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "B_BP_CORRECT": {
@@ -2424,7 +2424,7 @@
       "dialogueContent": "(혈압 140/86mmHg로 보고하고 기록했다.)",
       "dialogueContentTTSPassing": "(혈압 140에 86 밀리미터 머큐리로 보고하고 기록했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "B_TEMP": {
@@ -2466,7 +2466,7 @@
       "speakerName": "@s",
       "dialogueContent": "(체온은 37.8도, 산소포화도는 93%였어.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "B_TEMP_CORRECT": {
@@ -2476,7 +2476,7 @@
       "speakerName": "@s",
       "dialogueContent": "(체온 37.8도, 산소포화도 93%로 보고하고 기록했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "B_VITAL_WAIT_UPDATE": {
@@ -2547,7 +2547,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_PUPIL_1": {
       "identifier": "C_PUPIL_1",
@@ -2556,7 +2556,7 @@
       "speakerName": "@s",
       "dialogueContent": "(펜라이트를 환자의 양쪽 눈에 비춘다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_PUPIL_2": {
@@ -2566,7 +2566,7 @@
       "speakerName": "@s",
       "dialogueContent": "(이 환자의 좌측 동공이 빛에 반응하지 않는다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_PUPIL_3": {
@@ -2576,7 +2576,7 @@
       "speakerName": "@s",
       "dialogueContent": "(이 환자의 우측 동공은 빛에 반응한다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_IV_WAIT": {
@@ -2600,7 +2600,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_NS_QUEST_UPDATE": {
       "identifier": "C_NS_QUEST_UPDATE",
@@ -2622,7 +2622,7 @@
       "speakerName": "@s",
       "dialogueContent": "(환자에게 생리식염수를 연결해두자.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_NS_WAIT": {
@@ -2646,7 +2646,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_PUPIL_WAIT_UPDATE": {
       "identifier": "C_PUPIL_WAIT_UPDATE",
@@ -2716,7 +2716,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "D_ORDER_CHECK": {
       "identifier": "D_ORDER_CHECK",
@@ -2746,7 +2746,7 @@
       "speakerName": "@s",
       "dialogueContent": "(비강 캐뉼라를 적용하자.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "D_NASAL_WAIT": {
@@ -2770,7 +2770,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "D_NASAL_DONE": {
       "identifier": "D_NASAL_DONE",
@@ -2779,7 +2779,7 @@
       "speakerName": "@s",
       "dialogueContent": "(비강 캐뉼라를 환자에게 적용했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "D_OXY_ORDER_CHECK": {
@@ -2810,7 +2810,7 @@
       "speakerName": "@s",
       "dialogueContent": "(산소유량계를 설치하자.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "D_OXY_WAIT": {
@@ -2834,7 +2834,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "D_OXY_REPORT": {
       "identifier": "D_OXY_REPORT",
@@ -2843,7 +2843,7 @@
       "speakerName": "@s",
       "dialogueContent": "산소 넣었습니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "D_GAUZE_WAIT": {
@@ -2867,7 +2867,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "D_GAUZE_DONE": {
       "identifier": "D_GAUZE_DONE",
@@ -2876,7 +2876,7 @@
       "speakerName": "@s",
       "dialogueContent": "(거즈를 출혈 부위에 대고 압박 지혈을 시행했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "D_PLASTER_PROMPT": {
@@ -2886,7 +2886,7 @@
       "speakerName": "@s",
       "dialogueContent": "(출혈이 멎었다. 거즈 위에 플라스터를 붙이자.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "D_DELAY": {
@@ -2920,7 +2920,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "D_PLASTER_DONE": {
       "identifier": "D_PLASTER_DONE",
@@ -2929,7 +2929,7 @@
       "speakerName": "@s",
       "dialogueContent": "(거즈 위에 플라스터를 붙였다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "D_WAIT_UPDATE": {
@@ -2962,7 +2962,7 @@
       "speakerName": "의사",
       "dialogueContent": "이 남성 환자는 마무리하고 다음으로 넘어가죠.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
     },
@@ -2982,7 +2982,7 @@
       "dialogueContent": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 IV 확보해 주세요.",
       "dialogueContentTTSPassing": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 아이 브이 확보해 주세요.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
     },
@@ -2994,7 +2994,7 @@
       "dialogueContent": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
       "dialogueContentTTSPassing": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
     },
@@ -3096,7 +3096,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_A_REC1_PLAYER": {
       "identifier": "C_A_REC1_PLAYER",
@@ -3105,7 +3105,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자분..! 말씀 들리세요?",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_REC1_PATIENT": {
@@ -3115,7 +3115,7 @@
       "speakerName": "여성 환자",
       "dialogueContent": "으으.. 아.. 어디지..?",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "F3" }
     },
@@ -3127,7 +3127,7 @@
       "dialogueContent": "(환자는 잠시 눈을 뜨더니 다시 눈을 감는다.)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_REC2_ACT": {
@@ -3158,7 +3158,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_A_REC2_PLAYER": {
       "identifier": "C_A_REC2_PLAYER",
@@ -3167,7 +3167,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자분..!",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_REC2_PATIENT": {
@@ -3177,7 +3177,7 @@
       "speakerName": "여성 환자",
       "dialogueContent": "으으으..! 아..! 왜요..!!",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "F3" }
     },
@@ -3189,7 +3189,7 @@
       "dialogueContent": "(이 환자는 말에 조금 늦게 반응하고 있다.)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_REC3_ACT": {
@@ -3220,7 +3220,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_A_REC3_PLAYER": {
       "identifier": "C_A_REC3_PLAYER",
@@ -3229,7 +3229,7 @@
       "speakerName": "@s",
       "dialogueContent": "여기가 어딘지 아시겠어요?",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_REC3_PATIENT": {
@@ -3239,7 +3239,7 @@
       "speakerName": "여성 환자",
       "dialogueContent": "으으악...! 과장님 제가 분명...!!! 기안 올린거 처리해달라고..!",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "F3" }
     },
@@ -3250,7 +3250,7 @@
       "speakerName": "@s",
       "dialogueContent": "...",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_REC3_NOTE": {
@@ -3261,7 +3261,7 @@
       "dialogueContent": "(이 환자는 무슨 일이 있었는지 기억을 못하는 것 같다.)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_REC4_ACT": {
@@ -3292,7 +3292,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_A_REC4_PLAYER": {
       "identifier": "C_A_REC4_PLAYER",
@@ -3301,7 +3301,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자분..! 환자분!! 다리 한번 펴보실래요?",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_REC4_PATIENT": {
@@ -3311,7 +3311,7 @@
       "speakerName": "여성 환자",
       "dialogueContent": "으으으...! 날 가만히 둬..!!",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "F3" }
     },
@@ -3323,7 +3323,7 @@
       "dialogueContent": "(불평을 하면서도 환자는 다리를 움직인다.)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_RECOG_REMOVE": {
@@ -3353,7 +3353,7 @@
       "speakerName": "@s",
       "dialogueContent": "이 환자의 상태를 정리해보자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_AVPU": {
@@ -3392,7 +3392,7 @@
       "dialogueContent": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. V로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_A_AVPU_WRONG_P": {
@@ -3403,7 +3403,7 @@
       "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_A_AVPU_WRONG_U": {
@@ -3414,7 +3414,7 @@
       "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_A_AVPU_CORRECT": {
@@ -3425,7 +3425,7 @@
       "dialogueContent": "질문에 대답은 하지만 정확한 답변을 하지 못하고 있으니 V로 분류하자.",
       "dialogueContentTTSPassing": "질문에 대답은 하지만 정확한 답변을 하지 못하고 있으니 브이로 분류하자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_A_GCS_E": {
@@ -3464,7 +3464,7 @@
       "dialogueContent": "아니야, 이 환자는 소리에 반응하고 있어. E 3으로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_A_E_CORRECT": {
@@ -3475,7 +3475,7 @@
       "dialogueContent": "맞아, 이 환자는 소리에 반응하고 있어. E 3으로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류하자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_A_GCS_V": {
@@ -3518,7 +3518,7 @@
       "dialogueContent": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_A_V_CORRECT": {
@@ -3529,7 +3529,7 @@
       "dialogueContent": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류하자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_A_GCS_M": {
@@ -3576,7 +3576,7 @@
       "dialogueContent": "아니야, 이 환자는 지시를 따라주었어. M 6으로 분류해야해.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 지시를 따라주었어. 엠 식스로 분류해야 해.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_A_M_CORRECT": {
@@ -3587,7 +3587,7 @@
       "dialogueContent": "맞아, 이 환자는 지시를 따라주었어. M 6으로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 지시를 따라주었어. 엠 식스로 분류하자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_A_GCS_SUM1": {
@@ -3598,7 +3598,7 @@
       "dialogueContent": "E는 3, V는 4.. M은 6이었으니까..",
       "dialogueContentTTSPassing": "이는 쓰리, 브이는 포.. 엠은 식스이었으니까..",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_GCS_SUM2": {
@@ -3609,7 +3609,7 @@
       "dialogueContent": "E3 / V4 / M6, GCS 13점입니다.",
       "dialogueContentTTSPassing": "이 쓰리, 브이 포, 엠 식스, 지 씨 에스 13점입니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_STRENGTH_TRANSITION": {
@@ -3619,7 +3619,7 @@
       "speakerName": "@s",
       "dialogueContent": "이제 근력을 확인해 보자.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_STRENGTH_Q": {
@@ -3660,7 +3660,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_A_RIGHT_LEG": {
       "identifier": "C_A_RIGHT_LEG",
@@ -3669,7 +3669,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자분 오른쪽 다리 한번 들어보세요.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_RIGHT_PRESS": {
@@ -3695,7 +3695,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자의 다리가 맥없이 눌린다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_LEFT_LEG": {
@@ -3705,7 +3705,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자분 이번엔 왼쪽 다리 한번 들어보세요.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_LEFT_PRESS": {
@@ -3731,7 +3731,7 @@
       "speakerName": "@s",
       "dialogueContent": "눌리지 않는다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_LEFT_GRADE": {
@@ -3773,7 +3773,7 @@
       "speakerName": "@t=[nurse_c, ???]",
       "dialogueContent": "왼쪽 다리는 정상 근력인 것 같은데요. 좌측은 5점으로 고치죠.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_LEFT_CORRECT": {
@@ -3783,7 +3783,7 @@
       "speakerName": "@s",
       "dialogueContent": "(5점으로 기록했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_RIGHT_GRADE": {
@@ -3825,7 +3825,7 @@
       "speakerName": "@t=[nurse_c, ???]",
       "dialogueContent": "방금 이쪽 다리 그냥 눌리지 않았나요? 우측은 3점으로 고치죠.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_RIGHT_CORRECT": {
@@ -3835,7 +3835,7 @@
       "speakerName": "@s",
       "dialogueContent": "(3점으로 기록했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_FINAL_SUMMARY": {
@@ -3846,7 +3846,7 @@
       "dialogueContent": "이 환자 GCS 13점, Motor Grade 좌측 5, 우측 3 입니다.",
       "dialogueContentTTSPassing": "이 환자 지 씨 에스 13점, 모터 그레이드 좌측 5, 우측 3입니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_A_STRENGTH_WAIT_UPDATE": {
@@ -3921,7 +3921,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_B_RR_PULSE": {
       "identifier": "C_B_RR_PULSE",
@@ -3962,7 +3962,7 @@
       "speakerName": "@s",
       "dialogueContent": "(호흡수 분당 24회, 맥박 분당 120회였어.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_B_RR_CORRECT": {
@@ -3972,7 +3972,7 @@
       "speakerName": "@s",
       "dialogueContent": "(호흡수 분당 24회, 맥박 분당 120회로 보고하고 기록했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_B_BP": {
@@ -4015,7 +4015,7 @@
       "dialogueContent": "(혈압은 140/86mmHg였어.)",
       "dialogueContentTTSPassing": "(혈압은 140에 86 밀리미터 머큐리였어.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_B_BP_CORRECT": {
@@ -4026,7 +4026,7 @@
       "dialogueContent": "(혈압 140/86mmHg로 보고하고 기록했다.)",
       "dialogueContentTTSPassing": "(혈압 140에 86 밀리미터 머큐리로 보고하고 기록했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_B_TEMP": {
@@ -4068,7 +4068,7 @@
       "speakerName": "@s",
       "dialogueContent": "(체온은 37.8도, 산소포화도는 93%였어.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_B_TEMP_CORRECT": {
@@ -4078,7 +4078,7 @@
       "speakerName": "@s",
       "dialogueContent": "(체온 37.8도, 산소포화도 93%로 보고하고 기록했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_B_VITAL_WAIT_UPDATE": {
@@ -4149,7 +4149,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_C_PUPIL_1": {
       "identifier": "C_C_PUPIL_1",
@@ -4158,7 +4158,7 @@
       "speakerName": "@s",
       "dialogueContent": "(펜라이트를 환자의 양쪽 눈에 비춘다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_C_PUPIL_2": {
@@ -4168,7 +4168,7 @@
       "speakerName": "@s",
       "dialogueContent": "(이 환자의 좌측 동공이 빛에 반응하지 않는다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_C_PUPIL_3": {
@@ -4178,7 +4178,7 @@
       "speakerName": "@s",
       "dialogueContent": "(이 환자의 우측 동공은 빛에 반응한다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_C_IV_WAIT": {
@@ -4202,7 +4202,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_C_NS_QUEST_UPDATE": {
       "identifier": "C_C_NS_QUEST_UPDATE",
@@ -4224,7 +4224,7 @@
       "speakerName": "@s",
       "dialogueContent": "(환자에게 생리식염수를 연결해두자.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 2,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_C_NS_WAIT": {
@@ -4248,7 +4248,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_C_PUPIL_WAIT_UPDATE": {
       "identifier": "C_C_PUPIL_WAIT_UPDATE",
@@ -4318,7 +4318,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_D_ORDER_CHECK": {
       "identifier": "C_D_ORDER_CHECK",
@@ -4348,7 +4348,7 @@
       "speakerName": "@s",
       "dialogueContent": "(비강 캐뉼라를 적용하자.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_D_NASAL_WAIT": {
@@ -4372,7 +4372,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_D_NASAL_DONE": {
       "identifier": "C_D_NASAL_DONE",
@@ -4381,7 +4381,7 @@
       "speakerName": "@s",
       "dialogueContent": "(비강 캐뉼라를 환자에게 적용했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_D_OXY_ORDER_CHECK": {
@@ -4412,7 +4412,7 @@
       "speakerName": "@s",
       "dialogueContent": "(산소유량계를 설치하자.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_D_OXY_WAIT": {
@@ -4436,7 +4436,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_D_OXY_REPORT": {
       "identifier": "C_D_OXY_REPORT",
@@ -4445,7 +4445,7 @@
       "speakerName": "@s",
       "dialogueContent": "산소 넣었습니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_D_GAUZE_WAIT": {
@@ -4469,7 +4469,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_D_GAUZE_DONE": {
       "identifier": "C_D_GAUZE_DONE",
@@ -4478,7 +4478,7 @@
       "speakerName": "@s",
       "dialogueContent": "(거즈를 출혈 부위에 대고 압박 지혈을 시행했다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_D_PLASTER_PROMPT": {
@@ -4488,7 +4488,7 @@
       "speakerName": "@s",
       "dialogueContent": "(출혈이 멎었다. 거즈 위에 플라스터를 붙이자.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": null,
       "playTTS": false
     },
     "C_D_DELAY": {
@@ -4522,7 +4522,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "C_D_PLASTER_DONE": {
       "identifier": "C_D_PLASTER_DONE",
@@ -4531,7 +4531,7 @@
       "speakerName": "@s",
       "dialogueContent": "(거즈 위에 플라스터를 붙였다.)",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 1,
+      "autoAdvanceSeconds": 4,
       "playTTS": false
     },
     "C_D_WAIT_UPDATE": {
@@ -4564,7 +4564,7 @@
       "speakerName": "의사",
       "dialogueContent": "이 환자도 급한 처치는 끝낸 것 같습니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 3,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
     },
@@ -4661,7 +4661,7 @@
       "dialogueContent": "남성 환자는 E3, V4, M6으로 GCS 13점입니다. 근력은 우측 5점, 좌측 3점이며, 호흡수는 분당 24회, 맥박은 분당 120회, 혈압은 140/86mmHg, 체온은 37.8도, 산소포화도는 93%입니다.",
       "dialogueContentTTSPassing": "남성 환자는 이 쓰리, 브이 포, 엠 식스로 지 씨 에스 13점입니다. 근력은 우측 5점, 좌측 3점이며, 호흡수는 분당 24회, 맥박은 분당 120회, 혈압은 140에 86 밀리미터 머큐리, 체온은 37.8도, 산소포화도는 93퍼센트입니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 4,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
     },
@@ -4673,7 +4673,7 @@
       "dialogueContent": "여성 환자는 E3 / V4 / M6, GCS 13점, 근력 좌측 5점, 우측 3점, 호흡수 24, 맥박 120, 혈압 140/86, 체온 37.8, 산소포화도 93%...",
       "dialogueContentTTSPassing": "여성 환자는 이 쓰리, 브이 포, 엠 식스, 지 씨 에스 13점, 근력 좌측 5점, 우측 3점, 호흡수 24, 맥박 120, 혈압 140에 86, 체온 37.8, 산소포화도 93퍼센트...",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 4,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
     },
@@ -4685,7 +4685,7 @@
       "dialogueContent": "두 분 다 뇌손상이 의심되니 브레인 CT 찍어봅시다. 환자들을 CT실로 옮겨주세요.",
       "dialogueContentTTSPassing": "두 분 다 뇌손상이 의심되니 브레인 씨티 찍어봅시다. 환자들을 씨티실로 옮겨주세요.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": 4,
+      "autoAdvanceSeconds": null,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
     },
@@ -4751,7 +4751,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "CT_A_REMOVE": {
       "identifier": "CT_A_REMOVE",
@@ -4785,7 +4785,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "CT_B_REMOVE": {
       "identifier": "CT_B_REMOVE",
@@ -4819,7 +4819,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "CT_C_REMOVE": {
       "identifier": "CT_C_REMOVE",
@@ -4853,7 +4853,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting"
+      "onWaitTimeout": "ForceAdvance"
     },
     "CT_D_REMOVE": {
       "identifier": "CT_D_REMOVE",

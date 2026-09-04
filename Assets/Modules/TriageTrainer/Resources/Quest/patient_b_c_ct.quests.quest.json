@@ -808,6 +808,14 @@
           "signalId": "ct_patient_arrived_patient_c",
           "displayTextContent": "많이 다친 여성 환자를 CT실로 이동시키기",
           "count": 1
+        },
+        {
+          "identifier": "ct-room",
+          "type": "WaypointReached",
+          "waypointIdentifier": "ct:ctroom",
+          "reachDistance": 6,
+          "displayTextContent": "CT실로 이동하기",
+          "count": 1
         }
       ],
       "presentationBindings": [
