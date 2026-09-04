@@ -15,5 +15,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("waitForResolution")]
     public bool? WaitForResolution { get; set; }
+
+    [JsonPropertyName("waitTimeoutSeconds")]
+    public float? WaitTimeoutSeconds { get; set; }
   }
 }

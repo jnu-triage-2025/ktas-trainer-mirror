@@ -1155,6 +1155,104 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>
+    /// 역할 브랜치가 올린 서버 내부 신호 Resolve 를 나머지 피어에도 반영하게 한다.
+    ///
+    /// <para>
+    /// 내부 신호 레지스트리는 피어마다 따로 있다. 호환 실행 경로에서 Register 를 기다리는
+    /// 브랜치와 Resolve 를 올리는 브랜치가 서로 다른 담당자에게 배정되면, 이 전달 없이는
+    /// 기다리는 쪽 피어에 Resolve 가 닿지 않아 병렬 합류가 영원히 끝나지 않는다.
+    /// 브랜치 이벤트 전달(<see cref="PublishBranchEventToPeers"/>)과 같은 경로와 검증을 쓴다.
+    /// </para>
+    /// </summary>
+    public static void PublishBranchInternalSignalToPeers(
+      string graphIdentifier, string targetIdentifier, string signalIdentifier, int originClientId)
+    {
+      if (_instance == null
+          || string.IsNullOrWhiteSpace(graphIdentifier)
+          || string.IsNullOrWhiteSpace(signalIdentifier))
+        return;
+
+      string normalizedTarget = ScenarioServerInternalSignalRegistry.NormalizeTarget(targetIdentifier);
+      if (InstanceFinder.IsServerStarted)
+      {
+        _instance.ObserversResolveBranchInternalSignal(
+          graphIdentifier, normalizedTarget, signalIdentifier, originClientId);
+        return;
+      }
+
+      if (InstanceFinder.IsClientStarted)
+        _instance.CmdResolveBranchInternalSignal(
+          graphIdentifier, normalizedTarget, signalIdentifier, originClientId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdResolveBranchInternalSignal(
+      string graphIdentifier, string targetIdentifier, string signalIdentifier, int originClientId,
+      NetworkConnection sender = null)
+    {
+      // 발신자가 자기 자신을 원본으로 지목한 요청만 받는다. 다른 피어를 원본으로 위장해
+      // 특정 피어의 반영만 건너뛰게 만들 수 없어야 한다.
+      if (sender == null || !sender.IsValid || sender.ClientId != originClientId)
+        return;
+
+      if (!IsDeclaredInternalSignalResolve(graphIdentifier, targetIdentifier, signalIdentifier))
+      {
+        Debug.LogWarning(
+          $"[ScenarioNetworkRelay] Rejected internal signal resolve '{targetIdentifier}::{signalIdentifier}' "
+          + $"that graph '{graphIdentifier}' does not declare.");
+        return;
+      }
+
+      ObserversResolveBranchInternalSignal(graphIdentifier, targetIdentifier, signalIdentifier, originClientId);
+    }
+
+    // ExcludeServer 를 쓰지 않는다. 발신자가 클라이언트일 때 서버(호스트)의 레지스트리에도 반영해야
+    // 호스트가 맡은 브랜치의 Register 가 풀린다. 발신자 자신은 originClientId 대조로 건너뛴다.
+    [ObserversRpc(BufferLast = false)]
+    private void ObserversResolveBranchInternalSignal(
+      string graphIdentifier, string targetIdentifier, string signalIdentifier, int originClientId)
+    {
+      ScenarioController.Instance?.ResolveBranchInternalSignalFromPeer(
+        graphIdentifier, targetIdentifier, signalIdentifier, originClientId);
+    }
+
+    /// <summary>그래프가 ServerInternalSignal(Resolve) 노드로 선언한 대상·신호 쌍인지 확인한다.</summary>
+    internal static bool IsDeclaredInternalSignalResolve(
+      string graphIdentifier, string targetIdentifier, string signalIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(signalIdentifier)
+          || !Registry.Registry.TryGetScenarioGraph(graphIdentifier, out ScenarioGraph graph, out _)
+          || graph?.Nodes == null)
+        return false;
+
+      return IsDeclaredInternalSignalResolve(graph, targetIdentifier, signalIdentifier);
+    }
+
+    internal static bool IsDeclaredInternalSignalResolve(
+      ScenarioGraph graph, string targetIdentifier, string signalIdentifier)
+    {
+      if (graph?.Nodes == null || string.IsNullOrWhiteSpace(signalIdentifier))
+        return false;
+
+      string normalizedTarget = ScenarioServerInternalSignalRegistry.NormalizeTarget(targetIdentifier);
+      string normalizedSignal = signalIdentifier.Trim();
+      foreach (var node in graph.Nodes.Values)
+      {
+        if (node is ScenarioServerInternalSignalNode internalSignal
+            && internalSignal.Operation == ScenarioServerInternalSignalOperationType.Resolve
+            && !string.IsNullOrWhiteSpace(internalSignal.SignalIdentifier)
+            && string.Equals(internalSignal.SignalIdentifier.Trim(), normalizedSignal, StringComparison.Ordinal)
+            && string.Equals(
+              ScenarioServerInternalSignalRegistry.NormalizeTarget(internalSignal.TargetIdentifier),
+              normalizedTarget,
+              StringComparison.Ordinal))
+          return true;
+      }
+
+      return false;
+    }
+
+    /// <summary>
     /// 플레이어 퀘스트 상태 플래그 변경을 서버로 올린다.
     ///
     /// <para>

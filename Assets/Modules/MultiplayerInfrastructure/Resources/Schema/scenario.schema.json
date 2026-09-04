@@ -1865,6 +1865,14 @@
                 "null"
               ],
               "default": true
+            },
+            "waitTimeoutSeconds": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "exclusiveMinimum": 0,
+              "description": "waitForResolution 대기의 선택적 타임아웃(초). 미지정/null이면 Resolve 가 올 때까지 무한 대기한다. 양수이면 그 시간 안에 Resolve 가 오지 않을 경우 대기를 끝내고 다음 노드로 진행한다."
             }
           },
           "required": [

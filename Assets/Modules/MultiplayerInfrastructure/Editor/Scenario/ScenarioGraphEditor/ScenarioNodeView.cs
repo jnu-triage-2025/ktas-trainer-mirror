@@ -690,6 +690,7 @@ namespace MultiplayerInfrastructure.Editor
       _inlineEditorContainer.Add(enumField);
 
       AddToggleField("Wait For Resolution", value => data.WaitForResolution = value, data.WaitForResolution);
+      AddOptionalFloatField("Wait Timeout (sec)", value => data.WaitTimeoutSeconds = value, data.WaitTimeoutSeconds);
       AddNextIdentifierField(data);
     }
 
