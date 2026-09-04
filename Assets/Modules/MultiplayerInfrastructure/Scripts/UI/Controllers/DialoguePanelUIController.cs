@@ -65,6 +65,17 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private float _lastTypeTime;
     [SerializeField] private bool _currentDialogueInteractionRequired;
 
+    // 재생 중 마지막으로 글자가 진행된 unscaled 시각. 건너뛰기 설정이 꺼져 있을 때
+    // 재생이 멈춰 버린 상황(타임스케일 정지 등)을 감지해 입력 잠금이 영구화되지 않도록 한다.
+    private float _lastTypeProgressUnscaledTime;
+
+    /// <summary>
+    /// 건너뛰기 설정이 꺼져 있어도, 이 시간(초, unscaled) 동안 글자가 하나도 진행되지 않으면
+    /// 재생이 멈춘 것으로 보고 진행 입력으로 재생을 끝낼 수 있게 허용한다.
+    /// 타이핑 간격이 이보다 길게 설정된 경우에는 간격의 배수로 늘려 잡는다.
+    /// </summary>
+    public const float TypingStallGraceSeconds = 1.5f;
+
     // 대화창이 진행/선택 입력을 소비한 마지막 프레임 번호.
     // 선택 확정 직후 오버레이가 pop 되어도, 같은 프레임의 F/스페이스/엔터/좌클릭이
     // 주변 Interactable 상호작용이나 아이템 사용으로 흘러가지 않도록 입력 경로에서 확인한다.
@@ -622,11 +633,18 @@ namespace MultiplayerInfrastructure.UI
       if (HasConsumedInputThisFrame)
         return;
 
-      // 타이핑 중이면 스킵
+      // 타이핑 중의 진행 입력은 설정에 따라 재생을 건너뛰거나 소비만 한다.
+      // 어느 쪽이든 이 입력은 대화창의 것이므로 먼저 소비 표시를 해서, 같은 프레임의
+      // F/좌클릭이 주변 Interactable 상호작용으로 새는 것을 막는다.
       if (_isTyping)
       {
         MarkInputConsumed();
-        SkipTyping();
+
+        // 건너뛰기가 꺼져 있으면 재생을 끝까지 이어 간다. 재생이 끝나면 FinishTyping 이
+        // 입력 대기 또는 선택지 표시로 넘기므로 시나리오 흐름은 그대로 이어진다.
+        // 단, 재생이 멈춰 버린 상태에서는 설정과 무관하게 끝내어 입력 잠금이 영구화되지 않게 한다.
+        if (DialogueSkipPreference.IsEnabled || IsTypingStalled())
+          SkipTyping();
         return;
       }
 
@@ -776,6 +794,7 @@ namespace MultiplayerInfrastructure.UI
       _isTyping = true;
       _isWaitingForInput = false;
       _lastTypeTime = Time.time;
+      _lastTypeProgressUnscaledTime = Time.unscaledTime;
 
       if (_dialogueTextLabel != null)
       {
@@ -790,9 +809,18 @@ namespace MultiplayerInfrastructure.UI
       if (!_isTyping)
         return;
 
+      // 표시할 문장이 없으면 즉시 완료 처리한다. 건너뛰기가 꺼진 상태에서 재생이
+      // 끝나지 않으면 입력 대기 상태로 넘어가지 못하므로 방어적으로 끝낸다.
+      if (string.IsNullOrEmpty(_fullText))
+      {
+        FinishTyping();
+        return;
+      }
+
       if (Time.time - _lastTypeTime >= _typingSpeed)
       {
         _lastTypeTime = Time.time;
+        _lastTypeProgressUnscaledTime = Time.unscaledTime;
         _currentCharIndex++;
 
         if (_dialogueTextLabel != null)
@@ -890,12 +918,36 @@ namespace MultiplayerInfrastructure.UI
 
     /// <summary>
     /// 타이핑을 스킵하고 전체 텍스트를 즉시 표시합니다.
+    ///
+    /// <see cref="DialogueSkipPreference"/> 는 사용자 입력 경로(<see cref="TrySelectCurrentOption"/>)에서만
+    /// 확인합니다. 이 메서드를 직접 호출하는 내부·외부 흐름은 설정과 무관하게 재생을 끝내므로,
+    /// 시나리오 제어 코드가 필요할 때 언제든 표시를 완료시킬 수 있습니다.
     /// </summary>
     public void SkipTyping()
     {
       if (!_isTyping)
         return;
       FinishTyping();
+    }
+
+    /// <summary>
+    /// 재생이 멈춘 상태인지 여부. 건너뛰기 설정이 꺼져 있을 때 입력 잠금이 영구화되지 않도록
+    /// 마지막 글자 진행 이후 흐른 unscaled 시간을 기준으로 판정합니다.
+    /// </summary>
+    private bool IsTypingStalled()
+    {
+      return IsTypingStalled(Time.unscaledTime - _lastTypeProgressUnscaledTime, _typingSpeed);
+    }
+
+    /// <summary>
+    /// 마지막 글자 진행 이후 <paramref name="secondsSinceProgress"/>초가 흘렀을 때 재생이 멈춘 것으로
+    /// 볼지 판정합니다. 허용 시간은 <see cref="TypingStallGraceSeconds"/>와 타이핑 간격의 4배 중
+    /// 큰 값이므로, 느린 타이핑 설정에서도 정상 재생을 멈춤으로 오판하지 않습니다.
+    /// </summary>
+    public static bool IsTypingStalled(float secondsSinceProgress, float typingSpeed)
+    {
+      float grace = Mathf.Max(TypingStallGraceSeconds, Mathf.Max(0f, typingSpeed) * 4f);
+      return secondsSinceProgress > grace;
     }
 
     /// <summary>

@@ -211,6 +211,7 @@ namespace MultiplayerInfrastructure.UI
       {
         case SettingsTab.General:
           _tabContent.Add(EnsureGeneralTabContent());
+          RefreshGeneralTab();
           break;
         case SettingsTab.Key:
           _tabContent.Add(EnsureKeyTabContent());
