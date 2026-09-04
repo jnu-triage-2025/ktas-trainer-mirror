@@ -210,7 +210,9 @@ stages:
         parameters:
           jobName: BuildWindowsClient
           displayName: 'Build Windows client'
-          enabled: ${{ parameters.buildWindowsClient }}
+          # The Windows and macOS client builds are mandatory so each local
+          # self-hosted agent always refreshes its latest build.
+          enabled: true
           agentMode: ${{ parameters.agentMode }}
           host: windows
           buildTarget: StandaloneWindows64
@@ -236,7 +238,7 @@ stages:
         parameters:
           jobName: BuildMacosClient
           displayName: 'Build macOS client'
-          enabled: ${{ parameters.buildMacosClient }}
+          enabled: true
           agentMode: ${{ parameters.agentMode }}
           host: macos
           buildTarget: StandaloneOSX

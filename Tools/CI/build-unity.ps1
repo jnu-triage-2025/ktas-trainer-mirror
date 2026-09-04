@@ -45,10 +45,11 @@ $logPath = if ($logArtifactPath) {
     Join-Path $buildPath "unity-$($env:BUILD_TARGET)-$($env:BUILD_SUBTARGET).log"
 }
 
-$buildIdentifier = (& git -C $projectPath tag --points-at HEAD --sort=refname | Select-Object -First 1).Trim()
+$buildIdentifier = & git -C $projectPath tag --points-at HEAD --sort=refname | Select-Object -First 1
 if ([string]::IsNullOrWhiteSpace($buildIdentifier)) {
-    $buildIdentifier = (& git -C $projectPath rev-parse --short=7 HEAD).Trim()
+    $buildIdentifier = & git -C $projectPath rev-parse --short=7 HEAD
 }
+$buildIdentifier = if ($null -ne $buildIdentifier) { $buildIdentifier.ToString().Trim() } else { '' }
 if ($buildIdentifier -notmatch '^[A-Za-z0-9._/-]+$') {
     throw "Could not determine a safe build identifier from Git: '$buildIdentifier'."
 }
