@@ -22,7 +22,7 @@ parameters:
   - name: buildWindowsClient
     displayName: 'Build Windows client'
     type: boolean
-    default: false
+    default: true
   - name: buildWindowsDedicatedServer
     displayName: 'Build Windows dedicated server'
     type: boolean
@@ -30,7 +30,7 @@ parameters:
   - name: buildMacosClient
     displayName: 'Build macOS client'
     type: boolean
-    default: false
+    default: true
   - name: buildMacosDedicatedServer
     displayName: 'Build macOS dedicated server'
     type: boolean
