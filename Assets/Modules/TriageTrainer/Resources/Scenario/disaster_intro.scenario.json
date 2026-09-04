@@ -7,7 +7,9 @@
     "sig.click_intravenous_set",
     "sig.click_blood_bag",
     "sig.click_patient_a",
-    "sig.click_patient_dummy_d_a"
+    "sig.click_patient_dummy_d_a",
+    "sig.assess_patient_a_triage",
+    "sig.assess_patient_dummy_d_a_triage"
   ],
   "defaultEntrypoint": "D001",
   "tags": [
@@ -258,7 +260,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_patient_a"
+              "registryIdentifier": "sig.assess_patient_a_triage"
             }
           ]
         }
@@ -268,14 +270,25 @@
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "WarnAndKeepWaiting",
-      "nextIdentifier": "E002"
+      "nextIdentifier": "INFO_A_1"
     },
-    "E002": {
-      "identifier": "E002",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "show_patientA_ui",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "C001"
+    "INFO_A_1": {
+      "identifier": "INFO_A_1",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "외양: 흉부 관통상, 다량의 출혈, 피부 창백하고 차가움\n빈맥\n불규칙한 서호흡\n의식 상태: 대화가 불가능하고 신음소리만 내고 있음",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "INFO_A_2",
+      "playTTS": false
+    },
+    "INFO_A_2": {
+      "identifier": "INFO_A_2",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "활력징후 측정 결과:\n혈압: 70/40mmHg\n맥박: 140회/분 (빠르고 약함)\n호흡수: 8회/분\n체온: 35.9도\nSpO2: 82%",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "C001",
+      "playTTS": false
     },
     "C001": {
       "identifier": "C001",
@@ -339,7 +352,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_patient_dummy_d_a"
+              "registryIdentifier": "sig.assess_patient_dummy_d_a_triage"
             }
           ]
         }
@@ -349,14 +362,16 @@
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "WarnAndKeepWaiting",
-      "nextIdentifier": "E003"
+      "nextIdentifier": "INFO_D_1"
     },
-    "E003": {
-      "identifier": "E003",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "show_patient_dummy_d_a_ui",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "C002"
+    "INFO_D_1": {
+      "identifier": "INFO_D_1",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "외양: 사지에 약간의 타박상\n현재 의식 상태: 원활한 대화 가능\n활력징후 정상\nC/C: 하지 통증",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "C002",
+      "playTTS": false
     },
     "C002": {
       "identifier": "C002",
