@@ -1081,6 +1081,80 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>
+    /// 역할 브랜치가 실행한 이벤트를 나머지 피어에서도 실행하게 한다.
+    ///
+    /// <para>
+    /// 호환 실행 경로에서 역할 브랜치는 담당 피어 한 곳에서만 돈다. 그래서 이벤트 핸들러가 담고
+    /// 있는 서버 전용 처리(퀘스트 상태 플래그, 라인 연결, 조건부 신호 리스너 출력)와 모든 피어에
+    /// 보여야 하는 표현이 담당자가 호스트가 아닐 때 어디에도 적용되지 않는다. 메인 체인 이벤트는
+    /// 모든 피어가 각자 실행하므로 이 문제가 없으며, 이 전달은 역할 브랜치를 같은 범위로 맞춘다.
+    /// </para>
+    /// </summary>
+    public static void PublishBranchEventToPeers(
+      string graphIdentifier, string eventIdentifier, int originClientId)
+    {
+      if (_instance == null
+          || string.IsNullOrWhiteSpace(graphIdentifier)
+          || string.IsNullOrWhiteSpace(eventIdentifier))
+        return;
+
+      if (InstanceFinder.IsServerStarted)
+      {
+        _instance.ObserversRunBranchEvent(graphIdentifier, eventIdentifier, originClientId);
+        return;
+      }
+
+      if (InstanceFinder.IsClientStarted)
+        _instance.CmdRunBranchEvent(graphIdentifier, eventIdentifier, originClientId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdRunBranchEvent(
+      string graphIdentifier, string eventIdentifier, int originClientId, NetworkConnection sender = null)
+    {
+      // 발신자가 자기 자신을 원본으로 지목한 요청만 받는다. 그래야 다른 피어를 원본으로 위장해
+      // 특정 피어만 이벤트를 건너뛰게 만들 수 없다.
+      if (sender == null || !sender.IsValid || sender.ClientId != originClientId)
+        return;
+
+      if (!IsDeclaredScenarioEvent(graphIdentifier, eventIdentifier))
+      {
+        Debug.LogWarning(
+          $"[ScenarioNetworkRelay] Rejected branch event '{eventIdentifier}' that graph "
+          + $"'{graphIdentifier}' does not declare.");
+        return;
+      }
+
+      ObserversRunBranchEvent(graphIdentifier, eventIdentifier, originClientId);
+    }
+
+    // ExcludeServer 를 쓰지 않는다. 발신자가 클라이언트일 때 서버도 이 이벤트를 실행해야 하며,
+    // 발신자 자신은 originClientId 대조로 건너뛴다.
+    [ObserversRpc(BufferLast = false)]
+    private void ObserversRunBranchEvent(
+      string graphIdentifier, string eventIdentifier, int originClientId)
+    {
+      ScenarioController.Instance?.RunBranchEventFromPeer(graphIdentifier, eventIdentifier, originClientId);
+    }
+
+    /// <summary>그래프가 InvokeEvent 노드로 선언한 이벤트 식별자인지 확인한다.</summary>
+    private static bool IsDeclaredScenarioEvent(string graphIdentifier, string eventIdentifier)
+    {
+      if (!Registry.Registry.TryGetScenarioGraph(graphIdentifier, out ScenarioGraph graph, out _)
+          || graph?.Nodes == null)
+        return false;
+
+      foreach (var node in graph.Nodes.Values)
+      {
+        if (node is ScenarioInvokeEventNode invoke
+            && string.Equals(invoke.EventIdentifier, eventIdentifier, StringComparison.Ordinal))
+          return true;
+      }
+
+      return false;
+    }
+
+    /// <summary>
     /// 플레이어 퀘스트 상태 플래그 변경을 서버로 올린다.
     ///
     /// <para>
