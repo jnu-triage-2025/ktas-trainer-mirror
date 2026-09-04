@@ -2363,22 +2363,36 @@ namespace TriageTrainer.Tests
         var patient = patientObject.AddComponent<PatientController>();
         var player = playerObject.AddComponent<MultiplayerInfrastructure.Player.PlayerController>();
         playerObject.transform.position = patientObject.transform.position + Vector3.right * playerDistance;
-        SetSyncVarValue(patient, "_recognitionCheckActive", true);
-        SetSyncVarValue(patient, "_recognitionInteractionEnabled", true);
+        // 활성 확인 항목은 이제 완료 신호로 구분한다. 역할 태그를 비우면 역할을 제한하지 않는다.
+        patient.ActivateRecognitionCheck(RecognitionDistanceProbeSignal, false, string.Empty);
 
         var complete = typeof(PatientController).GetMethod(
           "TryCompleteRecognitionCheckAuthoritative",
           BindingFlags.Instance | BindingFlags.NonPublic);
 
         Assert.That(complete, Is.Not.Null);
-        Assert.That(complete.Invoke(patient, new object[] { player, false }), Is.EqualTo(expected));
-        Assert.That(GetSyncVarValue<bool>(patient, "_recognitionCheckActive"), Is.EqualTo(!expected));
+        Assert.That(
+          complete.Invoke(patient, new object[] { player, false, RecognitionDistanceProbeSignal }),
+          Is.EqualTo(expected));
+        Assert.That(IsRecognitionCheckActive(patient, RecognitionDistanceProbeSignal), Is.EqualTo(!expected));
       }
       finally
       {
+        ScenarioInteractionSignals.Clear(RecognitionDistanceProbeSignal);
         Object.DestroyImmediate(playerObject);
         Object.DestroyImmediate(patientObject);
       }
+    }
+
+    private const string RecognitionDistanceProbeSignal = "recognition_distance_probe";
+
+    private static bool IsRecognitionCheckActive(PatientController patient, string completionSignal)
+    {
+      var indexOf = typeof(PatientController).GetMethod(
+        "IndexOfRecognitionCheck",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      Assert.That(indexOf, Is.Not.Null);
+      return (int)indexOf.Invoke(patient, new object[] { completionSignal }) >= 0;
     }
 
     [Test]

@@ -5,22 +5,65 @@ using TriageTrainer.Entity.Patient;
 
 namespace TriageTrainer.Scenario
 {
+  /// <summary>시나리오 이벤트 하나가 여는 의식 확인 항목의 정의.</summary>
+  public readonly struct PatientRecognitionActivation
+  {
+    public readonly string EventIdentifier;
+    public readonly bool TargetPatientC;
+    public readonly string CompletionSignal;
+    public readonly bool AllowMicrophone;
+    public readonly string DisplayText;
+
+    /// <summary>이 항목을 수행할 역할 태그. 비워 두면 역할을 제한하지 않는다.</summary>
+    public readonly string RequiredRoleTag;
+
+    public PatientRecognitionActivation(
+      string eventIdentifier,
+      bool targetPatientC,
+      string completionSignal,
+      bool allowMicrophone,
+      string displayText,
+      string requiredRoleTag)
+    {
+      EventIdentifier = eventIdentifier;
+      TargetPatientC = targetPatientC;
+      CompletionSignal = completionSignal;
+      AllowMicrophone = allowMicrophone;
+      DisplayText = displayText;
+      RequiredRoleTag = requiredRoleTag;
+    }
+  }
+
   public partial class TriageScenarioEventBootstrap
   {
+    private const string RecognitionRoleNurseA = "nurse_a";
+    private const string RecognitionRoleNurseC = "nurse_c";
+
+    /// <summary>
+    /// 환자 B/C 의식 확인 항목의 활성화 정의. 역할 태그는 patient_b_c_ct 그래프의 P_B_CARE /
+    /// P_C_CARE 분기 역할과 같아야 한다. 말 걸기·근력 확인은 A_RECOG_Q(nurse_a) 분기가, 동공반사
+    /// 확인은 C_PUPIL_Q(nurse_c) 분기가 진행하며 펜라이트도 nurse_c 에게만 배분된다.
+    /// </summary>
+    internal static readonly PatientRecognitionActivation[] PatientBCRecognitionActivations =
+    {
+      new("activate_patient_b_recognition_1", false, "patient_b_recognition_1", true, "말 걸기", RecognitionRoleNurseA),
+      new("activate_patient_b_recognition_2", false, "patient_b_recognition_2", true, "계속해서 말 걸기", RecognitionRoleNurseA),
+      new("activate_patient_b_recognition_3", false, "patient_b_recognition_3", true, "계속해서 말 걸기", RecognitionRoleNurseA),
+      new("activate_patient_b_recognition_4", false, "patient_b_recognition_4", false, "계속해서 말 걸기", RecognitionRoleNurseA),
+      new("activate_patient_b_strength_check", false, "patient_b_strength_checked", false, "근력 확인", RecognitionRoleNurseA),
+      new("activate_patient_b_pupil_check", false, "patient_b_pupil_checked", false, "동공반사 확인", RecognitionRoleNurseC),
+      new("activate_patient_c_recognition_1", true, "patient_c_recognition_1", true, "말 걸기", RecognitionRoleNurseA),
+      new("activate_patient_c_recognition_2", true, "patient_c_recognition_2", true, "말 걸기", RecognitionRoleNurseA),
+      new("activate_patient_c_recognition_3", true, "patient_c_recognition_3", true, "말 걸기", RecognitionRoleNurseA),
+      new("activate_patient_c_recognition_4", true, "patient_c_recognition_4", false, "말 걸기", RecognitionRoleNurseA),
+      new("activate_patient_c_strength_check", true, "patient_c_strength_checked", false, "근력 확인", RecognitionRoleNurseA),
+      new("activate_patient_c_pupil_check", true, "patient_c_pupil_checked", false, "동공반사 확인", RecognitionRoleNurseC),
+    };
+
     private void RegisterPatientBCRecognitionEvents()
     {
-      RegisterRecognition("activate_patient_b_recognition_1", false, "patient_b_recognition_1", true, "말 걸기");
-      RegisterRecognition("activate_patient_b_recognition_2", false, "patient_b_recognition_2", true, "계속해서 말 걸기");
-      RegisterRecognition("activate_patient_b_recognition_3", false, "patient_b_recognition_3", true, "계속해서 말 걸기");
-      RegisterRecognition("activate_patient_b_recognition_4", false, "patient_b_recognition_4", false, "계속해서 말 걸기");
-      RegisterRecognition("activate_patient_b_strength_check", false, "patient_b_strength_checked", false, "근력 확인");
-      RegisterRecognition("activate_patient_b_pupil_check", false, "patient_b_pupil_checked", false, "동공반사 확인");
-      RegisterRecognition("activate_patient_c_recognition_1", true, "patient_c_recognition_1", true, "말 걸기");
-      RegisterRecognition("activate_patient_c_recognition_2", true, "patient_c_recognition_2", true, "말 걸기");
-      RegisterRecognition("activate_patient_c_recognition_3", true, "patient_c_recognition_3", true, "말 걸기");
-      RegisterRecognition("activate_patient_c_recognition_4", true, "patient_c_recognition_4", false, "말 걸기");
-      RegisterRecognition("activate_patient_c_strength_check", true, "patient_c_strength_checked", false, "근력 확인");
-      RegisterRecognition("activate_patient_c_pupil_check", true, "patient_c_pupil_checked", false, "동공반사 확인");
+      for (int i = 0; i < PatientBCRecognitionActivations.Length; i++)
+        RegisterRecognition(PatientBCRecognitionActivations[i]);
       Register("evaluate_patient_b_c_triage", Event_EvaluatePatientBCTriage);
       Register("reset_patient_b_c_triage_attempt", Event_ResetPatientBCTriageAttempt);
       Register("reset_patient_b_triage_attempt", () => Event_ResetPatientBCTriageAttempt("patient_b"));
@@ -29,38 +72,32 @@ namespace TriageTrainer.Scenario
       Register("complete_patient_b_c_triage", Event_CompletePatientBCTriage);
     }
 
-    private void RegisterRecognition(
-      string eventIdentifier,
-      bool targetPatientC,
-      string completionSignal,
-      bool allowMicrophone,
-      string displayText)
+    private void RegisterRecognition(PatientRecognitionActivation activation)
     {
-      Register(eventIdentifier,
-        () => Event_ActivatePatientRecognition(targetPatientC, completionSignal, allowMicrophone, displayText));
+      Register(activation.EventIdentifier, () => Event_ActivatePatientRecognition(activation));
     }
 
-    private IEnumerator Event_ActivatePatientRecognition(
-      bool targetPatientC,
-      string completionSignal,
-      bool allowMicrophone,
-      string displayText)
+    private IEnumerator Event_ActivatePatientRecognition(PatientRecognitionActivation activation)
     {
       ResolveRuntimeReferencesIfNeeded();
-      var target = targetPatientC ? _patientCObject : _patientBObject;
+      var target = activation.TargetPatientC ? _patientCObject : _patientBObject;
       var patient = target != null
         ? target.GetComponentInChildren<PatientController>(true)
         : null;
       if (patient == null)
       {
-        string patientIdentifier = targetPatientC ? "patient_c" : "patient_b";
+        string patientIdentifier = activation.TargetPatientC ? "patient_c" : "patient_b";
         UnityEngine.Debug.LogError(
-          $"[TriageScenarioEventBootstrap] {patientIdentifier} recognition target is missing ({completionSignal}).",
+          $"[TriageScenarioEventBootstrap] {patientIdentifier} recognition target is missing ({activation.CompletionSignal}).",
           this);
         yield break;
       }
 
-      patient.ActivateRecognitionCheck(completionSignal, allowMicrophone, displayText);
+      patient.ActivateRecognitionCheck(
+        activation.CompletionSignal,
+        activation.AllowMicrophone,
+        activation.RequiredRoleTag,
+        activation.DisplayText);
       yield break;
     }
 
