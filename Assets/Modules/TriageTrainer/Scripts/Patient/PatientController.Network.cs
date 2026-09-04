@@ -23,6 +23,27 @@ namespace TriageTrainer.Entity
     private bool IsFishNetClientInitialized =>
       NetworkObject != null && NetworkObject.NetworkManager != null && IsClientInitialized;
 
+    /// <summary>
+    /// FishNet 이 이 인스턴스를 네트워크로 초기화했는지(= 스폰이 끝났는지). 스폰 전에는 false 다.
+    /// </summary>
+    private bool IsFishNetNetworkInitialized =>
+      NetworkObject != null
+      && (NetworkObject.IsServerInitialized || NetworkObject.IsClientInitialized);
+
+    /// <summary>
+    /// 서버 권위 SyncVar 에 값을 기록해도 되는 컨텍스트인지.
+    ///
+    /// <para>
+    /// 프리셋 스폰은 <c>ServerManager.Spawn</c> <b>이전</b>에 식별자를 주입한다. 그 시점의 인스턴스는
+    /// 아직 NetworkManager 를 갖지 않으므로 <see cref="IsFishNetServerStarted"/> 는 false 이고,
+    /// 서버 여부만으로 게이트하면 런타임 식별자가 SyncVar 에 영영 기록되지 않는다. FishNet 은
+    /// 네트워크 초기화 전 SyncVar 쓰기를 초깃값으로 받아 스폰 페이로드에 실어 보내므로, 이 구간의
+    /// 쓰기를 허용해야 원격 피어가 같은 식별자로 엔티티를 등록한다.
+    /// </para>
+    /// </summary>
+    private bool CanWriteAuthoritativeSyncVar =>
+      !IsFishNetNetworkInitialized || IsFishNetServerStarted;
+
     private string EffectiveIdentifier =>
       string.IsNullOrWhiteSpace(_runtimeIdentifier.Value) ? _identifier : _runtimeIdentifier.Value;
 
@@ -38,10 +59,9 @@ namespace TriageTrainer.Entity
       string trimmed = identifier.Trim();
       _identifier = trimmed; // 로컬 즉시 반영(서버에서 OnStartClient 전 RaisePatientInteractionSignals 등에 대비)
 
-      // EditMode/오프라인 인스턴스에는 FishNet 이 NetworkBehaviour 의 NetworkObject
-      // 캐시를 채우기 전에 PatientController 가 있을 수 있다. 그 상태에서도 로컬
-      // 식별자는 유효하므로, 초기화된 서버에서만 SyncVar 를 다룬다.
-      if (IsFishNetServerStarted)
+      // 스폰 전(네트워크 미초기화)에는 초깃값으로 기록되어 스폰 페이로드에 담기고, 스폰 후에는
+      // 서버만 권위 값을 갱신한다. 원격 클라이언트가 이미 스폰된 인스턴스에 쓰는 것만 막는다.
+      if (CanWriteAuthoritativeSyncVar)
       {
         _runtimeIdentifier.Value = trimmed;
       }

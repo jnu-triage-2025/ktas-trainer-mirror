@@ -288,7 +288,10 @@ namespace TriageTrainer.Entity
       string trimmed = identifier.Trim();
       _entityRuntimeIdentifier = trimmed; // 로컬 즉시 반영
 
-      if (IsServerStarted)
+      // 스폰 전(네트워크 미초기화)에는 초깃값으로 기록되어 스폰 페이로드에 담기고, 스폰 후에는
+      // 서버만 권위 값을 갱신한다. 프리셋 스폰은 ServerManager.Spawn 이전에 식별자를 주입하므로
+      // 서버 여부만으로 게이트하면 이 값이 원격 피어에 영영 복제되지 않는다.
+      if (CanWriteAuthoritativeSyncVar)
       {
         _runtimeIdentifierSync.Value = trimmed;
       }
