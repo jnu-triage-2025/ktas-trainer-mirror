@@ -4,7 +4,7 @@ set -euo pipefail
 
 : "${BUILD_TARGET:?BUILD_TARGET must be set to a Unity BuildTarget}"
 : "${BUILD_NAME:=ktas-trainer}"
-: "${BUILD_PATH:=build}"
+: "${BUILD_PATH:=Build}"
 # 'Player' builds the normal client; 'Server' builds the dedicated headless server.
 : "${BUILD_SUBTARGET:=Player}"
 : "${KEEP_BUILD_OUTPUT:=0}"

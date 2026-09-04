@@ -23,7 +23,7 @@ if ([string]::IsNullOrWhiteSpace($env:BUILD_NAME)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($env:BUILD_PATH)) {
-    $env:BUILD_PATH = 'build'
+    $env:BUILD_PATH = 'Build'
 }
 
 $projectPath = if ($env:CI_PROJECT_DIR) { $env:CI_PROJECT_DIR } else { (Get-Location).Path }

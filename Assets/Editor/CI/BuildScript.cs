@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -39,7 +40,7 @@ public static class GitLabBuild
   {
     string targetName = GetEnvironmentVariable("BUILD_TARGET", EditorUserBuildSettings.activeBuildTarget.ToString());
     string buildName = GetEnvironmentVariable("BUILD_NAME", "ktas-trainer");
-    string buildDirectory = GetEnvironmentVariable("BUILD_PATH", "build");
+    string buildDirectory = GetEnvironmentVariable("BUILD_PATH", "Build");
 
     if (!Enum.TryParse(targetName, true, out BuildTarget target))
     {
@@ -61,9 +62,11 @@ public static class GitLabBuild
 
     bool isServer = subtarget == StandaloneBuildSubtarget.Server;
     string projectPath = projectDirectory.FullName;
+    string buildIdentifier = GetCurrentBuildIdentifier(projectPath);
     string outputDirectory = Path.Combine(
         projectPath,
         buildDirectory,
+        $"Build-{buildIdentifier}",
         isServer ? $"{target}-Server" : target.ToString());
     Directory.CreateDirectory(outputDirectory);
 
@@ -85,7 +88,7 @@ public static class GitLabBuild
 
     try
     {
-      Debug.Log($"Building {targetName} ({subtarget}) to {locationPath}");
+      UnityEngine.Debug.Log($"Building {targetName} ({subtarget}) to {locationPath}");
       BuildReport report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
       {
         scenes = scenes,
@@ -95,7 +98,7 @@ public static class GitLabBuild
         options = BuildOptions.StrictMode
       });
 
-      Debug.Log($"Build result: {report.summary.result}, size: {report.summary.totalSize} bytes");
+      UnityEngine.Debug.Log($"Build result: {report.summary.result}, size: {report.summary.totalSize} bytes");
       if (report.summary.result != BuildResult.Succeeded)
       {
         string hint = isServer
@@ -114,6 +117,61 @@ public static class GitLabBuild
   {
     string value = Environment.GetEnvironmentVariable(name);
     return string.IsNullOrWhiteSpace(value) ? fallback : value;
+  }
+
+  private static string GetCurrentBuildIdentifier(string projectPath)
+  {
+    string tag = RunGit(projectPath, "tag --points-at HEAD --sort=refname")
+        .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+        .FirstOrDefault();
+    if (!string.IsNullOrWhiteSpace(tag))
+    {
+      return tag;
+    }
+
+    string commitHash = RunGit(projectPath, "rev-parse --short=7 HEAD").Trim();
+    if (commitHash.Length == 7)
+    {
+      return commitHash;
+    }
+
+    throw new InvalidOperationException(
+        "Could not determine the current Git tag or seven-character commit hash for the build output path.");
+  }
+
+  private static string RunGit(string projectPath, string arguments)
+  {
+    using Process process = new Process
+    {
+      StartInfo = new ProcessStartInfo
+      {
+        FileName = "git",
+        Arguments = arguments,
+        WorkingDirectory = projectPath,
+        UseShellExecute = false,
+        RedirectStandardOutput = true,
+        RedirectStandardError = true,
+        CreateNoWindow = true
+      }
+    };
+
+    try
+    {
+      process.Start();
+      string output = process.StandardOutput.ReadToEnd();
+      string error = process.StandardError.ReadToEnd();
+      process.WaitForExit();
+      if (process.ExitCode == 0)
+      {
+        return output;
+      }
+
+      throw new InvalidOperationException($"Git command failed: git {arguments}. {error.Trim()}");
+    }
+    catch (System.ComponentModel.Win32Exception exception)
+    {
+      throw new InvalidOperationException("Git must be available on PATH to determine the build output path.", exception);
+    }
   }
 
   private static string GetLocationPath(BuildTarget target, string outputDirectory, string buildName)

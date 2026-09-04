@@ -52,7 +52,7 @@ variables:
   - name: buildName
     value: 'ktas-trainer'
   - name: buildPath
-    value: 'build'
+    value: 'Build'
   - name: windowsAgentPool
     value: 'windowsAgentPool'
 

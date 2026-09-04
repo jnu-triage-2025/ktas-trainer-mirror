@@ -80,3 +80,5 @@ unity-merge를 즉시 사용 가능한 상태로 구성합니다: 서브모듈 �
 BUILD_TARGET=StandaloneWindows64 BUILD_SUBTARGET=Player BUILD_NAME=ktas-trainer KEEP_BUILD_OUTPUT=1 Tools/CI/build-unity.sh
 BUILD_TARGET=StandaloneOSX BUILD_SUBTARGET=Player BUILD_NAME=ktas-trainer KEEP_BUILD_OUTPUT=1 Tools/CI/build-unity.sh
 ```
+
+빌드 산출물은 현재 커밋을 가리키는 태그가 있으면 해당 태그를, 없으면 7자리 커밋 해시를 사용하여 `Build/Build-<태그 또는 커밋 해시>/` 아래에 생성됩니다.
