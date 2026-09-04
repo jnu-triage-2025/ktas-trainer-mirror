@@ -59,7 +59,7 @@ namespace MultiplayerInfrastructure.Tests
       Assert.That(clientNameCommand, Is.GreaterThan(serverStart));
       Assert.That(joinMessage, Is.GreaterThan(clientNameCommand));
       Assert.That(source.Substring(serverStart, clientNameCommand - serverStart),
-        Does.Not.Contain("가 들어왔습니다."));
+        Does.Not.Contain("이(가) 들어왔습니다."));
     }
 
     [Test]
