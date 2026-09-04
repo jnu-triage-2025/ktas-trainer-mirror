@@ -21,6 +21,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("scenario list", "List available scenarios."),
       new UsageLine("scenario execute <target> <scenario>", "Start a scenario for targets."),
       new UsageLine("scenario exe <target> <scenario>", "Alias for scenario execute."),
+      new UsageLine("scenario exec <target> <scenario>", "Alias for scenario execute."),
       new UsageLine("scenario signal <signal> [clear]", "Raise (or clear) a signal."),
       new UsageLine("scenario enter <entrypoint>", "Skip playback to a ManualEntrypoint node."),
       new UsageLine("scenario enter <entrypoint> [clear-state=true|clear-state=false]", "Skip, wiping (default) or keeping prior scenario state."),
@@ -169,9 +170,10 @@ namespace MultiplayerInfrastructure.Command
 
       if (args == null || args.Length < 3
           || (!string.Equals(args[0], "execute", StringComparison.OrdinalIgnoreCase)
-              && !string.Equals(args[0], "exe", StringComparison.OrdinalIgnoreCase)))
+              && !string.Equals(args[0], "exe", StringComparison.OrdinalIgnoreCase)
+              && !string.Equals(args[0], "exec", StringComparison.OrdinalIgnoreCase)))
       {
-        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute|exe <target> <scenario_id> | /scenario enter <entrypoint> [clear-state=true|false] | /scenario end | /scenario restart [entrypoint] | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic] | /scenario validatorlog [<console|chat|session> <on|off>]");
+        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute|exe|exec <target> <scenario_id> | /scenario enter <entrypoint> [clear-state=true|false] | /scenario end | /scenario restart [entrypoint] | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic] | /scenario validatorlog [<console|chat|session> <on|off>]");
         return;
       }
 
