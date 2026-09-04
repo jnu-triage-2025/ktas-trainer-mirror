@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Quest;
+using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity.Patient;
 using TriageTrainer.Utils;
@@ -803,6 +804,102 @@ namespace MultiplayerInfrastructure.Editor
 
     // ── 그래프 수준 검사 ──────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Validator 게이트가 기다리는 RuntimeState 신호 가운데, 그래프 데이터만으로는 누가 올리는지
+    /// 확인할 수 없는 것을 알린다.
+    ///
+    /// <para>
+    /// 원격 클라이언트가 올리는 신호는 그래프의 clientSignalIdentifiers 나 clientSignalPrefixes 에
+    /// 선언되어 있어야 서버가 받아들인다. 호스트가 올리는 같은 신호는 이 검사를 거치지 않으므로,
+    /// 선언을 빠뜨리면 호스트로 확인할 때는 정상으로 보이고 나머지 참가자만 막힌다. 그 신호를
+    /// 기다리는 게이트는 열리지 않고, 결국 세션 전체가 멈춘다. 선언 누락을 미리 찾기 위한 검사다.
+    /// </para>
+    ///
+    /// <para>
+    /// 다만 이 검사는 거짓 양성을 낸다. 게임플레이 C# 코드가 서버 권위로 직접 올리는 신호는
+    /// 그래프 데이터에 흔적이 남지 않기 때문이다. 그래서 심각도를 Info 로 두고, 문구도
+    /// "발신자가 없다"가 아니라 "그래프만으로는 확인할 수 없다"로 적는다.
+    /// </para>
+    /// </summary>
+    private static void AddUnattributedGateSignalWarnings(ScenarioGraph graph, List<DiagnosticItem> items)
+    {
+      // 그래프 엔진이 서버에서 스스로 계산해 내보내는 출력은 선언이 필요 없다.
+      var serverProduced = new HashSet<string>(StringComparer.Ordinal);
+      foreach (var node in graph.Nodes.Values)
+      {
+        switch (node)
+        {
+          case ScenarioSignalCounterNode counter:
+            AddNormalizedSignal(serverProduced, counter.OutputSignalIdentifier);
+            break;
+          case ScenarioSignalListenerNode listener:
+            AddNormalizedSignal(serverProduced, listener.OutputSignalIdentifier);
+            break;
+          case ScenarioEntityStateSignalBindingNode binding:
+            AddNormalizedSignal(serverProduced, binding.OutputSignalIdentifier);
+            break;
+        }
+      }
+
+      var declared = new HashSet<string>(StringComparer.Ordinal);
+      foreach (var signal in graph.ClientSignalIdentifiers ?? Array.Empty<string>())
+        AddNormalizedSignal(declared, signal);
+
+      var prefixes = new List<string>();
+      foreach (var prefix in graph.ClientSignalPrefixes ?? Array.Empty<string>())
+      {
+        var normalized = ScenarioInteractionSignals.Normalize(prefix);
+        if (!string.IsNullOrWhiteSpace(normalized))
+          prefixes.Add(normalized);
+      }
+
+      // 같은 신호를 여러 게이트가 기다리는 일이 흔하므로 신호마다 한 번만 보고한다.
+      var reported = new HashSet<string>(StringComparer.Ordinal);
+      foreach (var node in graph.Nodes.Values)
+      {
+        if (node is not ScenarioValidatorNode validator || validator.RootConditions == null)
+          continue;
+
+        foreach (var rootCondition in validator.RootConditions)
+        {
+          foreach (var rule in rootCondition?.ValidationRules ?? (IReadOnlyList<ScenarioValidatorRule>)Array.Empty<ScenarioValidatorRule>())
+          {
+            if (rule == null
+                || rule.Type != ScenarioValidatorRuleType.Registry
+                || rule.RegistryType != RegistryType.RuntimeState
+                || string.IsNullOrWhiteSpace(rule.RegistryIdentifier))
+            {
+              continue;
+            }
+
+            var signal = ScenarioInteractionSignals.Normalize(rule.RegistryIdentifier);
+            if (serverProduced.Contains(signal)
+                || declared.Contains(signal)
+                || prefixes.Any(prefix => signal.StartsWith(prefix, StringComparison.Ordinal))
+                || !reported.Add(signal))
+            {
+              continue;
+            }
+
+            items.Add(new DiagnosticItem(
+              Severity.Info,
+              validator.Identifier,
+              $"게이트가 기다리는 신호 '{signal}' 를 누가 올리는지 그래프 데이터만으로는 확인할 수 없습니다. "
+              + "게임플레이 코드가 서버에서 올리는 신호라면 정상입니다. "
+              + "클라이언트가 올리는 신호라면 clientSignalIdentifiers 또는 clientSignalPrefixes 에 선언해야 하며, "
+              + "선언하지 않으면 호스트에서만 통과하고 나머지 참가자는 이 게이트를 넘지 못합니다."));
+          }
+        }
+      }
+    }
+
+    private static void AddNormalizedSignal(HashSet<string> target, string signal)
+    {
+      var normalized = ScenarioInteractionSignals.Normalize(signal);
+      if (!string.IsNullOrWhiteSpace(normalized))
+        target.Add(normalized);
+    }
+
     private static void CheckGraphLevel(ScenarioGraph graph, HashSet<string> nodeIds, List<DiagnosticItem> items)
     {
       const string graphLevel = "(graph)";
@@ -810,6 +907,7 @@ namespace MultiplayerInfrastructure.Editor
       AddSessionStartActingNpcInfos(graph, items, graphLevel);
       AddUndefinedWaypointWarnings(graph, items);
       AddQuestMarkWarnings(graph, items);
+      AddUnattributedGateSignalWarnings(graph, items);
 
       // 진입 노드 감지: 다른 노드로부터 참조되지 않는 노드
       var referenced = new HashSet<string>();

@@ -437,7 +437,7 @@
       "nextIdentifier": "CC_ARRIVAL",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Panic",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "ARR_A_Q",
@@ -506,7 +506,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "ARR_A_REMOVE": {
       "identifier": "ARR_A_REMOVE",
@@ -547,7 +549,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "ARR_B_REMOVE": {
       "identifier": "ARR_B_REMOVE",
@@ -588,7 +592,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "ARR_C_REMOVE": {
       "identifier": "ARR_C_REMOVE",
@@ -629,7 +635,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "ARR_D_REMOVE": {
       "identifier": "ARR_D_REMOVE",
@@ -657,7 +665,7 @@
       "nextIdentifier": "P_MOVE",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Panic",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "TRIAGE_A_Q",
@@ -747,7 +755,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "TRIAGE_EVALUATE_CURRENT": {
       "identifier": "TRIAGE_EVALUATE_CURRENT",
@@ -789,7 +799,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "TRIAGE_COMPLETE_EVENT": {
       "identifier": "TRIAGE_COMPLETE_EVENT",
@@ -817,7 +829,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "TRIAGE_WRONG": {
       "identifier": "TRIAGE_WRONG",
@@ -954,7 +968,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "TRIAGE_B_REMOVE": {
       "identifier": "TRIAGE_B_REMOVE",
@@ -995,7 +1011,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "TRIAGE_C_REMOVE": {
       "identifier": "TRIAGE_C_REMOVE",
@@ -1036,7 +1054,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "TRIAGE_D_REMOVE": {
       "identifier": "TRIAGE_D_REMOVE",
@@ -1054,7 +1074,7 @@
       "nextIdentifier": "MOVE_DOCTOR_TO_CARE_AREA",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Panic",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "MOVE_A_Q",
@@ -1145,7 +1165,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "MOVE_A_REMOVE": {
       "identifier": "MOVE_A_REMOVE",
@@ -1192,7 +1214,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "MOVE_B_REMOVE": {
       "identifier": "MOVE_B_REMOVE",
@@ -1239,7 +1263,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "MOVE_C_REMOVE": {
       "identifier": "MOVE_C_REMOVE",
@@ -1286,7 +1312,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "MOVE_D_REMOVE": {
       "identifier": "MOVE_D_REMOVE",
@@ -1374,7 +1402,7 @@
       "nextIdentifier": "P_B_WAIT_REMOVE",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Panic",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "A_RECOG_Q",
@@ -1420,7 +1448,7 @@
       "nextIdentifier": "DOC_B_COMPLETE",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Panic",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         { "identifier": "A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_B_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
         { "identifier": "B_VITAL_REMOVE", "completionConditionIdentifier": "CC_B_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
@@ -1464,7 +1492,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "A_REC1_PLAYER": {
       "identifier": "A_REC1_PLAYER",
@@ -1524,7 +1554,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "A_REC2_PLAYER": {
       "identifier": "A_REC2_PLAYER",
@@ -1584,7 +1616,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "A_REC3_PLAYER": {
       "identifier": "A_REC3_PLAYER",
@@ -1654,7 +1688,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "A_REC4_PLAYER": {
       "identifier": "A_REC4_PLAYER",
@@ -2020,7 +2056,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "A_RIGHT_LEG": {
       "identifier": "A_RIGHT_LEG",
@@ -2279,7 +2317,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "B_RR_PULSE": {
       "identifier": "B_RR_PULSE",
@@ -2505,7 +2545,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_PUPIL_1": {
       "identifier": "C_PUPIL_1",
@@ -2556,7 +2598,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_NS_QUEST_UPDATE": {
       "identifier": "C_NS_QUEST_UPDATE",
@@ -2600,7 +2644,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_PUPIL_WAIT_UPDATE": {
       "identifier": "C_PUPIL_WAIT_UPDATE",
@@ -2668,7 +2714,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "D_ORDER_CHECK": {
       "identifier": "D_ORDER_CHECK",
@@ -2720,7 +2768,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "D_NASAL_DONE": {
       "identifier": "D_NASAL_DONE",
@@ -2782,7 +2832,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "D_OXY_REPORT": {
       "identifier": "D_OXY_REPORT",
@@ -2813,7 +2865,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "D_GAUZE_DONE": {
       "identifier": "D_GAUZE_DONE",
@@ -2864,7 +2918,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "D_PLASTER_DONE": {
       "identifier": "D_PLASTER_DONE",
@@ -2948,7 +3004,7 @@
       "nextIdentifier": "P_C_WAIT_REMOVE",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Panic",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "C_A_RECOG_Q",
@@ -2994,7 +3050,7 @@
       "nextIdentifier": "C_COMPLETE",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Panic",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         { "identifier": "C_A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_C_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
         { "identifier": "C_B_VITAL_REMOVE", "completionConditionIdentifier": "CC_C_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
@@ -3038,7 +3094,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_A_REC1_PLAYER": {
       "identifier": "C_A_REC1_PLAYER",
@@ -3098,7 +3156,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_A_REC2_PLAYER": {
       "identifier": "C_A_REC2_PLAYER",
@@ -3158,7 +3218,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_A_REC3_PLAYER": {
       "identifier": "C_A_REC3_PLAYER",
@@ -3228,7 +3290,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_A_REC4_PLAYER": {
       "identifier": "C_A_REC4_PLAYER",
@@ -3594,7 +3658,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_A_RIGHT_LEG": {
       "identifier": "C_A_RIGHT_LEG",
@@ -3853,7 +3919,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_B_RR_PULSE": {
       "identifier": "C_B_RR_PULSE",
@@ -4079,7 +4147,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_C_PUPIL_1": {
       "identifier": "C_C_PUPIL_1",
@@ -4130,7 +4200,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_C_NS_QUEST_UPDATE": {
       "identifier": "C_C_NS_QUEST_UPDATE",
@@ -4174,7 +4246,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_C_PUPIL_WAIT_UPDATE": {
       "identifier": "C_C_PUPIL_WAIT_UPDATE",
@@ -4242,7 +4316,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_D_ORDER_CHECK": {
       "identifier": "C_D_ORDER_CHECK",
@@ -4294,7 +4370,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_D_NASAL_DONE": {
       "identifier": "C_D_NASAL_DONE",
@@ -4356,7 +4434,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_D_OXY_REPORT": {
       "identifier": "C_D_OXY_REPORT",
@@ -4387,7 +4467,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_D_GAUZE_DONE": {
       "identifier": "C_D_GAUZE_DONE",
@@ -4438,7 +4520,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "C_D_PLASTER_DONE": {
       "identifier": "C_D_PLASTER_DONE",
@@ -4622,7 +4706,7 @@
       "nextIdentifier": "CT_DETACH_BEDS",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Panic",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         { "identifier": "CT_A_Q", "completionConditionIdentifier": "CC_CT_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
         { "identifier": "CT_B_Q", "completionConditionIdentifier": "CC_CT_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
@@ -4665,7 +4749,9 @@
       ] }],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "CT_A_REMOVE": {
       "identifier": "CT_A_REMOVE",
@@ -4697,7 +4783,9 @@
       ] }],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "CT_B_REMOVE": {
       "identifier": "CT_B_REMOVE",
@@ -4729,7 +4817,9 @@
       ] }],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "CT_C_REMOVE": {
       "identifier": "CT_C_REMOVE",
@@ -4761,7 +4851,9 @@
       ] }],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "CT_D_REMOVE": {
       "identifier": "CT_D_REMOVE",

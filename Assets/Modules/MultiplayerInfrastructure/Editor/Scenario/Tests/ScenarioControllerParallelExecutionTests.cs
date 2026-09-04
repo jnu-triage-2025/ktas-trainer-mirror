@@ -46,6 +46,40 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void WaitUntilDoneInvokeEventYieldsManagedRoutineWithoutStartingNestedCoroutine()
+    {
+      const string eventIdentifier = "test.manual-entry.wait-until-done";
+      var gameObject = new GameObject("scenario-wait-invoke-event-test");
+      var controller = gameObject.AddComponent<ScenarioController>();
+      var executeInvokeEvent = typeof(ScenarioController).GetMethod(
+        "ExecuteInvokeEventNode",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      ScenarioEventIdentifierRegistry.Register(eventIdentifier, () => Probe(null));
+
+      try
+      {
+        Assert.That(executeInvokeEvent, Is.Not.Null);
+        var node = new ScenarioInvokeEventNode
+        {
+          Identifier = "WAIT_EVENT",
+          EventIdentifier = eventIdentifier,
+          MoveNextBehavior = ScenarioInvokeEventMoveNextBehavior.WaitUntilDone
+        };
+        var routine = (IEnumerator)executeInvokeEvent.Invoke(controller, new object[] { node });
+
+        Assert.That(routine.MoveNext(), Is.True);
+        Assert.That(routine.Current, Is.InstanceOf<IEnumerator>(),
+          "WaitUntilDone 이벤트는 Unity에 중첩 코루틴을 다시 등록하지 않고 관리 루틴을 직접 yield해야 합니다.");
+        Assert.That(routine.Current, Is.Not.InstanceOf<Coroutine>());
+      }
+      finally
+      {
+        ScenarioEventIdentifierRegistry.Unregister(eventIdentifier);
+        UnityEngine.Object.DestroyImmediate(gameObject);
+      }
+    }
+
+    [Test]
     public void ParallelBranchWaitBlocksExternalGlobalAdvance()
     {
       var gameObject = new GameObject("scenario-parallel-advance-block-test");

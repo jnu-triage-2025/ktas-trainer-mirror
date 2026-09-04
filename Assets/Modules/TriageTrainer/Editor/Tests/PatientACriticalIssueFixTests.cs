@@ -233,6 +233,19 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void RapidInfuserCannotBeItemizedByAttack()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RapidInfuserPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+
+      var itemizableComponents = prefab.GetComponentsInChildren<MonoBehaviour>(true)
+        .OfType<MultiplayerInfrastructure.Entity.IItemizableWorldEntity>();
+
+      Assert.That(itemizableComponents, Is.Empty,
+        "Level 1 rapid infuser를 클릭하거나 타격해 아이템으로 회수할 수 없어야 합니다.");
+    }
+
+    [Test]
     public void RapidInfuserRequiresPlasmaBeforeBloodBag()
     {
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RapidInfuserPrefabPath);

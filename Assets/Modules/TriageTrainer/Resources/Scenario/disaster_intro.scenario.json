@@ -187,6 +187,8 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "Q002_2"
     },
     "Q002_2": {
@@ -264,6 +266,8 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "E002"
     },
     "E002": {
@@ -343,6 +347,8 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "E003"
     },
     "E003": {
@@ -431,6 +437,8 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "CC_A_Triage"
     },
     "CC_A_Triage": {
@@ -481,6 +489,8 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "Q003_1"
     },
     "Q003_1": {
@@ -599,6 +609,8 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "q006_1"
     },
     "q006_1": {
@@ -674,6 +686,8 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "q007_1"
     },
     "q007_1": {
@@ -736,6 +750,8 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "q008_1"
     },
     "q008_1": {
@@ -796,6 +812,8 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "Q005_1"
     },
     "Q005_1": {

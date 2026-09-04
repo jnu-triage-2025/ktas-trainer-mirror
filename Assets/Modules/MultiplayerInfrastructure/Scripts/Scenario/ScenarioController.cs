@@ -57,6 +57,7 @@ namespace MultiplayerInfrastructure.Scenario
     // 우선해 RaycastAll로 다시 검사한다.
     private const int GroundRaycastHitCapacity = 32;
     private static readonly RaycastHit[] GroundRaycastHits = new RaycastHit[GroundRaycastHitCapacity];
+    private const string ChecklistPaperIdentifier = "checklist_paper";
 
     // WaitMode.All/Any 병렬 노드가 분기 완료를 기다리는 동안 외부 자동 진행이
     // 병렬 부모의 NextIdentifier로 건너뛰지 못하게 한다.
@@ -116,6 +117,41 @@ namespace MultiplayerInfrastructure.Scenario
     private readonly List<ScenarioOwnedActingNpc> _scenarioOwnedActingNpcs = new List<ScenarioOwnedActingNpc>();
     private readonly List<ScenarioOwnedWaypoint> _scenarioOwnedWaypoints = new List<ScenarioOwnedWaypoint>();
     private readonly Dictionary<int, int> _activeRoleBranchDepthByClientId = new Dictionary<int, int>();
+
+    /// <summary>
+    /// 접속이 끊긴 담당자의 클라이언트 식별자. 이 표시가 붙은 클라이언트에 배정된 브랜치 체인은
+    /// 다음 노드로 진행하지 않고 완료 처리되며, 그 담당자의 입력을 기다리던 게이트와 프롬프트도
+    /// 이 표시를 보고 대기를 끝낸다. 취소는 브랜치 단위이므로 다른 담당자의 브랜치는 계속 실행된다.
+    /// </summary>
+    private readonly HashSet<int> _cancelledBranchClientIds = new HashSet<int>();
+
+    /// <summary>
+    /// 담당자 이탈 경고에 "어떤 브랜치를 남기고 나갔는지" 적기 위해, 클라이언트마다 현재 배정된
+    /// ByRole 브랜치 식별자를 배정 순서대로 보관한다.
+    /// </summary>
+    private readonly Dictionary<int, List<string>> _activeRoleBranchIdentifiersByClientId =
+      new Dictionary<int, List<string>>();
+
+    /// <summary>
+    /// 초기 활성 역할 로스터가 상한까지 채워지지 않았다는 경고를 이번 시나리오 실행에서
+    /// 이미 남겼는지 표시한다. 병렬 노드마다 같은 경고를 반복하면 운영자가 읽어야 할
+    /// 다른 진단이 묻히므로 실행당 한 번만 알린다.
+    /// </summary>
+    private bool _reportedIncompleteInitialRoleRoster;
+
+    /// <summary>
+    /// 첫 ByRole 병렬 노드가 활성 역할 로스터를 기다리는 상한(초).
+    ///
+    /// <para>
+    /// 로스터는 접속과 태그 부여, UserDescriptor 등록이 모두 끝나야 채워진다. 한 명만 등록된 순간에
+    /// 병렬 노드에 닿으면 나머지 역할이 "부재"로 판정되어 분기가 조용히 생략되고, 그 담당자들은
+    /// 할 일을 받지 못한다. 그렇다고 무한정 기다리면 실제로 인원이 적은 세션이 시작조차 못 하므로
+    /// 상한을 둔다. 접속 직후의 등록 지연을 흡수하되 운영자가 멈췄다고 느끼지 않는 범위로 10초를
+    /// 골랐다. 인원이 이미 전원 등록된 정상적인 경우에는 이 상한에 닿기 전에 즉시 빠져나온다.
+    /// </para>
+    /// </summary>
+    private const float InitialActiveRoleRosterWaitSeconds = 10f;
+
     private readonly Stack<Action> _cleanupJournal = new Stack<Action>();
     private bool _isRevertingCleanupJournal;
 
@@ -472,23 +508,106 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void HandleRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs args)
     {
-      if (args.ConnectionState != RemoteConnectionState.Stopped || connection == null)
+      if (connection == null)
+        return;
+
+      // FishNet 은 접속이 끊긴 클라이언트 식별자를 이후 접속에 다시 부여한다. 같은 식별자로
+      // 새 접속이 들어오면 이전 접속에서 남은 취소 표시를 지워야, 새로 들어온 인원의 브랜치가
+      // 시작하자마자 취소된 것으로 오인되지 않는다.
+      if (args.ConnectionState == RemoteConnectionState.Started)
+      {
+        _cancelledBranchClientIds.Remove(connection.ClientId);
+        return;
+      }
+
+      if (args.ConnectionState != RemoteConnectionState.Stopped)
         return;
 
       if (_activeRoleBranchDepthByClientId.ContainsKey(connection.ClientId))
       {
-        var message = $"[ScenarioController] Aborting scenario because client {connection.ClientId} disconnected during an assigned ByRole branch.";
-        Debug.LogError(message, this);
-        GameLogService.WriteScenario(message, _currentGraph?.Identifier);
-        EndScenario();
-        return;
+        CancelActiveRoleBranchesForClient(connection.ClientId);
       }
 
-      // 역할 브랜치를 맡지 않은 인원이 나갔다면 시나리오는 계속 진행한다. 다만 활성 역할
-      // 로스터가 줄었으므로, 남은 인원의 신호만으로 이미 충족된 로스터 기반 카운터가 있는지
-      // 폴링을 기다리지 않고 이 자리에서 즉시 재평가한다.
+      // 역할 브랜치를 맡았든 아니든 활성 역할 로스터는 줄어든다. 남은 인원의 신호만으로 이미
+      // 충족된 로스터 기반 카운터가 있는지 폴링을 기다리지 않고 이 자리에서 즉시 재평가한다.
       ScenarioSignalCounters.RefreshDynamicThresholds();
     }
+
+    /// <summary>
+    /// 접속이 끊긴 담당자에게 배정된 ByRole 브랜치만 취소한다.
+    /// <para>
+    /// 이탈을 시나리오 전체 중단으로 처리하면 나머지 인원이 쌓아 온 진행까지 함께 폐기된다.
+    /// 운영 시나리오는 사실상 전 구간이 ByRole 병렬 노드이므로, 한 명이 잠깐 끊기는 것만으로
+    /// 세션 전체가 끝나서는 안 된다. 그래서 이탈은 그 담당자의 브랜치 종료로만 강등한다.
+    /// </para>
+    /// <para>
+    /// 취소 표시를 본 브랜치 체인은 다음 노드로 넘어가지 않고 끝나므로, waitMode: All 병렬
+    /// 노드는 그 브랜치를 완료한 것으로 보고 남은 브랜치만 기다린다. 이탈한 담당자의 입력을
+    /// 기다리던 게이트·프롬프트·대화도 같은 표시를 보고 대기를 끝내므로, 중단이 무한 대기로
+    /// 바뀌지 않는다.
+    /// </para>
+    /// </summary>
+    private void CancelActiveRoleBranchesForClient(int clientId)
+    {
+      _cancelledBranchClientIds.Add(clientId);
+
+      var branchIdentifiers =
+        _activeRoleBranchIdentifiersByClientId.TryGetValue(clientId, out var identifiers)
+        && identifiers != null
+        && identifiers.Count > 0
+          ? string.Join(", ", identifiers)
+          : "<unknown>";
+      var graphIdentifier = _currentGraph?.Identifier ?? "<unknown>";
+      var message =
+        $"Client {clientId} disconnected while running assigned ByRole branch(es) [{branchIdentifiers}] "
+        + $"in graph '{graphIdentifier}'. Those branches are cancelled and counted as completed; "
+        + "the remaining branches keep running.";
+
+      Debug.LogWarning($"[ScenarioController] {message}", this);
+      try
+      {
+        GameLogService.WriteScenario(message, graphIdentifier);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogException(ex, this);
+      }
+      AppendSystemChatMessage(message);
+      AddCurrentVisitNote(message);
+
+      // 취소된 브랜치의 코루틴은 다음 프레임에 스스로 빠져나오지만, 그 사이 같은 화면 슬롯을
+      // 기다리는 다른 브랜치가 묶이지 않도록 남은 입력 대기 상태를 이 자리에서 먼저 정리한다.
+      ReleaseBranchInteractionStateForClient(clientId);
+    }
+
+    /// <summary>이탈한 클라이언트가 점유하고 있던 브랜치 프롬프트/대화 대기 상태를 해제한다.</summary>
+    private void ReleaseBranchInteractionStateForClient(int clientId)
+    {
+      _activeRemoteBranchPromptClients.Remove(clientId);
+      _activeRemoteBranchDialogueClients.Remove(clientId);
+      _branchDialogueAdvanceInterceptors.Remove(clientId);
+
+      var stalePrefix = $"{clientId}|";
+      var staleKeys = _remoteBranchChoiceSelections.Keys
+        .Where(key => key.StartsWith(stalePrefix, StringComparison.Ordinal))
+        .ToList();
+      foreach (var staleKey in staleKeys)
+      {
+        _remoteBranchChoiceSelections.Remove(staleKey);
+      }
+    }
+
+    /// <summary>담당자 이탈로 이 브랜치 체인이 취소되었는지 확인한다.</summary>
+    private bool IsBranchCancelled(int? branchOwnerClientId)
+      => branchOwnerClientId.HasValue && _cancelledBranchClientIds.Contains(branchOwnerClientId.Value);
+
+    /// <summary>
+    /// 브랜치 내부의 무한 대기 게이트가 조건 충족과 무관하게 대기를 끝내야 하는 상황인지 확인한다.
+    /// 시나리오가 종료됐거나 담당자가 이탈해 브랜치가 취소된 경우가 여기에 해당한다.
+    /// 브랜치 컨텍스트가 없는 메인 체인 호출에서는 기존 대기 동작을 그대로 유지한다.
+    /// </summary>
+    private bool IsBranchGateReleased(BranchChainContext context)
+      => context != null && (_currentGraph == null || IsBranchCancelled(context.OwnerClientId));
 
     #endregion
 
@@ -867,6 +986,11 @@ namespace MultiplayerInfrastructure.Scenario
       _globalAdvanceSuppressionDepth = 0;
       _parallelAdvanceBlockDepth = 0;
       _activeRoleBranchDepthByClientId.Clear();
+      _activeRoleBranchIdentifiersByClientId.Clear();
+      // 이전 실행에서 이탈한 담당자의 취소 표시가 남아 있으면, 같은 클라이언트 식별자를 다시
+      // 받은 인원의 브랜치가 시작하자마자 취소된 것으로 처리된다. 실행 경계마다 반드시 비운다.
+      _cancelledBranchClientIds.Clear();
+      _reportedIncompleteInitialRoleRoster = false;
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioInteractionSignals.ClearAllRaisedSignals();
@@ -885,6 +1009,7 @@ namespace MultiplayerInfrastructure.Scenario
       _scenarioOwnerClientId = ownerClientId;
       ScenarioNetworkRelay.ConfigureClientSignalAuthorization(graph);
       ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
+      ReportActiveRoleRosterProblemsAtStart();
 
       // 시나리오가 요구하는 퀘스트 정의 include를 선로딩한다.
       QuestDefinitionRegistry.EnsureIncludesLoaded(graph.QuestDefinitionIncludes);
@@ -1002,6 +1127,11 @@ namespace MultiplayerInfrastructure.Scenario
       // 강제 종료된 브랜치 코루틴의 finally 가 실행되지 않을 수 있으므로 억제 카운터를 초기화한다.
       _globalAdvanceSuppressionDepth = 0;
       _activeRoleBranchDepthByClientId.Clear();
+      _activeRoleBranchIdentifiersByClientId.Clear();
+      // 이전 실행에서 이탈한 담당자의 취소 표시가 남아 있으면, 같은 클라이언트 식별자를 다시
+      // 받은 인원의 브랜치가 시작하자마자 취소된 것으로 처리된다. 실행 경계마다 반드시 비운다.
+      _cancelledBranchClientIds.Clear();
+      _reportedIncompleteInitialRoleRoster = false;
       // 브랜치 Choice/Quiz 대기 중 종료된 경우 남은 인터셉터/프롬프트 상태를 정리한다.
       // (StopAllCoroutines 로 강제 종료된 프롬프트 코루틴의 finally 가 실행되지 않을 수 있음)
       ResetBranchInteractionState();
@@ -1597,6 +1727,11 @@ namespace MultiplayerInfrastructure.Scenario
       _globalAdvanceSuppressionDepth = 0;
       _parallelAdvanceBlockDepth = 0;
       _activeRoleBranchDepthByClientId.Clear();
+      _activeRoleBranchIdentifiersByClientId.Clear();
+      // 이전 실행에서 이탈한 담당자의 취소 표시가 남아 있으면, 같은 클라이언트 식별자를 다시
+      // 받은 인원의 브랜치가 시작하자마자 취소된 것으로 처리된다. 실행 경계마다 반드시 비운다.
+      _cancelledBranchClientIds.Clear();
+      _reportedIncompleteInitialRoleRoster = false;
 
       ResetBranchInteractionState();
 
@@ -3132,7 +3267,7 @@ namespace MultiplayerInfrastructure.Scenario
           && string.Equals(value.Identifier, node.ActingNpcIdentifier, StringComparison.Ordinal));
         if (actingNpc == null)
         {
-          Debug.LogWarning($"[ScenarioController] EntityPresetSpawn '{node.Identifier}' references unknown actingNpc '{node.ActingNpcIdentifier}'.");
+          ReportGateArmingDegraded(node, $"it references unknown actingNpc '{node.ActingNpcIdentifier}'");
           Advance();
           return;
         }
@@ -3156,7 +3291,7 @@ namespace MultiplayerInfrastructure.Scenario
               out var actorError,
               actorSpawnPosition))
         {
-          Debug.LogWarning($"[ScenarioController] EntityPresetSpawn '{node.Identifier}' actingNpc '{node.ActingNpcIdentifier}' failed: {actorError}");
+          ReportGateArmingDegraded(node, $"actingNpc '{node.ActingNpcIdentifier}' could not be spawned: {actorError}");
           Advance();
           return;
         }
@@ -3189,7 +3324,7 @@ namespace MultiplayerInfrastructure.Scenario
             out var spawnedDescriptor,
             out var error))
       {
-        Debug.LogWarning($"[ScenarioController] EntityPresetSpawn '{node.Identifier}' failed: {error}");
+        ReportGateArmingDegraded(node, $"preset '{node.PresetIdentifier}' could not be spawned: {error}");
         Advance();
         return;
       }
@@ -4800,7 +4935,11 @@ namespace MultiplayerInfrastructure.Scenario
               {
                 // 첫 MoveNext 이후에 발생하는 예외까지 포착해야 한다. 감싸지 않으면 코루틴이
                 // 중간에 죽고 노드는 나갈 전이가 없는 상태로 남는다.
-                yield return StartCoroutine(RunInvokeEventRoutine(node, routine));
+                // IEnumerator를 직접 yield해야 수동 진입 준비 체인의
+                // RunWithGlobalAdvanceSuppressed가 중첩 루틴을 하나의 실행 스택에서 관리한다.
+                // 여기서 StartCoroutine으로 다시 등록하면 Unity 6 Mono 플레이어에서
+                // ExecuteBranchNode/InvokeEvent 중첩이 네이티브 코루틴 스택을 손상시킬 수 있다.
+                yield return RunInvokeEventRoutine(node, routine);
               }
               break;
             case ScenarioInvokeEventMoveNextBehavior.Immediately:
@@ -4860,6 +4999,40 @@ namespace MultiplayerInfrastructure.Scenario
     /// InvokeEvent 노드가 부수 효과를 적용하지 못했음을 콘솔과 세션 로그에 함께 남긴다.
     /// 임상 단계가 조용히 생략되는 것을 막기 위해, 경고가 아닌 오류로 기록한다.
     /// </summary>
+    /// <summary>
+    /// 부작용 노드가 제 일을 하지 못했음을 운영자가 볼 수 있는 진단으로 남긴다.
+    ///
+    /// <para>
+    /// 이런 실패는 지금까지 경고 한 줄만 남기고 다음 노드로 넘어갔다. 그런데 실패한 노드가 만들었어야
+    /// 할 신호를 기다리는 <c>Validator</c> 게이트는 그대로 남아 있으므로, 실제 결과는 한참 뒤의 조용한
+    /// 정지다. 원인과 결과가 멀리 떨어져 있어 추적이 어려우므로, 실패 시점에 "이 신호를 기다리는
+    /// 게이트가 열리지 못하게 되었다"는 사실까지 함께 남긴다.
+    /// </para>
+    ///
+    /// <para>흐름 자체는 계속 진행한다. 이 진단의 목적은 중단이 아니라 원인을 즉시 드러내는 것이다.</para>
+    /// </summary>
+    private void ReportGateArmingDegraded(IScenarioNode node, string reason, string affectedSignalIdentifier = null)
+    {
+      string signalText = string.IsNullOrWhiteSpace(affectedSignalIdentifier)
+        ? string.Empty
+        : $" Gates waiting for '{ScenarioInteractionSignals.Normalize(affectedSignalIdentifier)}' will never open.";
+      string message =
+        $"Node '{node?.Identifier}' in graph '{_currentGraph?.Identifier}' could not arm its effect: {reason}."
+        + signalText
+        + " The scenario keeps running, so a later gate may stall without an obvious cause.";
+      Debug.LogError($"[ScenarioController] {message}", this);
+      try
+      {
+        GameLogService.WriteScenario(message, _currentGraph?.Identifier);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogException(ex, this);
+      }
+      AppendSystemChatMessage(message);
+      AddCurrentVisitNote(message);
+    }
+
     private void ReportInvokeEventFailure(ScenarioInvokeEventNode node, string reason)
     {
       string message =
@@ -4975,9 +5148,22 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private IEnumerator ExecuteValidatorGate(ScenarioValidatorNode node, BranchChainContext context)
     {
+      // 담당자가 이탈해 취소된 브랜치의 게이트는 평가하지도, 대기하지도 않는다.
+      if (IsBranchGateReleased(context))
+      {
+        yield break;
+      }
+
       if (node.WaitForCondition)
       {
-        yield return WaitForValidatorGate(node);
+        yield return WaitForValidatorGate(node, context);
+
+        // 대기가 조건 충족이 아니라 브랜치 취소/시나리오 종료로 끝났다면 타임아웃 정책을
+        // 적용하지 않고 그대로 브랜치를 마친다.
+        if (IsBranchGateReleased(context))
+        {
+          yield break;
+        }
 
         if (EvaluateValidator(node))
         {
@@ -5036,7 +5222,7 @@ namespace MultiplayerInfrastructure.Scenario
     /// 타임아웃 판정은 권위 컨텍스트(게이트를 구동하는 컨트롤러)에서 수행된다.
     /// 빠져나온 뒤 조건 충족 여부는 호출부가 <see cref="EvaluateValidator(ScenarioValidatorNode)"/> 로 재확인한다.
     /// </summary>
-    private IEnumerator WaitForValidatorGate(ScenarioValidatorNode node)
+    private IEnumerator WaitForValidatorGate(ScenarioValidatorNode node, BranchChainContext context = null)
     {
       if (!EvaluateValidator(node, out var failureReason))
       {
@@ -5047,12 +5233,127 @@ namespace MultiplayerInfrastructure.Scenario
       if (timeout is > 0f)
       {
         float deadline = Time.time + timeout.Value;
-        yield return new WaitUntil(() => EvaluateValidator(node) || Time.time >= deadline);
+        yield return new WaitUntil(() => EvaluateValidator(node) || Time.time >= deadline || IsBranchGateReleased(context));
       }
       else
       {
-        yield return new WaitUntil(() => EvaluateValidator(node));
+        // 타임아웃이 없는 게이트는 조건이 올라오지 않으면 영원히 대기한다. 담당자가 이탈해
+        // 조건을 만들 사람이 사라진 브랜치에서는 이 대기를 함께 풀어 주어야, 중단을 막은 결과가
+        // 무한 대기로 바뀌지 않는다.
+        yield return new WaitUntil(() => EvaluateValidator(node) || IsBranchGateReleased(context));
       }
+    }
+
+    /// <summary>
+    /// 시나리오를 시작할 때 활성 역할 배정 상태를 한 번 점검해 운영자에게 알린다.
+    ///
+    /// <para>
+    /// 역할 태그 중복 부여나 미부여는 태그를 설정한 시점이 아니라 한참 뒤 ByRole 병렬 노드에
+    /// 닿았을 때에야 드러난다. 원인과 증상이 멀리 떨어져 있어 운영자가 무엇을 잘못했는지 알기
+    /// 어려우므로, 시작 시점에 미리 알린다.
+    /// </para>
+    ///
+    /// <para>이 점검은 시나리오를 중단시키지 않는다. 알리는 것이 목적이고, 판단은 운영자가 한다.</para>
+    /// </summary>
+    private void ReportActiveRoleRosterProblemsAtStart()
+    {
+      var declaredRoles = _currentGraph?.ActiveRoleTags?
+        .Where(role => !string.IsNullOrWhiteSpace(role))
+        .Distinct(StringComparer.Ordinal)
+        .ToList();
+      if (declaredRoles == null || declaredRoles.Count == 0)
+      {
+        return;
+      }
+
+      if (!TryGetActiveRoleRoster(out var roster, out var rosterError))
+      {
+        // 중복 부여처럼 로스터 자체를 구성할 수 없는 설정 오류가 여기에 해당한다.
+        var blockedMessage =
+          $"Graph '{_currentGraph.Identifier}' declares active roles [{string.Join(", ", declaredRoles)}] "
+          + $"but the active-role roster cannot be built: {rosterError}. "
+          + "ByRole parallel nodes will not be able to assign branches until this is corrected.";
+        Debug.LogWarning($"[ScenarioController] {blockedMessage}", this);
+        AppendSystemChatMessage(blockedMessage);
+        try
+        {
+          GameLogService.WriteScenario(blockedMessage, _currentGraph.Identifier);
+        }
+        catch (Exception ex)
+        {
+          Debug.LogException(ex, this);
+        }
+        return;
+      }
+
+      var presentRoles = new HashSet<string>(roster.Select(entry => entry.Role), StringComparer.Ordinal);
+      var missingRoles = declaredRoles.Where(role => !presentRoles.Contains(role)).ToList();
+      var roleHolders = new HashSet<string>(roster.Select(entry => entry.PlayerIdentifier), StringComparer.Ordinal);
+      var untaggedClients = GetActivePlayerIds()
+        .Where(clientId => UserDescriptorService.TryGetByClientId(clientId, out var player)
+                           && player != null
+                           && !string.IsNullOrWhiteSpace(player.Identifier)
+                           && !roleHolders.Contains(player.Identifier))
+        .ToList();
+
+      if (missingRoles.Count == 0 && untaggedClients.Count == 0)
+      {
+        return;
+      }
+
+      var message =
+        $"Graph '{_currentGraph.Identifier}' started with an incomplete role assignment. "
+        + $"Roles without a holder: [{string.Join(", ", missingRoles)}]. "
+        + $"Connected players without any declared role: [{string.Join(", ", untaggedClients)}]. "
+        + "Branches for roles without a holder are skipped, so those steps will not be played.";
+      Debug.LogWarning($"[ScenarioController] {message}", this);
+      AppendSystemChatMessage(message);
+      try
+      {
+        GameLogService.WriteScenario(message, _currentGraph.Identifier);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogException(ex, this);
+      }
+    }
+
+    /// <summary>
+    /// 병렬 배정이 완결되지 못한 채 실행을 이어 갈 때, 무엇이 배정되지 않았는지 운영자에게 알린다.
+    /// 배정 실패의 흔한 원인은 역할 태그 중복 부여와 미부여이므로 현재 로스터 상태도 함께 적는다.
+    /// </summary>
+    private void ReportParallelAllocationDegraded(
+      ScenarioParallelNode node,
+      List<int> players,
+      Dictionary<ScenarioParallelBranch, int?> allocation)
+    {
+      var unassigned = node.Branches == null
+        ? new List<string>()
+        : node.Branches
+          .Where(branch => !allocation.TryGetValue(branch, out var assigned) || !assigned.HasValue)
+          .Select(branch => branch?.Identifier ?? "<unnamed>")
+          .ToList();
+      string rosterText = TryGetActiveRoleRoster(out var roster, out var rosterError)
+        ? string.Join(", ", roster.Select(entry => $"{entry.Role}=client {entry.ClientId}"))
+        : $"unavailable ({rosterError})";
+      string message =
+        $"Parallel node '{node.Identifier}' in graph '{_currentGraph?.Identifier}' could not assign every branch "
+        + $"(allocation={node.AllocationType}, mismatch handling={node.WhenBranchingPlayerNotMatched}). "
+        + $"Unassigned branches: [{string.Join(", ", unassigned)}]. "
+        + $"Connected clients: [{string.Join(", ", players ?? new List<int>())}]. Active roles: [{rosterText}]. "
+        + "The assigned branches keep running and the unassigned ones are skipped instead of ending the scenario. "
+        + "Check the role tag assignment before continuing.";
+      Debug.LogError($"[ScenarioController] {message}", this);
+      try
+      {
+        GameLogService.WriteScenario(message, _currentGraph?.Identifier);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogException(ex, this);
+      }
+      AppendSystemChatMessage(message);
+      AddCurrentVisitNote(message);
     }
 
     /// <summary>
@@ -5099,8 +5400,12 @@ namespace MultiplayerInfrastructure.Scenario
 
         if (!TryAllocateParallel(node, players, allocation))
         {
-          EndScenario();
-          yield break;
+          // 배정에 실패했다고 시나리오를 끝내면, 역할 태그가 하나 어긋났을 뿐인데 네 명이 쌓아 온
+          // 진행이 통째로 사라진다. 게다가 이 실패는 병렬 노드에 닿는 순간에야 드러나므로,
+          // 운영자는 원인이 된 설정과 한참 떨어진 지점에서 세션이 끝나는 것을 보게 된다.
+          // 그래서 중단 대신, 배정된 분기만 실행하고 배정되지 못한 분기는 건너뛴 뒤 눈에 띄는
+          // 진단을 남긴다. 그래프가 Panic 을 선언한 의도(문제를 덮지 않는다)는 진단으로 지킨다.
+          ReportParallelAllocationDegraded(node, players, allocation);
         }
 
         if (_executionMode == ExecutionMode.ServerAuthoritative)
@@ -5108,10 +5413,21 @@ namespace MultiplayerInfrastructure.Scenario
 
         if (node.AllocationType == ScenarioParallelAllocationType.ByRole)
         {
-          foreach (var assignedClientId in allocation.Values.Where(value => value.HasValue))
+          foreach (var assignment in allocation.Where(pair => pair.Value.HasValue))
           {
-            _activeRoleBranchDepthByClientId.TryGetValue(assignedClientId.Value, out var depth);
-            _activeRoleBranchDepthByClientId[assignedClientId.Value] = depth + 1;
+            var assignedClientId = assignment.Value.Value;
+            _activeRoleBranchDepthByClientId.TryGetValue(assignedClientId, out var depth);
+            _activeRoleBranchDepthByClientId[assignedClientId] = depth + 1;
+
+            // 이탈 경고가 "어떤 브랜치를 남기고 나갔는지" 지목할 수 있도록 배정된 브랜치 식별자를
+            // 함께 기록한다. 깊이만으로는 담당자가 무엇을 하다 끊겼는지 알 수 없어, 운영자가
+            // 어디부터 복구해야 하는지 판단하지 못한다.
+            if (!_activeRoleBranchIdentifiersByClientId.TryGetValue(assignedClientId, out var identifiers))
+            {
+              identifiers = new List<string>();
+              _activeRoleBranchIdentifiersByClientId[assignedClientId] = identifiers;
+            }
+            identifiers.Add(assignment.Key?.Identifier ?? "<unnamed>");
           }
         }
 
@@ -5119,12 +5435,10 @@ namespace MultiplayerInfrastructure.Scenario
         {
           if (!_currentGraph.TryGetNode(branch.Identifier, out var branchNode))
           {
-            Debug.LogWarning($"[ScenarioController] Parallel branch target '{branch.Identifier}' not found.");
-            if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
-            {
-              EndScenario();
-              yield break;
-            }
+            // 브랜치 대상 노드가 없는 것은 그래프 배선 실수이지 참여자 구성 문제가 아니다.
+            // 여기서 시나리오를 끝내면 나머지 분기의 진행까지 함께 사라지므로, 이 분기만 건너뛰고
+            // 원인을 진단으로 남긴다.
+            ReportGateArmingDegraded(node, $"branch target node '{branch.Identifier}' was not found in the graph");
             continue;
           }
 
@@ -5137,10 +5451,16 @@ namespace MultiplayerInfrastructure.Scenario
             continue; // 건너뛴 브랜치
           }
 
-          if (assignedClientId == null && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
+          if (assignedClientId == null)
           {
-            EndScenario();
-            yield break;
+            // Panic 과 Reallocation 은 모두 여기까지 오면 배정할 사람이 없다는 뜻이다. 중단하는 대신
+            // 이 분기만 건너뛴다. 담당자가 없는 분기를 실행해 봐야 그 안의 게이트를 열 사람이 없어
+            // waitMode: All 이 영원히 끝나지 않으므로, 건너뛰는 편이 진행을 지킨다.
+            ReportGateArmingDegraded(
+              node,
+              $"branch '{branch.Identifier}' has no eligible player "
+              + $"(mismatch handling '{node.WhenBranchingPlayerNotMatched}'); the branch is skipped");
+            continue;
           }
 
           // 멀티플레이어에서는 로컬 클라이언트에 할당된 브랜치만 실행한다.
@@ -5207,14 +5527,22 @@ namespace MultiplayerInfrastructure.Scenario
         // NextIdentifier 가 없으면 Advance 가 EndScenario 로 폴백한다.
         if (node.AllocationType == ScenarioParallelAllocationType.ByRole)
         {
-          foreach (var assignedClientId in allocation.Values.Where(value => value.HasValue))
+          foreach (var assignment in allocation.Where(pair => pair.Value.HasValue))
           {
-            if (!_activeRoleBranchDepthByClientId.TryGetValue(assignedClientId.Value, out var depth))
+            var assignedClientId = assignment.Value.Value;
+            if (_activeRoleBranchIdentifiersByClientId.TryGetValue(assignedClientId, out var identifiers))
+            {
+              identifiers.Remove(assignment.Key?.Identifier ?? "<unnamed>");
+              if (identifiers.Count == 0)
+                _activeRoleBranchIdentifiersByClientId.Remove(assignedClientId);
+            }
+
+            if (!_activeRoleBranchDepthByClientId.TryGetValue(assignedClientId, out var depth))
               continue;
             if (depth <= 1)
-              _activeRoleBranchDepthByClientId.Remove(assignedClientId.Value);
+              _activeRoleBranchDepthByClientId.Remove(assignedClientId);
             else
-              _activeRoleBranchDepthByClientId[assignedClientId.Value] = depth - 1;
+              _activeRoleBranchDepthByClientId[assignedClientId] = depth - 1;
           }
         }
 
@@ -5341,7 +5669,7 @@ namespace MultiplayerInfrastructure.Scenario
       string entityIdentifier = ResolveEntityStateBindingTargetIdentifier(node);
       if (string.IsNullOrWhiteSpace(entityIdentifier))
       {
-        Debug.LogWarning($"[ScenarioController] EntityStateSignalBinding '{node.Identifier}' target identifier is missing.");
+        ReportGateArmingDegraded(node, "the target entity identifier is missing", node.OutputSignalIdentifier);
         Advance();
         return;
       }
@@ -5349,7 +5677,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (!Registry.Registry.TryGetEntity(entityIdentifier, out var entityDescriptor)
           || entityDescriptor?.GameObject == null)
       {
-        Debug.LogWarning($"[ScenarioController] EntityStateSignalBinding '{node.Identifier}' target '{entityIdentifier}' was not found.");
+        ReportGateArmingDegraded(node, $"target entity '{entityIdentifier}' was not found", node.OutputSignalIdentifier);
         Advance();
         return;
       }
@@ -5357,7 +5685,7 @@ namespace MultiplayerInfrastructure.Scenario
       var source = entityDescriptor.GameObject.GetComponentInChildren<Entity.IScenarioEntityStateEventSource>(true);
       if (source == null)
       {
-        Debug.LogWarning($"[ScenarioController] EntityStateSignalBinding '{node.Identifier}' target '{entityIdentifier}' has no IScenarioEntityStateEventSource.");
+        ReportGateArmingDegraded(node, $"target entity '{entityIdentifier}' exposes no IScenarioEntityStateEventSource", node.OutputSignalIdentifier);
         Advance();
         return;
       }
@@ -5372,7 +5700,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (!ok)
       {
-        Debug.LogWarning($"[ScenarioController] EntityStateSignalBinding '{node.Identifier}' failed to register event '{node.EventName}' on target '{entityIdentifier}'.");
+        ReportGateArmingDegraded(node, $"event '{node.EventName}' could not be registered on target '{entityIdentifier}'", node.OutputSignalIdentifier);
       }
 
       Advance();
@@ -5416,24 +5744,35 @@ namespace MultiplayerInfrastructure.Scenario
         {
           if (!TryGetActiveRoleRoster(out var roster, out var error))
           {
-            Debug.LogError($"[ScenarioController] SignalCounter active-role roster failed: {error}", this);
-            EndScenario();
-            return;
+            // 로스터를 읽지 못했다고 시나리오를 끝내면, 태그 설정 하나가 어긋났을 뿐인데 네 명의
+            // 진행이 통째로 사라진다. 로스터 기반 임계치만 포기하고 노드에 적힌 고정 임계치로
+            // 카운터를 등록한다. 카운터를 아예 등록하지 않으면 이 카운터의 출력 신호를 기다리는
+            // 게이트가 영원히 열리지 않으므로, 등록 자체는 반드시 해야 한다.
+            ReportGateArmingDegraded(
+              node,
+              $"active-role roster is unavailable ({error}); falling back to the node's fixed threshold "
+              + $"of {Math.Max(1, node.Threshold)} for counter '{node.CounterIdentifier}'");
+            expectedSignals = null;
+            threshold = node.Threshold;
+            roster = null;
           }
 
-          // 한 플레이어가 여러 역할을 맡아도 도착 신호는 플레이어마다 한 번만 발생한다.
-          // 역할 수를 임계치로 사용하면 같은 플레이어가 여러 역할을 맡은 멀티플레이어 세션에서
-          // 절대 충족할 수 없는 카운터가 만들어진다.
-          threshold = roster.Select(entry => entry.PlayerIdentifier)
-            .Distinct(StringComparer.Ordinal)
-            .Count();
-          expectedSignals = () => TryGetActiveRoleRoster(out var current, out _)
-            // 한 플레이어가 여러 역할을 맡으면 역할마다 같은 도착 신호가 생긴다.
-            // 도착 완료는 역할 수가 아니라 실제 플레이어별 1회 도착으로 판단한다.
-            ? current.Select(entry => ScenarioInteractionSignals.Normalize(node.SourceSignalPrefix + entry.PlayerIdentifier))
+          if (roster != null)
+          {
+            // 한 플레이어가 여러 역할을 맡아도 도착 신호는 플레이어마다 한 번만 발생한다.
+            // 역할 수를 임계치로 사용하면 같은 플레이어가 여러 역할을 맡은 멀티플레이어 세션에서
+            // 절대 충족할 수 없는 카운터가 만들어진다.
+            threshold = roster.Select(entry => entry.PlayerIdentifier)
               .Distinct(StringComparer.Ordinal)
-              .ToArray()
-            : Array.Empty<string>();
+              .Count();
+            expectedSignals = () => TryGetActiveRoleRoster(out var current, out _)
+              // 한 플레이어가 여러 역할을 맡으면 역할마다 같은 도착 신호가 생긴다.
+              // 도착 완료는 역할 수가 아니라 실제 플레이어별 1회 도착으로 판단한다.
+              ? current.Select(entry => ScenarioInteractionSignals.Normalize(node.SourceSignalPrefix + entry.PlayerIdentifier))
+                .Distinct(StringComparer.Ordinal)
+                .ToArray()
+              : Array.Empty<string>();
+          }
         }
 
         ScenarioSignalCounters.Register(
@@ -5464,13 +5803,42 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
+      int declaredRoleCount = _currentGraph.ActiveRoleTags
+        .Where(role => !string.IsNullOrWhiteSpace(role))
+        .Distinct(StringComparer.Ordinal)
+        .Count();
+
       bool reported = false;
+      float deadline = Time.realtimeSinceStartup + InitialActiveRoleRosterWaitSeconds;
+      List<ActiveRoleRosterEntry> lastRoster = null;
       while (_currentGraph != null)
       {
-        if (!TryGetActiveRoleRoster(out var roster, out _)
-            || roster.Count > 0)
+        if (!TryGetActiveRoleRoster(out var roster, out _))
+        {
+          // 로스터를 계산할 수 없는 그래프는 이 대기의 대상이 아니다.
+          yield break;
+        }
+        lastRoster = roster;
+
+        // 선언된 역할이 모두 채워졌으면 더 기다릴 이유가 없다.
+        if (roster.Count >= declaredRoleCount)
         {
           yield break;
+        }
+
+        // 접속한 인원 전원이 이미 역할을 갖고 있다면, 남은 역할은 애초에 참여자가 없는 것이다.
+        // 정상적인 소규모 세션이 매번 상한만큼 지연되지 않도록 이 경우에도 곧바로 진행한다.
+        int connectedPlayerCount = GetActivePlayerIds().Count;
+        if (connectedPlayerCount > 0
+            && roster.Select(entry => entry.PlayerIdentifier).Distinct(StringComparer.Ordinal).Count()
+               >= connectedPlayerCount)
+        {
+          yield break;
+        }
+
+        if (Time.realtimeSinceStartup >= deadline)
+        {
+          break;
         }
 
         if (!reported)
@@ -5481,6 +5849,43 @@ namespace MultiplayerInfrastructure.Scenario
 
         yield return null;
       }
+
+      if (_currentGraph == null)
+      {
+        yield break;
+      }
+
+      // 상한에 걸려 일부 역할이 빈 채로 진행한다. skipAbsentRoleBranches 가 그 역할의 분기를
+      // 조용히 건너뛰므로, 어떤 역할이 비었는지 알리지 않으면 담당자는 할 일을 받지 못한 이유를
+      // 알 수 없고 뒤쪽 게이트에서 원인 모를 정지가 일어난다.
+      var presentRoles = new HashSet<string>(
+        lastRoster?.Select(entry => entry.Role) ?? Enumerable.Empty<string>(), StringComparer.Ordinal);
+      var missingRoles = _currentGraph.ActiveRoleTags
+        .Where(role => !string.IsNullOrWhiteSpace(role) && !presentRoles.Contains(role))
+        .Distinct(StringComparer.Ordinal)
+        .ToList();
+      if (missingRoles.Count == 0 || _reportedIncompleteInitialRoleRoster)
+      {
+        yield break;
+      }
+
+      _reportedIncompleteInitialRoleRoster = true;
+      string message =
+        $"Parallel node '{node.Identifier}' in graph '{_currentGraph.Identifier}' started after waiting "
+        + $"{InitialActiveRoleRosterWaitSeconds:0.#}s without a complete active-role roster. "
+        + $"Roles still unassigned: [{string.Join(", ", missingRoles)}]. "
+        + "Their branches are skipped, so the players holding those roles receive no objective. "
+        + "If this is a timing problem rather than an absent participant, restart the scenario after the tags are set.";
+      Debug.LogWarning($"[ScenarioController] {message}", this);
+      try
+      {
+        GameLogService.WriteScenario(message, _currentGraph.Identifier);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogException(ex, this);
+      }
+      AppendSystemChatMessage(message);
     }
 
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
@@ -5523,6 +5928,13 @@ namespace MultiplayerInfrastructure.Scenario
           yield break;
         }
 
+        // 담당자가 이탈해 이 브랜치가 취소되었으면 더 진행하지 않는다. 브랜치 코루틴이 끝나면
+        // waitMode: All 병렬 노드가 이 브랜치를 완료한 것으로 보고 남은 브랜치만 기다린다.
+        if (IsBranchCancelled(branchOwnerClientId))
+        {
+          yield break;
+        }
+
         if (++guard > maxNodes)
         {
           Debug.LogWarning("[ScenarioController] Branch chain exceeded node limit; aborting branch to avoid infinite loop.");
@@ -5548,6 +5960,12 @@ namespace MultiplayerInfrastructure.Scenario
 
         // 노드 대기 도중 시나리오가 종료되어 그래프가 해제됐을 수 있으므로 재확인한다.
         if (_currentGraph == null)
+        {
+          yield break;
+        }
+
+        // 노드를 기다리는 동안 담당자가 이탈했다면 다음 노드로 넘어가지 않고 브랜치를 끝낸다.
+        if (IsBranchCancelled(branchOwnerClientId))
         {
           yield break;
         }
@@ -5944,7 +6362,9 @@ namespace MultiplayerInfrastructure.Scenario
 
         while (!selection.Resolved)
         {
-          if (_currentGraph == null)
+          // 담당자가 이탈하면 선택을 보내 줄 사람이 없다. 이 대기를 함께 풀지 않으면
+          // 이탈을 시나리오 중단에서 브랜치 취소로 낮춘 결과가 무한 대기로 되돌아간다.
+          if (_currentGraph == null || IsBranchCancelled(branchOwnerClientId))
           {
             _branchOptionInterceptor = null;
             yield break;
@@ -6035,6 +6455,7 @@ namespace MultiplayerInfrastructure.Scenario
           double deadline = Time.realtimeSinceStartupAsDouble + autoAdvanceSeconds;
           while (!advanceRequested
                  && _currentGraph != null
+                 && !IsBranchCancelled(context.OwnerClientId)
                  && Time.realtimeSinceStartupAsDouble < deadline)
           {
             yield return null;
@@ -6047,7 +6468,9 @@ namespace MultiplayerInfrastructure.Scenario
         }
         else
         {
-          yield return new WaitUntil(() => advanceRequested || _currentGraph == null);
+          // 담당자 이탈로 브랜치가 취소되면 대화를 닫아 줄 입력이 오지 않으므로 함께 대기를 끝낸다.
+          yield return new WaitUntil(() =>
+            advanceRequested || _currentGraph == null || IsBranchCancelled(context.OwnerClientId));
         }
       }
       finally
@@ -7163,7 +7586,7 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
-    private static bool TryExecuteScenarioGive(string commandLine, NetworkConnection ownerConnection, out bool succeeded, out string result)
+    private bool TryExecuteScenarioGive(string commandLine, NetworkConnection ownerConnection, out bool succeeded, out string result)
     {
       succeeded = false;
       result = string.Empty;
@@ -7195,7 +7618,7 @@ namespace MultiplayerInfrastructure.Scenario
     /// 시나리오 시작 시처럼 재실행될 수 있는 흐름에서, 이미 지급한 안내 아이템을 중복 지급하지 않는다.
     /// 일반 채팅 <c>/give</c>의 의미는 변경하지 않고 시나리오 실행 명령에만 적용한다.
     /// </summary>
-    private static bool TryExecuteScenarioGiveIfMissing(NetworkConnection ownerConnection, string[] args, out string result)
+    private bool TryExecuteScenarioGiveIfMissing(NetworkConnection ownerConnection, string[] args, out string result)
     {
       result = string.Empty;
       if (args == null || args.Length == 0)
@@ -7256,6 +7679,17 @@ namespace MultiplayerInfrastructure.Scenario
         return false;
       }
 
+      if (string.Equals(itemIdentifier, ChecklistPaperIdentifier, StringComparison.Ordinal)
+          && CurrentGraph?.ChecklistItemSetsByPlayerTag?.Count > 0)
+      {
+        targets = targets.Where(IsChecklistPaperRecipient).ToList();
+        if (targets.Count == 0)
+        {
+          result = "No connected player matched a checklist role tag.";
+          return false;
+        }
+      }
+
       int grantedPlayers = 0;
       int alreadyOwnedPlayers = 0;
       int unavailablePlayers = 0;
@@ -7297,6 +7731,20 @@ namespace MultiplayerInfrastructure.Scenario
         + (unavailablePlayers > 0 ? $"; {unavailablePlayers} target(s) were unavailable" : string.Empty)
         + ".";
       return true;
+    }
+
+    private bool IsChecklistPaperRecipient(NetworkConnection connection)
+    {
+      if (connection?.FirstObject == null
+          || !connection.FirstObject.TryGetComponent<PlayerController>(out var player)
+          || player == null
+          || string.IsNullOrWhiteSpace(player.UserIdentifier))
+      {
+        return false;
+      }
+
+      return CurrentGraph.ChecklistItemSetsByPlayerTag.Keys.Any(tag =>
+        !string.IsNullOrWhiteSpace(tag) && PlayerTagService.HasTag(player.UserIdentifier, tag));
     }
 
     private ChatService ResolveChatService()

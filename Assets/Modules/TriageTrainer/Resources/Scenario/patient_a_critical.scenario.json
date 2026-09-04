@@ -3782,7 +3782,7 @@
       "nodeType": "Parallel",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "Q_WAIT_INITIAL_A",
@@ -3828,7 +3828,7 @@
       "nodeType": "Parallel",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "Q010",
@@ -3884,7 +3884,7 @@
       "nodeType": "Parallel",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "Q019",
@@ -3930,7 +3930,7 @@
       "nodeType": "Parallel",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "Q023",
@@ -3976,7 +3976,7 @@
       "nodeType": "Parallel",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "Q028",
@@ -4097,7 +4097,7 @@
       "nextIdentifier": "CC_ARRIVAL_A",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "ARRIVAL_A_Q_A",
@@ -4165,7 +4165,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "ARRIVAL_A_REMOVE_A": {
       "identifier": "ARRIVAL_A_REMOVE_A",
@@ -4204,7 +4206,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "ARRIVAL_A_REMOVE_B": {
       "identifier": "ARRIVAL_A_REMOVE_B",
@@ -4243,7 +4247,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "ARRIVAL_A_REMOVE_C": {
       "identifier": "ARRIVAL_A_REMOVE_C",
@@ -4282,7 +4288,9 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting"
     },
     "ARRIVAL_A_REMOVE_D": {
       "identifier": "ARRIVAL_A_REMOVE_D",
@@ -4387,7 +4395,7 @@
       "nextIdentifier": "D010",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "Q_WAIT_INITIAL_A_REMOVE",
@@ -4940,8 +4948,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V011_1",
       "nodeType": "Validator",
       "nextIdentifier": "V_VITAL_MONITOR_CLOSE_A"
@@ -4967,8 +4975,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V_VITAL_MONITOR_CLOSE_A",
       "nodeType": "Validator",
       "nextIdentifier": "C_VITAL_RR_HR_A"
@@ -5284,8 +5292,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V012",
       "nodeType": "Validator",
       "nextIdentifier": "D_GCS_A_01"
@@ -5422,8 +5430,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V013_1",
       "nodeType": "Validator",
       "nextIdentifier": "D_STABILIZER_APPLIED_A"
@@ -5449,8 +5457,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V013_2",
       "nodeType": "Validator",
       "nextIdentifier": "D_SUCTION_INSTALLED_A"
@@ -5476,8 +5484,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V013_3",
       "nodeType": "Validator",
       "nextIdentifier": "V013_4"
@@ -5503,8 +5511,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V013_4",
       "nodeType": "Validator",
       "nextIdentifier": "N007_4"
@@ -5530,8 +5538,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V014_1",
       "nodeType": "Validator",
       "nextIdentifier": "ISC_PASS_ET_TUBE"
@@ -5557,8 +5565,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V014_2",
       "nodeType": "Validator",
       "nextIdentifier": "ACT_STYLET_REMOVE_A"
@@ -5591,8 +5599,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V014_3",
       "nodeType": "Validator",
       "nextIdentifier": "ISC_PASS_SYRINGE"
@@ -5618,8 +5626,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V014_4",
       "nodeType": "Validator",
       "nextIdentifier": "V014_5"
@@ -5645,8 +5653,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V014_5",
       "nodeType": "Validator",
       "nextIdentifier": "S001"
@@ -5672,8 +5680,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V015_2",
       "nodeType": "Validator",
       "nextIdentifier": "ACT_TPIECE_ATTACH_A"
@@ -5706,8 +5714,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V015_3_1",
       "nodeType": "Validator",
       "nextIdentifier": "V015_3_2"
@@ -5733,8 +5741,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V015_3_2",
       "nodeType": "Validator",
       "nextIdentifier": "V015_4"
@@ -5760,8 +5768,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V015_4",
       "nodeType": "Validator",
       "nextIdentifier": "C008"
@@ -5787,8 +5795,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V016_1",
       "nodeType": "Validator",
       "nextIdentifier": "V016_2"
@@ -5814,8 +5822,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V016_2",
       "nodeType": "Validator",
       "nextIdentifier": "D_GAUZE_APPLIED_A"
@@ -5841,8 +5849,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V016_3",
       "nodeType": "Validator",
       "nextIdentifier": "D_PLASTER_APPLIED_A"
@@ -5892,8 +5900,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V017_1",
       "nodeType": "Validator",
       "nextIdentifier": "E019"
@@ -5919,8 +5927,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V017_2",
       "nodeType": "Validator",
       "nextIdentifier": "E020"
@@ -5946,8 +5954,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V017_3",
       "nodeType": "Validator",
       "nextIdentifier": "E021"
@@ -5973,8 +5981,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V017_4",
       "nodeType": "Validator",
       "nextIdentifier": "E022"
@@ -6000,8 +6008,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V018",
       "nodeType": "Validator",
       "nextIdentifier": "D038"
@@ -6027,8 +6035,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V019_1",
       "nodeType": "Validator",
       "nextIdentifier": "V020"
@@ -6054,8 +6062,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V020",
       "nodeType": "Validator",
       "nextIdentifier": "V020_1"
@@ -6081,8 +6089,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V020_1",
       "nodeType": "Validator",
       "nextIdentifier": "E024"
@@ -6108,8 +6116,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V022",
       "nodeType": "Validator",
       "nextIdentifier": "D_PULSE_R1_ACTION"
@@ -6161,8 +6169,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V023_1",
       "nodeType": "Validator",
       "nextIdentifier": "V023_2"
@@ -6194,8 +6202,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V023_2",
       "nodeType": "Validator",
       "nextIdentifier": "E026"
@@ -6221,8 +6229,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V023_4",
       "nodeType": "Validator",
       "nextIdentifier": "E027"
@@ -6248,8 +6256,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V024",
       "nodeType": "Validator",
       "nextIdentifier": "E028"
@@ -6275,8 +6283,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V025",
       "nodeType": "Validator",
       "nextIdentifier": "V025_1"
@@ -6302,8 +6310,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V025_1",
       "nodeType": "Validator",
       "nextIdentifier": "E029"
@@ -6329,8 +6337,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V026_2",
       "nodeType": "Validator",
       "nextIdentifier": "D027"
@@ -6356,8 +6364,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V026_3",
       "nodeType": "Validator",
       "nextIdentifier": "D027_1"
@@ -6383,8 +6391,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V027",
       "nodeType": "Validator",
       "nextIdentifier": "E033"
@@ -6410,8 +6418,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V028",
       "nodeType": "Validator",
       "nextIdentifier": "E034"
@@ -6437,8 +6445,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V029_2",
       "nodeType": "Validator",
       "nextIdentifier": "D031"
@@ -6464,8 +6472,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V029_3",
       "nodeType": "Validator",
       "nextIdentifier": "D031_1"
@@ -6491,8 +6499,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V031",
       "nodeType": "Validator",
       "nextIdentifier": "D_PULSE_R2_ACTION"
@@ -6544,8 +6552,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V032",
       "nodeType": "Validator",
       "nextIdentifier": "E037"
@@ -6571,8 +6579,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V033",
       "nodeType": "Validator",
       "nextIdentifier": "S005"
@@ -6598,8 +6606,8 @@
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "identifier": "V034",
       "nodeType": "Validator",
       "nextIdentifier": "D_GCS_ROSC_01"
@@ -6618,7 +6626,7 @@
       "nodeType": "Parallel",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "QC_ROSC_WAIT_C_REMOVE",

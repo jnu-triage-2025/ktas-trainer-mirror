@@ -8,6 +8,84 @@ namespace MultiplayerInfrastructure.Tests.Scenario
 {
   public sealed class ScenarioGraphDiagnosticsTests
   {
+    private static ScenarioGraph BuildGateSignalGraph(string awaitedSignal)
+    {
+      var graph = new ScenarioGraph { Identifier = "gate-signal", DefaultEntrypoint = "gate" };
+      graph.Add(new ScenarioValidatorNode
+      {
+        Identifier = "gate",
+        WaitForCondition = true,
+        RootConditions = new List<ScenarioValidatorRootCondition>
+        {
+          new()
+          {
+            Condition = ScenarioValidatorCondition.RegistryContains,
+            ValidationRules = new List<ScenarioValidatorRule>
+            {
+              new()
+              {
+                Type = ScenarioValidatorRuleType.Registry,
+                Condition = ScenarioValidatorRuleCondition.Contains,
+                RegistryType = Registry.RegistryType.RuntimeState,
+                RegistryIdentifier = awaitedSignal
+              }
+            }
+          }
+        }
+      });
+      return graph;
+    }
+
+    private static bool HasUnattributedGateSignalReport(ScenarioGraph graph, string signal)
+      => ScenarioGraphDiagnostics.Run(graph).Any(item =>
+        item.Severity == ScenarioGraphDiagnostics.Severity.Info
+        && item.NodeIdentifier == "gate"
+        && item.Message.Contains(signal)
+        && item.Message.Contains("누가 올리는지"));
+
+    [Test]
+    public void GateSignalWithoutAnyKnownProducerIsReported()
+    {
+      var graph = BuildGateSignalGraph("sig.nobody_raises_this");
+
+      Assert.That(HasUnattributedGateSignalReport(graph, "sig.nobody_raises_this"), Is.True);
+    }
+
+    [Test]
+    public void GateSignalProducedByAServerOwnedNodeIsNotReported()
+    {
+      var graph = BuildGateSignalGraph("sig.all_arrived");
+      graph.Add(new ScenarioSignalCounterNode
+      {
+        Identifier = "counter",
+        CounterIdentifier = "arrivals",
+        SourceSignalPrefix = "quest_arrival_",
+        Threshold = 4,
+        OutputSignalIdentifier = "all_arrived"
+      });
+
+      Assert.That(HasUnattributedGateSignalReport(graph, "sig.all_arrived"), Is.False);
+    }
+
+    [Test]
+    public void GateSignalDeclaredAsAClientSignalIsNotReported()
+    {
+      var graph = BuildGateSignalGraph("sig.close_vital_ui_b");
+      graph.ClientSignalIdentifiers = new[] { "sig.close_vital_ui_b" };
+
+      Assert.That(HasUnattributedGateSignalReport(graph, "sig.close_vital_ui_b"), Is.False);
+    }
+
+    [Test]
+    public void GateSignalMatchingADeclaredClientPrefixIsNotReported()
+    {
+      var graph = BuildGateSignalGraph("sig.quest_arrival_triage_area_player_one");
+      graph.ClientSignalPrefixes = new[] { "sig.quest_arrival_triage_area_" };
+
+      Assert.That(
+        HasUnattributedGateSignalReport(graph, "sig.quest_arrival_triage_area_player_one"), Is.False);
+    }
+
     [Test]
     public void ManualEnterSetupChainEndingWithoutReturnToOriginNodeIsReported()
     {
