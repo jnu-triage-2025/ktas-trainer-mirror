@@ -129,7 +129,7 @@ namespace TriageTrainer.Entity
     public bool IsAttached => _isAttached;
     /// <summary>석션 라인 자동 연결에 사용할 장비 측 포트. 프리팹에 설정되지 않으면 null이다.</summary>
     public SuctionLineConnectionPoint SuctionLineConnectionPoint => _suctionLineConnectionPoint;
-    private bool IsPatientAInstallationTarget =>
+    internal bool IsPatientAInstallationTarget =>
       string.Equals(_attachCompletionSignal, "connect_wall_component_1", StringComparison.Ordinal);
     public override string PresentationEntityIdentifier =>
       IsPatientAInstallationTarget ? "patient_a_wall_suction" : base.PresentationEntityIdentifier;
@@ -335,7 +335,7 @@ namespace TriageTrainer.Entity
       _yankauerLine.SetPosition(1, _yankauerHolderPoint.position);
     }
 
-    private void DisconnectYankauer()
+    internal void DisconnectYankauer()
     {
       if (!_yankauerConnected)
         return;

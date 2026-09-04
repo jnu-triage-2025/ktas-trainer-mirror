@@ -12,6 +12,7 @@
       RegisterEvent_ActivateVitalMonitorUiPatientA();
       RegisterEvent_ShowSuctionChecklistUi();
       RegisterEvent_HideSuctionChecklistUi();
+      RegisterEvent_DisconnectWallSuctionPatientA();
       RegisterEvent_VitalInfoPatientA();
       RegisterEvent_ShowChecklistIntu();
       RegisterEvent_HideChecklistIntu();

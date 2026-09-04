@@ -768,7 +768,11 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes["V013_3"].NextIdentifier, Is.EqualTo("V013_4"));
       Assert.That(graph.Nodes["V013_4"].NextIdentifier, Is.EqualTo("N007_4"));
       Assert.That(graph.Nodes["N007_4"].NextIdentifier, Is.EqualTo("D009"));
-      Assert.That(graph.Nodes["D009"].NextIdentifier, Is.EqualTo("Q009_1"));
+      Assert.That(graph.Nodes["D009"].NextIdentifier, Is.EqualTo("E_DISCONNECT_WALL_SUCTION_A"));
+      var disconnect = graph.Nodes["E_DISCONNECT_WALL_SUCTION_A"] as ScenarioInvokeEventNode;
+      Assert.That(disconnect, Is.Not.Null);
+      Assert.That(disconnect.EventIdentifier, Is.EqualTo("disconnect_wall_suction_patient_a"));
+      Assert.That(disconnect.NextIdentifier, Is.EqualTo("Q009_1"));
     }
 
     [Test]

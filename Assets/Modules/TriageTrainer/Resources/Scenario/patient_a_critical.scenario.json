@@ -2210,6 +2210,13 @@
       },
       "identifier": "D009",
       "nodeType": "Dialogue",
+      "nextIdentifier": "E_DISCONNECT_WALL_SUCTION_A"
+    },
+    "E_DISCONNECT_WALL_SUCTION_A": {
+      "eventIdentifier": "disconnect_wall_suction_patient_a",
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "E_DISCONNECT_WALL_SUCTION_A",
+      "nodeType": "InvokeEvent",
       "nextIdentifier": "Q009_1"
     },
     "D010": {
