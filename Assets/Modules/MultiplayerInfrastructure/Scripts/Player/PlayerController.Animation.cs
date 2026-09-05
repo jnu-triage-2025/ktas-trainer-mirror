@@ -49,6 +49,7 @@ namespace MultiplayerInfrastructure.Player
     {
       base.OnValidate();
       EnsureDefaultRuntimeAnimatorController();
+      OnValidate_OverheadName();
     }
 #endif
 

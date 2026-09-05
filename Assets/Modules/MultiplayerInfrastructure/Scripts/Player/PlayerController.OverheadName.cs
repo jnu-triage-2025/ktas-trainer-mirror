@@ -26,6 +26,11 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private bool _overheadNameShownForOwner;
     [Tooltip("카메라와 이 거리(m)보다 멀어지면 머리 위 이름표를 숨긴다. 0 이하이면 거리 제한 없이 항상 표시한다.")]
     [SerializeField, Min(0f)] private float _overheadNameMaxVisibleDistance = 16f;
+    [Tooltip("머리 위 이름표의 높이 보정(m). 음수이면 아래로 내려온다. " +
+             "프리팹에 NameTagDisplayAttachPoint 가 배치되어 있으면 그 위치가 우선하므로 이 값은 쓰이지 않는다. " +
+             "부착점이 없을 때 쓰는 CharacterController 캡슐은 캐릭터 모델보다 여유 있게 잡혀 있어서, " +
+             "캡슐 윗면을 그대로 쓰면 이름표가 머리에서 지나치게 떨어져 보인다.")]
+    [SerializeField] private float _overheadNameHeightOffset = -0.4f;
     [SerializeField] private Color _overheadNameColor = Color.white;
 
     // 로컬 피어에서 살아 있는 PlayerController 전체. 누군가의 관전 상태가 바뀌면
@@ -33,6 +38,7 @@ namespace MultiplayerInfrastructure.Player
     private static readonly List<PlayerController> _overheadNameInstances = new();
 
     private Transform _overheadNameAnchor;
+    private NameTagDisplayAttachPoint _nameTagAttachPoint;
     private bool _overheadNameActive;
 
     private void OnStartClient_AnyPeer_OverheadName()
@@ -58,6 +64,16 @@ namespace MultiplayerInfrastructure.Player
       TeardownOverheadName();
     }
 
+#if UNITY_EDITOR
+    // 플레이 중에 인스펙터로 높이 보정을 조정하면 즉시 반영되게 한다.
+    // 앵커 위치는 라벨을 갱신할 때만 다시 계산하므로, 이 호출이 없으면 다음 사건까지 반영되지 않는다.
+    private void OnValidate_OverheadName()
+    {
+      if (Application.isPlaying && _overheadNameActive)
+        RefreshOverheadNameLabel();
+    }
+#endif
+
     private void TeardownOverheadName()
     {
       if (!_overheadNameActive)
@@ -68,8 +84,9 @@ namespace MultiplayerInfrastructure.Player
       _overheadNameActive = false;
 
       // 파괴된 앵커는 컨트롤러 LateUpdate의 stale 정리가 제거하지만, 명시적으로 먼저 해제한다.
-      EntityOverheadLabelUIController.ActiveInstance?.RemoveLabels(_overheadNameAnchor);
+      EntityOverheadLabelUIController.ActiveInstance?.RemoveLabels(CurrentOverheadNameAnchor);
 
+      // 프리팹에 배치된 부착점은 그대로 두고, 런타임에 만든 폴백 앵커만 정리한다.
       // 디스폰 후 같은 인스턴스가 다시 스폰되면 앵커를 새로 만들므로, 남은 앵커를 여기서 정리한다.
       if (_overheadNameAnchor != null)
         Destroy(_overheadNameAnchor.gameObject);
@@ -81,7 +98,7 @@ namespace MultiplayerInfrastructure.Player
     {
       if (!ShouldShowOverheadName())
       {
-        EntityOverheadLabelUIController.ActiveInstance?.RemoveLabel(_overheadNameAnchor, OverheadNameChannel);
+        EntityOverheadLabelUIController.ActiveInstance?.RemoveLabel(CurrentOverheadNameAnchor, OverheadNameChannel);
         return;
       }
 
@@ -143,6 +160,11 @@ namespace MultiplayerInfrastructure.Player
     // 이름표를 띄울 머리 위 앵커. UI 컨트롤러가 이 위치를 화면에 투영해 라벨을 배치한다.
     private Transform ResolveOverheadNameAnchor()
     {
+      // 프리팹이 이름표 부착점을 지정했다면 그 위치를 그대로 쓴다(작업자가 에디터에서 눈으로 맞춘 높이).
+      var attachPoint = ResolveNameTagAttachPoint();
+      if (attachPoint != null)
+        return attachPoint.transform;
+
       if (_overheadNameAnchor == null)
       {
         var anchorObject = new GameObject("Overhead Name Anchor");
@@ -154,18 +176,42 @@ namespace MultiplayerInfrastructure.Player
       return _overheadNameAnchor;
     }
 
-    // CharacterController 캡슐의 윗면을 머리 높이로 본다. 캐릭터 모델이 바뀌면 center 도 함께 갱신되므로
-    // Renderer 바운즈를 훑지 않고도 모델별 키를 따라간다.
-    // 라벨과 머리 사이 여유 간격은 UI 컨트롤러의 worldHeightOffset 이 담당한다.
+    /// <summary>
+    /// 지금 라벨이 붙어 있는 앵커를 돌려준다. 해제 경로가 폴백 앵커를 새로 만들지 않도록,
+    /// 부착점도 폴백 앵커도 없으면 null 을 돌려준다.
+    /// </summary>
+    private Transform CurrentOverheadNameAnchor
+    {
+      get
+      {
+        var attachPoint = ResolveNameTagAttachPoint();
+        return attachPoint != null ? attachPoint.transform : _overheadNameAnchor;
+      }
+    }
+
+    // 프리팹에 배치된 이름표 부착점. 캐릭터 모델이 런타임에 교체되면 함께 파괴될 수 있으므로 없을 때 다시 찾는다.
+    private NameTagDisplayAttachPoint ResolveNameTagAttachPoint()
+    {
+      if (_nameTagAttachPoint == null)
+        _nameTagAttachPoint = GetComponentInChildren<NameTagDisplayAttachPoint>(true);
+
+      return _nameTagAttachPoint;
+    }
+
+    // 부착점이 없을 때 쓰는 폴백 높이. CharacterController 캡슐의 윗면을 기준으로 삼는다.
+    // 캐릭터 모델이 바뀌면 center 도 함께 갱신되므로 Renderer 바운즈를 훑지 않고도 모델별 키를 따라간다.
+    // 다만 캡슐은 이동 판정을 위해 모델보다 여유 있게 잡혀 있으므로, 실제 머리 높이에 맞도록
+    // _overheadNameHeightOffset 으로 보정한다. (UI 컨트롤러의 worldHeightOffset 이 여기에 더해진다.)
     private float GetOverheadNameHeight()
     {
       if (_characterController == null)
         _characterController = GetComponent<CharacterController>();
 
-      if (_characterController == null)
-        return 2f;
+      float capsuleTop = _characterController == null
+        ? 2f
+        : _characterController.center.y + _characterController.height * 0.5f;
 
-      return _characterController.center.y + _characterController.height * 0.5f;
+      return capsuleTop + _overheadNameHeightOffset;
     }
   }
 }

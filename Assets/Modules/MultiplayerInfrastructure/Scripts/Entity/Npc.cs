@@ -34,9 +34,27 @@ namespace MultiplayerInfrastructure.Entity
     {
       get
       {
+        // 프리팹이 이름표 부착점을 지정했다면 그 위치를 그대로 쓴다(작업자가 에디터에서 눈으로 맞춘 높이).
+        var attachPoint = ResolveNameTagAttachPoint();
+        if (attachPoint != null)
+          return attachPoint.transform;
+
         EnsureScenarioOverheadNameAnchor();
         _scenarioOverheadNameAnchor.localPosition = new Vector3(0f, GetOverheadNameHeight(), 0f);
         return _scenarioOverheadNameAnchor;
+      }
+    }
+
+    /// <summary>
+    /// 지금 라벨이 붙어 있는 앵커를 돌려준다. 해제 경로가 폴백 앵커를 새로 만들지 않도록,
+    /// 부착점도 폴백 앵커도 없으면 null 을 돌려준다.
+    /// </summary>
+    private Transform CurrentOverheadNameAnchor
+    {
+      get
+      {
+        var attachPoint = ResolveNameTagAttachPoint();
+        return attachPoint != null ? attachPoint.transform : _scenarioOverheadNameAnchor;
       }
     }
 
@@ -52,6 +70,7 @@ namespace MultiplayerInfrastructure.Entity
     private bool _baseModelApplied;
     private string _registeredIdentifier;
     private Transform _scenarioOverheadNameAnchor;
+    private NameTagDisplayAttachPoint _nameTagAttachPoint;
     private bool _scenarioOverheadNameVisible;
 
     private void Awake()
@@ -251,7 +270,7 @@ namespace MultiplayerInfrastructure.Entity
     {
       if (string.IsNullOrWhiteSpace(displayName))
       {
-        ResolveOverheadLabelUI()?.RemoveLabel(_scenarioOverheadNameAnchor, "npc-name");
+        ResolveOverheadLabelUI()?.RemoveLabel(CurrentOverheadNameAnchor, "npc-name");
         return;
       }
 
@@ -266,7 +285,16 @@ namespace MultiplayerInfrastructure.Entity
         _overheadNameMaxVisibleDistance);
     }
 
-    // 이름표를 띄울 머리 위 앵커. UI 컨트롤러가 이 위치를 화면에 투영해 라벨을 배치한다.
+    // 프리팹에 배치된 이름표 부착점. NPC 모델이 런타임에 교체되면 함께 파괴될 수 있으므로 없을 때 다시 찾는다.
+    private NameTagDisplayAttachPoint ResolveNameTagAttachPoint()
+    {
+      if (_nameTagAttachPoint == null)
+        _nameTagAttachPoint = GetComponentInChildren<NameTagDisplayAttachPoint>(true);
+
+      return _nameTagAttachPoint;
+    }
+
+    // 부착점이 없을 때만 쓰는 폴백 앵커. UI 컨트롤러가 이 위치를 화면에 투영해 라벨을 배치한다.
     private void EnsureScenarioOverheadNameAnchor()
     {
       if (_scenarioOverheadNameAnchor != null)
@@ -299,7 +327,7 @@ namespace MultiplayerInfrastructure.Entity
         _scenarioOverheadNameVisible = showOverheadName.Value;
         ConfigureScenarioOverheadNameLabel(_scenarioOverheadNameVisible ? gameObject.name : null);
       }
-      else if (nameChanged && _scenarioOverheadNameAnchor != null)
+      else if (nameChanged && _scenarioOverheadNameVisible)
         ConfigureScenarioOverheadNameLabel(gameObject.name);
     }
 
@@ -331,8 +359,9 @@ namespace MultiplayerInfrastructure.Entity
     private void DestroyScenarioOverheadNameLabel()
     {
       // 파괴된 앵커는 컨트롤러 LateUpdate 의 stale 정리가 제거하지만, 명시적으로 먼저 해제한다.
-      EntityOverheadLabelUIController.ActiveInstance?.RemoveLabels(_scenarioOverheadNameAnchor);
+      EntityOverheadLabelUIController.ActiveInstance?.RemoveLabels(CurrentOverheadNameAnchor);
 
+      // 프리팹에 배치된 부착점은 그대로 두고, 런타임에 만든 폴백 앵커만 정리한다.
       if (_scenarioOverheadNameAnchor != null)
       {
         Destroy(_scenarioOverheadNameAnchor.gameObject);
