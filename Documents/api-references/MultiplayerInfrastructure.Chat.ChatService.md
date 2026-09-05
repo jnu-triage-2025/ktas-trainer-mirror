@@ -32,12 +32,31 @@
 public void SendSystemMessage(NetworkConnection conn, string message)
 ```
 
-특정 클라이언트에게 시스템 메시지(`[System]` 노란 태그)를 전송합니다.  
-`conn`이 `null`이면 서버 로그로 출력됩니다.
+플레이어가 실행한 명령의 결과를 실행자 이름 접두어(`(이름) 메시지`)와 함께 모든 접속자의 채팅창에 전파합니다.  
+`conn`이 `null`이거나 시스템 권한 실행(`TryExecuteSystemCommand`) 중이면 채팅에 전파하지 않고 서버 로그로만 출력합니다.  
+오류, 사용법, 조회 결과처럼 실행자에게만 의미 있는 출력에 사용합니다.
 
 ```csharp
-chatService.SendSystemMessage(conn, "아이템 지급이 완료되었습니다.");
+chatService.SendSystemMessage(conn, "Usage: /give <item> [count] [target]");
 ```
+
+---
+
+### `SendSystemNotification`
+
+```csharp
+public void SendSystemNotification(NetworkConnection actor, string message)
+```
+
+플레이어에게 알리는 성격의 시스템 메시지를 실행 컨텍스트와 무관하게 서버 전역으로 전파합니다.  
+플레이어가 실행한 경우 `(이름) 메시지` 형식으로, 시스템 권한 실행이나 서버 콘솔처럼 `actor`가 없는 경우 `[System]` 노란 태그로 모든 접속자에게 표시됩니다.  
+명령이 대상 플레이어나 세션 상태를 바꿨음을 알리는 "~에게 ~했습니다" 류의 결과 보고(`/give`, `/tp`, `/clean`, `/speed`, `/gamemode`, `/tag`, `/server kick|ban|unban|stop`, `/entitypreset` 스폰)에 사용합니다.
+
+```csharp
+chatService.SendSystemNotification(sender, $"Gave {count}x '{itemIdentifier}' to {targetName}.");
+```
+
+메시지에서 대상 플레이어를 지칭할 때는 `PlayerTargetResolver.DescribeTarget`으로 표기합니다. 표시 이름을 기본으로 하되, 명령이 FishNet 연결 번호로 대상을 지정했으면 `이름(clientId)`, 사용자 식별자로 지정했으면 `이름(uuid)` 형식이 됩니다.
 
 ---
 

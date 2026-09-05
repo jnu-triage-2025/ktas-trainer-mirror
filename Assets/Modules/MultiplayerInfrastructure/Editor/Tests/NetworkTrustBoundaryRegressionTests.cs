@@ -36,6 +36,27 @@ namespace MultiplayerInfrastructure.Editor.Tests
       Assert.That(source, Does.Not.Contain("TargetReceiveSystemMessage"));
     }
 
+    [Test]
+    public void SystemNotificationsReachEveryObserverEvenUnderSystemExecution()
+    {
+      string source = File.ReadAllText(
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Chat/ChatService.cs");
+
+      Assert.That(source, Does.Contain("public void SendSystemNotification(NetworkConnection actor, string message)"));
+      Assert.That(source, Does.Contain("ReceiveChatObserversRpc(FormatPlayerSystemMessage(actor, message))"));
+      Assert.That(source, Does.Contain("ReceiveChatObserversRpc(formatted)"));
+    }
+
+    [Test]
+    public void TriageScenarioSystemMessagesAreBroadcastFromTheAuthoritativeServer()
+    {
+      string source = File.ReadAllText(
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs");
+
+      Assert.That(source, Does.Contain("if (!TryBroadcastSystemMessage(message))"));
+      Assert.That(source, Does.Contain("_chatService.BroadcastSystemMessage(message);"));
+    }
+
     [TestCase("Assets/Modules/TriageTrainer/Scripts/Entities/Stretcher/StretcherController.cs")]
     [TestCase("Assets/Modules/MultiplayerInfrastructure/Scripts/Entity/MinecraftBoatLikeControl.cs")]
     public void VehicleInputRpcRejectsNonFiniteValues(string path)

@@ -202,9 +202,10 @@ namespace MultiplayerInfrastructure.Command
       var lines = new List<string>();
       foreach (UserDescriptor target in targets)
       {
+        string targetName = PlayerTargetResolver.DescribeTarget(args[0], target);
         lines.Add(SessionVariableService.TryGetScore(target.Identifier, objective, out int value)
-          ? $"{target.DisplayName} {objective} = {value}"
-          : $"{target.DisplayName} has no score in '{objective}'.");
+          ? $"{targetName} {objective} = {value}"
+          : $"{targetName} has no score in '{objective}'.");
       }
 
       _chat.SendSystemMessage(sender, string.Join("\n", lines));
@@ -224,7 +225,7 @@ namespace MultiplayerInfrastructure.Command
           return;
         }
 
-        lines.Add($"{target.DisplayName} {objective} = {value}");
+        lines.Add($"{PlayerTargetResolver.DescribeTarget(args[0], target)} {objective} = {value}");
       }
 
       _chat.SendSystemMessage(sender, string.Join("\n", lines));
@@ -245,7 +246,7 @@ namespace MultiplayerInfrastructure.Command
         }
 
         SessionVariableService.TryGetScore(target.Identifier, objective, out int newValue);
-        lines.Add($"{target.DisplayName} {objective} = {newValue}");
+        lines.Add($"{PlayerTargetResolver.DescribeTarget(args[0], target)} {objective} = {newValue}");
       }
 
       _chat.SendSystemMessage(sender, string.Join("\n", lines));
@@ -266,7 +267,7 @@ namespace MultiplayerInfrastructure.Command
         }
 
         SessionVariableService.TryGetScore(target.Identifier, objective, out int newValue);
-        lines.Add($"{target.DisplayName} {objective} = {newValue}");
+        lines.Add($"{PlayerTargetResolver.DescribeTarget(args[0], target)} {objective} = {newValue}");
       }
 
       _chat.SendSystemMessage(sender, string.Join("\n", lines));
@@ -336,7 +337,7 @@ namespace MultiplayerInfrastructure.Command
             return;
           }
 
-          lines.Add($"Reset '{args[1]}' score for {target.DisplayName}.");
+          lines.Add($"Reset '{args[1]}' score for {PlayerTargetResolver.DescribeTarget(args[0], target)}.");
           continue;
         }
 
@@ -346,7 +347,7 @@ namespace MultiplayerInfrastructure.Command
           return;
         }
 
-        lines.Add($"Reset all scores for {target.DisplayName}.");
+        lines.Add($"Reset all scores for {PlayerTargetResolver.DescribeTarget(args[0], target)}.");
       }
 
       _chat.SendSystemMessage(sender, string.Join("\n", lines));
@@ -394,7 +395,7 @@ namespace MultiplayerInfrastructure.Command
         }
 
         SessionVariableService.TryGetScore(target.Identifier, targetObjective, out int newValue);
-        lines.Add($"{target.DisplayName} {targetObjective} = {newValue}");
+        lines.Add($"{PlayerTargetResolver.DescribeTarget(args[0], target)} {targetObjective} = {newValue}");
       }
 
       _chat.SendSystemMessage(sender, string.Join("\n", lines));

@@ -109,7 +109,7 @@ namespace MultiplayerInfrastructure.Command
       }
 
       Teleport(controller, destination);
-      _chat.SendSystemMessage(sender, $"Teleported to ({destination.x:0.##}, {destination.y:0.##}, {destination.z:0.##}).");
+      _chat.SendSystemNotification(sender, $"Teleported to ({destination.x:0.##}, {destination.y:0.##}, {destination.z:0.##}).");
     }
 
     /// /tp <player> x y z
@@ -133,9 +133,9 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      string name = ResolveDisplayName(controller);
+      string name = ResolveDisplayName(playerToken, controller);
       Teleport(controller, destination);
-      _chat.SendSystemMessage(sender, $"Teleported {name} to ({destination.x:0.##}, {destination.y:0.##}, {destination.z:0.##}).");
+      _chat.SendSystemNotification(sender, $"Teleported {name} to ({destination.x:0.##}, {destination.y:0.##}, {destination.z:0.##}).");
     }
 
     /// /tp <target>  — 자기 자신에서 플레이어 또는 웨이포인트로 이동
@@ -150,9 +150,9 @@ namespace MultiplayerInfrastructure.Command
           return;
         }
 
-        string destName = ResolveDisplayName(destController);
+        string destName = ResolveDisplayName(targetToken, destController);
         Teleport(selfController, destController.transform.position);
-        _chat.SendSystemMessage(sender, $"Teleported to {destName}.");
+        _chat.SendSystemNotification(sender, $"Teleported to {destName}.");
         return;
       }
 
@@ -166,7 +166,7 @@ namespace MultiplayerInfrastructure.Command
         }
 
         Teleport(selfController, waypointPos);
-        _chat.SendSystemMessage(sender, $"Teleported to waypoint '{targetToken}'.");
+        _chat.SendSystemNotification(sender, $"Teleported to waypoint '{targetToken}'.");
         return;
       }
 
@@ -189,14 +189,14 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      string subjectName = ResolveDisplayName(subjectController);
+      string subjectName = ResolveDisplayName(aToken, subjectController);
 
       // b 를 플레이어로 시도한다.
       if (TryResolveController(bToken, sender, out var destController, out _))
       {
-        string destName = ResolveDisplayName(destController);
+        string destName = ResolveDisplayName(bToken, destController);
         Teleport(subjectController, destController.transform.position);
-        _chat.SendSystemMessage(sender, $"Teleported {subjectName} to {destName}.");
+        _chat.SendSystemNotification(sender, $"Teleported {subjectName} to {destName}.");
         return;
       }
 
@@ -204,7 +204,7 @@ namespace MultiplayerInfrastructure.Command
       if (TryResolveWaypointPosition(bToken, out Vector3 waypointPos))
       {
         Teleport(subjectController, waypointPos);
-        _chat.SendSystemMessage(sender, $"Teleported {subjectName} to waypoint '{bToken}'.");
+        _chat.SendSystemNotification(sender, $"Teleported {subjectName} to waypoint '{bToken}'.");
         return;
       }
 
@@ -345,8 +345,8 @@ namespace MultiplayerInfrastructure.Command
                                               out PlayerController controller, out string error)
       => PlayerTargetResolver.TryResolveSingleController(sender, token, out controller, out error);
 
-    private static string ResolveDisplayName(PlayerController controller)
-      => PlayerTargetResolver.DescribeController(controller);
+    private static string ResolveDisplayName(string token, PlayerController controller)
+      => PlayerTargetResolver.DescribeTarget(token, controller);
 
     private void SendUsage(NetworkConnection sender)
     {

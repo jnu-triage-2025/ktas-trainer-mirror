@@ -88,7 +88,7 @@ namespace MultiplayerInfrastructure.Command
       foreach (TagTarget target in targets)
       {
         PlayerTagService.AddTagToIdentifier(target.Identifier, tag);
-        _chat.SendSystemMessage(sender, $"[태그] '{target.DisplayName}'에게 태그 '{tag}'를 추가했습니다.");
+        _chat.SendSystemNotification(sender, $"[태그] '{target.DisplayName}'에게 태그 '{tag}'를 추가했습니다.");
       }
     }
 
@@ -118,7 +118,7 @@ namespace MultiplayerInfrastructure.Command
         if (!removed)
           _chat.SendSystemMessage(sender, $"[태그] '{target.DisplayName}'에게 태그 '{tag}'가 없습니다.");
         else
-          _chat.SendSystemMessage(sender, $"[태그] '{target.DisplayName}'에서 태그 '{tag}'를 제거했습니다.");
+          _chat.SendSystemNotification(sender, $"[태그] '{target.DisplayName}'에서 태그 '{tag}'를 제거했습니다.");
       }
     }
 
@@ -234,8 +234,9 @@ namespace MultiplayerInfrastructure.Command
 
       if (PlayerTargetResolver.TryResolve(sender, selector, out var descriptors, out string playerError))
       {
+        // 메시지에는 대상을 지정한 방식(이름 / fish id / uuid)이 드러나도록 표기한다.
         foreach (var descriptor in descriptors)
-          targets.Add(new TagTarget(descriptor.Identifier, descriptor.DisplayName));
+          targets.Add(new TagTarget(descriptor.Identifier, PlayerTargetResolver.DescribeTarget(selector, descriptor)));
 
         return true;
       }

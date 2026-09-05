@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using FishNet;
+using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
@@ -318,6 +320,7 @@ namespace TriageTrainer.Scenario
     private readonly List<string> _registeredEventIds = new();
     private ScenarioController _questStateFlagScopeController;
     private ChatUIController _chatUi;
+    private ChatService _chatService;
     private QuestUIController _questUi;
 
     /// <summary>
@@ -1187,6 +1190,12 @@ namespace TriageTrainer.Scenario
       target.rotation = destination.rotation;
     }
 
+    /// <summary>
+    /// 플레이어에게 알리는 시스템 메시지를 채팅에 남긴다.
+    /// 서버 권위 실행에서는 서버만 이벤트 핸들러를 돌리므로 로컬 채팅창에만 남기면 호스트 외의 참가자는
+    /// 안내를 볼 수 없다. 그래서 서버에서는 서버 전역 채팅으로 전파하고, 각 피어가 자기 그래프를 돌리는
+    /// 호환 실행 경로와 오프라인에서는 기존처럼 이 피어의 채팅창에만 출력한다.
+    /// </summary>
     private void EmitSystemMessage(string message)
     {
       if (string.IsNullOrWhiteSpace(message))
@@ -1194,17 +1203,51 @@ namespace TriageTrainer.Scenario
         return;
       }
 
-      if (_chatUi == null)
+      if (!TryBroadcastSystemMessage(message))
       {
-        _chatUi = Registry.Get<ChatUIController>(RegistryType.UI, Registry.TypeKey<ChatUIController>());
-      }
+        if (_chatUi == null)
+        {
+          _chatUi = Registry.Get<ChatUIController>(RegistryType.UI, Registry.TypeKey<ChatUIController>());
+        }
 
-      if (_chatUi != null)
-      {
-        _chatUi.AppendMessage($"<color=#FFD700>[System]</color> {message}", true);
+        if (_chatUi != null)
+        {
+          _chatUi.AppendMessage($"<color=#FFD700>[System]</color> {message}", true);
+        }
       }
 
       Debug.Log($"[TriageScenarioEventBootstrap] {message}");
+    }
+
+    private bool TryBroadcastSystemMessage(string message)
+    {
+      if (!InstanceFinder.IsServerStarted)
+      {
+        return false;
+      }
+
+      // 호스트가 호환 실행 경로로 그래프를 돌리는 중이면 다른 피어도 같은 핸들러를 로컬 실행하므로
+      // 브로드캐스트하면 메시지가 중복된다. 서버 권위 실행이거나 로컬 채팅창이 없는 전용 서버일 때만 전파한다.
+      var controller = ScenarioController.Instance;
+      if (controller != null && !controller.IsAuthoritativeExecutor && InstanceFinder.IsClientStarted)
+      {
+        return false;
+      }
+
+      if (_chatService == null)
+      {
+        _chatService = Registry.Get<ChatService>(RegistryType.Service, Registry.TypeKey<ChatService>());
+        // ChatService 가 레지스트리에 아직 등록되지 않았거나 분리 배치된 경우를 위해 씬 전역 검색으로 폴백한다.
+        _chatService ??= FindFirstObjectByType<ChatService>(FindObjectsInactive.Include);
+      }
+
+      if (_chatService == null)
+      {
+        return false;
+      }
+
+      _chatService.BroadcastSystemMessage(message);
+      return true;
     }
 
     private IEnumerator ApplyPatientAMonitorProfile(ECGParameters parameters, string message)

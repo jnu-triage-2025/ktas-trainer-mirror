@@ -47,7 +47,7 @@ namespace MultiplayerInfrastructure.Command
       {
         float defaultValue = controller.DefaultWalkingSpeed;
         controller.ApplyWalkingSpeedServer(defaultValue);
-        _manager.SendSystemMessage(sender, $"Reset walking speed to default ({FormatSpeed(defaultValue)}).");
+        _manager.SendSystemNotification(sender, $"Reset walking speed to default ({FormatSpeed(defaultValue)}).");
         return;
       }
 
@@ -58,7 +58,7 @@ namespace MultiplayerInfrastructure.Command
       }
 
       controller.ApplyWalkingSpeedServer(value);
-      _manager.SendSystemMessage(sender, $"Set walking speed to {FormatSpeed(value)}.");
+      _manager.SendSystemNotification(sender, $"Set walking speed to {FormatSpeed(value)}.");
     }
 
     private static bool TryParseSpeed(string raw, out float value, out string error)

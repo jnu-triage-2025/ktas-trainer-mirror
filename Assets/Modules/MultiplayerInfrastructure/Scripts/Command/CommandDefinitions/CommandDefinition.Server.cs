@@ -19,7 +19,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("stop", "Stop the server."),
       new UsageLine("kick <player>", "Disconnect a connected player."),
       new UsageLine("ban <player>", "Ban a player by display name and disconnect them."),
-      new UsageLine("unban <player>", "Remove a display name from the ban list."),
+      new UsageLine("unban <player>", "Remove a player from the ban list."),
       new UsageLine("banlist", "Return the current ban list."),
       new UsageLine("  <player>", PlayerTargetResolver.ShortSyntaxHint + "."),
     };
@@ -67,7 +67,7 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      _chat.SendSystemMessage(sender, "Stopping server.");
+      _chat.SendSystemNotification(sender, "Stopping server.");
       InstanceFinder.ServerManager.StopConnection(true);
     }
 
@@ -79,16 +79,18 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
+      string targetToken = GetTargetText(args);
       foreach ((NetworkConnection connection, UserDescriptor descriptor) in targets)
       {
+        string targetName = PlayerTargetResolver.DescribeTarget(targetToken, descriptor, connection);
         if (ban)
         {
           ServerBanService.Ban(descriptor.DisplayName);
-          _chat.SendSystemMessage(sender, $"Banned '{descriptor.DisplayName}'.");
+          _chat.SendSystemNotification(sender, $"Banned '{targetName}'.");
         }
         else
         {
-          _chat.SendSystemMessage(sender, $"Kicked '{descriptor.DisplayName}'.");
+          _chat.SendSystemNotification(sender, $"Kicked '{targetName}'.");
         }
 
         connection.Disconnect(true);
@@ -104,9 +106,31 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      _chat.SendSystemMessage(sender, ServerBanService.Unban(name)
-        ? $"Unbanned '{name}'."
-        : $"'{name}' is not in the ban list.");
+      // 1) 밴 목록은 표시 이름으로 관리되므로, 입력한 이름이 목록에 그대로 있으면 접속 여부와 무관하게 해제한다.
+      //    접속 중인 동명이인이나 부분 일치하는 다른 플레이어가 먼저 잡히는 일을 막기 위해 해석보다 앞선다.
+      if (ServerBanService.Unban(name))
+      {
+        _chat.SendSystemNotification(sender, $"Unbanned '{name}'.");
+        return;
+      }
+
+      // 2) 목록에 그대로 없으면 다른 명령과 같은 규칙(선택자, id:<uuid>, fish:<clientId>, 표시 이름)으로
+      //    플레이어를 해석하고, 그 플레이어의 표시 이름을 밴 목록에서 지운다.
+      if (!PlayerTargetResolver.TryResolve(sender, name, out var descriptors, out string resolveError))
+      {
+        _chat.SendSystemMessage(sender, $"'{name}' is not in the ban list. {resolveError}");
+        return;
+      }
+
+      foreach (UserDescriptor descriptor in descriptors)
+      {
+        PlayerTargetResolver.TryGetConnection(descriptor, out NetworkConnection connection);
+        string targetName = PlayerTargetResolver.DescribeTarget(name, descriptor, connection);
+        if (ServerBanService.Unban(descriptor.DisplayName))
+          _chat.SendSystemNotification(sender, $"Unbanned '{targetName}'.");
+        else
+          _chat.SendSystemMessage(sender, $"'{targetName}' is not in the ban list.");
+      }
     }
 
     private void BanList(NetworkConnection sender)

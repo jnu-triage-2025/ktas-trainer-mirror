@@ -404,9 +404,41 @@ namespace MultiplayerInfrastructure.Chat
         Debug.Log($"[System] {message}");
     }
 
+    /// <summary>
+    /// 플레이어에게 알리는 성격의 시스템 메시지를 서버 전역으로 전파한다.
+    /// <see cref="SendSystemMessage"/> 와 달리 시스템 권한 실행(시나리오 ExecuteCommand 노드, 데이터팩)이나
+    /// 서버 콘솔처럼 실행 주체 연결이 없는 경우에도 억제하지 않고 모든 접속자의 채팅창에 표시한다.
+    /// 명령이 대상 플레이어나 세션 상태를 바꿨음을 알리는 "~에게 ~했습니다" 류의 결과 보고에 쓴다.
+    /// 오류·사용법·조회 결과는 <see cref="SendSystemMessage"/> 를 그대로 쓴다.
+    /// </summary>
+    public void SendSystemNotification(NetworkConnection actor, string message)
+    {
+      if (string.IsNullOrWhiteSpace(message))
+        return;
+
+      if (actor != null && _systemExecutionContextDepth == 0)
+      {
+        ReceiveChatObserversRpc(FormatPlayerSystemMessage(actor, message));
+        return;
+      }
+
+      // 시스템 권한 실행은 특정 플레이어의 행위가 아니므로 이름 대신 [System] 접두어로 전파한다.
+      Debug.Log($"[System] {message}");
+      string formatted = FormatSystemMessage(message);
+      if (IsServerInitialized)
+        ReceiveChatObserversRpc(formatted);
+      else if (_uiController != null)
+        _uiController.AppendMessage(formatted, showToastWhenHidden: true); // 오프라인 실행은 로컬 채팅창에만 남긴다.
+    }
+
     private string FormatPlayerSystemMessage(NetworkConnection conn, string message)
     {
       return $"({GetDisplayName(conn)}) {message}";
+    }
+
+    private static string FormatSystemMessage(string message)
+    {
+      return $"<color=#FFD700>[System]</color> {message}";
     }
 
     public bool TryDispatchScenario(string scenarioIdentifier, IEnumerable<NetworkConnection> targets, out string error)
@@ -1027,7 +1059,7 @@ namespace MultiplayerInfrastructure.Chat
       if (string.IsNullOrWhiteSpace(message))
         return;
 
-      ReceiveChatObserversRpc($"<color=#FFD700>[System]</color> {message}");
+      ReceiveChatObserversRpc(FormatSystemMessage(message));
     }
 
     public string GetDisplayName(NetworkConnection conn)

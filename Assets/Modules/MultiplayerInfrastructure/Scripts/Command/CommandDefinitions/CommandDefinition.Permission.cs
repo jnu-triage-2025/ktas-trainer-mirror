@@ -365,7 +365,7 @@ namespace MultiplayerInfrastructure.Command
       }
 
       var lines = descriptors
-        .Select(descriptor => $"{descriptor.DisplayName} → role: {PermissionService.GetUserRole(descriptor.Identifier)}");
+        .Select(descriptor => $"{PlayerTargetResolver.DescribeTarget(args[0], descriptor)} → role: {PermissionService.GetUserRole(descriptor.Identifier)}");
       _chat.SendSystemMessage(sender, string.Join("\n", lines));
     }
 
@@ -394,7 +394,7 @@ namespace MultiplayerInfrastructure.Command
           return;
         }
 
-        applied.Add(descriptor.DisplayName);
+        applied.Add(PlayerTargetResolver.DescribeTarget(args[0], descriptor));
       }
 
       _chat.SendSystemMessage(sender, applied.Count == 1

@@ -36,7 +36,8 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      _chat.SendSystemMessage(sender, message);
+      // 지급 결과는 대상 플레이어에게 알리는 성격이므로 실행 컨텍스트와 무관하게 서버 전역에 전파한다.
+      _chat.SendSystemNotification(sender, message);
     }
 
     /// <summary>
@@ -116,7 +117,7 @@ namespace MultiplayerInfrastructure.Command
 
       int delivered = count - (leftover?.CurrentStackCount ?? 0);
       int dropped = leftover?.CurrentStackCount ?? 0;
-      string targetDisplayName = ResolveTargetDisplayName(targetConn);
+      string targetDisplayName = ResolveTargetDisplayName(targetIdentifier, targetConn);
 
       if (fullyAdded)
       {
@@ -152,7 +153,7 @@ namespace MultiplayerInfrastructure.Command
     private static bool TryGetPlayerController(NetworkConnection conn, out PlayerController controller)
       => PlayerTargetResolver.TryGetController(conn, out controller);
 
-    private static string ResolveTargetDisplayName(NetworkConnection connection)
-      => PlayerTargetResolver.DescribeConnection(connection);
+    private static string ResolveTargetDisplayName(string targetToken, NetworkConnection connection)
+      => PlayerTargetResolver.DescribeTarget(targetToken, connection);
   }
 }

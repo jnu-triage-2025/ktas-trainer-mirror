@@ -49,7 +49,7 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      _manager.SendSystemMessage(sender, $"Set gamemode to '{targetMode}'.");
+      _manager.SendSystemNotification(sender, $"Set gamemode to '{targetMode}'.");
     }
 
     private bool TryParseGamemode(string raw, out PlayerGamemode mode, out string error)

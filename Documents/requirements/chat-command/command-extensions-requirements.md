@@ -23,6 +23,7 @@ flags: []
 - `<target>`는 선택자(@p/@a/@r/@s/@e/@n) 및 인자(x,y,z,distance,dx,dy,dz,tag,type)를 지원해야 한다.
 - 플레이어를 인자로 받는 모든 커맨드(`/permission user`, `/scoreboard players`, `/tag`, `/signal player`, `/server kick|ban` 등)는 선택자와 `id:<uuid>`, `name:<displayName>`, 표시 이름을 동일하게 해석해야 한다.
 - 여러 대상을 지정하는 선택자를 사용하면, 대상마다 동작을 반복 수행하고 결과를 대상별로 안내해야 한다. 단일 대상만 허용하는 인자는 실패 사유를 반환해야 한다.
+- 시스템 메시지에서 플레이어를 지칭할 때는 표시 이름을 사용해야 한다. 다만 명령이 FishNet 연결 번호(`fish:<clientId>` 또는 숫자)로 대상을 지정했으면 `표시 이름(clientId)`, 사용자 식별자(`id:<uuid>` 또는 식별자 자체)로 지정했으면 `표시 이름(uuid)` 형식으로 표기하여 어떤 대상을 가리켰는지 드러내야 한다. (`PlayerTargetResolver.DescribeTarget`)
 - `&`와 `|`를 통한 명령 파이프라인 실행을 지원해야 한다.
 
 ## 기술적 세부 사항

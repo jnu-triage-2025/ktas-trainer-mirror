@@ -124,7 +124,7 @@ namespace MultiplayerInfrastructure.Command
         if (!ScenarioSignalParameterStore.TryGetForPlayer(args[2], player.Identifier, out var value))
         {
           LogQuery(sender, "player", ScenarioInteractionSignals.Normalize(args[2]), $"player={player.Identifier}, not-found");
-          lines.Add($"No stored parameter value for player '{player.DisplayName}' and signal '{ScenarioInteractionSignals.Normalize(args[2])}'.");
+          lines.Add($"No stored parameter value for player '{PlayerTargetResolver.DescribeTarget(args[1], player)}' and signal '{ScenarioInteractionSignals.Normalize(args[2])}'.");
           continue;
         }
         LogQuery(sender, "player", value.SignalIdentifier, Format(value));

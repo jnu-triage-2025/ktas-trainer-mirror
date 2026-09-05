@@ -25,6 +25,17 @@ namespace MultiplayerInfrastructure.Command
   /// 선택자는 스폰된 플레이어만 매칭하므로, 아직 스폰되지 않은 사용자는 식별자나 표시 이름으로 지정해야 한다.
   /// 이름 자체의 일치 규칙은 <see cref="PlayerNameQuery"/>가 담당한다.
   /// </summary>
+  /// <summary>시스템 메시지가 플레이어를 지칭하는 방식. 명령이 대상을 지정한 토큰 형식에서 정해진다.</summary>
+  public enum PlayerReferenceStyle
+  {
+    /// <summary>표시 이름만 쓴다. 선택자, 이름, 대상 생략(자기 자신)에 해당한다.</summary>
+    DisplayName,
+    /// <summary><c>이름(clientId)</c>. fish:/client: 접두사나 숫자로 FishNet 연결 번호를 지정한 경우.</summary>
+    ClientId,
+    /// <summary><c>이름(uuid)</c>. id:/uuid: 접두사나 식별자 자체로 지정한 경우.</summary>
+    Identifier,
+  }
+
   public static class PlayerTargetResolver
   {
     /// <summary>도움말·오류 메시지에 사용하는 토큰 문법 안내.</summary>
@@ -349,6 +360,120 @@ namespace MultiplayerInfrastructure.Command
         return "Unknown";
 
       return controller.Owner != null ? DescribeConnection(controller.Owner) : controller.name;
+    }
+
+    // ── 시스템 메시지의 대상 표기 ─────────────────────────────────────────────
+
+    /// <summary>
+    /// 명령이 대상을 지정한 방식을 판정한다. 시스템 메시지는 이 결과에 따라 플레이어를
+    /// 표시 이름만으로, 또는 <c>표시 이름(clientId)</c>·<c>표시 이름(uuid)</c> 로 지칭한다.
+    /// 판정 순서는 <see cref="TryResolveTargets"/>의 해석 순서를 그대로 따른다.
+    /// </summary>
+    public static PlayerReferenceStyle GetReferenceStyle(
+      string token,
+      UserDescriptor descriptor,
+      NetworkConnection connection)
+    {
+      string trimmed = PlayerNameQuery.Normalize(token);
+      if (trimmed.Length == 0 || trimmed.StartsWith('@'))
+        return PlayerReferenceStyle.DisplayName;
+
+      if (TryStripPrefix(trimmed, ClientIdPrefixes, out _))
+        return PlayerReferenceStyle.ClientId;
+
+      if (TryStripPrefix(trimmed, IdentifierPrefixes, out _))
+        return PlayerReferenceStyle.Identifier;
+
+      if (TryStripPrefix(trimmed, DisplayNamePrefixes, out _)
+          || TryStripPrefix(trimmed, EntityPrefixes, out _)
+          || SelfAliases.Contains(trimmed, StringComparer.OrdinalIgnoreCase))
+      {
+        return PlayerReferenceStyle.DisplayName;
+      }
+
+      // 접두사가 없는 토큰은 표시 이름 완전 일치 → 식별자 완전 일치 → 연결 번호 → 식별자 앞부분 순으로 해석된다.
+      if (descriptor != null && string.Equals(descriptor.DisplayName, trimmed, StringComparison.OrdinalIgnoreCase))
+        return PlayerReferenceStyle.DisplayName;
+
+      if (descriptor?.Identifier != null && string.Equals(descriptor.Identifier, trimmed, StringComparison.OrdinalIgnoreCase))
+        return PlayerReferenceStyle.Identifier;
+
+      if (int.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out int clientId)
+          && connection != null
+          && connection.ClientId == clientId)
+      {
+        return PlayerReferenceStyle.ClientId;
+      }
+
+      if (descriptor?.Identifier != null
+          && trimmed.Length >= PlayerNameQuery.MinimumIdentifierPrefixLength
+          && descriptor.Identifier.StartsWith(trimmed, StringComparison.OrdinalIgnoreCase))
+      {
+        return PlayerReferenceStyle.Identifier;
+      }
+
+      return PlayerReferenceStyle.DisplayName;
+    }
+
+    /// <summary>
+    /// 시스템 메시지에서 대상 플레이어를 지칭하는 문자열. 표시 이름을 기본으로 하되,
+    /// 명령이 FishNet 연결 번호로 지정했으면 <c>이름(clientId)</c>, 사용자 식별자로 지정했으면
+    /// <c>이름(uuid)</c> 형식으로 어떤 대상을 가리켰는지 함께 보여 준다.
+    /// </summary>
+    /// <param name="token">명령에 입력된 대상 토큰. 대상을 생략한 자기 자신 등은 null 을 넘긴다.</param>
+    public static string DescribeTarget(string token, UserDescriptor descriptor, NetworkConnection connection)
+    {
+      string name = DescribeTargetName(descriptor, connection);
+      switch (GetReferenceStyle(token, descriptor, connection))
+      {
+        case PlayerReferenceStyle.ClientId:
+          return connection != null
+            ? $"{name}({connection.ClientId.ToString(CultureInfo.InvariantCulture)})"
+            : name;
+        case PlayerReferenceStyle.Identifier:
+          return !string.IsNullOrWhiteSpace(descriptor?.Identifier)
+            ? $"{name}({descriptor.Identifier})"
+            : name;
+        default:
+          return name;
+      }
+    }
+
+    /// <summary>연결로 지정된 대상의 시스템 메시지 표기. 설명자는 연결 번호로 찾는다.</summary>
+    public static string DescribeTarget(string token, NetworkConnection connection)
+    {
+      UserDescriptor descriptor = null;
+      if (connection != null)
+        UserDescriptorService.TryGetByClientId(connection.ClientId, out descriptor);
+
+      return DescribeTarget(token, descriptor, connection);
+    }
+
+    /// <summary>설명자로 지정된 대상의 시스템 메시지 표기. 연결은 설명자로 찾는다.</summary>
+    public static string DescribeTarget(string token, UserDescriptor descriptor)
+    {
+      TryGetConnection(descriptor, out NetworkConnection connection);
+      return DescribeTarget(token, descriptor, connection);
+    }
+
+    /// <summary>플레이어 오브젝트로 지정된 대상의 시스템 메시지 표기.</summary>
+    public static string DescribeTarget(string token, PlayerController controller)
+    {
+      if (controller == null)
+        return "Unknown";
+
+      return controller.Owner != null ? DescribeTarget(token, controller.Owner) : controller.name;
+    }
+
+    private static string DescribeTargetName(UserDescriptor descriptor, NetworkConnection connection)
+    {
+      if (!string.IsNullOrWhiteSpace(descriptor?.DisplayName))
+        return descriptor.DisplayName;
+
+      if (connection != null)
+        return DescribeConnection(connection);
+
+      return descriptor != null ? PlayerNameQuery.Describe(descriptor) : "Unknown";
     }
 
     /// <summary>

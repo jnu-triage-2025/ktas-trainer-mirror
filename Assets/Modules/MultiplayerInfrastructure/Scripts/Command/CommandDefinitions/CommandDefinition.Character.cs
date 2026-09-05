@@ -109,7 +109,7 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      ApplyAndBroadcast(sender, controller, modelIdentifier);
+      ApplyAndBroadcast(sender, null, controller, modelIdentifier);
     }
 
     private void HandleSetTarget(NetworkConnection sender, string playerIdentifier, string modelIdentifier)
@@ -120,10 +120,10 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      ApplyAndBroadcast(sender, controller, modelIdentifier);
+      ApplyAndBroadcast(sender, playerIdentifier, controller, modelIdentifier);
     }
 
-    private void ApplyAndBroadcast(NetworkConnection sender, PlayerController controller, string modelIdentifier)
+    private void ApplyAndBroadcast(NetworkConnection sender, string targetToken, PlayerController controller, string modelIdentifier)
     {
       if (controller == null)
       {
@@ -143,7 +143,7 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      string targetName = ResolveDisplayName(controller.Owner);
+      string targetName = ResolveDisplayName(targetToken, controller);
       _chat.BroadcastSystemMessage($"{targetName}가 {modelIdentifier}캐릭터로 변경했습니다.");
     }
 
@@ -164,7 +164,7 @@ namespace MultiplayerInfrastructure.Command
     private static bool TryResolveControllerByConnection(NetworkConnection connection, out PlayerController controller)
       => PlayerTargetResolver.TryGetController(connection, out controller);
 
-    private static string ResolveDisplayName(NetworkConnection connection)
-      => PlayerTargetResolver.DescribeConnection(connection);
+    private static string ResolveDisplayName(string targetToken, PlayerController controller)
+      => PlayerTargetResolver.DescribeTarget(targetToken, controller);
   }
 }

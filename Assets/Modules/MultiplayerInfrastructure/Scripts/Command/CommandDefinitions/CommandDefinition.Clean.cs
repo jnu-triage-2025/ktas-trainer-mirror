@@ -38,7 +38,7 @@ namespace MultiplayerInfrastructure.Command
       if (args == null || args.Length == 0)
       {
         int removedAll = player.ClearInventory();
-        _chat.SendSystemMessage(sender, $"Inventory cleaned. Removed {removedAll} item(s).");
+        _chat.SendSystemNotification(sender, $"Inventory cleaned. Removed {removedAll} item(s).");
         return;
       }
 
@@ -64,7 +64,7 @@ namespace MultiplayerInfrastructure.Command
       if (args.Length == 1)
       {
         int removed = player.RemoveAllOfItemFromInventory(itemIdentifier);
-        _chat.SendSystemMessage(sender, $"Removed {removed}x '{itemIdentifier}'.");
+        _chat.SendSystemNotification(sender, $"Removed {removed}x '{itemIdentifier}'.");
         return;
       }
 
@@ -75,7 +75,7 @@ namespace MultiplayerInfrastructure.Command
       }
 
       int removedCount = player.RemoveItemFromInventory(itemIdentifier, count);
-      _chat.SendSystemMessage(sender, $"Removed {removedCount}x '{itemIdentifier}' (requested {count}).");
+      _chat.SendSystemNotification(sender, $"Removed {removedCount}x '{itemIdentifier}' (requested {count}).");
     }
   }
 }
