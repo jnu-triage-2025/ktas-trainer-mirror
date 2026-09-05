@@ -3137,3 +3137,69 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.50022805
   m_Center: {x: 0.000821151, y: 0.000042209238, z: -0.00003080075}
+--- !u!114 &810000000000001000 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 910000000000000101, guid: 1ad502a94e54942608cdf503fdfbfb99, type: 3}
+  m_PrefabInstance: {fileID: 992101388435578401}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 978329288786347787}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a6f3e92b4504c2ab5a84ea45d200001, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.PatientAGauzeVisualMarker
+--- !u!114 &810000000000001001 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 910000000000000102, guid: 5642718b1571341819e502e9cdb9e9a1, type: 3}
+  m_PrefabInstance: {fileID: 6110314863228879627}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4534114771527360831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a6f3e92b4504c2ab5a84ea45d200002, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.PatientAGauzeWithPlasterVisualMarker
+--- !u!114 &810000000000001002 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 910000000000000103, guid: dcee9fb4b31b241c7b77b0892829d4cb, type: 3}
+  m_PrefabInstance: {fileID: 5898601868988091510}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8163350724442503120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a6f3e92b4504c2ab5a84ea45d200003, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.PatientA18gLeftVisualMarker
+--- !u!114 &810000000000001003 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 910000000000000104, guid: dcfe309fdb6a04d1da590b1aec0f76b5, type: 3}
+  m_PrefabInstance: {fileID: 4525247568028796357}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6637881578017928823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a6f3e92b4504c2ab5a84ea45d200004, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.PatientA18gRightVisualMarker
+--- !u!114 &810000000000001004 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 910000000000000105, guid: 27f40cc96c1f64f268b072c79976c306, type: 3}
+  m_PrefabInstance: {fileID: 6644284848210178880}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3232896854539521401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a6f3e92b4504c2ab5a84ea45d200005, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.PatientACentralLineVisualMarker
+--- !u!114 &810000000000001005 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 910000000000000106, guid: d3033c3cec6a1450c83d253bcb6bff4a, type: 3}
+  m_PrefabInstance: {fileID: 4349205227501080285}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8264803836134063233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a6f3e92b4504c2ab5a84ea45d200006, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.PatientAAmbuConnectedVisualMarker

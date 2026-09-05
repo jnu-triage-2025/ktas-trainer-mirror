@@ -11,6 +11,51 @@ namespace TriageTrainer.Tests
 {
   public sealed class TypedReferenceRecoveryTests
   {
+    [TestCase("Assets/Scenes/OverworldScene.unity")]
+    [TestCase("Assets/Scenes/IndevScene.unity")]
+    public void AuthoredTreatmentReferencesResolveToComponentsAndCanBeActivated(string path)
+    {
+      var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+        path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+      try
+      {
+        var bootstraps = new System.Collections.Generic.List<TriageScenarioEventBootstrap>();
+        foreach (var root in scene.GetRootGameObjects())
+          bootstraps.AddRange(root.GetComponentsInChildren<TriageScenarioEventBootstrap>(true));
+        Assert.That(bootstraps, Has.Count.EqualTo(1));
+        var bootstrap = bootstraps[0];
+        string[] fields = {
+          "_patientAGauzeVisual", "_patientAGauzeWithPlasterVisual",
+          "_patientA18gLeftVisual", "_patientA18gRightVisual",
+          "_patientACentralLineVisual", "_patientAAmbuConnectedVisual"
+        };
+        foreach (string name in fields)
+        {
+          var field = typeof(TriageScenarioEventBootstrap).GetField(
+            name, BindingFlags.Instance | BindingFlags.NonPublic);
+          var value = field.GetValue(bootstrap);
+          Assert.That(value, Is.Not.Null, name);
+          Assert.That(value, Is.InstanceOf(field.FieldType), name);
+          var component = (Component)value;
+          Assert.That(component.gameObject, Is.Not.Null, name);
+          bool wasActive = component.gameObject.activeSelf;
+          try
+          {
+            component.gameObject.SetActive(true);
+            Assert.That(component.gameObject.activeSelf, Is.True, name);
+          }
+          finally
+          {
+            component.gameObject.SetActive(wasActive);
+          }
+        }
+      }
+      finally
+      {
+        UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+      }
+    }
+
     [Test]
     public void PlayerPrefabUsesTypedBodyAndSpectatorMarkers()
     {
