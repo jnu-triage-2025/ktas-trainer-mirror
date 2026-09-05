@@ -53,6 +53,8 @@ if (Test-Path -LiteralPath $resultsPath -PathType Leaf) {
 # Use the same build-scoped validator as the editor and player build callbacks.
 New-Item -ItemType Directory -Path (Split-Path -Parent $referenceLogPath) -Force | Out-Null
 Write-Host 'Validating serialized references for enabled build scenes and runtime dependencies.'
+# Unity.exe is a GUI application. Piping its output makes Windows PowerShell wait
+# for termination before reading LASTEXITCODE, even when Unity writes to a log file.
 & $env:UNITY_EXECUTABLE `
     -batchmode `
     -nographics `
@@ -60,7 +62,7 @@ Write-Host 'Validating serialized references for enabled build scenes and runtim
     -quit `
     -projectPath $projectPath `
     -executeMethod TriageTrainer.Editor.SerializedReferenceBuildValidator.ValidateProject `
-    -logFile $referenceLogPath
+    -logFile $referenceLogPath | Out-Host
 
 $validationExitCode = $LASTEXITCODE
 if ($null -eq $validationExitCode -or $validationExitCode -ne 0) {
@@ -76,9 +78,9 @@ if ($null -eq $validationExitCode -or $validationExitCode -ne 0) {
     -runTests `
     -testPlatform $testPlatform `
     -testResults $resultsPath `
-    -logFile $logPath
+    -logFile $logPath | Out-Host
 
 $unityExitCode = $LASTEXITCODE
-if ($null -ne $unityExitCode -and $unityExitCode -ne 0) {
+if ($null -eq $unityExitCode -or $unityExitCode -ne 0) {
     throw "Unity tests failed with exit code $unityExitCode. See $logPath."
 }
