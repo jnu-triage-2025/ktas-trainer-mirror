@@ -353,7 +353,10 @@ def check_destination_conflicts(refs: dict[str, str], state: dict[str, Any], cur
         expected = pushed.get(ref)
         if expected is None and actual is not None and not rebuild:
             raise MirrorError(f"Destination already has {ref}. Use --rebuild only after reviewing the rewrite.")
-        if expected is not None and actual != expected:
+        # A deleted destination ref cannot overwrite anyone else's work.  Let
+        # the normal force-with-lease below recreate it, while still refusing
+        # to overwrite a ref that was moved to a different commit externally.
+        if expected is not None and actual is not None and actual != expected:
             raise MirrorError(f"Destination {ref} changed outside this tool; refusing to overwrite it.")
 
 
