@@ -50,6 +50,7 @@ test-editmode:
     paths:
       - artifacts/unity-editmode-results.xml
       - artifacts/unity-editmode.log
+      - artifacts/unity-reference-validation.log
 
 .manual-local-build:
   stage: build

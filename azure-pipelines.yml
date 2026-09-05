@@ -197,7 +197,7 @@ stages:
                 throw 'Tools/CI/test-unity.ps1 was not found.'
               }
               & .\Tools\CI\test-unity.ps1
-            displayName: 'Run Unity EditMode tests'
+            displayName: 'Validate references and run Unity EditMode tests'
           - task: PublishTestResults@2
             displayName: 'Publish Unity test results'
             condition: always()
@@ -208,6 +208,12 @@ stages:
               testRunTitle: 'Unity EditMode tests'
               failTaskOnFailedTests: true
               publishRunAttachments: false
+          - task: PublishBuildArtifacts@1
+            displayName: Publish Unity validation and test logs
+            condition: always()
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts'
+              ArtifactName: unity-test-artifacts
 
   - stage: Build
     displayName: 'Unity builds'

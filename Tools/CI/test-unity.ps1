@@ -17,6 +17,12 @@ $logPath = if ($env:UNITY_TEST_LOG_PATH) {
     Join-Path $projectPath "artifacts/unity-$testPlatform.log"
 }
 
+$referenceLogPath = if ($env:UNITY_REFERENCE_LOG_PATH) {
+    [IO.Path]::GetFullPath((Join-Path $projectPath $env:UNITY_REFERENCE_LOG_PATH))
+} else {
+    Join-Path $projectPath 'artifacts/unity-reference-validation.log'
+}
+
 if ([string]::IsNullOrWhiteSpace($env:UNITY_EXECUTABLE)) {
     $versionFile = Join-Path $projectPath 'ProjectSettings/ProjectVersion.txt'
     $version = (Select-String -Path $versionFile -Pattern '^m_EditorVersion: (.+)$').Matches[0].Groups[1].Value
@@ -39,11 +45,33 @@ if ([string]::IsNullOrWhiteSpace($env:UNITY_EXECUTABLE)) {
 New-Item -ItemType Directory -Path (Split-Path -Parent $resultsPath) -Force | Out-Null
 New-Item -ItemType Directory -Path (Split-Path -Parent $logPath) -Force | Out-Null
 
+# Remove only the generated result so a failed preflight cannot publish a cached test run.
+if (Test-Path -LiteralPath $resultsPath -PathType Leaf) {
+    Remove-Item -LiteralPath $resultsPath -Force
+}
+
+# Use the same build-scoped validator as the editor and player build callbacks.
+New-Item -ItemType Directory -Path (Split-Path -Parent $referenceLogPath) -Force | Out-Null
+Write-Host 'Validating serialized references for enabled build scenes and runtime dependencies.'
 & $env:UNITY_EXECUTABLE `
     -batchmode `
     -nographics `
     -silent-crashes `
     -quit `
+    -projectPath $projectPath `
+    -executeMethod TriageTrainer.Editor.SerializedReferenceBuildValidator.ValidateProject `
+    -logFile $referenceLogPath
+
+$validationExitCode = $LASTEXITCODE
+if ($null -eq $validationExitCode -or $validationExitCode -ne 0) {
+    throw "Serialized reference validation failed with exit code $validationExitCode. See $referenceLogPath."
+}
+
+# Test Runner owns termination; do not exit before asynchronous tests complete.
+& $env:UNITY_EXECUTABLE `
+    -batchmode `
+    -nographics `
+    -silent-crashes `
     -projectPath $projectPath `
     -runTests `
     -testPlatform $testPlatform `

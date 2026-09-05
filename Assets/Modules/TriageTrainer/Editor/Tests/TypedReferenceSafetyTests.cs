@@ -129,6 +129,16 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void UnityBuiltinUiDocumentScriptResolvesWithoutAProjectAssetGuid()
+    {
+      var method = typeof(SerializedReferenceBuildValidator).GetMethod("CreateScriptTypeResolver",
+        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+      var resolve = (Func<string, string, Type>)method.Invoke(null, null);
+      Assert.That(resolve("0000000000000000e000000000000000", "19102"),
+        Is.EqualTo(typeof(UnityEngine.UIElements.UIDocument)));
+    }
+
+    [Test]
     public void BuiltinScriptsWithTheSameGuidAreResolvedByFileId()
     {
       string text = Owner.Replace("TARGET", "3") + MarkerDoc.Replace("guid: marker", "guid: builtin").Replace("fileID: 11500000, guid: builtin", "fileID: 19102, guid: builtin")
