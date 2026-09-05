@@ -141,6 +141,7 @@ namespace MultiplayerInfrastructure.Player
 
       OnDestroy_Item();
       OnDestroy_PlaceableItemPreview();
+      OnDestroy_OverheadName();
     }
 
     private void HandleNearbyUpdated(IReadOnlyList<IInteractable> nearby)

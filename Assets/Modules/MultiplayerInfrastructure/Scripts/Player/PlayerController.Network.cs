@@ -233,12 +233,15 @@ namespace MultiplayerInfrastructure.Player
 
       // 이후 DisplayName 변경(서버 반영) 시 갱신
       _userDisplayName.OnChange += OnDisplayNameChanged;
+
+      OnStartClient_AnyPeer_OverheadName();
     }
 
     /// <summary>PlayerController가 어느 클라이언트에서 디스폰될 때 호출됩니다.</summary>
     private void OnStopClient_AnyPeer()
     {
       _userDisplayName.OnChange -= OnDisplayNameChanged;
+      OnStopClient_AnyPeer_OverheadName();
       OnStopClient_AnyPeer_PlayerModel();
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
       PlayerTagService.ClearTags(_userIdentifier.Value);
@@ -252,6 +255,7 @@ namespace MultiplayerInfrastructure.Player
     {
       UserDescriptorService.UpdateDisplayName(_userIdentifier.Value, next);
       Registry.Registry.UpdateEntityDisplayName(_entityIdentifier.Value, next);
+      RefreshOverheadNameLabel();
     }
 
     /// <summary>

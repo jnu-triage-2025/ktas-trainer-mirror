@@ -62,6 +62,8 @@ namespace MultiplayerInfrastructure.Player
         return;
 
       ApplyPlayerModelByIdentifierLocal(next);
+      // 모델이 바뀌면 CharacterController 캡슐 높이도 바뀌므로 이름표 앵커를 다시 잡는다.
+      RefreshOverheadNameLabel();
     }
 
     public void RequestSetPlayerModel(string modelIdentifier)

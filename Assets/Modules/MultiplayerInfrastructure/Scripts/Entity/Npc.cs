@@ -279,25 +279,8 @@ namespace MultiplayerInfrastructure.Entity
 
     // ActiveInstance 가 없으면 씬 내 컴포넌트를 직접 탐색해 폴백으로 사용한다(PatientController 와 동일한 방식).
     // (씬에 EntityOverheadLabelUIController 가 배치되지 않은 경우 경고를 출력한다.)
-    private static EntityOverheadLabelUIController _cachedOverheadLabelUI;
-
     private static EntityOverheadLabelUIController ResolveOverheadLabelUI()
-    {
-      var instance = EntityOverheadLabelUIController.ActiveInstance;
-      if (instance != null)
-        return instance;
-
-      if (_cachedOverheadLabelUI != null)
-        return _cachedOverheadLabelUI;
-
-      _cachedOverheadLabelUI = UnityEngine.Object.FindFirstObjectByType<EntityOverheadLabelUIController>();
-      if (_cachedOverheadLabelUI == null)
-      {
-        Debug.LogWarning("[Npc] EntityOverheadLabelUIController 를 씬에서 찾을 수 없어 머리 위 이름표를 표시하지 않습니다. " +
-                         "씬에 EntityOverheadLabelUIController + UIDocument 컴포넌트를 배치하세요.");
-      }
-      return _cachedOverheadLabelUI;
-    }
+      => EntityOverheadLabelUIController.Resolve();
 
     /// <summary>시나리오 노드가 NPC의 표시명과 머리 위 이름표를 런타임에 갱신한다.</summary>
     public void SetScenarioDisplay(string displayName, bool? showOverheadName)

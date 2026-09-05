@@ -66,6 +66,16 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public static EntityOverheadLabelUIController ActiveInstance { get; private set; }
 
+    /// <summary>
+    /// <see cref="ActiveInstance"/> 가 바뀔 때(준비/해제) 발생한다.
+    /// 컨트롤러가 아직 없을 때 라벨을 요청한 표현 코드가 준비 시점에 다시 시도하기 위한 신호다.
+    /// (오버레이 씬이 나중에 로드되는 구성에서 라벨이 영영 누락되는 것을 막는다.)
+    /// </summary>
+    public static event System.Action ActiveInstanceChanged;
+
+    // ActiveInstance 가 아직 없을 때 Resolve() 가 1회 수행한 씬 탐색 결과. 파괴되면 다시 탐색한다.
+    private static EntityOverheadLabelUIController _sceneLookupCache;
+
     [SerializeField] private float _sortingOrder = DefaultsUIDocument.EntityOverheadLabelSortOrder;
     [Tooltip("월드 앵커로부터 위로 띄울 추가 높이(월드 단위).")]
     [SerializeField] private float _worldHeightOffset = 0.4f;
@@ -97,6 +107,7 @@ namespace MultiplayerInfrastructure.UI
       base.Awake();
       ActiveInstance = this;
       QuestPresentationService.ActiveInstance?.RefreshPresentation();
+      ActiveInstanceChanged?.Invoke();
     }
 
     private void Start()
@@ -112,7 +123,8 @@ namespace MultiplayerInfrastructure.UI
 
     protected override void OnDestroy()
     {
-      if (ReferenceEquals(ActiveInstance, this))
+      bool wasActiveInstance = ReferenceEquals(ActiveInstance, this);
+      if (wasActiveInstance)
         ActiveInstance = null;
 
       foreach (var targetEntries in _entries.Values)
@@ -126,6 +138,33 @@ namespace MultiplayerInfrastructure.UI
       _entries.Clear();
 
       base.OnDestroy();
+
+      if (wasActiveInstance)
+        ActiveInstanceChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// 표현 코드가 쓸 컨트롤러를 조회한다. <see cref="ActiveInstance"/> 가 아직 없으면 씬을 1회 탐색해 캐시한다.
+    /// (씬에 컨트롤러가 배치되지 않았다면 경고를 출력하고 null 을 돌려준다.)
+    /// </summary>
+    public static EntityOverheadLabelUIController Resolve()
+    {
+      var instance = ActiveInstance;
+      if (instance != null)
+        return instance;
+
+      if (_sceneLookupCache != null)
+        return _sceneLookupCache;
+
+      _sceneLookupCache = FindFirstObjectByType<EntityOverheadLabelUIController>();
+      if (_sceneLookupCache == null)
+      {
+        Debug.LogWarning(
+          $"[{nameof(EntityOverheadLabelUIController)}] 씬에서 컨트롤러를 찾을 수 없어 머리 위 라벨을 표시하지 않습니다. " +
+          "씬에 EntityOverheadLabelUIController + UIDocument 컴포넌트를 배치하세요.");
+      }
+
+      return _sceneLookupCache;
     }
 
     /// <summary>

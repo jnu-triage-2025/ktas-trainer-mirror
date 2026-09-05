@@ -51,6 +51,10 @@ namespace MultiplayerInfrastructure.Player
       // 로컬 카메라 컬링 조정: 플레이어에게는 관전자가 안 보이고, 관전자에게는 관전자가 보인다.
       if (IsOwner && _camControl != null)
         _camControl.SetSpectatorLayerCulling(IsSpectator);
+
+      // 관전 상태는 이 플레이어뿐 아니라 "누구의 이름표가 보이는가"를 함께 바꾼다.
+      // (로컬 플레이어가 관전자가 되면 다른 관전자들의 이름표도 함께 보여야 한다.)
+      RefreshAllOverheadNameLabels();
     }
 
     private void EnterSpectatorMode()
