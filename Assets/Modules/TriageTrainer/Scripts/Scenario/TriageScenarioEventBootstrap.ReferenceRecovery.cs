@@ -17,49 +17,48 @@ namespace TriageTrainer.Scenario
 
     private void RecoverPatientATreatmentVisuals()
     {
-      if (_patientAObject == null)
-        return;
-
-      _patientAEtTubePreparedVisual ??= ResolveUniqueChild<PatientAEtTubePreparedVisualMarker>(_patientAObject);
-      _patientAEtTubeInsertedVisual ??= ResolveUniqueChild<PatientAEtTubeInsertedVisualMarker>(_patientAObject);
-      _patientATPieceConnectedVisual ??= ResolveUniqueChild<PatientATPieceConnectedVisualMarker>(_patientAObject);
-      _patientAGauzeVisual ??= ResolveUniqueChild<PatientAGauzeVisualMarker>(_patientAObject);
-      _patientAGauzeWithPlasterVisual ??= ResolveUniqueChild<PatientAGauzeWithPlasterVisualMarker>(_patientAObject);
-      _patientA18gLeftVisual ??= ResolveUniqueChild<PatientA18gLeftVisualMarker>(_patientAObject);
-      _patientA18gRightVisual ??= ResolveUniqueChild<PatientA18gRightVisualMarker>(_patientAObject);
-      _patientACentralLineVisual ??= ResolveUniqueChild<PatientACentralLineVisualMarker>(_patientAObject);
-      _patientAAmbuConnectedVisual ??= ResolveUniqueChild<PatientAAmbuConnectedVisualMarker>(_patientAObject);
+      _patientAEtTubePreparedVisual = TypedUnityReference.RecoverUniqueChild<PatientAEtTubePreparedVisualMarker>(
+        (object)_patientAEtTubePreparedVisual, (object)_patientAObject, nameof(_patientAEtTubePreparedVisual), ReportReferenceError);
+      _patientAEtTubeInsertedVisual = TypedUnityReference.RecoverUniqueChild<PatientAEtTubeInsertedVisualMarker>(
+        (object)_patientAEtTubeInsertedVisual, (object)_patientAObject, nameof(_patientAEtTubeInsertedVisual), ReportReferenceError);
+      _patientATPieceConnectedVisual = TypedUnityReference.RecoverUniqueChild<PatientATPieceConnectedVisualMarker>(
+        (object)_patientATPieceConnectedVisual, (object)_patientAObject, nameof(_patientATPieceConnectedVisual), ReportReferenceError);
+      _patientAGauzeVisual = TypedUnityReference.RecoverUniqueChild<PatientAGauzeVisualMarker>(
+        (object)_patientAGauzeVisual, (object)_patientAObject, nameof(_patientAGauzeVisual), ReportReferenceError);
+      _patientAGauzeWithPlasterVisual = TypedUnityReference.RecoverUniqueChild<PatientAGauzeWithPlasterVisualMarker>(
+        (object)_patientAGauzeWithPlasterVisual, (object)_patientAObject, nameof(_patientAGauzeWithPlasterVisual), ReportReferenceError);
+      _patientA18gLeftVisual = TypedUnityReference.RecoverUniqueChild<PatientA18gLeftVisualMarker>(
+        (object)_patientA18gLeftVisual, (object)_patientAObject, nameof(_patientA18gLeftVisual), ReportReferenceError);
+      _patientA18gRightVisual = TypedUnityReference.RecoverUniqueChild<PatientA18gRightVisualMarker>(
+        (object)_patientA18gRightVisual, (object)_patientAObject, nameof(_patientA18gRightVisual), ReportReferenceError);
+      _patientACentralLineVisual = TypedUnityReference.RecoverUniqueChild<PatientACentralLineVisualMarker>(
+        (object)_patientACentralLineVisual, (object)_patientAObject, nameof(_patientACentralLineVisual), ReportReferenceError);
+      _patientAAmbuConnectedVisual = TypedUnityReference.RecoverUniqueChild<PatientAAmbuConnectedVisualMarker>(
+        (object)_patientAAmbuConnectedVisual, (object)_patientAObject, nameof(_patientAAmbuConnectedVisual), ReportReferenceError);
     }
 
     private void RecoverPatientBTreatmentVisuals()
     {
-      if (_patientBObject == null)
-        return;
-
-      _patientBGauzeVisual ??= ResolveUniqueChild<PatientBGauzeVisualMarker>(_patientBObject);
-      _patientBGauzeWithPlasterVisual ??= ResolveUniqueChild<PatientBGauzeWithPlasterVisualMarker>(_patientBObject);
-      _patientB20gRightVisual ??= ResolveUniqueChild<PatientB20gRightVisualMarker>(_patientBObject);
+      _patientBGauzeVisual = TypedUnityReference.RecoverUniqueChild<PatientBGauzeVisualMarker>(
+        (object)_patientBGauzeVisual, (object)_patientBObject, nameof(_patientBGauzeVisual), ReportReferenceError);
+      _patientBGauzeWithPlasterVisual = TypedUnityReference.RecoverUniqueChild<PatientBGauzeWithPlasterVisualMarker>(
+        (object)_patientBGauzeWithPlasterVisual, (object)_patientBObject, nameof(_patientBGauzeWithPlasterVisual), ReportReferenceError);
+      _patientB20gRightVisual = TypedUnityReference.RecoverUniqueChild<PatientB20gRightVisualMarker>(
+        (object)_patientB20gRightVisual, (object)_patientBObject, nameof(_patientB20gRightVisual), ReportReferenceError);
     }
 
     private void RecoverPatientCTreatmentVisuals()
     {
-      if (_patientCObject == null)
-        return;
-
-      _patientCGauzeVisual ??= ResolveUniqueChild<PatientCGauzeVisualMarker>(_patientCObject);
-      _patientCGauzeWithPlasterVisual ??= ResolveUniqueChild<PatientCGauzeWithPlasterVisualMarker>(_patientCObject);
-      _patientC20gLeftVisual ??= ResolveUniqueChild<PatientC20gLeftVisualMarker>(_patientCObject);
+      _patientCGauzeVisual = TypedUnityReference.RecoverUniqueChild<PatientCGauzeVisualMarker>(
+        (object)_patientCGauzeVisual, (object)_patientCObject, nameof(_patientCGauzeVisual), ReportReferenceError);
+      _patientCGauzeWithPlasterVisual = TypedUnityReference.RecoverUniqueChild<PatientCGauzeWithPlasterVisualMarker>(
+        (object)_patientCGauzeWithPlasterVisual, (object)_patientCObject, nameof(_patientCGauzeWithPlasterVisual), ReportReferenceError);
+      _patientC20gLeftVisual = TypedUnityReference.RecoverUniqueChild<PatientC20gLeftVisualMarker>(
+        (object)_patientC20gLeftVisual, (object)_patientCObject, nameof(_patientC20gLeftVisual), ReportReferenceError);
     }
 
-    private T ResolveUniqueChild<T>(GameObject root) where T : Component
-    {
-      var matches = root.GetComponentsInChildren<T>(true);
-      if (matches.Length == 1)
-        return matches[0];
-      if (matches.Length > 1)
-        Debug.LogError($"[{nameof(TriageScenarioEventBootstrap)}] '{root.name}' contains {matches.Length} {typeof(T).Name} markers; exactly one is required.", this);
-      return null;
-    }
+    private void ReportReferenceError(string message)
+      => Debug.LogError($"[{nameof(TriageScenarioEventBootstrap)}] {message}", this);
 
     private void RecoverSceneReferences()
     {

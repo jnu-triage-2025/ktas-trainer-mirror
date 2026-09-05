@@ -1031,20 +1031,12 @@ namespace TriageTrainer.Scenario
       }
     }
 
-    private void SetActiveIfPresent(GameObject target, bool active)
+    private void SetActiveIfPresent<T>(T target, bool active,
+      string fieldName = null)
+      where T : UnityEngine.Object
     {
-      if (target != null)
-      {
-        target.SetActive(active);
-      }
-    }
-
-    private void SetActiveIfPresent(Component target, bool active)
-    {
-      if (target != null)
-      {
-        target.gameObject.SetActive(active);
-      }
+      TypedUnityReference.SetActive<T>((object)target, active,
+        fieldName ?? typeof(T).Name, ReportReferenceError);
     }
 
     private void ToggleChecklistPanel(ref GameObject panel,
