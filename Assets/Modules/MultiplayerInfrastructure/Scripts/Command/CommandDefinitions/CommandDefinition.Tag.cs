@@ -13,8 +13,12 @@ namespace MultiplayerInfrastructure.Command
   /// /tag change {target} {from} {to}      — 태그 변경
   /// /tag change {target} {from} {to} --force — 태그가 없어도 강제 추가
   /// /tag show {target}                    — 태그 목록 출력
+  ///
+  /// 권한: 기본적으로 "tag" 권한이 필요하다. 다만 태그 정의(PlayerTagDefinitionService)에서
+  /// requiresPermission=false 로 선언된 태그는 add/remove/change 를 권한 없이도 실행할 수 있다.
+  /// (change 는 from/to 두 태그가 모두 권한이 필요 없을 때만 면제된다. show 는 면제되지 않는다.)
   /// </summary>
-  public class CommandDefinition_Tag : IChatCommandModel, IChatCommandUsage
+  public class CommandDefinition_Tag : IChatCommandModel, IChatCommandUsage, IChatCommandPermissionExemption
   {
     public string CommandEntry => "tag";
     public string Description => "Manage target tags.";
@@ -25,8 +29,41 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("tag change <target> <from> <to> [--force]", "Rename a tag (--force adds if missing)."),
       new UsageLine("tag show <target>", "List the target's tags."),
       new UsageLine("  <target>", PlayerTargetResolver.ShortSyntaxHint + ", or entity id."),
+      new UsageLine("  <tag>", "Tags defined without a permission requirement can be added/removed without the 'tag' permission."),
     };
     public string PermissionIdentifier => "tag";
+
+    /// <summary>
+    /// 권한이 없는 요청자라도, 다루려는 태그가 모두 "권한 불필요"로 정의되어 있으면 면제한다.
+    /// 인자 해석은 실제 실행 경로(HandleAdd/HandleRemove/HandleChange)와 같은 규칙을 따른다.
+    /// </summary>
+    public bool IsExemptFromPermission(NetworkConnection sender, string[] args)
+    {
+      if (args == null || args.Length < 2)
+        return false;
+
+      switch (args[0].ToLowerInvariant())
+      {
+        case "add":
+        case "remove":
+          // /tag add|remove <target> <tag...>
+          if (args.Length < 3)
+            return false;
+          return IsPermissionFreeTag(string.Join(' ', args[2..]));
+
+        case "change":
+          // /tag change <target> <from> <to> [--force]
+          if (args.Length < 4)
+            return false;
+          return IsPermissionFreeTag(args[2]) && IsPermissionFreeTag(args[3]);
+
+        default:
+          return false;
+      }
+    }
+
+    private static bool IsPermissionFreeTag(string tag)
+      => !string.IsNullOrWhiteSpace(tag) && !PlayerTagDefinitionService.RequiresPermission(tag);
 
     private readonly ChatService _chat;
 

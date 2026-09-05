@@ -35,6 +35,11 @@
     "eventHandlers": {
       "type": "array",
       "items": { "$ref": "#/$defs/eventHandler" }
+    },
+    "tagDefinitions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tagDefinition" },
+      "description": "Player tag definitions active while the pack is loaded. Declares whether the 'tag' command permission is required to add, remove, or change the tag."
     }
   },
   "$defs": {
@@ -79,6 +84,25 @@
       "properties": {
         "eventIdentifier": { "type": "string", "minLength": 1, "pattern": "^\\S+$" },
         "command": { "$ref": "#/$defs/command" }
+      }
+    },
+    "tagDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identifier"],
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(?:.*\\S)?$",
+          "description": "Tag identifier, matched case-sensitively against the tags stored on players."
+        },
+        "requiresPermission": {
+          "type": "boolean",
+          "default": true,
+          "description": "When false, anyone may add, remove, or change this tag with /tag even without the 'tag' permission. Omitted means true."
+        },
+        "description": { "type": "string" }
       }
     }
   }

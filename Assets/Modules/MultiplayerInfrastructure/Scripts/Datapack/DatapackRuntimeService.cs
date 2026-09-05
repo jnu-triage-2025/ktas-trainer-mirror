@@ -11,6 +11,7 @@ using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.Tag;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Datapack
@@ -211,6 +212,12 @@ namespace MultiplayerInfrastructure.Datapack
             loaded.RegisteredAliases.Add(alias.name);
           }
 
+      // 태그 정의도 우선순위가 낮은 팩부터 등록되므로, 같은 태그는 나중(높은 우선순위) 팩의 정의가 유효하다.
+      if (definition.tagDefinitions != null)
+        foreach (var tagDefinition in definition.tagDefinitions)
+          if (tagDefinition != null && !string.IsNullOrWhiteSpace(tagDefinition.identifier))
+            PlayerTagDefinitionService.Define(tagDefinition, TagDefinitionSource(definition.packId));
+
       if (definition.periodicCommands != null)
       {
         for (int i = 0; i < definition.periodicCommands.Length; i++)
@@ -295,6 +302,8 @@ namespace MultiplayerInfrastructure.Datapack
       for (int i = 0; i < loaded.RegisteredAliases.Count; i++)
         _chatService?.CommandService?.UnregisterAlias(loaded.RegisteredAliases[i], loaded.PackId);
 
+      PlayerTagDefinitionService.Undefine(TagDefinitionSource(loaded.PackId));
+
       for (int i = 0; i < loaded.InjectedHandlers.Count; i++)
       {
         var injected = loaded.InjectedHandlers[i];
@@ -325,6 +334,9 @@ namespace MultiplayerInfrastructure.Datapack
       Debug.Log($"[DatapackRuntimeService] Unregistered datapack '{packId}'.");
       return true;
     }
+
+    /// <summary>데이터팩이 등록한 태그 정의를 구분하는 출처 문자열.</summary>
+    private static string TagDefinitionSource(string packId) => "datapack:" + packId;
 
     private void RestoreDebugCprEscapeRuleAfterUnload(LoadedDatapack unloaded)
     {

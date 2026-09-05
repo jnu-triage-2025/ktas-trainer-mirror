@@ -154,14 +154,8 @@ namespace MultiplayerInfrastructure.Command
       // 그 외 클라이언트는 PermissionService 를 통해 role 기반 검사를 수행한다.
       if (!bypassPermissionCheck && sender != null && !sender.IsHost)
       {
-        PermissionService.EnsureLoaded();
         string userIdentifier = ResolveUserIdentifier(sender);
-
-        // 데이터팩 별칭은 고유 권한을 갖지 않는다. 별칭이 실행할 대상 커맨드들의 권한을
-        // 모두 보유해야 실행을 허용한다. 이렇게 하지 않으면 별칭이 권한 경계를 우회한다.
-        bool denied = command is DatapackCommandAlias alias
-          ? !HasAllAliasTargetPermissions(userIdentifier, alias)
-          : !PermissionService.HasPermission(userIdentifier, command.PermissionIdentifier);
+        bool denied = !IsPermitted(userIdentifier, sender, command, args);
 
         if (denied)
         {
@@ -209,35 +203,79 @@ namespace MultiplayerInfrastructure.Command
     }
 
     /// <summary>
+    /// 사용자가 커맨드를 주어진 인자로 실행할 권한이 있는지 판단한다. 실행하지는 않는다.
+    /// <see cref="TryExecute(string,string[],NetworkConnection,bool,bool,out IReadOnlyList{string},out string)"/> 가
+    /// 서버 콘솔/호스트/시스템 권한 실행을 먼저 통과시킨 뒤, 나머지 클라이언트에 대해 이 판단을 쓴다.
+    /// <paramref name="sender"/> 는 <see cref="IChatCommandPermissionExemption"/> 판단에만 전달되며 null 일 수 있다.
+    /// </summary>
+    public bool IsPermitted(string userIdentifier, NetworkConnection sender, string commandName, string[] args)
+    {
+      string key = commandName?.ToLowerInvariant();
+      if (string.IsNullOrWhiteSpace(key) || !_commands.TryGetValue(key, out var command))
+        return false;
+
+      return IsPermitted(userIdentifier, sender, command, args);
+    }
+
+    private bool IsPermitted(string userIdentifier, NetworkConnection sender, IChatCommandModel command, string[] args)
+    {
+      PermissionService.EnsureLoaded();
+
+      // 데이터팩 별칭은 고유 권한을 갖지 않는다. 별칭이 실행할 대상 커맨드들의 권한을
+      // 모두 보유해야 실행을 허용한다. 이렇게 하지 않으면 별칭이 권한 경계를 우회한다.
+      return command is DatapackCommandAlias alias
+        ? HasAllAliasTargetPermissions(
+            userIdentifier, sender, alias, args, new HashSet<string>(StringComparer.OrdinalIgnoreCase))
+        : IsCommandPermitted(userIdentifier, sender, command, args);
+    }
+
+    /// <summary>
+    /// 단일(별칭이 아닌) 커맨드의 권한을 판단한다. role 권한이 없어도 커맨드가
+    /// <see cref="IChatCommandPermissionExemption"/> 로 해당 인자 조합을 면제하면 허용한다
+    /// (예: 권한이 필요 없다고 정의된 태그의 <c>/tag add</c>).
+    /// </summary>
+    private static bool IsCommandPermitted(
+      string userIdentifier, NetworkConnection sender, IChatCommandModel command, string[] args)
+    {
+      if (PermissionService.HasPermission(userIdentifier, command.PermissionIdentifier))
+        return true;
+
+      return command is IChatCommandPermissionExemption exemption
+        && exemption.IsExemptFromPermission(sender, args ?? Array.Empty<string>());
+    }
+
+    /// <summary>
     /// 별칭이 실행할 대상 커맨드 전체에 대한 권한을 보유했는지 확인한다.
+    /// 대상 커맨드마다 별칭이 실제로 전달할 인자(<see cref="DatapackCommandAlias.ResolveTargetCommands"/>)로
+    /// 판단하므로, 인자에 따른 권한 면제도 별칭을 통해 그대로 적용된다.
     /// 해석할 수 없는 대상 커맨드가 하나라도 있으면 거부한다(알 수 없는 대상은 안전 측으로 판단).
     /// </summary>
-    private bool HasAllAliasTargetPermissions(string userIdentifier, DatapackCommandAlias alias)
-      => HasAllAliasTargetPermissions(
-        userIdentifier, alias, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
-
     private bool HasAllAliasTargetPermissions(
-      string userIdentifier, DatapackCommandAlias alias, HashSet<string> visitedAliases)
+      string userIdentifier,
+      NetworkConnection sender,
+      DatapackCommandAlias alias,
+      string[] args,
+      HashSet<string> visitedAliases)
     {
       // 별칭이 서로를 가리키는 순환 구조에서 무한 재귀가 발생하지 않게 한다.
       // 순환은 정상 설정이 아니므로 거부한다.
       if (!visitedAliases.Add(alias.CommandEntry ?? string.Empty))
         return false;
 
-      var targets = alias.TargetCommandNames;
+      var targets = alias.ResolveTargetCommands(args);
       if (targets == null || targets.Count == 0)
         return false;
 
-      foreach (string targetName in targets)
+      foreach (var target in targets)
       {
-        string targetKey = targetName?.ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(targetKey) || !_commands.TryGetValue(targetKey, out var target))
+        string targetKey = target.Name?.ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(targetKey) || !_commands.TryGetValue(targetKey, out var command))
           return false;
 
         // 별칭이 다른 별칭을 가리키는 경우도 대상 커맨드까지 재귀적으로 검사한다.
-        bool allowed = target is DatapackCommandAlias nested
-          ? HasAllAliasTargetPermissions(userIdentifier, nested, visitedAliases)
-          : PermissionService.HasPermission(userIdentifier, target.PermissionIdentifier);
+        bool allowed = command is DatapackCommandAlias nested
+          ? HasAllAliasTargetPermissions(userIdentifier, sender, nested, target.Args, visitedAliases)
+          : IsCommandPermitted(userIdentifier, sender, command, target.Args);
         if (!allowed)
           return false;
       }

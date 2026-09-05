@@ -1,0 +1,8 @@
+{
+  "tags": [
+    { "identifier": "nurse_a", "requiresPermission": false, "description": "간호사 A 역할. 훈련생이 권한 없이 스스로 선택하고 해제할 수 있다." },
+    { "identifier": "nurse_b", "requiresPermission": false, "description": "간호사 B 역할. 훈련생이 권한 없이 스스로 선택하고 해제할 수 있다." },
+    { "identifier": "nurse_c", "requiresPermission": false, "description": "간호사 C 역할. 훈련생이 권한 없이 스스로 선택하고 해제할 수 있다." },
+    { "identifier": "nurse_d", "requiresPermission": false, "description": "간호사 D 역할. 훈련생이 권한 없이 스스로 선택하고 해제할 수 있다." }
+  ]
+}

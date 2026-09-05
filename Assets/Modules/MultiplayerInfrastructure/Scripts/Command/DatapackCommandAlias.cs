@@ -52,28 +52,55 @@ namespace MultiplayerInfrastructure.Command
       }
     }
 
+    /// <summary>별칭이 실행하는 대상 커맨드 하나(이름과 실제로 전달할 인자).</summary>
+    internal readonly struct TargetCommand
+    {
+      public readonly string Name;
+      public readonly string[] Args;
+
+      public TargetCommand(string name, string[] args)
+      {
+        Name = name;
+        Args = args ?? Array.Empty<string>();
+      }
+    }
+
+    /// <summary>
+    /// 이 별칭이 실행하는 대상 커맨드를 (이름, 인자) 순서대로 반환한다.
+    /// 별칭에 전달된 인자는 마지막 커맨드에만 붙인다. 연결된 설정 커맨드를 결정적으로
+    /// 유지하면서 단일 커맨드 별칭 동작도 보존한다.
+    /// 권한 검사(<see cref="ChatCommandService"/>)와 실제 실행이 같은 인자를 보도록 하는 단일 해석 지점이다.
+    /// </summary>
+    internal IReadOnlyList<TargetCommand> ResolveTargetCommands(string[] forwardedArgs)
+    {
+      var result = new List<TargetCommand>();
+      string[] commands = _target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+      for (int i = 0; i < commands.Length; i++)
+      {
+        string[] targetParts = commands[i].Trim().TrimStart('/').Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (targetParts.Length == 0)
+          continue;
+
+        string[] args = targetParts.Skip(1)
+          .Concat(i == commands.Length - 1 ? forwardedArgs ?? Array.Empty<string>() : Array.Empty<string>())
+          .ToArray();
+        result.Add(new TargetCommand(targetParts[0], args));
+      }
+
+      return result;
+    }
+
     public void Execute(NetworkConnection sender, string[] args)
     {
       if (_executionDepth >= 32)
         return;
 
-      string[] commands = _target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+      var targets = ResolveTargetCommands(args);
       _executionDepth++;
       try
       {
-        for (int i = 0; i < commands.Length; i++)
-        {
-          string[] targetParts = commands[i].Trim().TrimStart('/').Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-          if (targetParts.Length == 0)
-            continue;
-
-          // 별칭 인자는 마지막 커맨드에만 붙인다. 연결된 설정 커맨드를 결정적으로
-          // 유지하면서 단일 커맨드 별칭 동작도 보존한다.
-          string[] forwarded = targetParts.Skip(1)
-            .Concat(i == commands.Length - 1 ? args ?? Array.Empty<string>() : Array.Empty<string>())
-            .ToArray();
-          _service.TryExecute(targetParts[0], forwarded, sender);
-        }
+        for (int i = 0; i < targets.Count; i++)
+          _service.TryExecute(targets[i].Name, targets[i].Args, sender);
       }
       finally { _executionDepth--; }
     }

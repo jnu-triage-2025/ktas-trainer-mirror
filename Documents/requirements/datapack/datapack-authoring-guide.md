@@ -42,6 +42,9 @@ flags: []
   ],
   "eventHandlers": [
     { "eventIdentifier": "training:on-start", "command": "/help" }
+  ],
+  "tagDefinitions": [
+    { "identifier": "observer", "requiresPermission": false, "description": "참관자 역할" }
   ]
 }
 ```
@@ -58,6 +61,10 @@ flags: []
 - `/nurse_b` → 자기 자신에게 `nurse_b` 태그 추가
 - `/nurse_c` → 자기 자신에게 `nurse_c` 태그 추가
 - `/nurse_d` → 자기 자신에게 `nurse_d` 태그 추가
+
+`tagDefinitions`는 팩이 활성화된 동안 유효한 플레이어 태그 정의를 선언한다. 각 항목의 `identifier`는 태그 식별자이고, `requiresPermission`은 `/tag add`, `/tag remove`, `/tag change`로 그 태그를 다룰 때 `tag` 권한이 필요한지를 뜻한다. 이 값을 생략하면 권한이 필요한 것으로 간주된다. `requiresPermission`을 `false`로 선언한 태그는 권한이 없는 참가자도 자기 자신이나 다른 대상에게 붙이거나 뗄 수 있으므로, 별칭이 `/tag add @self ...`처럼 태그를 부여하도록 만들 때에는 그 태그를 이 목록에 함께 선언해야 훈련생이 별칭을 실행할 수 있다. 정의되지 않은 태그는 항상 권한을 요구한다.
+
+같은 태그를 여러 팩이 정의하면 우선순위가 높은 팩의 정의가 유효하고, 팩이 비활성화되면 이전 정의로 되돌아간다. `nurse_a`부터 `nurse_d`까지의 간호사 역할 태그는 `TriageTrainer` 모듈의 내장 정의 파일([triage_roles.tags.json](../../../Assets/Modules/TriageTrainer/Resources/Tag/triage_roles.tags.json))에서 이미 권한이 필요 없는 태그로 선언되어 있으므로, 데이터팩이 따로 선언하지 않아도 된다. 내장 정의 파일의 형식과 권한 정책의 자세한 내용은 [Tag 모듈 README](../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Tag/README.md)를 참고한다.
 
 ## UI 동작
 
