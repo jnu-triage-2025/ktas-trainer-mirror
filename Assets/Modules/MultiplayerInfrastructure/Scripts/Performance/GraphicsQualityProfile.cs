@@ -49,6 +49,19 @@ namespace MultiplayerInfrastructure.Performance
     [Header("Display")]
     public int ResolutionWidth = 1920;
     public int ResolutionHeight = 1080;
+
+    /// <summary>
+    /// 사용자가 선택한 화면 모드입니다. 플랫폼별 실제 <see cref="UnityEngine.FullScreenMode"/>는
+    /// 적용 시점에 <see cref="DisplayWindowModes.ResolveFullScreenMode"/>로 결정합니다.
+    /// 필드 초기값을 Unspecified로 두어, 이 항목이 없던 저장값을 읽을 때
+    /// <see cref="Sanitize"/>가 <see cref="FullScreenMode"/>로부터 모드를 복원할 수 있게 합니다.
+    /// </summary>
+    public DisplayWindowMode WindowMode = DisplayWindowMode.Unspecified;
+
+    /// <summary>
+    /// <see cref="WindowMode"/>를 현재 플랫폼에서 적용한 결과입니다. <see cref="Sanitize"/>가 갱신하며,
+    /// <see cref="WindowMode"/>가 저장되기 전 설정의 하위 호환 용도로도 읽습니다.
+    /// </summary>
     public FullScreenMode FullScreenMode = FullScreenMode.FullScreenWindow;
     public int RefreshRate = 60;
     public bool VSync;
@@ -97,6 +110,8 @@ namespace MultiplayerInfrastructure.Performance
     {
       ResolutionWidth = Mathf.Clamp(ResolutionWidth, 640, 16384);
       ResolutionHeight = Mathf.Clamp(ResolutionHeight, 360, 8640);
+      WindowMode = DisplayWindowModes.Sanitize(WindowMode, FullScreenMode);
+      FullScreenMode = DisplayWindowModes.ResolveFullScreenMode(WindowMode, Application.platform);
       RefreshRate = Mathf.Clamp(RefreshRate, 0, 1000);
       FrameRateLimit = Mathf.Clamp(FrameRateLimit, 0, 1000);
       RenderScale = Mathf.Clamp(RenderScale, 0.5f, 2f);

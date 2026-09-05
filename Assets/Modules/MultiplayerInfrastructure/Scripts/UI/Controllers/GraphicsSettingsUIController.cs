@@ -296,10 +296,7 @@ namespace MultiplayerInfrastructure.UI
     // 헬퍼
     // ──────────────────────────────────────────────────────────────────────────
     private static TexturePerformanceService GetService()
-      => Registry.Registry.Get<TexturePerformanceService>(
-        RegistryType.Service,
-        Registry.Registry.TypeKey<TexturePerformanceService>()
-      );
+      => TexturePerformanceService.GetOrCreateInstance();
 
   }
 }

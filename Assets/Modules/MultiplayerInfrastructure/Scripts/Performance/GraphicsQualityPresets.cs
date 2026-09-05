@@ -21,7 +21,7 @@ namespace MultiplayerInfrastructure.Performance
         Profile = profile,
         ResolutionWidth = Screen.currentResolution.width > 0 ? Screen.currentResolution.width : 1920,
         ResolutionHeight = Screen.currentResolution.height > 0 ? Screen.currentResolution.height : 1080,
-        FullScreenMode = FullScreenMode.FullScreenWindow,
+        WindowMode = DisplayWindowModes.Default,
         RefreshRate = 0,
         VSync = false,
       };

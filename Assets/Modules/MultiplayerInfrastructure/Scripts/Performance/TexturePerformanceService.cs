@@ -31,8 +31,77 @@ namespace MultiplayerInfrastructure.Performance
     public TextureQuality CurrentQuality
       => (TextureQuality)Mathf.Clamp(_currentSettings?.TextureMipmapLimit ?? 2, 0, 3);
 
+    /// <summary>
+    /// 이 프로세스에서 디스플레이(해상도·화면 모드) 설정을 이미 한 번 적용했는지 나타냅니다.
+    /// 창과 화면 모드는 씬이 바뀌어도 그대로 남으므로, 씬마다 새로 깨어나는 서비스가 저장값을 다시 적용하면
+    /// 사용자가 그 사이에 바꾼 창 크기나 모드가 되돌아갑니다. 그래서 시작 시 한 번만 적용하고, 이후에는
+    /// 설정 화면에서 명시적으로 적용할 때만 바꿉니다.
+    /// </summary>
+    private static bool _displayAppliedThisSession;
+
+    /// <summary>씬에 배치된 서비스가 없을 때 <see cref="GetOrCreateInstance"/>가 만든 임시 인스턴스인지 나타냅니다.</summary>
+    private bool _isRuntimeFallback;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetSessionState()
+    {
+      _displayAppliedThisSession = false;
+    }
+
+    /// <summary>등록되어 있으면 서비스 인스턴스를, 아니면 null을 돌려줍니다.</summary>
+    public static TexturePerformanceService Instance
+      => Registry.Registry.Get<TexturePerformanceService>(
+        RegistryType.Service, Registry.Registry.TypeKey<TexturePerformanceService>());
+
+    /// <summary>
+    /// 씬에 배치된 서비스가 아직 로드되지 않았어도 설정 화면에서 바로 쓸 수 있게 합니다.
+    ///
+    /// IntroScene에는 서비스가 없고 SystemOverlayScene이 게임 진입 시에 추가 로드되므로, 시작 화면에서도
+    /// 그래픽 설정을 읽고 저장할 수 있도록 필요하면 지속되는 런타임 서비스를 만듭니다. 이후 씬에 배치된
+    /// 서비스가 깨어나면 임시 인스턴스는 정리되고 역할을 넘겨받습니다.
+    /// </summary>
+    public static TexturePerformanceService GetOrCreateInstance()
+    {
+      var service = Instance;
+      if (service != null)
+        return service;
+
+      service = FindAnyObjectByType<TexturePerformanceService>();
+      if (service != null)
+      {
+        Registry.Registry.Register(
+          RegistryType.Service,
+          Registry.Registry.TypeKey<TexturePerformanceService>(),
+          service);
+        return service;
+      }
+
+      var host = new GameObject(nameof(TexturePerformanceService));
+      DontDestroyOnLoad(host);
+      var created = host.AddComponent<TexturePerformanceService>();
+      created._isRuntimeFallback = true;
+      return created;
+    }
+
+    /// <summary>
+    /// 첫 씬에 서비스가 없어도(IntroScene) 저장된 디스플레이 설정이 시작 시 적용되게 합니다.
+    /// 첫 씬에 서비스가 배치되어 있으면 그 Awake가 이미 적용했으므로 아무 일도 하지 않습니다.
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void ApplySavedSettingsOnStartup()
+    {
+      if (MppmLiteMode.IsActive || _displayAppliedThisSession)
+        return;
+      GetOrCreateInstance();
+    }
+
     private void Awake()
     {
+      // 시작 화면에서 만든 임시 서비스가 남아 있으면, 씬에 배치된 이 인스턴스가 역할을 이어받는다.
+      var registered = Instance;
+      if (registered != null && registered != this && registered._isRuntimeFallback)
+        Destroy(registered.gameObject);
+
       Registry.Registry.Register(
         RegistryType.Service,
         Registry.Registry.TypeKey<TexturePerformanceService>(),
@@ -46,10 +115,16 @@ namespace MultiplayerInfrastructure.Performance
     {
       SceneManager.sceneLoaded -= HandleSceneLoaded;
       DestroyGammaVolume();
-      Registry.Registry.Unregister(
-        RegistryType.Service,
-        Registry.Registry.TypeKey<TexturePerformanceService>());
+      // 다른 인스턴스가 이미 등록을 넘겨받았으면 그 등록을 지우지 않는다.
+      if (ReferenceEquals(Instance, this))
+      {
+        Registry.Registry.Unregister(
+          RegistryType.Service,
+          Registry.Registry.TypeKey<TexturePerformanceService>());
+      }
     }
+
+    private void Update() => PersistWindowSizeIfResized();
 
     public void SetProfile(GraphicsQualityProfile profile)
     {
@@ -69,6 +144,8 @@ namespace MultiplayerInfrastructure.Performance
       _currentSettings = settings.Clone();
       _currentSettings.Sanitize();
       ApplyToUnity(_currentSettings, applyDisplay: true);
+      _displayAppliedThisSession = true;
+      EnsureWindowSizeApplied(_currentSettings);
       Save(_currentSettings);
 
       OnQualityChanged?.Invoke(CurrentQuality);
@@ -95,9 +172,120 @@ namespace MultiplayerInfrastructure.Performance
       if (MppmLiteMode.IsActive)
         _currentSettings = MppmLiteMode.CreateSettings();
 
-      ApplyToUnity(_currentSettings, applyDisplay: !MppmLiteMode.IsActive);
+      bool applyDisplay = ShouldApplyDisplayOnLoad(MppmLiteMode.IsActive, _displayAppliedThisSession);
+      ApplyToUnity(_currentSettings, applyDisplay);
+      if (applyDisplay)
+      {
+        _displayAppliedThisSession = true;
+        EnsureWindowSizeApplied(_currentSettings);
+      }
       Debug.Log($"[GraphicsPerformance] 설정 불러오기: {_currentSettings.Profile}" +
-                (MppmLiteMode.IsActive ? " (MPPM Lite)" : string.Empty));
+                (MppmLiteMode.IsActive ? " (MPPM Lite)" : string.Empty) +
+                (applyDisplay ? string.Empty : " (디스플레이 설정은 유지)"));
+    }
+
+    /// <summary>
+    /// 불러온 설정의 디스플레이 부분을 적용할지 결정합니다. MPPM Lite에서는 적용하지 않고,
+    /// 같은 프로세스에서 이미 한 번 적용했으면 씬 전환으로 다시 깨어난 서비스가 되돌리지 않게 합니다.
+    /// </summary>
+    public static bool ShouldApplyDisplayOnLoad(bool mppmLiteActive, bool alreadyAppliedThisSession)
+      => !mppmLiteActive && !alreadyAppliedThisSession;
+
+    private int _observedWindowWidth;
+    private int _observedWindowHeight;
+    private float _windowSizeStableSince;
+    private bool _windowSizePending;
+    private const float WindowSizeSettleSeconds = 0.5f;
+
+    /// <summary>
+    /// 창 모드에서 사용자가 창 가장자리를 끌어 크기를 바꾸면, 크기가 잠시 안정된 뒤 그 값을 해상도 설정으로 저장합니다.
+    /// 저장만 하고 다시 적용하지는 않으므로 창이 움직이지 않으며, 설정 화면과 다음 실행에 반영됩니다.
+    /// </summary>
+    private void PersistWindowSizeIfResized()
+    {
+      if (Application.isEditor || _currentSettings == null || _windowSizeRetry != null)
+        return;
+
+      int width = Screen.width;
+      int height = Screen.height;
+      if (width != _observedWindowWidth || height != _observedWindowHeight)
+      {
+        _observedWindowWidth = width;
+        _observedWindowHeight = height;
+        _windowSizeStableSince = Time.unscaledTime;
+        _windowSizePending = true;
+        return;
+      }
+
+      if (!_windowSizePending || Time.unscaledTime - _windowSizeStableSince < WindowSizeSettleSeconds)
+        return;
+
+      _windowSizePending = false;
+      if (!ShouldPersistWindowSize(_currentSettings, Screen.fullScreenMode, width, height))
+        return;
+
+      _currentSettings.ResolutionWidth = width;
+      _currentSettings.ResolutionHeight = height;
+      Save(_currentSettings);
+      OnSettingsChanged?.Invoke(CurrentSettings);
+      Debug.Log($"[GraphicsPerformance] 창 크기 변경을 저장: {width}x{height}");
+    }
+
+    /// <summary>
+    /// 관찰된 창 크기를 설정으로 저장할지 결정합니다. 창 모드로 저장되어 있고 실제로도 창 모드이며,
+    /// 저장된 해상도와 다르고 허용 범위 안일 때만 저장합니다.
+    /// </summary>
+    public static bool ShouldPersistWindowSize(GraphicsSettingsData settings, FullScreenMode actualMode,
+      int width, int height)
+    {
+      if (settings == null || settings.WindowMode != DisplayWindowMode.Windowed)
+        return false;
+      if (actualMode != FullScreenMode.Windowed)
+        return false;
+      if (width < 640 || height < 360 || width > 16384 || height > 8640)
+        return false;
+      return width != settings.ResolutionWidth || height != settings.ResolutionHeight;
+    }
+
+    private Coroutine _windowSizeRetry;
+
+    /// <summary>
+    /// 창 모드에서는 Screen.SetResolution 직후에 창 크기가 바뀌지 않는 경우가 있다.
+    /// (전체 화면에서 창 모드로 바꾸는 프레임에 이전 창 크기가 복원되거나, 크기를 줄이는 요청이 그대로 무시된다.)
+    /// 몇 프레임에 걸쳐 실제 크기를 확인하고, 아직 요청한 크기와 다르면 같은 요청을 다시 보낸다.
+    /// 에디터의 Game 뷰는 SetResolution의 영향을 받지 않으므로 플레이어에서만 동작한다.
+    /// </summary>
+    private void EnsureWindowSizeApplied(GraphicsSettingsData settings)
+    {
+      if (Application.isEditor || settings == null || !isActiveAndEnabled)
+        return;
+      if (settings.WindowMode != DisplayWindowMode.Windowed)
+        return;
+
+      if (_windowSizeRetry != null)
+        StopCoroutine(_windowSizeRetry);
+      _windowSizeRetry = StartCoroutine(RetryWindowSize(settings.ResolutionWidth, settings.ResolutionHeight));
+    }
+
+    private System.Collections.IEnumerator RetryWindowSize(int width, int height)
+    {
+      const int maxAttempts = 3;
+      for (int attempt = 0; attempt < maxAttempts; attempt++)
+      {
+        // 창 크기 변경은 다음 프레임에 반영되므로 한 프레임을 온전히 건너뛴 뒤 확인한다.
+        yield return null;
+        yield return null;
+
+        if (Screen.fullScreenMode != FullScreenMode.Windowed)
+          break;
+        if (Screen.width == width && Screen.height == height)
+          break;
+
+        Debug.Log($"[GraphicsPerformance] 창 크기 재요청 ({attempt + 1}/{maxAttempts}): " +
+                  $"{Screen.width}x{Screen.height} -> {width}x{height}");
+        Screen.SetResolution(width, height, FullScreenMode.Windowed);
+      }
+      _windowSizeRetry = null;
     }
 
     public void ReapplySceneSettings() => ApplySceneSettings(_currentSettings);
@@ -145,10 +333,12 @@ namespace MultiplayerInfrastructure.Performance
         var refresh = settings.RefreshRate > 0
           ? new RefreshRate { numerator = (uint)settings.RefreshRate, denominator = 1 }
           : Screen.currentResolution.refreshRateRatio;
+        // 저장된 화면 모드 의도를 실행 중인 플랫폼이 지원하는 FullScreenMode로 바꿔 적용한다.
+        // (Windows만 전용 전체 화면을 지원하고, macOS와 Linux는 테두리 없는 창으로 대체된다.)
         Screen.SetResolution(
           settings.ResolutionWidth,
           settings.ResolutionHeight,
-          settings.FullScreenMode,
+          DisplayWindowModes.ResolveFullScreenMode(settings.WindowMode, Application.platform),
           refresh);
       }
     }
@@ -282,6 +472,7 @@ namespace MultiplayerInfrastructure.Performance
 
       destination.ResolutionWidth = source.ResolutionWidth;
       destination.ResolutionHeight = source.ResolutionHeight;
+      destination.WindowMode = source.WindowMode;
       destination.FullScreenMode = source.FullScreenMode;
       destination.RefreshRate = source.RefreshRate;
       destination.FieldOfView = source.FieldOfView;

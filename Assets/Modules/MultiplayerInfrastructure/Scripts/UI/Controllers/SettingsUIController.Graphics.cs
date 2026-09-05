@@ -16,6 +16,13 @@ namespace MultiplayerInfrastructure.UI
     private DropdownField _profileField;
     private bool _graphicsFormInitializing;
 
+    private DropdownField _resolutionPresetField;
+    private SliderInt _resolutionWidthField;
+    private SliderInt _resolutionHeightField;
+    private System.Collections.Generic.List<DisplayResolution> _resolutionOptions;
+    private int _displayWidth;
+    private int _displayHeight;
+
     private VisualElement _uiScaleOptionsContainer;
     private readonly System.Collections.Generic.List<UIScaleOptionElement> _uiScaleOptionElements = new();
     private Slider _povSlider;
@@ -56,6 +63,10 @@ namespace MultiplayerInfrastructure.UI
 
       _graphicsScroll = null;
       _profileField = null;
+      _resolutionPresetField = null;
+      _resolutionWidthField = null;
+      _resolutionHeightField = null;
+      _resolutionOptions = null;
       _uiScaleOptionsContainer = null;
       _povSlider = null;
       _povValueLabel = null;
@@ -118,19 +129,99 @@ namespace MultiplayerInfrastructure.UI
 
     private void BuildDisplaySection()
     {
-      var section = AddSection("디스플레이", "해상도, 화면 모드, 동기화 및 프레임 제한을 설정합니다.");
-      AddInt(section, "가로 해상도", _pendingGraphics.ResolutionWidth, 640, 16384,
-        value => _pendingGraphics.ResolutionWidth = value, affectsProfile: false);
-      AddInt(section, "세로 해상도", _pendingGraphics.ResolutionHeight, 360, 8640,
-        value => _pendingGraphics.ResolutionHeight = value, affectsProfile: false);
-      AddEnum(section, "화면 모드", _pendingGraphics.FullScreenMode,
-        value => _pendingGraphics.FullScreenMode = (FullScreenMode)value, affectsProfile: false);
+      var description = "해상도, 화면 모드, 동기화 및 프레임 제한을 설정합니다. 화면 모드 기본값은 전체 화면입니다.";
+      var platformNote = DisplayWindowModes.PlatformNote(Application.platform);
+      if (!string.IsNullOrEmpty(platformNote))
+        description += " " + platformNote;
+
+      var section = AddSection("디스플레이", description);
+      AddResolutionPresetField(section);
+      _resolutionWidthField = AddInt(section, "가로 해상도", _pendingGraphics.ResolutionWidth, 640, 16384,
+        value =>
+        {
+          _pendingGraphics.ResolutionWidth = value;
+          SyncResolutionPresetField();
+        }, affectsProfile: false);
+      _resolutionHeightField = AddInt(section, "세로 해상도", _pendingGraphics.ResolutionHeight, 360, 8640,
+        value =>
+        {
+          _pendingGraphics.ResolutionHeight = value;
+          SyncResolutionPresetField();
+        }, affectsProfile: false);
+      AddWindowModeField(section);
       AddInt(section, "주사율 (0=자동)", _pendingGraphics.RefreshRate, 0, 1000,
         value => _pendingGraphics.RefreshRate = value, affectsProfile: false);
       AddToggle(section, "수직 동기화", _pendingGraphics.VSync,
         value => _pendingGraphics.VSync = value);
       AddInt(section, "프레임 제한 (0=무제한)", _pendingGraphics.FrameRateLimit, 0, 1000,
         value => _pendingGraphics.FrameRateLimit = value);
+    }
+
+    /// <summary>
+    /// 널리 쓰이는 해상도 목록입니다. 목록에서 고르면 가로·세로 해상도 항목이 그 값으로 맞춰지고,
+    /// 가로·세로 항목을 직접 바꿔 목록의 어느 값과도 맞지 않으면 "(사용자 지정)"으로 표시합니다.
+    /// 현재 디스플레이의 해상도가 목록에 없으면 함께 보여 줍니다.
+    /// </summary>
+    private void AddResolutionPresetField(VisualElement section)
+    {
+      _displayWidth = Screen.currentResolution.width;
+      _displayHeight = Screen.currentResolution.height;
+      _resolutionOptions = DisplayResolutions.BuildOptions(_displayWidth, _displayHeight);
+
+      var choices = new System.Collections.Generic.List<string>();
+      foreach (var option in _resolutionOptions)
+        choices.Add(DisplayResolutions.Label(option, _displayWidth, _displayHeight));
+      choices.Add(DisplayResolutions.CustomLabel);
+
+      _resolutionPresetField = new DropdownField(choices, CurrentResolutionPresetLabel());
+      _resolutionPresetField.RegisterValueChangedCallback(evt =>
+      {
+        if (_graphicsFormInitializing)
+          return;
+
+        if (!DisplayResolutions.TryParseLabel(_resolutionOptions, evt.newValue, _displayWidth, _displayHeight,
+              out var selected))
+        {
+          // "(사용자 지정)"은 직접 고르는 항목이 아니라 상태 표시이므로, 현재 값에 맞는 라벨로 되돌린다.
+          SyncResolutionPresetField();
+          return;
+        }
+
+        ChangeDetail(() =>
+        {
+          _pendingGraphics.ResolutionWidth = selected.Width;
+          _pendingGraphics.ResolutionHeight = selected.Height;
+          _resolutionWidthField?.SetValueWithoutNotify(selected.Width);
+          _resolutionHeightField?.SetValueWithoutNotify(selected.Height);
+        }, affectsProfile: false);
+      });
+      AddRow(section, "해상도 목록", _resolutionPresetField);
+    }
+
+    private void SyncResolutionPresetField()
+      => _resolutionPresetField?.SetValueWithoutNotify(CurrentResolutionPresetLabel());
+
+    private string CurrentResolutionPresetLabel()
+      => DisplayResolutions.LabelFor(_resolutionOptions, _pendingGraphics.ResolutionWidth,
+        _pendingGraphics.ResolutionHeight, _displayWidth, _displayHeight);
+
+    /// <summary>
+    /// 화면 모드 선택 필드입니다. Unity <see cref="FullScreenMode"/>를 그대로 노출하지 않고,
+    /// 모든 플랫폼에서 의미가 같은 세 가지 모드(창 모드, 테두리 없는 창 모드, 전체 화면)만 보여 줍니다.
+    /// 실제 플랫폼별 변환은 적용 시 <see cref="TexturePerformanceService"/>가 처리합니다.
+    /// </summary>
+    private void AddWindowModeField(VisualElement section)
+    {
+      var choices = new System.Collections.Generic.List<string>();
+      foreach (var mode in DisplayWindowModes.Selectable)
+        choices.Add(DisplayWindowModes.Label(mode));
+
+      var current = DisplayWindowModes.Sanitize(_pendingGraphics.WindowMode, _pendingGraphics.FullScreenMode);
+      var field = new DropdownField(choices, DisplayWindowModes.Label(current));
+      field.RegisterValueChangedCallback(evt => ChangeDetail(
+        () => _pendingGraphics.WindowMode = DisplayWindowModes.FromLabel(evt.newValue),
+        affectsProfile: false));
+      AddRow(section, "화면 모드", field);
     }
 
     private void BuildRenderingSection()
@@ -300,12 +391,13 @@ namespace MultiplayerInfrastructure.UI
       AddRow(section, label, field);
     }
 
-    private void AddInt(VisualElement section, string label, int value, int min, int max,
+    private SliderInt AddInt(VisualElement section, string label, int value, int min, int max,
       Action<int> setter, bool affectsProfile = true)
     {
       var field = new SliderInt(min, max) { value = value, showInputField = true };
       field.RegisterValueChangedCallback(evt => ChangeDetail(() => setter(evt.newValue), affectsProfile));
       AddRow(section, label, field);
+      return field;
     }
 
     private void AddFloat(VisualElement section, string label, float value, float min, float max,
@@ -342,6 +434,7 @@ namespace MultiplayerInfrastructure.UI
         return;
       destination.ResolutionWidth = source.ResolutionWidth;
       destination.ResolutionHeight = source.ResolutionHeight;
+      destination.WindowMode = source.WindowMode;
       destination.FullScreenMode = source.FullScreenMode;
       destination.RefreshRate = source.RefreshRate;
       destination.FieldOfView = source.FieldOfView;
@@ -440,9 +533,12 @@ namespace MultiplayerInfrastructure.UI
         _povValueLabel.text = $"{value:0.0} m";
     }
 
+    /// <summary>
+    /// 그래픽 서비스를 돌려줍니다. IntroScene처럼 씬에 서비스가 배치되지 않은 곳에서도 저장된 설정을
+    /// 읽고 적용할 수 있어야 하므로, 없으면 지속되는 런타임 인스턴스를 만듭니다.
+    /// </summary>
     private static TexturePerformanceService GetGraphicsService()
-      => Registry.Registry.Get<TexturePerformanceService>(RegistryType.Service,
-        Registry.Registry.TypeKey<TexturePerformanceService>());
+      => TexturePerformanceService.GetOrCreateInstance();
 
     private static CameraDistancePreferenceService GetCameraDistanceService()
       => Registry.Registry.Get<CameraDistancePreferenceService>(RegistryType.Service,
