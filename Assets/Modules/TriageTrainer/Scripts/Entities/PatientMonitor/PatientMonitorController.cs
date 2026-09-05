@@ -329,6 +329,11 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
         if (IsClientInitialized)
         {
+          // arm 은 이벤트 시점에 한 번만 시도되는데, 그때 환자가 아직 케어존 밖에 있었거나 서버 그래프가
+          // 준비되지 않았으면 조용히 거부된다. 그 뒤 담당자가 모니터를 닫아도 서버는 "arm 되지 않음"으로
+          // 계속 거부하므로, 닫기 요청마다 같은 인자로 arm 을 다시 보내 그 사이 조건이 갖춰졌으면
+          // 승인되게 한다. 서버 처리는 멱등이고 같은 오브젝트의 ServerRpc 는 순서가 보장된다.
+          CmdArmScenarioClose(patient.Identifier, normalizedSignal);
           // 서버가 거부하면 TargetScenarioCloseRejected 로 핸들러가 재등록되어 재시도할 수 있다.
           CmdCompleteScenarioClose(patient, normalizedSignal);
           return;
@@ -376,21 +381,53 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     {
       // arm 자체는 권한이 아니라 '시나리오가 이 모니터를 열었다'는 사실 기록이다.
       // 실제 권한 검증은 완료(CmdCompleteScenarioClose) 시점에 수행된다.
-      if (sender == null
-          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
-          || descriptor == null
-          || !PlayerTagService.HasTag(descriptor.Identifier, "nurse_b")
-          || !IsValidPatientBCMonitorClose(patientIdentifier, normalizedSignal))
+      string rejection = GetScenarioArmRejection(sender, patientIdentifier, normalizedSignal);
+      if (rejection != null)
+      {
+        // 거부를 조용히 삼키면 담당자는 모니터를 닫아도 완료 신호가 올라가지 않는 이유를 알 수 없고,
+        // 뒤따르는 게이트는 타임아웃까지 기다린다. 원인을 서버와 담당 클라이언트 양쪽에 남긴다.
+        Debug.LogWarning(
+          $"[PatientMonitorController] 시나리오 모니터 닫기 arm 이 거부되었습니다: {rejection} " +
+          $"(patient='{patientIdentifier}', signal='{normalizedSignal}', " +
+          $"sender={(sender != null ? sender.ClientId.ToString() : "null")}, monitor='{name}')", this);
+        if (sender != null)
+          TargetScenarioArmRejected(sender, rejection);
         return;
-
-      var patient = FindPatient(patientIdentifier);
-      if (patient == null
-          || !IsAuthoritativeCareZoneMonitorForPatient(this, patient)
-          || ScenarioController.Instance == null
-          || !ScenarioController.Instance.CanAcceptPatientBCMonitorClose(sender.ClientId, normalizedSignal))
-        return;
+      }
 
       ArmScenarioCloseOnServer(patientIdentifier, normalizedSignal);
+    }
+
+    private string GetScenarioArmRejection(NetworkConnection sender, string patientIdentifier,
+      string normalizedSignal)
+    {
+      if (sender == null
+          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
+          || descriptor == null)
+        return "발신 플레이어를 서버 세션에서 확인할 수 없습니다.";
+      if (!PlayerTagService.HasTag(descriptor.Identifier, "nurse_b"))
+        return "발신 플레이어에게 nurse_b 태그가 없습니다.";
+      if (!IsValidPatientBCMonitorClose(patientIdentifier, normalizedSignal))
+        return "환자/시그널 조합이 유효하지 않습니다.";
+
+      var patient = FindPatient(patientIdentifier);
+      if (patient == null)
+        return "대상 환자를 서버에서 찾을 수 없습니다.";
+      if (!IsAuthoritativeCareZoneMonitorForPatient(this, patient))
+        return "모니터가 환자의 케어존 안에 있지 않습니다(환자 침대가 아직 케어존에 정박하지 않았을 수 있습니다).";
+      if (ScenarioController.Instance == null
+          || !ScenarioController.Instance.CanAcceptPatientBCMonitorClose(sender.ClientId, normalizedSignal))
+        return "시나리오 컨트롤러가 승인하지 않습니다(활성 그래프/롤 브랜치/시그널 상태 확인).";
+
+      return null;
+    }
+
+    [TargetRpc]
+    private void TargetScenarioArmRejected(NetworkConnection connection, string rejection)
+    {
+      Debug.LogWarning(
+        $"[PatientMonitorController] 서버가 시나리오 모니터 닫기 arm 을 거부했습니다: {rejection} " +
+        "모니터를 닫을 때 다시 시도합니다. (monitor='" + name + "')", this);
     }
 
     [ServerRpc(RequireOwnership = false)]

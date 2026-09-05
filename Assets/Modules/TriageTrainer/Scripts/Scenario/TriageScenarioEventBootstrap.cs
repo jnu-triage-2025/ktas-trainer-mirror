@@ -66,7 +66,9 @@ namespace TriageTrainer.Scenario
     [Tooltip("수동 진입에서 환자 A 침대를 정박시킬 포지셔닝 포인트입니다. 일반 진행의 이송 목표와 달리 " +
              "수동 진입은 침대를 밀고 오는 과정이 없으므로, 이 포인트로 바로 붙입니다.")]
     [SerializeField] private string _patientAManualEntryBedSnapPointIdentifier = "zone_a:bed_snap_point";
-    [SerializeField, Min(0f)] private float _patientATransferWaitTimeoutSeconds = 0f;
+    [Tooltip("환자 A 침대 정박 신호를 기다리는 상한(초)입니다. 0이면 무한 대기하므로 네 명이 진행하는 세션에서 " +
+             "침대가 스냅 범위에 들어오지 못하면 모든 참가자가 이 지점에서 멈춥니다. 기본값은 운영 씬과 같은 600초입니다.")]
+    [SerializeField, Min(0f)] private float _patientATransferWaitTimeoutSeconds = 600f;
 
     [SerializeField] private string _patientAVitalMonitorEntityIdentifier = "patientA_monitor";
     [SerializeField] private string[] _patientAVitalMonitorAliases = { "patientA_monitor", "patient_a_monitor", "monitorA" };

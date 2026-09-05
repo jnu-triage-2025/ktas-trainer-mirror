@@ -453,7 +453,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "nextIdentifier": "CC_A_Triage"
     },
     "CC_A_Triage": {
@@ -505,7 +505,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "nextIdentifier": "Q003_1"
     },
     "Q003_1": {
@@ -681,7 +681,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "quest.completed.disaster_intro.role_a::collect_ns1_and_iv_set"
+              "registryIdentifier": "quest.completed.disaster_intro.role_a::collect_ps1_and_iv_set"
             },
             {
               "type": "Registry",
@@ -828,7 +828,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "nextIdentifier": "Q005_1"
     },
     "Q005_1": {
