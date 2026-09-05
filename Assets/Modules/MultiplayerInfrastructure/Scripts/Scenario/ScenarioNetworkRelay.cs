@@ -345,6 +345,19 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
+    /// <summary>
+    /// 호환 실행 경로의 모든 피어에서 지금 대기 중인 게이트를 풀어 다음 노드로 진행시킨다.
+    /// 피어마다 자기 커서로 같은 그래프를 돌기 때문에, 한 피어만 풀면 나머지 피어는 그대로 멈춰 있다.
+    /// </summary>
+    public static bool BroadcastGateSkip()
+    {
+      if (_instance == null || !InstanceFinder.IsServerStarted)
+        return false;
+
+      _instance.ObserversSkipCompatibilityGate();
+      return true;
+    }
+
     // ExcludeServer: 호스트는 자기 상태기를 호출부에서 직접 옮긴다.
     [ObserversRpc(BufferLast = false, ExcludeServer = true)]
     private void ObserversEnterManualEntrypoint(string entrypointIdentifier, bool clearState)
@@ -363,6 +376,12 @@ namespace MultiplayerInfrastructure.Scenario
     private void ObserversRestartCompatibilityScenario(string entrypointIdentifier)
     {
       ScenarioController.Instance?.RestartScenario(entrypointIdentifier);
+    }
+
+    [ObserversRpc(BufferLast = false, ExcludeServer = true)]
+    private void ObserversSkipCompatibilityGate()
+    {
+      ScenarioController.Instance?.RequestGateSkip(out _);
     }
 
     /// <summary>

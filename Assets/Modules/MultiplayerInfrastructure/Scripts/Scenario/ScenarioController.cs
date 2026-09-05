@@ -141,6 +141,17 @@ namespace MultiplayerInfrastructure.Scenario
     private bool _reportedIncompleteInitialRoleRoster;
 
     /// <summary>
+    /// 운영자가 게이트 강제 진행(<see cref="RequestGateSkip"/>)을 요청할 때마다 1씩 오르는 세대 번호.
+    ///
+    /// <para>
+    /// 대기 중인 게이트(Validator 대기 게이트, 서버 내부 신호 대기)는 대기를 시작할 때 이 값을
+    /// 기억해 두고, 값이 바뀌면 조건 충족과 무관하게 대기를 끝낸다. 요청 시점에 이미 대기 중이던
+    /// 게이트만 풀리고, 그 뒤에 시작하는 게이트는 새 세대 번호를 기억하므로 영향을 받지 않는다.
+    /// </para>
+    /// </summary>
+    private int _gateSkipGeneration;
+
+    /// <summary>
     /// 첫 ByRole 병렬 노드가 활성 역할 로스터를 기다리는 상한(초).
     ///
     /// <para>
@@ -1684,6 +1695,57 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public bool IsAuthoritativeExecutor
       => _executionMode == ExecutionMode.ServerAuthoritative && _currentGraph != null;
+
+    /// <summary>
+    /// 이 피어에서 지금 대기 중인 게이트(Validator 대기 게이트, 서버 내부 신호 대기)를 모두 풀어
+    /// 다음 노드로 진행시킨다. 운영자 명령 <c>/scenario skip</c> 이 호출한다.
+    ///
+    /// <para>
+    /// 조건을 만들 담당자가 이탈했거나 발신처가 배선되지 않은 신호를 기다리는 게이트는 타임아웃이
+    /// 없으면 영원히 열리지 않는다. 그런 게이트에서 세션 전체가 멈추지 않도록 운영자에게 탈출구를
+    /// 준다. 건너뛴 게이트는 미수행으로 기록하며, 게이트가 아닌 노드(대화, 이벤트 대기 등)는
+    /// 건드리지 않는다.
+    /// </para>
+    /// </summary>
+    /// <returns>요청을 받아들였으면 true. 이 피어가 그래프를 실행하지 않으면 false.</returns>
+    public bool RequestGateSkip(out string error)
+    {
+      if (_currentGraph == null)
+      {
+        error = "No scenario is currently playing on this peer.";
+        return false;
+      }
+
+      if (_executionMode == ExecutionMode.ClientPresentation)
+      {
+        // 표시 전용 피어는 서버 커서를 따라가므로 서버 쪽 컨트롤러가 게이트를 풀어야 한다.
+        error = "This peer only presents the server-driven scenario; skip must run on the server.";
+        return false;
+      }
+
+      _gateSkipGeneration++;
+
+      string message =
+        $"Gate skip requested by operator in graph '{_currentGraph.Identifier}' at node "
+        + $"'{_currentNode?.Identifier ?? "<none>"}'; waiting gates are released (미수행 기록).";
+      Debug.LogWarning($"[ScenarioController] {message}", this);
+      try
+      {
+        GameLogService.WriteScenario(message, _currentGraph.Identifier);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogException(ex, this);
+      }
+      AddCurrentVisitNote(message);
+      AppendSystemChatMessage(message);
+
+      error = null;
+      return true;
+    }
+
+    /// <summary>대기를 시작할 때 기억한 세대 번호와 현재 값이 다르면 운영자가 건너뛰기를 요청한 것이다.</summary>
+    private bool IsGateSkipRequested(int generationAtWaitStart) => _gateSkipGeneration != generationAtWaitStart;
 
     /// <summary>
     /// 호환 실행 경로에서 서버 브로드캐스트를 받아 이 피어의 상태기를 직접 옮긴다.
@@ -5172,12 +5234,22 @@ namespace MultiplayerInfrastructure.Scenario
       // WaitForCondition=true 이면 조건 충족까지 폴링 대기하는 게이트로 동작한다.
       if (node.WaitForCondition)
       {
+        int skipGeneration = _gateSkipGeneration;
+
         // 조건 충족 또는 (지정 시) 타임아웃 중 먼저 도달하는 쪽까지 대기한다.
         yield return WaitForValidatorGate(node);
 
         // 조건이 충족된 상태로 빠져나왔다면 정상 진행한다.
         if (EvaluateValidator(node))
         {
+          Advance();
+          yield break;
+        }
+
+        // 운영자가 건너뛰기를 요청했다면 타임아웃 정책과 무관하게 진행한다.
+        if (IsGateSkipRequested(skipGeneration))
+        {
+          Debug.LogWarning($"[ScenarioController] Validator gate '{node.Identifier}' skipped by operator request (미수행 기록).");
           Advance();
           yield break;
         }
@@ -5203,20 +5275,22 @@ namespace MultiplayerInfrastructure.Scenario
             }
             // 분기 대상이 없으면 KeepWaiting 으로 폴백.
             Debug.LogWarning($"[ScenarioController] Validator gate '{node.Identifier}' timed out but FailureNextIdentifier '{node.FailureNextIdentifier}' is unavailable; falling back to KeepWaiting.");
-            yield return new WaitUntil(() => EvaluateValidator(node));
+            yield return new WaitUntil(() => EvaluateValidator(node) || IsGateSkipRequested(skipGeneration));
             Advance();
             yield break;
 
           case ScenarioValidatorWaitTimeoutBehavior.WarnAndKeepWaiting:
             ReportValidatorWaitTimeoutWarning(node);
-            yield return new WaitUntil(() => EvaluateValidator(node));
+            // 타임아웃 뒤의 무한 대기도 운영자 건너뛰기로 풀 수 있어야 한다. 이 조건이 없으면
+            // 발신처가 없는 신호를 기다리는 게이트에서 세션이 영구히 멈춘다.
+            yield return new WaitUntil(() => EvaluateValidator(node) || IsGateSkipRequested(skipGeneration));
             Advance();
             yield break;
 
           case ScenarioValidatorWaitTimeoutBehavior.KeepWaiting:
           default:
             // 타임아웃을 무시하고 조건이 올라올 때까지 계속 대기(기존 동작).
-            yield return new WaitUntil(() => EvaluateValidator(node));
+            yield return new WaitUntil(() => EvaluateValidator(node) || IsGateSkipRequested(skipGeneration));
             Advance();
             yield break;
         }
@@ -5272,6 +5346,8 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (node.WaitForCondition)
       {
+        int skipGeneration = _gateSkipGeneration;
+
         yield return WaitForValidatorGate(node, context);
 
         // 대기가 조건 충족이 아니라 브랜치 취소/시나리오 종료로 끝났다면 타임아웃 정책을
@@ -5283,6 +5359,13 @@ namespace MultiplayerInfrastructure.Scenario
 
         if (EvaluateValidator(node))
         {
+          yield break;
+        }
+
+        // 운영자 건너뛰기는 타임아웃 정책과 무관하게 게이트를 풀어 체인을 다음 노드로 보낸다.
+        if (IsGateSkipRequested(skipGeneration))
+        {
+          Debug.LogWarning($"[ScenarioController] Branch validator gate '{node.Identifier}' skipped by operator request; releasing gate (미수행 기록).");
           yield break;
         }
 
@@ -5306,13 +5389,13 @@ namespace MultiplayerInfrastructure.Scenario
             ReportValidatorWaitTimeoutWarning(node);
             // 경고 뒤에도 담당자가 연결을 끊거나 시나리오가 끝나면 이 브랜치를
             // 완료 처리해야 한다. 이 조건을 빼면 타임아웃 이후의 이탈은 WaitMode.All
-            // 합류를 영구적으로 막는다.
-            yield return new WaitUntil(() => EvaluateValidator(node) || IsBranchGateReleased(context));
+            // 합류를 영구적으로 막는다. 운영자 건너뛰기도 같은 이유로 대기를 푼다.
+            yield return new WaitUntil(() => EvaluateValidator(node) || IsBranchGateReleased(context) || IsGateSkipRequested(skipGeneration));
             yield break;
 
           case ScenarioValidatorWaitTimeoutBehavior.KeepWaiting:
           default:
-            yield return new WaitUntil(() => EvaluateValidator(node) || IsBranchGateReleased(context));
+            yield return new WaitUntil(() => EvaluateValidator(node) || IsBranchGateReleased(context) || IsGateSkipRequested(skipGeneration));
             yield break;
         }
       }
@@ -5348,20 +5431,26 @@ namespace MultiplayerInfrastructure.Scenario
         ReportValidatorBlocked(node, failureReason);
       }
 
+      int skipGeneration = _gateSkipGeneration;
       var timeout = node.WaitTimeoutSeconds;
       if (timeout is > 0f)
       {
         // 게이트 타임아웃은 시간 배율과 무관하게 만료되어야 한다. 일시정지 중
         // Time.time은 멈추므로, 이를 기준으로 하면 예외 복구가 영구히 지연된다.
         float deadline = Time.unscaledTime + timeout.Value;
-        yield return new WaitUntil(() => EvaluateValidator(node) || Time.unscaledTime >= deadline || IsBranchGateReleased(context));
+        yield return new WaitUntil(() => EvaluateValidator(node)
+                                         || Time.unscaledTime >= deadline
+                                         || IsBranchGateReleased(context)
+                                         || IsGateSkipRequested(skipGeneration));
       }
       else
       {
         // 타임아웃이 없는 게이트는 조건이 올라오지 않으면 영원히 대기한다. 담당자가 이탈해
         // 조건을 만들 사람이 사라진 브랜치에서는 이 대기를 함께 풀어 주어야, 중단을 막은 결과가
-        // 무한 대기로 바뀌지 않는다.
-        yield return new WaitUntil(() => EvaluateValidator(node) || IsBranchGateReleased(context));
+        // 무한 대기로 바뀌지 않는다. 운영자 건너뛰기 요청도 같은 탈출구다.
+        yield return new WaitUntil(() => EvaluateValidator(node)
+                                         || IsBranchGateReleased(context)
+                                         || IsGateSkipRequested(skipGeneration));
       }
     }
 
@@ -5761,6 +5850,7 @@ namespace MultiplayerInfrastructure.Scenario
               float deadline = node.WaitTimeoutSeconds is > 0f
                 ? Time.unscaledTime + node.WaitTimeoutSeconds.Value
                 : float.PositiveInfinity;
+              int skipGeneration = _gateSkipGeneration;
               while (!resolved)
               {
                 // 담당자가 이탈해 취소된 브랜치의 대기는 조건과 무관하게 끝내야 한다. 이 확인이
@@ -5768,6 +5858,26 @@ namespace MultiplayerInfrastructure.Scenario
                 if (_currentGraph == null || IsBranchGateReleased(context))
                 {
                   yield break;
+                }
+
+                if (IsGateSkipRequested(skipGeneration))
+                {
+                  // 내부 신호는 /scenario signal 로 올릴 수 없으므로, 타임아웃이 없는 Register 대기는
+                  // 운영자 건너뛰기만이 유일한 탈출구다. 타임아웃과 같은 방식으로 대기자를 지운다.
+                  ScenarioInteractionSignals.ClearInternal(targetId, signalId);
+                  string skipMessage =
+                    $"Server internal signal wait '{node.Identifier}' ({targetId}::{signalId}) skipped by operator "
+                    + $"request in graph '{_currentGraph.Identifier}'; continuing (미수행 기록).";
+                  Debug.LogWarning($"[ScenarioController] {skipMessage}", this);
+                  try
+                  {
+                    GameLogService.WriteScenario(skipMessage, _currentGraph.Identifier);
+                  }
+                  catch (Exception ex)
+                  {
+                    Debug.LogException(ex, this);
+                  }
+                  break;
                 }
 
                 if (Time.unscaledTime >= deadline)
@@ -7893,9 +8003,16 @@ namespace MultiplayerInfrastructure.Scenario
         if (TryExecuteScenarioGive(node.CommandLine, ownerConnection, out var giveSucceeded, out var giveResult))
         {
           if (giveSucceeded)
+          {
             Debug.Log($"[ScenarioController] ExecuteCommand node '{node.Identifier}': {giveResult}");
+            // 지급 결과는 플레이어에게 알리는 성격이므로 /give 와 같이 서버 전역 채팅으로 전파한다.
+            // 시나리오가 대신 지급한 것이므로 owner 이름 대신 [System] 접두어가 붙도록 actor 를 비운다.
+            ResolveChatService()?.SendSystemNotification(null, giveResult);
+          }
           else
+          {
             Debug.LogWarning($"[ScenarioController] ExecuteCommand node '{node.Identifier}' failed: {giveResult}");
+          }
         }
         else
         {

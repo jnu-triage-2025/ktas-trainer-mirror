@@ -26,6 +26,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("scenario enter <entrypoint> [clear-state=true|clear-state=false]", "Skip, wiping (default) or keeping prior scenario state."),
       new UsageLine("scenario end", "End the active scenario and clean up its tracked changes."),
       new UsageLine("scenario restart [entrypoint]", "Clean up and restart the active scenario."),
+      new UsageLine("scenario skip", "Release the gate every peer is waiting on (Validator wait / internal signal wait) and continue (미수행 기록)."),
       new UsageLine("scenario conflictpolicy [warn|cancel|panic]", "Get/set concurrent-dialogue conflict policy."),
       new UsageLine("scenario validatorlog", "Show Validator block logging targets."),
       new UsageLine("scenario validatorlog <console|chat|session> <on|off>", "Enable or disable a logging target."),
@@ -125,6 +126,29 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
+      // /scenario skip
+      // 대기 중인 게이트를 풀어 다음 노드로 진행시킨다. 호환 실행 경로에서는 피어마다 자기 커서를
+      // 돌리므로 서버의 컨트롤러와 나머지 피어에 함께 전달한다.
+      if (args != null
+          && args.Length >= 1
+          && string.Equals(args[0], "skip", StringComparison.OrdinalIgnoreCase))
+      {
+        var controller = ScenarioController.Instance;
+        bool authoritative = controller != null && controller.IsAuthoritativeExecutor;
+        bool skippedHere = controller != null && controller.RequestGateSkip(out _);
+        bool broadcast = !authoritative && ScenarioNetworkRelay.BroadcastGateSkip();
+        if (!skippedHere && !broadcast)
+        {
+          _chat.SendSystemMessage(sender, "No scenario is currently playing.");
+          return;
+        }
+
+        _chat.SendSystemMessage(sender, broadcast
+          ? "Gate skip requested on the server and every peer (미수행 기록)."
+          : "Gate skip requested (미수행 기록).");
+        return;
+      }
+
       if (args != null && args.Length >= 1
           && (string.Equals(args[0], "end", StringComparison.OrdinalIgnoreCase)
               || string.Equals(args[0], "restart", StringComparison.OrdinalIgnoreCase)))
@@ -132,7 +156,17 @@ namespace MultiplayerInfrastructure.Command
         var controller = ScenarioController.Instance;
         if (controller == null || !controller.HasActiveScenario)
         {
-          _chat.SendSystemMessage(sender, "No scenario is currently playing.");
+          // 전용 서버이거나 호스트가 대상에서 빠진 세션에서는 서버 컨트롤러에 그래프가 없다. 그래도
+          // 호환 경로의 피어들은 자기 그래프를 돌리고 있으므로 요청을 그대로 전달해야 운영자가
+          // 세션을 정리하거나 다시 시작할 수 있다.
+          bool isEnd = string.Equals(args[0], "end", StringComparison.OrdinalIgnoreCase);
+          string relayEntrypoint = !isEnd && args.Length >= 2 ? args[1].Trim() : null;
+          bool relayed = isEnd
+            ? ScenarioNetworkRelay.BroadcastScenarioEnd()
+            : ScenarioNetworkRelay.BroadcastScenarioRestart(relayEntrypoint);
+          _chat.SendSystemMessage(sender, relayed
+            ? $"No scenario is playing on the server; '{args[0]}' was broadcast to every peer."
+            : "No scenario is currently playing.");
           return;
         }
 
@@ -172,7 +206,7 @@ namespace MultiplayerInfrastructure.Command
               && !string.Equals(args[0], "exe", StringComparison.OrdinalIgnoreCase)
               && !string.Equals(args[0], "exec", StringComparison.OrdinalIgnoreCase)))
       {
-        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute|exe|exec <target> <scenario_id> [entrypoint] | /scenario enter <entrypoint> [clear-state=true|false] | /scenario end | /scenario restart [entrypoint] | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic] | /scenario validatorlog [<console|chat|session> <on|off>]");
+        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute|exe|exec <target> <scenario_id> [entrypoint] | /scenario enter <entrypoint> [clear-state=true|false] | /scenario end | /scenario restart [entrypoint] | /scenario skip | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic] | /scenario validatorlog [<console|chat|session> <on|off>]");
         return;
       }
 
