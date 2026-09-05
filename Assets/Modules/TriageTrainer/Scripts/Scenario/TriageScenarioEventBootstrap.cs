@@ -1032,7 +1032,7 @@ namespace TriageTrainer.Scenario
     }
 
     private void SetActiveIfPresent<T>(T target, bool active,
-      string fieldName = null)
+      [System.Runtime.CompilerServices.CallerMemberName] string fieldName = null)
       where T : UnityEngine.Object
     {
       TypedUnityReference.SetActive<T>((object)target, active,
