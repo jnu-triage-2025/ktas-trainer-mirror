@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Build;
-using UnityEditor.Build.Reporting;
 using UnityEngine;
 
 namespace TriageTrainer.Editor
@@ -15,26 +14,69 @@ namespace TriageTrainer.Editor
   /// Validates authored direct Unity object fields before Unity can normalize invalid references.
   /// Does not load scenes or prefabs, invoke their lifecycle methods, or modify their contents.
   /// </summary>
-  public sealed class SerializedReferenceBuildValidator : IPreprocessBuildWithReport
+  public sealed class SerializedReferenceBuildValidator : BuildPlayerProcessor
   {
-    public int callbackOrder => -10000;
+    public override int callbackOrder => -10000;
 
-    public void OnPreprocessBuild(BuildReport report) => ValidateProject();
+    public override void PrepareForBuild(BuildPlayerContext context)
+      => ValidateBuildScenes(context.BuildPlayerOptions.scenes);
 
     [MenuItem("Tools/Triage Trainer/Validate Serialized Reference Types")]
     public static void ValidateProject()
     {
-      var paths = AssetDatabase.FindAssets("t:Scene", new[] { "Assets" })
-        .Concat(AssetDatabase.FindAssets("t:Prefab", new[] { "Assets" }))
-        .Select(AssetDatabase.GUIDToAssetPath).Distinct().ToArray();
+      ValidateBuildScenes(EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path));
+    }
+
+    private static void ValidateBuildScenes(IEnumerable<string> scenes)
+    {
+      var paths = CollectBuildAssets(scenes,
+        AssetDatabase.GetAllAssetPaths().Where(path => !AssetDatabase.IsValidFolder(path)),
+        PlayerSettings.GetPreloadedAssets().Where(asset => asset != null).Select(AssetDatabase.GetAssetPath),
+        roots => AssetDatabase.GetDependencies(roots, true));
       var validator = new ReferenceYamlValidator(
         File.ReadAllText, AssetDatabase.GUIDToAssetPath,
-        guid => AssetDatabase.LoadAssetAtPath<MonoScript>(AssetDatabase.GUIDToAssetPath(guid))?.GetClass(),
+        CreateScriptTypeResolver(),
         ResolveImportedObjectType);
       var errors = validator.Validate(paths);
       if (errors.Count > 0)
         throw new BuildFailedException("Serialized reference validation failed:\n" + string.Join("\n", errors));
       Debug.Log($"[SerializedReferenceValidation] Validated direct object fields and prefab overrides in {paths.Length} scene/prefab assets.");
+    }
+
+    public static string[] CollectBuildAssets(IEnumerable<string> scenes, IEnumerable<string> assetPaths,
+      IEnumerable<string> preloadedAssets, Func<string[], string[]> dependencies)
+    {
+      bool IsRuntimePath(string path) => !string.IsNullOrEmpty(path)
+        && !path.Contains("/Editor/") && !path.Contains("/StreamingAssets/");
+      var roots = (scenes ?? Array.Empty<string>())
+        .Concat(assetPaths.Where(path => IsRuntimePath(path) && path.Contains("/Resources/")))
+        .Concat(preloadedAssets).Where(IsRuntimePath).Distinct().ToArray();
+      return (roots.Length == 0 ? roots : dependencies(roots).Concat(roots))
+        .Where(IsRuntimePath)
+        .Where(path => path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase)
+          || path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+        .Distinct().OrderBy(path => path, StringComparer.Ordinal).ToArray();
+    }
+
+    private static Func<string, string, Type> CreateScriptTypeResolver()
+    {
+      Dictionary<string, Type> builtins = null;
+      return (guid, id) =>
+      {
+        if (guid == "0000000000000000e000000000000000")
+        {
+          if (builtins == null)
+          {
+            builtins = new Dictionary<string, Type>();
+            foreach (var script in MonoImporter.GetAllRuntimeMonoScripts())
+              if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(script, out string scriptGuid, out long scriptId)
+                && scriptGuid == guid)
+                builtins[scriptId.ToString(System.Globalization.CultureInfo.InvariantCulture)] = script.GetClass();
+          }
+          return builtins.TryGetValue(id, out var type) ? type : null;
+        }
+        return AssetDatabase.LoadAssetAtPath<MonoScript>(AssetDatabase.GUIDToAssetPath(guid))?.GetClass();
+      };
     }
 
     private static Type ResolveImportedObjectType(string path, string id)
@@ -58,7 +100,7 @@ namespace TriageTrainer.Editor
       @"^    - target: (\{[^\r\n]+\})\r?\n      propertyPath: (\w+)\r?\n      value:[^\r\n]*\r?\n      objectReference: (\{[^\r\n]+\})", RegexOptions.Multiline);
     private readonly Func<string, string> read;
     private readonly Func<string, string> assetPath;
-    private readonly Func<string, Type> scriptType;
+    private readonly Func<string, string, Type> scriptType;
     private readonly Func<string, string, Type> importedType;
     private readonly Dictionary<string, Type> importedTypes = new();
     private readonly Dictionary<string, Dictionary<string, Document>> files = new();
@@ -70,7 +112,7 @@ namespace TriageTrainer.Editor
     }
 
     public ReferenceYamlValidator(Func<string, string> read, Func<string, string> assetPath,
-      Func<string, Type> scriptType, Func<string, string, Type> importedType = null)
+      Func<string, string, Type> scriptType, Func<string, string, Type> importedType = null)
     {
       this.read = read;
       this.assetPath = assetPath;
@@ -211,8 +253,10 @@ namespace TriageTrainer.Editor
         string guid = Regex.Match(doc.Body, @"m_Script: \{fileID: [^,]+, guid: (\w+)").Groups[1].Value;
         if (guid.Length > 0)
         {
-          if (!scripts.TryGetValue(guid, out var type))
-            scripts[guid] = type = scriptType(guid);
+          string id = FileId(Regex.Match(doc.Body, @"m_Script: (\{[^\r\n]+\})").Groups[1].Value);
+          string key = guid + ":" + id;
+          if (!scripts.TryGetValue(key, out var type))
+            scripts[key] = type = scriptType(guid, id);
           return type;
         }
       }

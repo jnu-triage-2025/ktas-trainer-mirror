@@ -100,8 +100,49 @@ namespace TriageTrainer.Tests
     private const string Owner = "--- !u!114 &1\nMonoBehaviour:\n  m_Script: {fileID: 11500000, guid: owner, type: 3}\n  m_Name: Bootstrap\n  marker: {fileID: TARGET}\n";
     private const string GameObjectDoc = "--- !u!1 &2\nGameObject:\n  m_Name: Wrong\n";
     private const string MarkerDoc = "--- !u!114 &3\nMonoBehaviour:\n  m_Script: {fileID: 11500000, guid: marker, type: 3}\n";
-    private static Type ScriptType(string guid) => guid == "owner" ? typeof(ReferenceValidationFixture) :
+    private static Type ScriptType(string guid, string id) => guid == "owner" ? typeof(ReferenceValidationFixture) :
       guid == "marker" ? typeof(PatientA18gLeftVisualMarker) : null;
+
+    [Test]
+    public void BuildScopeExcludesUnreferencedResearchAndIncludesRuntimeDependencies()
+    {
+      string[] assets = { "Assets/Scenes/Researchs/TrialsScenarioGraph.unity", "Assets/Unused.prefab",
+        "Assets/Resources/Runtime.prefab", "Assets/Editor/Resources/EditorOnly.prefab" };
+      string[] passedRoots = null;
+      var result = SerializedReferenceBuildValidator.CollectBuildAssets(
+        new[] { "Assets/Scenes/Game.unity" }, assets, new[] { "Assets/Preloaded.asset" }, roots =>
+        {
+          passedRoots = roots;
+          return new[] { "Assets/Used.prefab", "Assets/Nested.prefab", "Assets/Texture.png" };
+        });
+      Assert.That(passedRoots, Is.EquivalentTo(new[] { "Assets/Scenes/Game.unity", "Assets/Resources/Runtime.prefab", "Assets/Preloaded.asset" }));
+      Assert.That(result, Is.EquivalentTo(new[] { "Assets/Scenes/Game.unity", "Assets/Resources/Runtime.prefab", "Assets/Used.prefab", "Assets/Nested.prefab" }));
+    }
+
+    [Test]
+    public void ExplicitlyBuiltResearchSceneIsStillValidated()
+    {
+      const string scene = "Assets/Scenes/Researchs/TrialsScenarioGraph.unity";
+      var result = SerializedReferenceBuildValidator.CollectBuildAssets(new[] { scene },
+        Array.Empty<string>(), Array.Empty<string>(), roots => roots);
+      Assert.That(result, Is.EqualTo(new[] { scene }));
+    }
+
+    [Test]
+    public void BuiltinScriptsWithTheSameGuidAreResolvedByFileId()
+    {
+      string text = Owner.Replace("TARGET", "3") + MarkerDoc.Replace("guid: marker", "guid: builtin").Replace("fileID: 11500000, guid: builtin", "fileID: 19102, guid: builtin")
+        + "--- !u!114 &4\nMonoBehaviour:\n  m_Script: {fileID: 19103, guid: builtin, type: 0}\n";
+      var seen = new List<string>();
+      var validator = new ReferenceYamlValidator(_ => text, _ => "", (guid, id) =>
+      {
+        if (guid != "builtin") return ScriptType(guid, id);
+        seen.Add(id);
+        return id == "19102" ? typeof(PatientA18gLeftVisualMarker) : typeof(MonoBehaviour);
+      });
+      Assert.That(validator.Validate(new[] { "scene.unity" }), Is.Empty);
+      Assert.That(seen, Is.EquivalentTo(new[] { "19102", "19103" }));
+    }
 
     [TestCase("2", 1)]
     [TestCase("3", 0)]
