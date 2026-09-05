@@ -32,6 +32,9 @@ namespace MultiplayerInfrastructure.UI
     private TextElement _inputTextElement;
     private VisualElement _completionOverlay;
     private VisualElement _completionList;
+    // resolvedStyle 은 다음 레이아웃까지 이전 값을 돌려주므로, 같은 프레임에 열고 곧바로
+    // 묻는 키 처리 순서에서도 어긋나지 않도록 표시 상태를 따로 기억한다.
+    private bool _completionListVisible;
     private VisualElement _toastPanel;
     private VisualElement _toastContainer;
     private VisualElement _panel;
@@ -94,6 +97,12 @@ namespace MultiplayerInfrastructure.UI
 
     /// <summary>현재 입력창의 커서 위치.</summary>
     public int CursorPosition => _inputField?.cursorIndex ?? 0;
+
+    /// <summary>
+    /// 자동완성 후보 목록이 화면에 떠 있으면 true. 이 동안 화살표 키와 Enter 는
+    /// 히스토리 탐색과 전송 대신 목록을 조작하는 키로 쓰인다.
+    /// </summary>
+    public bool IsCompletionListVisible => _completionListVisible;
 
     public ChatPanelElement()
     {
@@ -274,7 +283,10 @@ namespace MultiplayerInfrastructure.UI
       _textInputElement.style.borderRightWidth = 0;
 
       inputBg.Add(_inputField);
-      _inputField.RegisterCallback<KeyDownEvent>(HandleInputKeyDown);
+      // 트리클다운 단계에서 받아야 텍스트 요소가 키를 편집에 쓰기 전에 가로챌 수 있다.
+      // 후보 목록이 열린 동안 화살표와 Enter 가 캐럿을 옮기거나 줄을 넘기지 않게
+      // 막는 데 필요하다.
+      _inputField.RegisterCallback<KeyDownEvent>(HandleInputKeyDown, TrickleDown.TrickleDown);
 
       // 입력 행 위에 겹쳐 그리므로 입력창을 만든 뒤에 마지막 자식으로 붙인다.
       BuildCompletionOverlay(inputRow);
@@ -622,6 +634,7 @@ namespace MultiplayerInfrastructure.UI
 
       _completionOverlay.style.left = MeasureColumnOffset(anchorColumn);
       _completionOverlay.style.display = DisplayStyle.Flex;
+      _completionListVisible = true;
     }
 
     /// <summary>후보 목록 오버레이를 숨긴다.</summary>
@@ -632,6 +645,7 @@ namespace MultiplayerInfrastructure.UI
 
       _completionList?.Clear();
       _completionOverlay.style.display = DisplayStyle.None;
+      _completionListVisible = false;
     }
 
     private VisualElement BuildCompletionRow(
@@ -1007,8 +1021,18 @@ namespace MultiplayerInfrastructure.UI
       KeyCode keyCode = evt.keyCode;
       if (keyCode == KeyCode.None && evt.character == '\t')
         keyCode = KeyCode.Tab;
+      // 스페이스는 다음 구문을 쓰기 시작한다는 뜻이므로, 문자만 담긴 이벤트로 오더라도
+      // 컨트롤러가 후보 목록을 닫을 수 있게 키로 되돌려 준다.
+      else if (keyCode == KeyCode.None && evt.character == ' ')
+        keyCode = KeyCode.Space;
 
       if (keyCode == KeyCode.Tab)
+        evt.StopPropagation();
+
+      // 후보 목록이 열려 있으면 화살표, Enter, Escape 는 목록을 조작하는 키다. 실제
+      // 동작은 PlayerController.Input 이 맡으므로 여기서는 텍스트 필드가 이 키들을 캐럿
+      // 이동, 개행, 편집 취소로 소비하지 못하게 막기만 한다.
+      if (IsCompletionListVisible && IsCompletionNavigationKey(keyCode, evt.character))
         evt.StopPropagation();
 
       // 문자만 담긴 이벤트는 어떤 키를 눌렀는지 알려 주지 못하므로 전달하지 않는다.
@@ -1017,6 +1041,17 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       InputKeyPressed?.Invoke(keyCode);
+    }
+
+    private static bool IsCompletionNavigationKey(KeyCode keyCode, char character)
+    {
+      return keyCode == KeyCode.UpArrow
+        || keyCode == KeyCode.DownArrow
+        || keyCode == KeyCode.Return
+        || keyCode == KeyCode.KeypadEnter
+        || keyCode == KeyCode.Escape
+        || character == '\n'
+        || character == '\r';
     }
 
     private void AddInputHistory(string text)

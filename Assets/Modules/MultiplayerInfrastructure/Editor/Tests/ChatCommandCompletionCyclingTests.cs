@@ -101,6 +101,47 @@ namespace MultiplayerInfrastructure.Tests.Command
     }
 
     [Test]
+    public void ArrowKeysMoveTheSelectionInBothDirectionsAndWrap()
+    {
+      var first = _completion.HandleTabPress("/s", 2);
+      Assert.That(first.HasValue, Is.True);
+      int count = _completion.ActiveCandidates.Count;
+      Assert.That(count, Is.GreaterThan(1));
+
+      var down = _completion.MoveSelection(1);
+      Assert.That(down.HasValue, Is.True);
+      Assert.That(_completion.ActiveCandidateIndex, Is.EqualTo(1));
+      Assert.That(down.Value.text, Is.Not.EqualTo(first.Value.text));
+
+      // 위로 두 칸: 처음을 지나 마지막 후보로 이어진다.
+      _completion.MoveSelection(-1);
+      var wrapped = _completion.MoveSelection(-1);
+      Assert.That(wrapped.HasValue, Is.True);
+      Assert.That(_completion.ActiveCandidateIndex, Is.EqualTo(count - 1));
+      Assert.That(wrapped.Value.text, Does.StartWith(_completion.ActiveCandidates[count - 1].Text));
+    }
+
+    [Test]
+    public void TabContinuesFromTheCandidatePickedWithTheArrowKeys()
+    {
+      Assert.That(_completion.HandleTabPress("/s", 2).HasValue, Is.True);
+      var moved = _completion.MoveSelection(1);
+      Assert.That(moved.HasValue, Is.True);
+
+      // 화살표로 고른 뒤 Tab 을 누르면 그 자리에서 이어서 순환해야 한다.
+      var next = _completion.HandleTabPress(moved.Value.text, moved.Value.cursorPos);
+      Assert.That(next.HasValue, Is.True);
+      Assert.That(_completion.ActiveCandidateIndex, Is.EqualTo(2 % _completion.ActiveCandidates.Count));
+    }
+
+    [Test]
+    public void MovingTheSelectionWithoutASessionDoesNothing()
+    {
+      Assert.That(_completion.MoveSelection(1), Is.Null);
+      Assert.That(_completion.HasActiveSession, Is.False);
+    }
+
+    [Test]
     public void CommandNameCandidatesCarryTheirDescription()
     {
       Assert.That(_completion.HandleTabPress("/he", 3).HasValue, Is.True);

@@ -118,6 +118,22 @@ namespace MultiplayerInfrastructure.Command
     }
 
     /// <summary>
+    /// 후보 목록이 열려 있는 동안 화살표 키로 선택을 한 칸 옮깁니다. 목록의 양 끝에서는
+    /// 반대편으로 이어집니다. 옮겨진 후보를 입력창에 채운 결과를 반환하며, 진행 중인
+    /// 세션이 없으면 null 입니다.
+    /// </summary>
+    /// <param name="delta">-1 이면 이전 후보, +1 이면 다음 후보.</param>
+    public (string text, int cursorPos)? MoveSelection(int delta)
+    {
+      if (!_hasActiveSession || _completionCandidates == null || _completionCandidates.Count == 0)
+        return null;
+
+      int count = _completionCandidates.Count;
+      _completionIndex = ((_completionIndex + delta) % count + count) % count;
+      return BuildResult(_completionCandidates[_completionIndex]);
+    }
+
+    /// <summary>
     /// Tab 외의 키가 입력되었을 때 호출하여 자동완성 세션을 리셋합니다.
     /// </summary>
     public void ResetSession()

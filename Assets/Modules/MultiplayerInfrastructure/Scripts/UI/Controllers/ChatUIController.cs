@@ -92,13 +92,33 @@ namespace MultiplayerInfrastructure.UI
         _completionService = new ChatCommandCompletionService(commandService);
     }
 
+    private bool IsCompletionListOpen => _chatPanel != null && _chatPanel.IsCompletionListVisible;
+
     private void HandleInputKeyPressed(KeyCode keyCode)
     {
       // 실제 Tab 동작은 Return/Escape/히스토리 처리와 일관성을 유지하기 위해
       // PlayerController.Input 에서 처리한다. UI 이벤트는 포커스 이동을 막고,
       // 사용자가 편집을 시작했거나 다른 탐색 키를 눌렀을 때 완성 세션에 알리는 역할만 한다.
-      if (keyCode != KeyCode.Tab)
-        ResetCompletionSession();
+      if (keyCode == KeyCode.Tab)
+        return;
+
+      // 후보 목록이 열려 있는 동안 화살표, Enter, Escape 는 목록을 고르고 확정하고
+      // 닫는 키이므로 여기서는 손대지 않는다. 실제 동작은 PlayerController.Input 이
+      // 맡는다. 스페이스를 포함한 그 밖의 입력은 다음 구문을 쓰기 시작한 것으로
+      // 보고 목록을 닫는다.
+      if (IsCompletionListOpen && IsCompletionNavigationKey(keyCode))
+        return;
+
+      ResetCompletionSession();
+    }
+
+    private static bool IsCompletionNavigationKey(KeyCode keyCode)
+    {
+      return keyCode == KeyCode.UpArrow
+        || keyCode == KeyCode.DownArrow
+        || keyCode == KeyCode.Return
+        || keyCode == KeyCode.KeypadEnter
+        || keyCode == KeyCode.Escape;
     }
 
     /// <summary>
@@ -174,6 +194,14 @@ namespace MultiplayerInfrastructure.UI
       if (_chatPanel == null || !IsOpen)
         return;
 
+      // 후보 목록이 열려 있으면 Enter 는 전송이 아니라 고른 후보의 확정이다. 후보
+      // 텍스트는 Tab 이나 화살표로 고를 때 이미 입력창에 채워져 있으므로 목록만 닫는다.
+      if (IsCompletionListOpen)
+      {
+        ResetCompletionSession();
+        return;
+      }
+
       string text = _chatPanel.ConsumeInput();
       ResetCompletionSession();
       OnSubmitted?.Invoke(text);
@@ -184,6 +212,14 @@ namespace MultiplayerInfrastructure.UI
     {
       if (!IsOpen)
         return;
+
+      // 후보 목록이 열려 있으면 Escape 는 채팅창이 아니라 목록을 닫는다. 입력창에
+      // 채워진 텍스트는 그대로 남는다.
+      if (IsCompletionListOpen)
+      {
+        ResetCompletionSession();
+        return;
+      }
 
       OnCancelled?.Invoke();
       ResetCompletionSession();
@@ -233,6 +269,12 @@ namespace MultiplayerInfrastructure.UI
       if (!IsOpen)
         return;
 
+      if (IsCompletionListOpen)
+      {
+        MoveCompletionSelection(-1);
+        return;
+      }
+
       _chatPanel?.RecallPreviousInput();
       ResetCompletionSession();
     }
@@ -242,8 +284,33 @@ namespace MultiplayerInfrastructure.UI
       if (!IsOpen)
         return;
 
+      if (IsCompletionListOpen)
+      {
+        MoveCompletionSelection(1);
+        return;
+      }
+
       _chatPanel?.RecallNextInput();
       ResetCompletionSession();
+    }
+
+    /// <summary>
+    /// 열려 있는 후보 목록에서 선택을 한 칸 옮기고, 옮겨진 후보를 입력창에 채운다.
+    /// </summary>
+    private void MoveCompletionSelection(int delta)
+    {
+      var result = _completionService?.MoveSelection(delta);
+      if (!result.HasValue)
+      {
+        ResetCompletionSession();
+        return;
+      }
+
+      _chatPanel.ApplyInput(result.Value.text, result.Value.cursorPos);
+      _chatPanel.ShowCompletionCandidates(
+        _completionService.ActiveCandidates,
+        _completionService.ActiveCandidateIndex,
+        _completionService.ActiveTokenStart);
     }
 
     public void OnOverlayPushed()
