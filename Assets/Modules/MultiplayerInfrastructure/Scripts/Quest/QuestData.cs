@@ -30,6 +30,17 @@ namespace MultiplayerInfrastructure.Quest
     [JsonIgnore]
     public string SourceScenarioIdentifier { get; set; }
 
+    /// <summary>
+    /// 여러 참여자가 함께 끝내야 넘어가는 구간에서 이 퀘스트가 놓인 공동 진행 상태.
+    /// QuestManager 가 스냅샷을 내보낼 때 채우는 런타임 값이며 직렬화하지 않는다. 해당 구간이 아니면 null 이다.
+    /// </summary>
+    [JsonIgnore]
+    public QuestGroupWaitStatus GroupWait { get; set; }
+
+    /// <summary>분기 퀘스트가 모두 회수된 뒤 대기 상태만 보여 주기 위해 합성한 자리 표시 퀘스트인지 여부.</summary>
+    [JsonIgnore]
+    public bool IsGroupWaitPlaceholder { get; set; }
+
     public QuestData()
     {
       DefinitionIdentifier = string.Empty;
@@ -75,7 +86,9 @@ namespace MultiplayerInfrastructure.Quest
         IsAutoComplete = IsAutoComplete,
         PersistProgressOnSessionEnd = PersistProgressOnSessionEnd,
         PresentationBindings = ClonePresentationBindings(PresentationBindings),
-        SourceScenarioIdentifier = SourceScenarioIdentifier
+        SourceScenarioIdentifier = SourceScenarioIdentifier,
+        GroupWait = GroupWait,
+        IsGroupWaitPlaceholder = IsGroupWaitPlaceholder
       };
     }
 

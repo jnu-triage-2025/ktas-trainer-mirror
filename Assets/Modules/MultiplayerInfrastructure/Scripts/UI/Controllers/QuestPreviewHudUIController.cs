@@ -178,6 +178,11 @@ namespace MultiplayerInfrastructure.UI
         if (previous == null || previous.Completed)
           continue;
 
+        // 대기 문구 "다른 플레이어가 완료할 때까지 기다리기(n/N)" 의 숫자만 바뀐 경우는 목표 달성이
+        // 아니므로 이전 문구에 취소선 연출을 하지 않는다.
+        if (previous.GroupWait != null && previous.GroupWait.IsWaitingForOthers)
+          continue;
+
         QuestData next = null;
         for (int j = 0; j < nextTracked.Count; j++)
         {

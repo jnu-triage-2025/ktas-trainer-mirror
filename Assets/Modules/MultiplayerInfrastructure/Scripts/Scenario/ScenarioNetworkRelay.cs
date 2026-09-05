@@ -288,6 +288,22 @@ namespace MultiplayerInfrastructure.Scenario
       => ClearScenarioQuestsLocal(scenarioIdentifier);
 
     /// <summary>
+    /// 서버가 집계한 공동 진행 게이트 스냅샷(<see cref="ScenarioGroupGateSnapshot"/> 의 JSON)을 표시
+    /// 클라이언트에 전달한다. 호스트는 호출부에서 이미 로컬 상태에 반영했으므로 RPC 에서 제외한다.
+    /// </summary>
+    public static void PublishGroupGate(string snapshotJson)
+    {
+      if (_instance == null || !InstanceFinder.IsServerStarted || string.IsNullOrWhiteSpace(snapshotJson))
+        return;
+
+      _instance.ObserversApplyGroupGate(snapshotJson);
+    }
+
+    [ObserversRpc(BufferLast = false, ExcludeServer = true)]
+    private void ObserversApplyGroupGate(string snapshotJson)
+      => ScenarioGroupGateState.TryApplyJson(snapshotJson);
+
+    /// <summary>
     /// 이 피어의 QuestManager 에서 해당 시나리오가 발행한 퀘스트만 제거한다.
     /// 튜토리얼 리졸버 등 시나리오 밖 출처가 등록한 퀘스트는 건드리지 않는다.
     /// </summary>

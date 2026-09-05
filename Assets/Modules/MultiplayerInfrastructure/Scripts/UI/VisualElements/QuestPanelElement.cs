@@ -59,6 +59,8 @@ namespace MultiplayerInfrastructure.UI
     private Label _detailDescription;
     private VisualElement _detailTaskList;
     private Label _detailTaskSectionLabel;
+    private Label _detailParticipantSectionLabel;
+    private VisualElement _detailParticipantList;
     private VisualElement _detailInfoTiles;
     private VisualElement _detailNotice;
     private Label _detailNoticeText;
@@ -309,6 +311,14 @@ namespace MultiplayerInfrastructure.UI
 
       _detailTaskList = new VisualElement { pickingMode = PickingMode.Ignore };
       _detailScroll.Add(_detailTaskList);
+
+      // 함께 완료해야 넘어가는 참여자 목록. 공동 진행 게이트에 속한 임무에서만 표시한다.
+      _detailParticipantSectionLabel = new Label("함께 완료해야 하는 참여자") { pickingMode = PickingMode.Ignore };
+      _detailParticipantSectionLabel.AddToClassList("quest-detail__section-label");
+      _detailScroll.Add(_detailParticipantSectionLabel);
+
+      _detailParticipantList = new VisualElement { pickingMode = PickingMode.Ignore };
+      _detailScroll.Add(_detailParticipantList);
 
       var infoSectionLabel = new Label("임무 정보") { pickingMode = PickingMode.Ignore };
       infoSectionLabel.AddToClassList("quest-detail__section-label");
@@ -582,16 +592,20 @@ namespace MultiplayerInfrastructure.UI
       _detailTitle.text = GetTitle(quest);
       BuildDetailMeta(quest);
 
+      bool waitingForOthers = IsWaitingForOthers(quest);
       string objective = QuestPreviewHudElement.GetCurrentObjective(quest);
-      _detailObjectiveText.text = quest.Completed
-        ? "모든 목표를 달성했습니다."
-        : string.IsNullOrWhiteSpace(objective) ? "진행 중" : objective;
-      _detailObjective.EnableInClassList("quest-detail__objective--completed", quest.Completed);
+      _detailObjectiveText.text = waitingForOthers
+        ? quest.GroupWait.WaitingDisplayText
+        : quest.Completed
+          ? "모든 목표를 달성했습니다."
+          : string.IsNullOrWhiteSpace(objective) ? "진행 중" : objective;
+      _detailObjective.EnableInClassList("quest-detail__objective--completed", quest.Completed && !waitingForOthers);
 
       string description = quest.Description?.Trim();
       _detailDescription.text = string.IsNullOrWhiteSpace(description) ? "등록된 설명이 없습니다." : description;
 
       BuildTaskRows(quest);
+      BuildParticipantRows(quest);
       BuildInfoTiles(quest);
       UpdateNotice(quest, tracked);
       UpdateTrackButton(quest, tracked);
@@ -608,7 +622,8 @@ namespace MultiplayerInfrastructure.UI
     {
       _detailMeta.Clear();
 
-      AddMetaItem(FormatProgress(quest) + " 달성");
+      if (!quest.IsGroupWaitPlaceholder)
+        AddMetaItem(FormatProgress(quest) + " 달성");
 
       if (quest.IsOrdinal)
         AddMetaItem("순차 진행");
@@ -668,6 +683,77 @@ namespace MultiplayerInfrastructure.UI
       }
     }
 
+    /// <summary>
+    /// 공동 진행 게이트의 참여자를 한 줄씩 나열한다. 자기 몫을 끝낸 참여자는 취소선과 "완료함" 으로,
+    /// 이탈한 참여자는 취소선과 "이탈함" 으로 표시하고, 아직 진행 중인 참여자는 이름만 보여 준다.
+    /// </summary>
+    private void BuildParticipantRows(QuestData quest)
+    {
+      _detailParticipantList.Clear();
+
+      var status = quest.GroupWait;
+      if (status == null || status.Participants == null || status.Participants.Count == 0)
+      {
+        _detailParticipantSectionLabel.style.display = DisplayStyle.None;
+        _detailParticipantList.style.display = DisplayStyle.None;
+        return;
+      }
+
+      _detailParticipantSectionLabel.style.display = DisplayStyle.Flex;
+      _detailParticipantList.style.display = DisplayStyle.Flex;
+      _detailParticipantSectionLabel.text = $"함께 완료해야 하는 참여자 ({status.CompletedCount}/{status.TotalCount})";
+
+      for (int i = 0; i < status.Participants.Count; i++)
+      {
+        var participant = status.Participants[i];
+        if (participant == null)
+          continue;
+
+        var row = new VisualElement { pickingMode = PickingMode.Ignore };
+        row.AddToClassList("quest-task");
+        row.AddToClassList("quest-participant");
+        _detailParticipantList.Add(row);
+
+        var check = new VisualElement { pickingMode = PickingMode.Ignore };
+        check.AddToClassList("quest-task__check");
+        if (participant.CountsAsCompleted)
+          check.AddToClassList("quest-task__check--done");
+        row.Add(check);
+
+        // 완료한 참여자는 세부 목표와 같은 TextCore 취소선 태그로 표시한다.
+        var label = new Label(FormatParticipantRow(participant)) { pickingMode = PickingMode.Ignore };
+        label.enableRichText = true;
+        label.AddToClassList("quest-task__text");
+        if (participant.CountsAsCompleted)
+          label.AddToClassList("quest-task__text--done");
+        row.Add(label);
+      }
+    }
+
+    /// <summary>예: "<s>플레이어 a</s> 완료함", "플레이어 b", "<s>플레이어 c (나)</s> 완료함".</summary>
+    public static string FormatParticipantRow(QuestGroupWaitParticipant participant)
+    {
+      string name = FormatParticipantName(participant);
+      if (participant.Left)
+        return $"<s>{name}</s> 이탈함";
+      if (participant.Completed)
+        return $"<s>{name}</s> 완료함";
+      return name;
+    }
+
+    private static string FormatParticipantName(QuestGroupWaitParticipant participant)
+    {
+      string name = !string.IsNullOrWhiteSpace(participant.DisplayName)
+        ? participant.DisplayName.Trim()
+        : !string.IsNullOrWhiteSpace(participant.Role)
+          ? participant.Role.Trim()
+          : $"플레이어 {participant.ClientId}";
+      return participant.IsLocal ? $"{name} (나)" : name;
+    }
+
+    private static bool IsWaitingForOthers(QuestData quest)
+      => quest?.GroupWait != null && quest.GroupWait.IsWaitingForOthers;
+
     private void AddTaskRow(QuestCompletionCriteria criterion, int depth, bool isCurrent)
     {
       string text = FormatCriterionText(criterion);
@@ -721,7 +807,8 @@ namespace MultiplayerInfrastructure.UI
     {
       _detailInfoTiles.Clear();
 
-      AddInfoTile(FormatProgress(quest), "진행도");
+      if (!quest.IsGroupWaitPlaceholder)
+        AddInfoTile(FormatProgress(quest), "진행도");
 
       var tasks = QuestManager.GetQuestTasks(quest);
       int total = tasks?.Count ?? 0;
@@ -735,8 +822,10 @@ namespace MultiplayerInfrastructure.UI
       if (total > 0)
         AddInfoTile($"{completed}/{total}", "세부 목표");
 
-      AddInfoTile(quest.Completed ? "완료" : "진행 중", "상태");
+      AddInfoTile(IsWaitingForOthers(quest) ? "대기 중" : quest.Completed ? "완료" : "진행 중", "상태");
       AddInfoTile(quest.Scope == QuestScopeType.Global ? "공용" : "개인", "범위");
+      if (quest.GroupWait != null)
+        AddInfoTile($"{quest.GroupWait.CompletedCount}/{quest.GroupWait.TotalCount}", "참여자 완료");
     }
 
     private void AddInfoTile(string value, string caption)
@@ -760,7 +849,12 @@ namespace MultiplayerInfrastructure.UI
       string message = null;
       bool completedStyle = false;
 
-      if (quest.Completed)
+      if (IsWaitingForOthers(quest))
+      {
+        message = "내 목표는 마쳤습니다. 함께 진행하는 참여자가 모두 완료하면 다음 단계로 넘어갑니다.";
+        completedStyle = true;
+      }
+      else if (quest.Completed)
       {
         message = "완료한 임무입니다. 진행 내역만 확인할 수 있습니다.";
         completedStyle = true;
@@ -856,6 +950,9 @@ namespace MultiplayerInfrastructure.UI
 
     private string GetEntrySubText(QuestData quest)
     {
+      if (IsWaitingForOthers(quest))
+        return quest.GroupWait.WaitingDisplayText;
+
       if (quest.Completed)
         return "완료";
 

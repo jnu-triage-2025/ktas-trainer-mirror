@@ -793,6 +793,7 @@ namespace MultiplayerInfrastructure.Scenario
       _parallelAdvanceBlockDepth = 0;
       _executionMode = ExecutionMode.ClientPresentation;
       ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
+      ScenarioGroupGateState.ClearGraph(graph.Identifier);
       _currentGraph = graph;
       _currentNode = null;
       _currentPresentationNodeRoleScoped = false;
@@ -959,6 +960,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       CancelInlineTTSPrewarm();
       CancelDialogueAutoAdvance();
+      ScenarioGroupGateState.ClearGraph(graphIdentifier);
       _currentGraph = null;
       _currentNode = null;
       _currentPresentationNodeRoleScoped = false;
@@ -1115,6 +1117,7 @@ namespace MultiplayerInfrastructure.Scenario
       _scenarioOwnerClientId = ownerClientId;
       ScenarioNetworkRelay.ConfigureClientSignalAuthorization(graph);
       ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
+      ScenarioGroupGateState.ClearGraph(graph.Identifier);
       ReportActiveRoleRosterProblemsAtStart();
 
       // 시나리오가 요구하는 퀘스트 정의 include를 선로딩한다.
@@ -1201,6 +1204,7 @@ namespace MultiplayerInfrastructure.Scenario
       _activeMainNodeVisitSequence = 0;
       // 로그 기록을 위해 그래프 ID를 먼저 캡처 (_currentGraph는 이후 null로 초기화됨)
       string endingGraphId = _currentGraph?.Identifier;
+      CloseGroupGatesForGraph(endingGraphId);
       if (_executionMode == ExecutionMode.ServerAuthoritative && !string.IsNullOrEmpty(endingGraphId))
       {
         if (endAuthoritativePresentation)
@@ -2037,7 +2041,10 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioNetworkRelay.ClearScenarioQuestsAuthoritative(_currentGraph?.Identifier);
 
       if (_currentGraph != null)
+      {
         ScenarioParallelAssignmentState.ClearGraph(_currentGraph.Identifier);
+        CloseGroupGatesForGraph(_currentGraph.Identifier);
+      }
     }
 
     /// <summary>
@@ -5627,6 +5634,16 @@ namespace MultiplayerInfrastructure.Scenario
         if (_executionMode == ExecutionMode.ServerAuthoritative)
           ScenarioNetworkRelay.PublishParallelAssignments(_currentGraph?.Identifier, node.Identifier, allocation);
 
+        // 서로 다른 두 명 이상이 분기를 맡은 waitMode: All 병렬은 한 사람이 끝내도 나머지를 기다린다.
+        // 그 기다림을 퀘스트 HUD 가 보여 줄 수 있도록 분기별 퀘스트 발행과 완료를 집계해 배포한다.
+        var groupGate = ScenarioGroupGateTracker.TryCreate(_currentGraph?.Identifier, node, allocation);
+        if (groupGate != null)
+        {
+          groupGate.DisplayNameResolver = ResolveGroupGateParticipantDisplayName;
+          groupGate.Changed = PublishGroupGateSnapshot;
+          groupGate.Publish();
+        }
+
         if (node.AllocationType == ScenarioParallelAllocationType.ByRole)
         {
           foreach (var assignment in allocation.Where(pair => pair.Value.HasValue))
@@ -5703,7 +5720,8 @@ namespace MultiplayerInfrastructure.Scenario
             node.NextIdentifier,
             assignedClientId,
             tracker,
-            replicateBranchEvents);
+            replicateBranchEvents,
+            groupGate?.GetParticipant(branch));
           if (!sequenceRoleBranches)
           {
             runningCoroutines.Add(StartCoroutine(routine));
@@ -5742,6 +5760,9 @@ namespace MultiplayerInfrastructure.Scenario
             // 바로 진행
             break;
         }
+
+        // 모든 분기가 끝났으므로 참여자 화면의 대기 표시를 내린다.
+        groupGate?.Close();
 
         // 병렬 노드 완료 후에는 NextIdentifier 로 진행한다.
         // (기존의 무조건 EndScenario 호출은 병렬 이후 노드를 모두 건너뛰고
@@ -5787,6 +5808,50 @@ namespace MultiplayerInfrastructure.Scenario
       _parallelAdvanceBlockDepth = Math.Max(0, _parallelAdvanceBlockDepth - 1);
     }
 
+    /// <summary>
+    /// 공동 진행 게이트 스냅샷을 이 피어의 상태에 반영하고, 서버 권위 실행이면 표시 클라이언트에도
+    /// 중계한다. 호스트는 여기서 이미 반영했으므로 중계 RPC 는 서버를 제외한다.
+    /// </summary>
+    private void PublishGroupGateSnapshot(ScenarioGroupGateSnapshot snapshot)
+    {
+      if (snapshot == null)
+        return;
+
+      ScenarioGroupGateState.Apply(snapshot);
+      if (_executionMode == ExecutionMode.ServerAuthoritative)
+        ScenarioNetworkRelay.PublishGroupGate(ScenarioGroupGateState.Serialize(snapshot));
+    }
+
+    /// <summary>
+    /// 이 그래프의 공동 진행 게이트를 모두 닫는다. 병렬 노드가 정상 종료되지 않고 시나리오가 끝나거나
+    /// 수동 진입으로 중단되면 분기 코루틴의 닫힘 알림이 나가지 않으므로, 여기서 닫힘 스냅샷을 직접
+    /// 배포해 참여자 화면에 대기 표시가 남지 않게 한다.
+    /// </summary>
+    private void CloseGroupGatesForGraph(string graphIdentifier)
+    {
+      if (string.IsNullOrEmpty(graphIdentifier))
+        return;
+
+      // Apply 가 컬렉션을 바꾸므로 대상을 먼저 모아 둔다.
+      var gates = ScenarioGroupGateState.ActiveGates
+        .Where(gate => string.Equals(gate.GraphIdentifier, graphIdentifier, StringComparison.Ordinal))
+        .ToList();
+      foreach (var gate in gates)
+      {
+        PublishGroupGateSnapshot(new ScenarioGroupGateSnapshot
+        {
+          GraphIdentifier = gate.GraphIdentifier,
+          ParallelNodeIdentifier = gate.ParallelNodeIdentifier,
+          Active = false
+        });
+      }
+
+      ScenarioGroupGateState.ClearGraph(graphIdentifier);
+    }
+
+    private static string ResolveGroupGateParticipantDisplayName(int clientId)
+      => UserDescriptorService.TryGetByClientId(clientId, out var descriptor) ? descriptor?.DisplayName : null;
+
     /// <summary>병렬 브랜치의 완료 여부를 추적하는 플래그 홀더.</summary>
     private sealed class BranchCompletionTracker
     {
@@ -5799,16 +5864,27 @@ namespace MultiplayerInfrastructure.Scenario
         yield return routines[index];
     }
 
-    private IEnumerator RunTrackedBranch(IScenarioNode branchNode, string completionCondition, string joinNodeIdentifier, int? assignedClientId, BranchCompletionTracker tracker, bool replicateEventsToPeers)
+    private IEnumerator RunTrackedBranch(
+      IScenarioNode branchNode,
+      string completionCondition,
+      string joinNodeIdentifier,
+      int? assignedClientId,
+      BranchCompletionTracker tracker,
+      bool replicateEventsToPeers,
+      ScenarioGroupGateTracker.Participant groupGateParticipant = null)
     {
       try
       {
         yield return ExecuteBranch(
-          branchNode, completionCondition, joinNodeIdentifier, assignedClientId, replicateEventsToPeers);
+          branchNode, completionCondition, joinNodeIdentifier, assignedClientId, replicateEventsToPeers,
+          groupGateParticipant);
       }
       finally
       {
         tracker.Completed = true;
+        // 이탈로 취소된 분기도 병렬 노드는 완료로 보므로 같은 자리에서 기록한다. 다만 표시는
+        // "완료함" 이 아니라 "이탈함" 으로 구분한다.
+        groupGateParticipant?.MarkCompleted(left: IsBranchCancelled(assignedClientId));
       }
     }
 
@@ -6172,7 +6248,13 @@ namespace MultiplayerInfrastructure.Scenario
       AppendSystemChatMessage(message);
     }
 
-    private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId, bool replicateEventsToPeers)
+    private IEnumerator ExecuteBranch(
+      IScenarioNode node,
+      string completionCondition,
+      string joinNodeIdentifier,
+      int? branchOwnerClientId,
+      bool replicateEventsToPeers,
+      ScenarioGroupGateTracker.Participant groupGateParticipant = null)
     {
       // _scenarioOwnerClientId는 전역 시나리오 입력 권한을 나타내는 상태다. 병렬 코루틴이
       // 이를 임시로 교체하면 A 브랜치가 yield한 사이 B 브랜치가 owner를 덮어써, Quest/이동 등
@@ -6181,7 +6263,8 @@ namespace MultiplayerInfrastructure.Scenario
       // 브랜치의 시작 노드부터 NextIdentifier 체인을 끝까지(또는 완료조건 라벨까지) 실행한다.
       // 완료조건/합류 라벨 도달은 전역 Advance/EndScenario를 건드리지 않는 브랜치 완료다.
       yield return RunBranchChain(
-        node, completionCondition, joinNodeIdentifier, branchOwnerClientId, replicateEventsToPeers);
+        node, completionCondition, joinNodeIdentifier, branchOwnerClientId, replicateEventsToPeers,
+        groupGateParticipant);
     }
 
     /// <summary>
@@ -6196,13 +6279,17 @@ namespace MultiplayerInfrastructure.Scenario
       string completionLabel,
       string joinNodeIdentifier = null,
       int? branchOwnerClientId = null,
-      bool replicateEventsToPeers = false)
+      bool replicateEventsToPeers = false,
+      ScenarioGroupGateTracker.Participant groupGateParticipant = null)
     {
       var cursor = startNode;
       int guard = 0;
       const int maxNodes = 10000; // 순환 방지 안전장치.
       // 브랜치 체인별 실행 컨텍스트(동시 실행되는 다른 브랜치와 상태를 공유하지 않는다).
-      var chainContext = new BranchChainContext(branchOwnerClientId, replicateEventsToPeers);
+      var chainContext = new BranchChainContext(branchOwnerClientId, replicateEventsToPeers)
+      {
+        GroupGateParticipant = groupGateParticipant
+      };
 
       while (cursor != null)
       {
@@ -6316,6 +6403,12 @@ namespace MultiplayerInfrastructure.Scenario
 
       /// <summary>Choice/Quiz 등 선택 결과가 다음 노드를 결정하는 경우 설정된다.</summary>
       public string NextOverride;
+
+      /// <summary>
+      /// 이 체인이 공동 진행 게이트(서로 다른 담당자가 모두 끝내야 넘어가는 waitMode: All 병렬)의
+      /// 한 분기일 때, 분기가 발행한 퀘스트와 완료 여부를 집계하는 참여자 기록. 게이트가 아니면 null 이다.
+      /// </summary>
+      public ScenarioGroupGateTracker.Participant GroupGateParticipant;
     }
 
     /// <summary>
@@ -6488,6 +6581,9 @@ namespace MultiplayerInfrastructure.Scenario
           yield return ExecuteQuizNodeInBranch(quiz, context);
           break;
         case ScenarioQuestControlNode questControl:
+          // 이 분기가 발행하고 아직 회수하지 않은 퀘스트를 공동 진행 게이트에 기록한다. 담당자의 퀘스트
+          // HUD 는 그 퀘스트에 "다른 플레이어가 완료할 때까지 기다리기" 를 표시한다.
+          context.GroupGateParticipant?.RecordQuestOperation(questControl.Operation, ResolveQuestId(questControl));
           ExecuteQuestControlNode(questControl, context.OwnerClientId);
           break;
         case ScenarioQuestWaypointHighlightNode waypointHighlight:

@@ -55,7 +55,7 @@ namespace MultiplayerInfrastructure.Quest
         OnQuestPresentationExpired?.Invoke(questId);
     }
 
-    public IReadOnlyList<QuestData> Quests => Snapshot(_quests.Values);
+    public IReadOnlyList<QuestData> Quests => DecorateGroupWait(Snapshot(_quests.Values));
     public IReadOnlyList<QuestData> TrackedQuests
     {
       get
@@ -66,7 +66,7 @@ namespace MultiplayerInfrastructure.Quest
           if (_quests.TryGetValue(_trackedQuestOrder[i], out var q) && q != null)
             result.Add(q.Clone());
         }
-        return result;
+        return DecorateGroupWait(result);
       }
     }
 
@@ -97,6 +97,7 @@ namespace MultiplayerInfrastructure.Quest
     {
       Registry.Registry.Register(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>(), this);
       ScenarioInteractionSignals.OnSignalRegistered += HandleScenarioSignalRegistered;
+      ScenarioGroupGateState.Changed += HandleGroupGateChanged;
       if (GetComponent<QuestPresentationService>() == null)
         gameObject.AddComponent<QuestPresentationService>();
       _definitionRegistry = Registry.Registry.Get<QuestDefinitionRegistry>(RegistryType.Service, Registry.Registry.TypeKey<QuestDefinitionRegistry>());
@@ -107,6 +108,7 @@ namespace MultiplayerInfrastructure.Quest
     private void OnDestroy()
     {
       ScenarioInteractionSignals.OnSignalRegistered -= HandleScenarioSignalRegistered;
+      ScenarioGroupGateState.Changed -= HandleGroupGateChanged;
       UnsubscribeFromSessionLifecycle();
       Registry.Registry.Unregister(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>());
     }
@@ -127,6 +129,16 @@ namespace MultiplayerInfrastructure.Quest
       {
         _evaluatingSignalProgress = false;
       }
+    }
+
+    /// <summary>
+    /// 공동 진행 게이트(여러 참여자가 모두 끝내야 넘어가는 병렬 노드)의 스냅샷이 바뀌면 스냅샷에
+    /// 붙는 대기 상태와 자리 표시 퀘스트가 달라지므로 목록·추적 구독자에게 다시 알린다.
+    /// </summary>
+    private void HandleGroupGateChanged()
+    {
+      NotifyListChanged();
+      NotifyTrackedChanged();
     }
 
     private void Start()
@@ -854,6 +866,66 @@ namespace MultiplayerInfrastructure.Quest
       }
 
       return list;
+    }
+
+    /// <summary>
+    /// 스냅샷의 각 퀘스트에 공동 진행 상태를 붙인다. 로컬 참여자가 자기 몫을 끝냈는데 분기가 발행한
+    /// 퀘스트가 모두 회수되어 대기 상태를 실어 보낼 퀘스트가 없으면, 자리 표시 퀘스트를 맨 앞에 합성해
+    /// HUD 와 저널이 "다른 플레이어가 완료할 때까지 기다리기(n/N)" 를 계속 보여 줄 수 있게 한다.
+    /// </summary>
+    private List<QuestData> DecorateGroupWait(List<QuestData> snapshot)
+    {
+      if (snapshot == null)
+        return new List<QuestData>();
+
+      for (int i = 0; i < snapshot.Count; i++)
+      {
+        var quest = snapshot[i];
+        if (quest != null)
+          quest.GroupWait = ScenarioGroupGateState.GetStatusForQuest(quest.Id);
+      }
+
+      var waiting = ScenarioGroupGateState.GetLocalWaitingStatuses();
+      for (int i = waiting.Count - 1; i >= 0; i--)
+      {
+        var status = waiting[i];
+        if (status == null || HasAnyQuest(status.LocalQuestIds))
+          continue;
+
+        snapshot.Insert(0, CreateGroupWaitPlaceholder(status));
+      }
+
+      return snapshot;
+    }
+
+    private bool HasAnyQuest(IReadOnlyList<string> questIds)
+    {
+      if (questIds == null)
+        return false;
+
+      for (int i = 0; i < questIds.Count; i++)
+      {
+        if (!string.IsNullOrWhiteSpace(questIds[i]) && _quests.ContainsKey(questIds[i]))
+          return true;
+      }
+
+      return false;
+    }
+
+    private static QuestData CreateGroupWaitPlaceholder(QuestGroupWaitStatus status)
+    {
+      return new QuestData(
+        status.PlaceholderQuestId,
+        "다른 플레이어 기다리기",
+        "내 목표는 마쳤습니다. 함께 진행하는 참여자가 모두 완료하면 다음 단계로 넘어갑니다.",
+        status.WaitingDisplayText,
+        isTracked: true)
+      {
+        IsTrackable = false,
+        IsGroupWaitPlaceholder = true,
+        GroupWait = status,
+        SourceScenarioIdentifier = status.GraphIdentifier
+      };
     }
 
     private static List<QuestData> Snapshot(IEnumerable<QuestData> source)

@@ -175,6 +175,10 @@ namespace MultiplayerInfrastructure.UI
 
     public static string GetCurrentObjective(QuestData quest)
     {
+      // 내 몫은 끝났지만 함께 진행하는 참여자를 기다리는 동안에는 남은 목표 대신 대기 문구를 보여 준다.
+      if (quest?.GroupWait != null && quest.GroupWait.IsWaitingForOthers)
+        return quest.GroupWait.WaitingDisplayText;
+
       var tasks = QuestManager.GetQuestTasks(quest);
       if (tasks != null)
       {
