@@ -145,10 +145,10 @@ MonoBehaviour:
   _requiredPlayerTag: 
   _enabled: 0
   _consumeOnce: 1
-  _requiredItemIdentifier: scissors
-  _consumeRequiredItemCount: 1
-  _missingItemDialogue: 가위가 없다.
-  _findItemDialogue: 가위를 찾자.
+  _requiredItemIdentifier:
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue:
+  _findItemDialogue:
   _activateOnInteract: []
   _deactivateOnInteract: []
 --- !u!1 &909999999999999991
