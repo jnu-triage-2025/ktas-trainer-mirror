@@ -80,9 +80,6 @@ MonoBehaviour:
   _npcBaseModel: {fileID: 0}
   _identifier: npc-tutorial-guide-hat
   _overheadNameMaxVisibleDistance: 12
-  _scenarioInteracts: []
-  _submissionInteracts: []
-  _customInteractSources: []
 --- !u!114 &850019907110011003
 MonoBehaviour:
   m_ObjectHideFlags: 0

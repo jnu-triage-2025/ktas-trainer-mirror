@@ -2,6 +2,7 @@
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Quest;
+using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -258,7 +259,11 @@ namespace MultiplayerInfrastructure.UI
 
       BindIcons(interact, mode, dialogueIcon);
 
-      _contentText.text = interact?.DisplayText ?? string.Empty;
+      // 시나리오 데이터가 문구를 명시한 등록 항목은 그 문구를 우선한다.
+      string displayText = interact?.DisplayText ?? string.Empty;
+      if (InteractionRegistry.TryGetDataDisplay(interact, out var dataDisplay) && !string.IsNullOrWhiteSpace(dataDisplay.Text))
+        displayText = dataDisplay.Text;
+      _contentText.text = displayText;
 
       EnableInClassList("selected", isSelected);
       EnableInClassList("dialogue-selection", mode == InteractableHintUIMode.Dialogue);
@@ -271,6 +276,18 @@ namespace MultiplayerInfrastructure.UI
       var icons = interact as IInteractDisplayIcons;
       var displayedSprites = new HashSet<Sprite>();
       int iconCount = 0;
+
+      // 시나리오 데이터가 아이콘 식별자를 명시한 등록 항목은 데이터 아이콘을 앞에 둔다.
+      if (InteractionRegistry.TryGetDataDisplay(interact, out var dataDisplay) && dataDisplay.IconIdentifiers != null)
+      {
+        for (int i = 0; i < dataDisplay.IconIdentifiers.Count; i++)
+        {
+          var dataSprite = Registry.Registry.Get<Sprite>(RegistryType.IconSprite, dataDisplay.IconIdentifiers[i])
+                           ?? Registry.Registry.GetOrLoadIconSprite(dataDisplay.IconIdentifiers[i]);
+          if (dataSprite != null && displayedSprites.Add(dataSprite))
+            ConfigureIconHolder(iconCount++, dataSprite, Color.clear);
+        }
+      }
       Sprite primaryOverride = null;
       bool hasOverride = QuestPresentationService.ActiveInstance != null
                          && QuestPresentationService.ActiveInstance.TryGetPrimaryIconOverride(interact, out primaryOverride);

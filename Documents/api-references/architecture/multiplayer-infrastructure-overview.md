@@ -168,7 +168,7 @@ var localPlayer = Registry.GetFirstEntityComponent<PlayerController>(
 엔티티 ID 규칙:
 
 - `PlayerController` : 서버가 `player:{userIdentifier}` 발급 후 SyncVar 전파
-- `Npc`, `WaypointAnchor`, `ScenarioInteractable`, `ScenarioTriggerZone` : authored ID 사용
+- `Npc`, `WaypointAnchor`, `ItemSubmissionInteractable`, `ScenarioTriggerZone` : authored ID 사용
 - `ItemObject` : 서버가 `item:{guid}` 발급하거나 `SceneItemPlacement` authored ID 사용
 
 ### ScenarioGraph 지연 로딩
@@ -324,7 +324,8 @@ ScenarioEventIdentifierRegistry.Unregister("move_patient_a_to_treatment");
 
 ### 상호작용 컴포넌트
 
-- **`Interactable`**: 가장 기본적인 `IInteractable` 구현체. `handlerSources` 슬롯에 `IInteract` 구현 컴포넌트를 연결합니다.
+- **`Interactable`**: 가장 기본적인 `IInteractable` 구현체.
+- **`InteractionRegistry`**: 인터렉션 정의(코드 리터럴 + 시나리오 데이터)와 가시성(오버라이드 → 조건 절 → 초기값)을 관리하는 정적 레지스트리. 오버라이드와 엔티티 태그는 서버 권위로 복제됩니다.
 - **`InteractableEntityResolver`**: `PlayerController`에 붙어서 인터랙션 라우팅을 처리합니다.
 - **`NearbyInteractablesDetector`**: 카메라에 붙어 주기적으로 반경 내 `IInteractable`을 감지합니다.
 - **`InteractableObjectHintUIController`**: 가까운 인터랙터블을 HUD에 표시합니다.
@@ -339,8 +340,9 @@ public class OpenDoorInteract : MonoBehaviour, IInteract
     public void Interact(Transform interactor) { /* 문 여는 로직 */ }
 }
 
-// 2. 오브젝트에 Interactable 컴포넌트 추가
-//    Inspector에서 handlerSources에 OpenDoorInteract 추가
+// 2. 엔티티가 IInteractionDefinitionSource 로 코드 리터럴 정의를 선언
+//    InteractionDefinition.Code(entityId, "open_door", "문 열기", initialVisible: true)
+//    노출 조건은 시나리오 JSON 의 interactions[].visibility 로 덮어쓸 수 있음
 
 // 3. Interactable Layer 또는 Collider 설정
 //    NearbyInteractablesDetector의 interactionLayerMask에 해당 레이어 포함

@@ -167,7 +167,114 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioBedSnapNode bedSnap:
           CheckBedSnap(bedSnap, items);
           break;
+        case ScenarioInteractionVisibilityNode interactionVisibility:
+          CheckInteractionVisibility(interactionVisibility, graph, items);
+          break;
       }
+    }
+
+    private static void CheckInteractionVisibility(ScenarioInteractionVisibilityNode node, ScenarioGraph graph, List<DiagnosticItem> items)
+    {
+      if (node.Targets == null || node.Targets.Count == 0)
+      {
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier, "targets 가 비어 있습니다."));
+        return;
+      }
+      if (node.PlayerScope == ScenarioInteractionVisibilityPlayerScope.ByTag
+          && (node.PlayerTags == null || node.PlayerTags.Count == 0))
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier, "playerScope 가 ByTag 이면 playerTags 가 필요합니다."));
+
+      for (int i = 0; i < node.Targets.Count; i++)
+      {
+        var target = node.Targets[i];
+        if (target?.Entity == null || target.Entity.IsEmpty)
+        {
+          items.Add(new DiagnosticItem(Severity.Error, node.Identifier, $"targets[{i}] 의 entity(id 또는 tag)가 비어 있습니다."));
+          continue;
+        }
+        if (string.IsNullOrWhiteSpace(target.InteractionIdentifier))
+        {
+          items.Add(new DiagnosticItem(Severity.Error, node.Identifier, $"targets[{i}] 의 interaction 이 비어 있습니다."));
+          continue;
+        }
+        if (!IsInteractionDeclaredInGraph(graph, target.Entity, target.InteractionIdentifier))
+          items.Add(new DiagnosticItem(Severity.Warning, node.Identifier,
+            $"'{target.Entity}/{target.InteractionIdentifier}' 이(가) 이 시나리오의 interactions 구역에 없습니다. " +
+            "코드 리터럴 정의라면 무시해도 되지만, 식별자 오타가 아닌지 확인하세요."));
+      }
+    }
+
+    private static bool IsInteractionDeclaredInGraph(ScenarioGraph graph, ScenarioEntityReference entity, string interactionIdentifier)
+    {
+      if (graph?.Interactions == null)
+        return false;
+      foreach (var definition in graph.Interactions)
+      {
+        if (definition == null || definition.Entity == null)
+          continue;
+        if (!string.Equals(definition.InteractionIdentifier, interactionIdentifier?.Trim(), StringComparison.Ordinal))
+          continue;
+        bool sameEntity = entity.IsTagReference
+          ? string.Equals(definition.Entity.Tag, entity.Tag, StringComparison.Ordinal)
+          : string.Equals(definition.Entity.Identifier, entity.Identifier, StringComparison.Ordinal)
+            || definition.Entity.IsTagReference; // 태그 참조 정의는 어떤 엔티티에도 붙을 수 있다.
+        if (sameEntity)
+          return true;
+      }
+      return false;
+    }
+
+    private static void AddInteractionDefinitionWarnings(ScenarioGraph graph, List<DiagnosticItem> items, string graphLevel)
+    {
+      if (graph?.Interactions == null)
+        return;
+      foreach (var definition in graph.Interactions)
+      {
+        if (definition == null)
+          continue;
+        string address = $"{definition.Entity}/{definition.InteractionIdentifier}";
+        if (definition.KindSpecified && definition.Kind == global::MultiplayerInfrastructure.InteractableEntity.InteractionKind.Custom
+            && string.IsNullOrWhiteSpace(definition.HandlerKey))
+          items.Add(new DiagnosticItem(Severity.Info, graphLevel,
+            $"interactions '{address}': Custom 종류는 같은 주소의 코드 리터럴 정의(핸들러)가 있어야 노출됩니다."));
+        if (!definition.HasVisibilityConditions && !definition.InitialVisible
+            && !HasVisibilityTrigger(graph, definition))
+          items.Add(new DiagnosticItem(Severity.Warning, graphLevel,
+            $"interactions '{address}': 조건도 없고 initial 도 false 인데 InteractionVisibility 노드가 이 주소를 켜지 않습니다. 영영 숨겨질 수 있습니다."));
+      }
+
+      foreach (var node in graph.Nodes.Values)
+      {
+        if (node is not ScenarioQuestMarkNode questMark
+            || questMark.TargetType != QuestPresentationTargetType.Interaction
+            || string.IsNullOrWhiteSpace(questMark.EntityIdentifier)
+            || string.IsNullOrWhiteSpace(questMark.InteractionIdentifier))
+          continue;
+        if (!IsInteractionDeclaredInGraph(graph, ScenarioEntityReference.ForIdentifier(questMark.EntityIdentifier), questMark.InteractionIdentifier))
+          items.Add(new DiagnosticItem(Severity.Info, node.Identifier,
+            $"QuestMark 대상 '{questMark.EntityIdentifier}/{questMark.InteractionIdentifier}' 이(가) interactions 구역에 없습니다(코드 리터럴 정의일 수 있음)."));
+      }
+    }
+
+    private static bool HasVisibilityTrigger(ScenarioGraph graph, global::MultiplayerInfrastructure.InteractableEntity.InteractionDefinition definition)
+    {
+      foreach (var node in graph.Nodes.Values)
+      {
+        if (node is not ScenarioInteractionVisibilityNode visibility || visibility.Targets == null)
+          continue;
+        if (visibility.Operation == ScenarioInteractionVisibilityOperation.Hide)
+          continue;
+        foreach (var target in visibility.Targets)
+        {
+          if (target?.Entity == null
+              || !string.Equals(target.InteractionIdentifier, definition.InteractionIdentifier, StringComparison.Ordinal))
+            continue;
+          if (target.Entity.IsTagReference || definition.Entity.IsTagReference
+              || string.Equals(target.Entity.Identifier, definition.Entity.Identifier, StringComparison.Ordinal))
+            return true;
+        }
+      }
+      return false;
     }
 
     private static void CheckBedSnap(ScenarioBedSnapNode node, List<DiagnosticItem> items)
@@ -356,8 +463,7 @@ namespace MultiplayerInfrastructure.Editor
       // 표를 채우는 노드가 있는 그래프에서 준비 체인이 없으면 진입 후 대상 조회가 전부 실패한다.
       if (string.IsNullOrEmpty(node.ManualEnterSetupIdentifier)
           && graph.Nodes.Values.Any(each => each is ScenarioEntityPresetSpawnNode
-                                            or ScenarioEntityInitNode
-                                            or ScenarioItemSubmissionConfigNode))
+                                            or ScenarioEntityInitNode))
       {
         items.Add(new DiagnosticItem(Severity.Info, node.Identifier,
           "manualEnterSetupIdentifier가 없습니다. 이 그래프는 resultStateKey로 엔티티를 등록하는데, "
@@ -907,6 +1013,7 @@ namespace MultiplayerInfrastructure.Editor
       AddSessionStartActingNpcInfos(graph, items, graphLevel);
       AddUndefinedWaypointWarnings(graph, items);
       AddQuestMarkWarnings(graph, items);
+      AddInteractionDefinitionWarnings(graph, items, graphLevel);
       AddUnattributedGateSignalWarnings(graph, items);
 
       // 진입 노드 감지: 다른 노드로부터 참조되지 않는 노드

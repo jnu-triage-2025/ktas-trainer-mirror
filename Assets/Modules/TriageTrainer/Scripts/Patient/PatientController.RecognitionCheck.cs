@@ -102,15 +102,19 @@ namespace TriageTrainer.Entity
 
       /// <summary>이 인터랙션이 담당하는 확인 항목의 완료 신호(항목 식별자).</summary>
       private readonly string _completionSignal;
+      private readonly string _interactionIdentifier;
 
-      public PatientRecognitionCheckInteract(PatientController owner, string completionSignal)
+      public PatientRecognitionCheckInteract(PatientController owner, string completionSignal, string interactionIdentifier = null)
       {
         _owner = owner;
         _completionSignal = completionSignal ?? string.Empty;
+        _interactionIdentifier = string.IsNullOrWhiteSpace(interactionIdentifier)
+          ? RecognitionInteractionIdentifier
+          : interactionIdentifier.Trim();
       }
 
       public string PresentationEntityIdentifier => _owner.Identifier;
-      public string InteractionIdentifier => RecognitionInteractionIdentifier;
+      public string InteractionIdentifier => _interactionIdentifier;
 
       public string DisplayText
       {
@@ -164,7 +168,7 @@ namespace TriageTrainer.Entity
     /// 마이크 장치를 다시 여는 인터랙션. 장치 단위 조치라 항목마다 만들지 않고 하나만 두되,
     /// 노출 조건은 "이 플레이어가 마이크로 완료할 수 있는 항목이 하나라도 열려 있는가"로 판정한다.
     /// </summary>
-    private sealed class PatientRecognitionMicrophoneInteract : IInteract, IInteractorConditional
+    private sealed class PatientRecognitionMicrophoneInteract : IInteract, IInteractorConditional, IInteractionRegistryExempt
     {
       private readonly PatientController _owner;
       public PatientRecognitionMicrophoneInteract(PatientController owner) => _owner = owner;
@@ -208,54 +212,46 @@ namespace TriageTrainer.Entity
 
     private bool HasActiveRecognitionCheck => _recognitionChecks.Count > 0;
 
+    /// <summary>
+    /// 마이크 다시 사용 인터랙션만 엔티티 목록에 둔다. 확인 항목 인터랙션은 시나리오 데이터의
+    /// interactions 정의(handlerKey "recognition_check")가 선언하고, 레지스트리가 <see cref="TryCreateInteractionHandler"/>
+    /// 로 이 환자에게 핸들러를 만들어 붙인다.
+    /// </summary>
     private void AddRecognitionCheckInteract()
     {
-      _interacts.AddRange(CreateRecognitionCheckInteracts());
+      _interacts.Add(_recognitionMicrophoneInteract ??= new PatientRecognitionMicrophoneInteract(this));
     }
 
     /// <summary>
-    /// 활성 항목마다 인터랙션을 하나씩 만든다. 이미 만들어 둔 항목의 인스턴스는 그대로 재사용해야
-    /// 힌트에서 고른 항목과 실행되는 항목이 어긋나지 않는다(선택 검증이 인스턴스 동일성을 본다).
+    /// 시나리오 데이터가 선언한 의식 확인 인터랙션의 핸들러를 만든다. 정의의 completionSignal 이 확인 항목의
+    /// 식별자이며, 같은 신호의 핸들러는 인스턴스를 재사용해 힌트 선택과 실행이 어긋나지 않게 한다.
     /// </summary>
-    private List<IInteract> CreateRecognitionCheckInteracts()
+    private bool TryCreateRecognitionCheckHandler(InteractionDefinition definition, out IInteract handler)
     {
-      var created = new List<IInteract>();
-      var live = new Dictionary<string, PatientRecognitionCheckInteract>(StringComparer.Ordinal);
-      for (int i = 0; i < _recognitionChecks.Count; i++)
+      handler = null;
+      if (definition == null || !string.Equals(definition.HandlerKey, RecognitionInteractionIdentifier, StringComparison.Ordinal))
+        return false;
+      string signal = definition.CompletionSignal?.Trim();
+      if (string.IsNullOrWhiteSpace(signal))
       {
-        string signal = _recognitionChecks[i].CompletionSignal ?? string.Empty;
-        if (live.ContainsKey(signal))
-          continue;
-
-        if (!_recognitionCheckInteracts.TryGetValue(signal, out var interact) || interact == null)
-          interact = new PatientRecognitionCheckInteract(this, signal);
-        live[signal] = interact;
-        created.Add(interact);
+        Debug.LogWarning($"[PatientController] recognition_check definition '{definition.InteractionIdentifier}' requires completionSignal.", this);
+        return false;
       }
-
-      _recognitionCheckInteracts.Clear();
-      foreach (var pair in live)
-        _recognitionCheckInteracts[pair.Key] = pair.Value;
-
-      created.Add(_recognitionMicrophoneInteract ??= new PatientRecognitionMicrophoneInteract(this));
-      return created;
+      if (!_recognitionCheckInteracts.TryGetValue(signal, out var interact) || interact == null
+          || !string.Equals(interact.InteractionIdentifier, definition.InteractionIdentifier, StringComparison.Ordinal))
+      {
+        interact = new PatientRecognitionCheckInteract(this, signal, definition.InteractionIdentifier);
+        _recognitionCheckInteracts[signal] = interact;
+      }
+      handler = interact;
+      return true;
     }
 
-    /// <summary>활성 항목이 바뀌었을 때 인터랙션 목록의 의식 확인 구간만 다시 만든다.</summary>
+    /// <summary>활성 항목이 바뀌면 힌트만 다시 계산한다. 핸들러 목록은 레지스트리가 관리한다.</summary>
     private void RebuildRecognitionCheckInteracts()
     {
-      if (_interacts.Count == 0)
-        return;
-
-      int insertIndex = _interacts.FindIndex(IsRecognitionInteract);
-      if (insertIndex < 0)
-        insertIndex = _interacts.Count;
-      _interacts.RemoveAll(IsRecognitionInteract);
-      _interacts.InsertRange(insertIndex, CreateRecognitionCheckInteracts());
+      InteractionRegistry.RequestHintRefresh();
     }
-
-    private static bool IsRecognitionInteract(IInteract interact) =>
-      interact is PatientRecognitionCheckInteract || interact is PatientRecognitionMicrophoneInteract;
 
     private void InitializeRecognitionCheckSync()
     {

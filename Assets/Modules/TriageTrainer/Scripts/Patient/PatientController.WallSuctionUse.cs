@@ -33,14 +33,9 @@ namespace TriageTrainer.Entity
       public bool AllowDisplayIconFallback => false;
       public Color DisplayColor => Color.clear;
 
+      // 시나리오 단계 노출은 레지스트리의 데이터 조건이 정한다.
       public bool CanInteract(Transform interactor)
       {
-        var presentation = QuestPresentationService.ActiveInstance;
-        if (PatientACriticalQuestStateFlags.IsArmed
-            && presentation != null
-            && !presentation.HasActiveInteractionBinding(_owner.Identifier, InteractIdWallSuctionUse))
-          return false;
-
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         return player != null
                && player.IsWallSuctionAvailable

@@ -19,18 +19,30 @@
       }
     },
     "activeRoleTags": {
-      "type": ["array", "null"],
-      "items": { "type": "string", "minLength": 1 },
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "uniqueItems": true,
       "description": "Declared player role tags used to build the server-authoritative active roster."
     },
     "skipAbsentRoleBranches": {
-      "type": ["boolean", "null"],
+      "type": [
+        "boolean",
+        "null"
+      ],
       "default": false,
       "description": "Allows ByRole branches for declared roles absent from the active roster to be skipped."
     },
     "checklistItemSetsByPlayerTag": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "Checklist item sets keyed by player tag.",
       "additionalProperties": {
         "type": "array",
@@ -38,22 +50,45 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "identifier": { "type": "string", "minLength": 1 },
-            "count": { "type": "integer", "minimum": 1 }
+            "identifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            }
           },
-          "required": ["identifier", "count"]
+          "required": [
+            "identifier",
+            "count"
+          ]
         }
       }
     },
     "clientSignalIdentifiers": {
-      "type": ["array", "null"],
-      "items": { "type": "string", "minLength": 1, "pattern": "^sig\\.\\S+$" },
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^sig\\.\\S+$"
+      },
       "uniqueItems": true,
       "description": "Exact generic scenario signals that an authenticated client may report. Omitted or empty denies generic client raises unless an audited legacy migration applies."
     },
     "clientSignalPrefixes": {
-      "type": ["array", "null"],
-      "items": { "type": "string", "minLength": 5, "pattern": "^sig\\.\\S+$" },
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string",
+        "minLength": 5,
+        "pattern": "^sig\\.\\S+$"
+      },
       "uniqueItems": true,
       "description": "Explicit generic client signal namespaces. Prefix authorization is not inferred from validators or counters."
     },
@@ -82,14 +117,34 @@
         "$ref": "#/$defs/ScenarioActingNpcDefinition"
       }
     },
+    "interactions": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "$ref": "#/$defs/InteractionDefinition"
+      },
+      "description": "이 시나리오가 인터렉션 레지스트리에 적용할 정의 목록."
+    },
     "waypoints": {
-      "type": ["array", "null"],
+      "type": [
+        "array",
+        "null"
+      ],
       "description": "시나리오 시작 전에 생성·등록할 waypoint anchor 정의.",
-      "items": { "$ref": "#/$defs/ScenarioWaypointDefinition" }
+      "items": {
+        "$ref": "#/$defs/ScenarioWaypointDefinition"
+      }
     },
     "ttsVoiceProfiles": {
-      "type": ["array", "null"],
-      "items": { "$ref": "#/$defs/ScenarioTTSVoiceProfile" }
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "$ref": "#/$defs/ScenarioTTSVoiceProfile"
+      }
     },
     "nodes": {
       "type": "object",
@@ -111,28 +166,101 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "preset": { "type": ["string", "null"], "enum": ["None", "F1", "F2", "F3", "F4", "F5", "M1", "M2", "M3", "M4", "M5", null] },
-        "voiceIdentifier": { "type": ["string", "null"] },
-        "voiceStyleName": { "type": ["string", "null"] },
-        "language": { "type": ["string", "null"] },
-        "speed": { "type": ["number", "null"], "exclusiveMinimum": 0 },
-        "totalStep": { "type": ["integer", "null"], "minimum": 1 }
+        "preset": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "None",
+            "F1",
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "M1",
+            "M2",
+            "M3",
+            "M4",
+            "M5",
+            null
+          ]
+        },
+        "voiceIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "voiceStyleName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "language": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "speed": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "totalStep": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
       }
     },
     "ScenarioWaypointDefinition": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "identifier": { "type": "string", "minLength": 1, "pattern": "\\S" },
-        "positionX": { "type": "number", "default": 0 },
-        "positionY": { "type": "number", "default": 0 },
-        "positionZ": { "type": "number", "default": 0 },
-        "rotationX": { "type": "number", "default": 0 },
-        "rotationY": { "type": "number", "default": 0 },
-        "rotationZ": { "type": "number", "default": 0 },
-        "despawnOnScenarioEnd": { "type": "boolean", "default": true }
+        "identifier": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "positionX": {
+          "type": "number",
+          "default": 0
+        },
+        "positionY": {
+          "type": "number",
+          "default": 0
+        },
+        "positionZ": {
+          "type": "number",
+          "default": 0
+        },
+        "rotationX": {
+          "type": "number",
+          "default": 0
+        },
+        "rotationY": {
+          "type": "number",
+          "default": 0
+        },
+        "rotationZ": {
+          "type": "number",
+          "default": 0
+        },
+        "despawnOnScenarioEnd": {
+          "type": "boolean",
+          "default": true
+        }
       },
-      "required": ["identifier"]
+      "required": [
+        "identifier"
+      ]
     },
     "ScenarioActingNpcDefinition": {
       "type": "object",
@@ -166,14 +294,38 @@
           "default": false,
           "description": "true이면 displayName을 NPC 머리 위 이름표로 표시한다."
         },
-        "positionX": { "type": "number", "default": 0 },
-        "positionY": { "type": "number", "default": 0 },
-        "positionZ": { "type": "number", "default": 0 },
-        "rotationX": { "type": "number", "default": 0 },
-        "rotationY": { "type": "number", "default": 0 },
-        "rotationZ": { "type": "number", "default": 0 },
-        "spawnOnStart": { "type": "boolean", "default": true },
-        "despawnOnScenarioEnd": { "type": "boolean", "default": true },
+        "positionX": {
+          "type": "number",
+          "default": 0
+        },
+        "positionY": {
+          "type": "number",
+          "default": 0
+        },
+        "positionZ": {
+          "type": "number",
+          "default": 0
+        },
+        "rotationX": {
+          "type": "number",
+          "default": 0
+        },
+        "rotationY": {
+          "type": "number",
+          "default": 0
+        },
+        "rotationZ": {
+          "type": "number",
+          "default": 0
+        },
+        "spawnOnStart": {
+          "type": "boolean",
+          "default": true
+        },
+        "despawnOnScenarioEnd": {
+          "type": "boolean",
+          "default": true
+        },
         "interactions": {
           "type": [
             "array",
@@ -181,7 +333,9 @@
           ],
           "items": {
             "$ref": "#/$defs/ScenarioActingNpcInteractionDefinition"
-          }
+          },
+          "description": "폐기 예정. 최상위 interactions 구역으로 옮긴다. 로더가 자동 변환한다.",
+          "deprecated": true
         }
       },
       "required": [
@@ -257,8 +411,14 @@
             "null"
           ]
         },
-        "consumeOnce": { "type": "boolean", "default": true },
-        "enabled": { "type": "boolean", "default": true }
+        "consumeOnce": {
+          "type": "boolean",
+          "default": true
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
       },
       "required": [
         "identifier",
@@ -268,7 +428,9 @@
         {
           "if": {
             "properties": {
-              "interactionType": { "const": "StartScenario" }
+              "interactionType": {
+                "const": "StartScenario"
+              }
             }
           },
           "then": {
@@ -287,7 +449,9 @@
         {
           "if": {
             "properties": {
-              "interactionType": { "const": "ItemSubmission" }
+              "interactionType": {
+                "const": "ItemSubmission"
+              }
             }
           },
           "then": {
@@ -305,7 +469,9 @@
         {
           "if": {
             "properties": {
-              "interactionType": { "const": "Signal" }
+              "interactionType": {
+                "const": "Signal"
+              }
             }
           },
           "then": {
@@ -367,7 +533,6 @@
             "QuestWaypointHighlight",
             "QuestMark",
             "Delay",
-            "Interaction",
             "CombineItem",
             "Quiz",
             "StateUpdate",
@@ -379,7 +544,6 @@
             "EntityInit",
             "TriageAssessControl",
             "PatientMedicalStatePreset",
-            "ItemSubmissionConfig",
             "ChatPrint",
             "ExecuteCommand",
             "TimeControl",
@@ -389,7 +553,8 @@
             "ManualEntrypoint",
             "BedSnap",
             "ReturnToOrigin",
-            "Lifecycle"
+            "Lifecycle",
+            "InteractionVisibility"
           ]
         }
       },
@@ -683,21 +848,6 @@
           "if": {
             "properties": {
               "nodeType": {
-                "const": "Interaction"
-              }
-            },
-            "required": [
-              "nodeType"
-            ]
-          },
-          "then": {
-            "$ref": "#/$defs/ScenarioInteractionNode"
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "nodeType": {
                 "const": "CombineItem"
               }
             },
@@ -851,21 +1001,6 @@
           "if": {
             "properties": {
               "nodeType": {
-                "const": "ItemSubmissionConfig"
-              }
-            },
-            "required": [
-              "nodeType"
-            ]
-          },
-          "then": {
-            "$ref": "#/$defs/ScenarioItemSubmissionConfigNode"
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "nodeType": {
                 "const": "ChatPrint"
               }
             },
@@ -939,10 +1074,33 @@
         },
         {
           "if": {
-            "properties": { "nodeType": { "const": "Lifecycle" } },
-            "required": ["nodeType"]
+            "properties": {
+              "nodeType": {
+                "const": "Lifecycle"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
           },
-          "then": { "$ref": "#/$defs/ScenarioLifecycleNode" }
+          "then": {
+            "$ref": "#/$defs/ScenarioLifecycleNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "InteractionVisibility"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioInteractionVisibilityNode"
+          }
         }
       ]
     },
@@ -975,13 +1133,19 @@
               "const": "Dialogue"
             },
             "speakerName": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "dialogueContent": {
               "type": "string"
             },
             "dialogueContentTTSPassing": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "portraitSpriteIdentifier": {
               "type": [
@@ -1036,10 +1200,17 @@
         },
         "unit": {
           "type": "string",
-          "enum": ["Tick", "Milliseconds", "Seconds"]
+          "enum": [
+            "Tick",
+            "Milliseconds",
+            "Seconds"
+          ]
         }
       },
-      "required": ["value", "unit"],
+      "required": [
+        "value",
+        "unit"
+      ],
       "additionalProperties": false
     },
     "ScenarioDisinteractableDialogueNode": {
@@ -1053,41 +1224,68 @@
               "const": "DisinteractableDialogue"
             },
             "speakerName": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "dialogueContent": {
               "type": "string"
             },
             "dialogueContentTTSPassing": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "portraitSpriteIdentifier": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "fadeInDuration": {
               "$ref": "#/$defs/ScenarioTimeValue",
-              "default": { "value": 0.5, "unit": "Seconds" }
+              "default": {
+                "value": 0.5,
+                "unit": "Seconds"
+              }
             },
             "displayDuration": {
               "$ref": "#/$defs/ScenarioTimeValue",
-              "default": { "value": 1.5, "unit": "Seconds" }
+              "default": {
+                "value": 1.5,
+                "unit": "Seconds"
+              }
             },
             "fadeOutDuration": {
               "$ref": "#/$defs/ScenarioTimeValue",
-              "default": { "value": 0.5, "unit": "Seconds" }
+              "default": {
+                "value": 0.5,
+                "unit": "Seconds"
+              }
             },
             "playTTS": {
-              "type": ["boolean", "null"],
+              "type": [
+                "boolean",
+                "null"
+              ],
               "default": false
             },
             "ttsVoiceIdentifier": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "ttsVoiceProfile": {
               "$ref": "#/$defs/ScenarioTTSVoiceProfile"
             }
           },
-          "required": ["speakerName", "dialogueContent"]
+          "required": [
+            "speakerName",
+            "dialogueContent"
+          ]
         }
       ]
     },
@@ -1102,13 +1300,19 @@
               "const": "Choice"
             },
             "speakerName": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "dialogueContent": {
               "type": "string"
             },
             "dialogueContentTTSPassing": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "portraitSpriteIdentifier": {
               "type": [
@@ -1124,10 +1328,16 @@
               }
             },
             "assessmentIdentifier": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "correctOptionIndex": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "playTTS": {
@@ -1325,9 +1535,15 @@
               },
               "then": {
                 "properties": {
-                  "destinationX": { "type": "number" },
-                  "destinationY": { "type": "number" },
-                  "destinationZ": { "type": "number" }
+                  "destinationX": {
+                    "type": "number"
+                  },
+                  "destinationY": {
+                    "type": "number"
+                  },
+                  "destinationZ": {
+                    "type": "number"
+                  }
                 },
                 "required": [
                   "destinationX",
@@ -1340,13 +1556,20 @@
               "if": {
                 "properties": {
                   "destinationType": {
-                    "enum": ["Waypoint", "WaypointSet"]
+                    "enum": [
+                      "Waypoint",
+                      "WaypointSet"
+                    ]
                   }
                 }
               },
               "then": {
                 "properties": {
-                  "destinationIdentifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
+                  "destinationIdentifier": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
                 },
                 "required": [
                   "destinationIdentifier"
@@ -1360,11 +1583,16 @@
                     "const": "BySpeed"
                   }
                 },
-                "required": ["moveMode"]
+                "required": [
+                  "moveMode"
+                ]
               },
               "then": {
                 "properties": {
-                  "moveSpeed": { "type": "number", "exclusiveMinimum": 0 }
+                  "moveSpeed": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
                 },
                 "required": [
                   "moveSpeed"
@@ -1378,11 +1606,16 @@
                     "const": "ByDuration"
                   }
                 },
-                "required": ["moveMode"]
+                "required": [
+                  "moveMode"
+                ]
               },
               "then": {
                 "properties": {
-                  "moveDuration": { "type": "number", "exclusiveMinimum": 0 }
+                  "moveDuration": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
                 },
                 "required": [
                   "moveDuration"
@@ -1400,164 +1633,182 @@
         },
         {
           "properties": {
-            "nodeType": { "const": "NPCControl" },
+            "nodeType": {
+              "const": "NPCControl"
+            },
             "mode": {
               "type": "string",
-              "enum": ["Update", "Control"]
+              "enum": [
+                "Update",
+                "Control"
+              ]
             },
             "npcIdentifier": {
               "type": "string",
               "minLength": 1,
               "pattern": "\\S"
             },
-            "interactOperation": {
-              "type": ["string", "null"],
-              "enum": ["None", "Create", "Read", "Update", "Delete", null],
-              "default": "None"
-            },
-            "interactableIdentifier": {
-              "type": ["string", "null"]
-            },
-            "interactEnabled": {
-              "type": ["boolean", "null"]
-            },
-            "resultStateKey": {
-              "type": ["string", "null"]
-            },
             "displayName": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "showOverheadName": {
-              "type": ["boolean", "null"]
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "destinationType": {
-              "type": ["string", "null"],
-              "enum": ["Position", "Waypoint", "WaypointSet", null]
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "Position",
+                "Waypoint",
+                "WaypointSet",
+                null
+              ]
             },
             "destinationIdentifier": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "destinationX": {
-              "type": ["number", "null"]
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "destinationY": {
-              "type": ["number", "null"]
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "destinationZ": {
-              "type": ["number", "null"]
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "ignoreGroundCheck": {
-              "type": ["boolean", "null"],
+              "type": [
+                "boolean",
+                "null"
+              ],
               "default": false
             },
             "moveMode": {
-              "type": ["string", "null"],
-              "enum": ["Instant", "BySpeed", "ByDuration", null],
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "Instant",
+                "BySpeed",
+                "ByDuration",
+                null
+              ],
               "default": "BySpeed"
             },
             "moveSpeed": {
-              "type": ["number", "null"]
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "moveDuration": {
-              "type": ["number", "null"]
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "facingYawDegrees": {
-              "type": ["number", "null"],
+              "type": [
+                "number",
+                "null"
+              ],
               "description": "지시를 마친 NPC가 바라볼 방향(월드 Y축 회전, 도). 생략하면 회전을 바꾸지 않는다."
             }
           },
-          "required": ["mode", "npcIdentifier"],
+          "required": [
+            "mode",
+            "npcIdentifier"
+          ],
           "allOf": [
             {
               "if": {
                 "properties": {
-                  "mode": { "const": "Update" },
-                  "interactOperation": {
-                    "enum": ["Create", "Read", "Update", "Delete"]
+                  "mode": {
+                    "const": "Control"
                   }
                 },
-                "required": ["interactOperation"]
+                "required": [
+                  "mode"
+                ]
               },
               "then": {
+                "required": [
+                  "destinationType"
+                ]
+              }
+            },
+            {
+              "if": {
                 "properties": {
-                  "interactableIdentifier": {
-                    "type": "string",
-                    "minLength": 1,
-                    "pattern": "\\S"
+                  "mode": {
+                    "const": "Control"
+                  },
+                  "destinationType": {
+                    "const": "Position"
                   }
                 },
-                "required": ["interactableIdentifier"]
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "mode": { "const": "Control" }
-                },
-                "required": ["mode"]
-              },
-              "then": {
-                "required": ["destinationType"]
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "mode": { "const": "Update" },
-                  "interactOperation": { "const": "Update" }
-                },
-                "required": ["mode", "interactOperation"]
+                "required": [
+                  "mode",
+                  "destinationType"
+                ]
               },
               "then": {
                 "properties": {
-                  "interactEnabled": { "type": "boolean" }
-                },
-                "required": ["interactEnabled"]
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "mode": { "const": "Update" },
-                  "interactOperation": { "const": "Read" }
-                },
-                "required": ["mode", "interactOperation"]
-              },
-              "then": {
-                "properties": {
-                  "resultStateKey": {
-                    "type": "string",
-                    "minLength": 1,
-                    "pattern": "\\S"
+                  "destinationX": {
+                    "type": "number"
+                  },
+                  "destinationY": {
+                    "type": "number"
+                  },
+                  "destinationZ": {
+                    "type": "number"
                   }
                 },
-                "required": ["resultStateKey"]
+                "required": [
+                  "destinationX",
+                  "destinationY",
+                  "destinationZ"
+                ]
               }
             },
             {
               "if": {
                 "properties": {
-                  "mode": { "const": "Control" },
-                  "destinationType": { "const": "Position" }
+                  "mode": {
+                    "const": "Control"
+                  },
+                  "destinationType": {
+                    "enum": [
+                      "Waypoint",
+                      "WaypointSet"
+                    ]
+                  }
                 },
-                "required": ["mode", "destinationType"]
-              },
-              "then": {
-                "properties": {
-                  "destinationX": { "type": "number" },
-                  "destinationY": { "type": "number" },
-                  "destinationZ": { "type": "number" }
-                },
-                "required": ["destinationX", "destinationY", "destinationZ"]
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "mode": { "const": "Control" },
-                  "destinationType": { "enum": ["Waypoint", "WaypointSet"] }
-                },
-                "required": ["mode", "destinationType"]
+                "required": [
+                  "mode",
+                  "destinationType"
+                ]
               },
               "then": {
                 "properties": {
@@ -1567,37 +1818,63 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["destinationIdentifier"]
+                "required": [
+                  "destinationIdentifier"
+                ]
               }
             },
             {
               "if": {
                 "properties": {
-                  "mode": { "const": "Control" },
-                  "moveMode": { "const": "BySpeed" }
+                  "mode": {
+                    "const": "Control"
+                  },
+                  "moveMode": {
+                    "const": "BySpeed"
+                  }
                 },
-                "required": ["mode", "moveMode"]
+                "required": [
+                  "mode",
+                  "moveMode"
+                ]
               },
               "then": {
                 "properties": {
-                  "moveSpeed": { "type": "number", "exclusiveMinimum": 0 }
+                  "moveSpeed": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
                 },
-                "required": ["moveSpeed"]
+                "required": [
+                  "moveSpeed"
+                ]
               }
             },
             {
               "if": {
                 "properties": {
-                  "mode": { "const": "Control" },
-                  "moveMode": { "const": "ByDuration" }
+                  "mode": {
+                    "const": "Control"
+                  },
+                  "moveMode": {
+                    "const": "ByDuration"
+                  }
                 },
-                "required": ["mode", "moveMode"]
+                "required": [
+                  "mode",
+                  "moveMode"
+                ]
               },
               "then": {
                 "properties": {
-                  "moveDuration": { "type": "number", "exclusiveMinimum": 0 }
+                  "moveDuration": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
                 },
-                "required": ["moveDuration"]
+                "required": [
+                  "moveDuration"
+                ]
               }
             }
           ]
@@ -1690,9 +1967,15 @@
               },
               "then": {
                 "properties": {
-                  "destinationX": { "type": "number" },
-                  "destinationY": { "type": "number" },
-                  "destinationZ": { "type": "number" }
+                  "destinationX": {
+                    "type": "number"
+                  },
+                  "destinationY": {
+                    "type": "number"
+                  },
+                  "destinationZ": {
+                    "type": "number"
+                  }
                 },
                 "required": [
                   "destinationX",
@@ -1705,13 +1988,20 @@
               "if": {
                 "properties": {
                   "destinationType": {
-                    "enum": ["Waypoint", "WaypointSet"]
+                    "enum": [
+                      "Waypoint",
+                      "WaypointSet"
+                    ]
                   }
                 }
               },
               "then": {
                 "properties": {
-                  "destinationIdentifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
+                  "destinationIdentifier": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
                 },
                 "required": [
                   "destinationIdentifier"
@@ -1725,11 +2015,16 @@
                     "const": "BySpeed"
                   }
                 },
-                "required": ["moveMode"]
+                "required": [
+                  "moveMode"
+                ]
               },
               "then": {
                 "properties": {
-                  "moveSpeed": { "type": "number", "exclusiveMinimum": 0 }
+                  "moveSpeed": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
                 },
                 "required": [
                   "moveSpeed"
@@ -1743,11 +2038,16 @@
                     "const": "ByDuration"
                   }
                 },
-                "required": ["moveMode"]
+                "required": [
+                  "moveMode"
+                ]
               },
               "then": {
                 "properties": {
-                  "moveDuration": { "type": "number", "exclusiveMinimum": 0 }
+                  "moveDuration": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
                 },
                 "required": [
                   "moveDuration"
@@ -2041,7 +2341,10 @@
               "default": 1
             },
             "useActiveRoleRosterThreshold": {
-              "type": ["boolean", "null"],
+              "type": [
+                "boolean",
+                "null"
+              ],
               "default": false
             },
             "outputSignalIdentifier": {
@@ -2126,6 +2429,14 @@
               ],
               "default": "KeepWaiting",
               "description": "waitTimeoutSeconds 초과 시 행동. KeepWaiting(기본, 계속 대기) / FailBranch(failureNextIdentifier 로 분기, 없으면 KeepWaiting 폴백) / ForceAdvance(nextIdentifier 로 강제 진행, 미수행 기록) / WarnAndKeepWaiting(경고 후 계속 대기)."
+            },
+            "idleWhileWaiting": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": false,
+              "description": "true 이면 waitForCondition 게이트가 조건을 기다리는 동안 이 노드를 담은 병렬 분기를 '다른 참여자를 기다리는 idle 상태' 로 표시한다. 한 담당자에게 태그별 분기가 여럿 배정되어 순차 실행될 때, idle 인 분기는 끝난 것과 같이 취급되어 같은 담당자의 다음 분기(다른 태그의 퀘스트)가 바로 시작된다. 다른 역할이 올릴 신호를 기다리는 게이트에 지정한다. 미지정/false 이면 분기가 끝날 때까지 다음 분기를 시작하지 않는다(기존 동작)."
             }
           },
           "required": [
@@ -2147,7 +2458,8 @@
             "PlayerCountGreaterThan",
             "PlayerCountGreaterThanOrEqual",
             "RegistryContains",
-            "PlayerAssignedTag"
+            "PlayerAssignedTag",
+            "Conditions"
           ]
         },
         "targetCount": {
@@ -2185,6 +2497,16 @@
           "items": {
             "$ref": "#/$defs/ScenarioValidatorRule"
           }
+        },
+        "conditions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/ScenarioCondition"
+          },
+          "description": "condition 이 Conditions 일 때 판정할 일반 조건 절 목록."
         }
       },
       "required": [
@@ -2424,58 +2746,6 @@
         }
       ]
     },
-    "ScenarioInteractionNode": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/ScenarioBaseNode"
-        },
-        {
-          "properties": {
-            "nodeType": {
-              "const": "Interaction"
-            },
-            "actorScope": {
-              "type": "string",
-              "enum": [
-                "Player",
-                "Any"
-              ],
-              "default": "Player"
-            },
-            "targetIdentifier": {
-              "type": "string"
-            },
-            "requiredItemIdentifier": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "interactionType": {
-              "type": "string",
-              "enum": [
-                "Use",
-                "Inspect",
-                "Attach",
-                "Detach"
-              ],
-              "default": "Use"
-            },
-            "completionConditionIdentifier": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
-          },
-          "required": [
-            "actorScope",
-            "targetIdentifier",
-            "interactionType"
-          ]
-        }
-      ]
-    },
     "ScenarioCombineItemNode": {
       "allOf": [
         {
@@ -2523,7 +2793,10 @@
               "type": "string"
             },
             "questionTTSPassing": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "options": {
               "type": "array",
@@ -2556,7 +2829,10 @@
               ]
             },
             "feedbackCorrectTTSPassing": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "feedbackIncorrect": {
               "type": [
@@ -2565,7 +2841,10 @@
               ]
             },
             "feedbackIncorrectTTSPassing": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "playTTS": {
               "type": [
@@ -3321,6 +3600,16 @@
                 "string",
                 "null"
               ]
+            },
+            "tags": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              },
+              "description": "스폰된 엔티티에 부여할 태그."
             }
           },
           "anyOf": [
@@ -3561,7 +3850,11 @@
           "anyOf": [
             {
               "properties": {
-                "presetIdentifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
+                "presetIdentifier": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
               },
               "required": [
                 "presetIdentifier"
@@ -3569,7 +3862,11 @@
             },
             {
               "properties": {
-                "targetEntityIdentifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
+                "targetEntityIdentifier": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
               },
               "required": [
                 "targetEntityIdentifier"
@@ -3577,7 +3874,11 @@
             },
             {
               "properties": {
-                "targetEntityStateKey": { "type": "string", "minLength": 1, "pattern": "\\S" }
+                "targetEntityStateKey": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
               },
               "required": [
                 "targetEntityStateKey"
@@ -3844,194 +4145,6 @@
         }
       ]
     },
-    "ScenarioItemRequirement": {
-      "type": "object",
-      "properties": {
-        "itemIdentifier": {
-          "type": "string",
-          "minLength": 1
-        },
-        "count": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 1,
-          "default": 1
-        }
-      },
-      "required": [
-        "itemIdentifier"
-      ],
-      "additionalProperties": false
-    },
-    "ScenarioItemSubmissionConfigNode": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/ScenarioBaseNode"
-        },
-        {
-          "properties": {
-            "nodeType": {
-              "const": "ItemSubmissionConfig"
-            },
-            "presetIdentifier": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "spawnedEntityIdentifier": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "positionSourceEntityIdentifier": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "positionX": {
-              "type": [
-                "number",
-                "null"
-              ]
-            },
-            "positionY": {
-              "type": [
-                "number",
-                "null"
-              ]
-            },
-            "positionZ": {
-              "type": [
-                "number",
-                "null"
-              ]
-            },
-            "targetIdentifier": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "targetStateKey": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "requiredItems": {
-              "type": [
-                "array",
-                "null"
-              ],
-              "items": {
-                "$ref": "#/$defs/ScenarioItemRequirement"
-              }
-            },
-            "completionSignalIdentifier": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "enabled": {
-              "type": [
-                "boolean",
-                "null"
-              ],
-              "default": true
-            },
-            "resultStateKey": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
-          },
-          "anyOf": [
-            {
-              "properties": {
-                "presetIdentifier": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "presetIdentifier"
-              ]
-            },
-            {
-              "properties": {
-                "targetIdentifier": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "targetIdentifier"
-              ]
-            },
-            {
-              "properties": {
-                "targetStateKey": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": [
-                "targetStateKey"
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    "ScenarioNpcInteractControlNode": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/ScenarioBaseNode"
-        },
-        {
-          "properties": {
-            "nodeType": {
-              "const": "NpcInteractControl"
-            },
-            "npcIdentifier": {
-              "type": "string",
-              "minLength": 1
-            },
-            "interactableIdentifier": {
-              "type": "string",
-              "minLength": 1
-            },
-            "displayName": {
-              "type": ["string", "null"]
-            },
-            "showOverheadName": {
-              "type": ["boolean", "null"]
-            },
-            "operation": {
-              "enum": [
-                "Add",
-                "Remove",
-                "Enable",
-                "Disable",
-                "UpdateDisplay",
-                null
-              ],
-              "default": "Add"
-            }
-          },
-          "required": [
-            "npcIdentifier"
-          ]
-        }
-      ]
-    },
     "ScenarioChatPrintNode": {
       "allOf": [
         {
@@ -4115,14 +4228,38 @@
     },
     "ScenarioLifecycleNode": {
       "allOf": [
-        { "$ref": "#/$defs/ScenarioBaseNode" },
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
         {
           "properties": {
-            "nodeType": { "const": "Lifecycle" },
-            "operation": { "type": "string", "enum": ["Cleanup", "End", "Restart"], "default": "Cleanup" },
-            "revertTrackedChanges": { "type": "boolean", "default": true },
-            "clearRuntimeState": { "type": "boolean", "default": true },
-            "restartEntrypointIdentifier": { "type": ["string", "null"], "minLength": 1 }
+            "nodeType": {
+              "const": "Lifecycle"
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Cleanup",
+                "End",
+                "Restart"
+              ],
+              "default": "Cleanup"
+            },
+            "revertTrackedChanges": {
+              "type": "boolean",
+              "default": true
+            },
+            "clearRuntimeState": {
+              "type": "boolean",
+              "default": true
+            },
+            "restartEntrypointIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            }
           }
         }
       ]
@@ -4229,6 +4366,592 @@
               ]
             }
           }
+        }
+      ]
+    },
+    "ScenarioEntityReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "description": "엔티티 참조. id(식별자) 또는 tag(태그 보유 엔티티 전체) 가운데 하나만 지정한다."
+    },
+    "ScenarioCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "PlayerHasTag",
+            "PlayerHasQuestFlag",
+            "PlayerHasQuest",
+            "PlayerHasItem",
+            "PlayerState",
+            "PlayerWithinDistance",
+            "SignalRaised",
+            "RegistryContains",
+            "EntityHasTag",
+            "EntityState",
+            "PlayerCount",
+            "ScenarioActive",
+            "Group"
+          ]
+        },
+        "negate": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
+        },
+        "tag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "flag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "questIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "questState": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "Active",
+            "Completed",
+            "Absent",
+            null
+          ],
+          "default": "Active"
+        },
+        "completionCriteriaIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "itemIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": 1
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "qualifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "compare": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "Equal",
+            "NotEqual",
+            "LessThan",
+            "LessThanOrEqual",
+            "GreaterThan",
+            "GreaterThanOrEqual",
+            null
+          ],
+          "default": "Equal"
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "entity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScenarioEntityReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "meters": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": 3
+        },
+        "signal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "registryType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "identifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scenarioIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "matchMode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "All",
+            "Any",
+            null
+          ],
+          "default": "All"
+        },
+        "conditions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/ScenarioCondition"
+          }
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "description": "인터렉션 가시성과 Validator 가 함께 쓰는 조건 절. 판정은 ScenarioConditionEvaluator 가 수행한다."
+    },
+    "InteractionDisplay": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "iconIdentifiers": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "color": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScenarioColor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "allowIconFallback": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "priority": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": 0
+        }
+      }
+    },
+    "InteractionItemRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "itemIdentifier": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "required": [
+        "itemIdentifier"
+      ]
+    },
+    "InteractionSubmissionSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "submitButtonText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "requiredItems": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/InteractionItemRequirement"
+          }
+        }
+      }
+    },
+    "InteractionVisibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "initial": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
+        },
+        "matchMode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "All",
+            "Any",
+            null
+          ],
+          "default": "All"
+        },
+        "conditions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/ScenarioCondition"
+          }
+        }
+      }
+    },
+    "InteractionDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entity": {
+          "$ref": "#/$defs/ScenarioEntityReference"
+        },
+        "interaction": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "Custom",
+            "Action",
+            "Signal",
+            "ItemSubmission",
+            "StartScenario",
+            null
+          ],
+          "default": "Custom"
+        },
+        "handlerKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "display": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InteractionDisplay"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completionSignal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "afterInteract": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "None",
+            "HideForPlayer",
+            "HideForAll",
+            null
+          ],
+          "default": "None"
+        },
+        "requiredItems": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/InteractionItemRequirement"
+          },
+          "description": "수행에 필요하지만 소비하지 않는 아이템. 없으면 안내 대사를 띄운다."
+        },
+        "consumeItems": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/InteractionItemRequirement"
+          }
+        },
+        "extras": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "핸들러가 해석하는 부가 문자열(missingItemDialogue, findItemDialogue, actionDialogue, resultDialogue 등)."
+        },
+        "itemSubmission": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InteractionSubmissionSettings"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scenarioIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "startNodeIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "activateObjects": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "deactivateObjects": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "visibility": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InteractionVisibility"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "entity",
+        "interaction"
+      ],
+      "description": "인터렉션 레지스트리에 적용할 정의. 같은 주소의 코드 리터럴 정의 위에 명시한 필드만 덮어쓴다."
+    },
+    "ScenarioInteractionTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entity": {
+          "$ref": "#/$defs/ScenarioEntityReference"
+        },
+        "interaction": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "entity",
+        "interaction"
+      ]
+    },
+    "ScenarioInteractionVisibilityNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "InteractionVisibility"
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Show",
+                "Hide",
+                "Reset"
+              ],
+              "default": "Show"
+            },
+            "targets": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/ScenarioInteractionTarget"
+              }
+            },
+            "playerScope": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "All",
+                "Current",
+                "ByTag",
+                null
+              ],
+              "default": "All"
+            },
+            "playerTags": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "tagMatchMode": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "All",
+                "Any",
+                null
+              ],
+              "default": "Any"
+            }
+          },
+          "required": [
+            "targets"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "playerScope": {
+                    "const": "ByTag"
+                  }
+                },
+                "required": [
+                  "playerScope"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "playerTags": {
+                    "type": "array",
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "playerTags"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

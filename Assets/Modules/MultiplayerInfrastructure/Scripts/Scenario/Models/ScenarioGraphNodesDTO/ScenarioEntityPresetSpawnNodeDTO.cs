@@ -38,5 +38,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("resultStateKey")]
     public string ResultStateKey { get; set; }
+    [JsonPropertyName("tags")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public System.Collections.Generic.List<string> Tags { get; set; }
   }
 }

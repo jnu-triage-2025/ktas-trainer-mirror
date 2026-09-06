@@ -86,6 +86,7 @@ namespace MultiplayerInfrastructure.Scenario
       graph.ClientSignalPrefixes = NormalizeSignalSpecification(dto.ClientSignalPrefixes);
       graph.QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(dto.QuestDefinitionIncludes);
       graph.ActingNpcs = ConvertActingNpcs(dto.ActingNpcs);
+      graph.Interactions = ScenarioInteractionDefinitionConverter.ConvertInteractions(graph.Identifier, dto.Interactions, graph.ActingNpcs);
       graph.Waypoints = ConvertWaypoints(dto.Waypoints);
       graph.TtsVoiceProfiles = ConvertVoiceProfiles(dto.TtsVoiceProfiles);
       graph.DefaultEntrypoint = dto.DefaultEntrypoint?.Trim();
@@ -473,7 +474,6 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioQuestWaypointHighlightNodeDTO highlight => ConvertQuestWaypointHighlight(highlight),
           ScenarioQuestMarkNodeDTO questMark => ConvertQuestMark(questMark),
           ScenarioDelayNodeDTO delay => ConvertDelay(delay),
-          ScenarioInteractionNodeDTO interaction => ConvertInteraction(interaction),
           ScenarioCombineItemNodeDTO combineItem => ConvertCombineItem(combineItem),
           ScenarioQuizNodeDTO quiz => ConvertQuiz(quiz),
           ScenarioStateUpdateNodeDTO stateUpdate => ConvertStateUpdate(stateUpdate),
@@ -484,8 +484,6 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioEntityInitNodeDTO entityInit => ConvertEntityInit(entityInit),
           ScenarioTriageAssessControlNodeDTO triageAssess => ConvertTriageAssessControl(triageAssess),
           ScenarioPatientMedicalStatePresetNodeDTO patientPreset => ConvertPatientMedicalStatePreset(patientPreset),
-          ScenarioItemSubmissionConfigNodeDTO itemSubmission => ConvertItemSubmissionConfig(itemSubmission),
-          ScenarioNpcInteractControlNodeDTO npcInteractControl => ConvertNpcInteractControl(npcInteractControl),
           ScenarioChatPrintNodeDTO chatPrint => ConvertChatPrint(chatPrint),
           ScenarioExecuteCommandNodeDTO executeCommand => ConvertExecuteCommand(executeCommand),
           ScenarioTimeControlNodeDTO timeControl => ConvertTimeControl(timeControl),
@@ -493,6 +491,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioBedSnapNodeDTO bedSnap => ConvertBedSnap(bedSnap),
           ScenarioReturnToOriginNodeDTO returnToOrigin => ConvertReturnToOrigin(returnToOrigin),
           ScenarioLifecycleNodeDTO lifecycle => ConvertLifecycle(lifecycle),
+          ScenarioInteractionVisibilityNodeDTO interactionVisibility => ScenarioInteractionDefinitionConverter.ConvertVisibilityNode(interactionVisibility),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -646,10 +645,6 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = dto.Identifier,
           Mode = ParseEnum(dto.Mode, ScenarioNPCControlMode.Update),
           NPCIdentifier = dto.NPCIdentifier,
-          InteractOperation = ParseEnum(dto.InteractOperation, ScenarioNPCInteractCrudOperation.None),
-          InteractableIdentifier = dto.InteractableIdentifier,
-          InteractEnabled = dto.InteractEnabled,
-          ResultStateKey = dto.ResultStateKey,
           DisplayName = dto.DisplayName,
           ShowOverheadName = dto.ShowOverheadName,
           DestinationType = ParseDestinationType(dto.DestinationType),
@@ -846,8 +841,9 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = dto.NextIdentifier
         };
 
-    private static ScenarioValidatorNode ConvertValidator(ScenarioValidatorNodeDTO dto) =>
-        new ScenarioValidatorNode
+    private static ScenarioValidatorNode ConvertValidator(ScenarioValidatorNodeDTO dto)
+    {
+      var node = new ScenarioValidatorNode
         {
           Identifier = dto.Identifier,
           RootConditions = ParseValidatorRootConditions(dto.RootConditions),
@@ -857,8 +853,12 @@ namespace MultiplayerInfrastructure.Scenario
           WaitForCondition = dto.WaitForCondition ?? false,
           WaitTimeoutSeconds = (dto.WaitTimeoutSeconds is > 0f) ? dto.WaitTimeoutSeconds : null,
           OnWaitTimeout = ParseValidatorWaitTimeoutBehavior(dto.OnWaitTimeout),
+          IdleWhileWaiting = dto.IdleWhileWaiting ?? false,
           NextIdentifier = dto.NextIdentifier
         };
+      ScenarioInteractionDefinitionConverter.ApplyValidatorConditions(node, dto);
+      return node;
+    }
 
     private static ScenarioDelayNode ConvertDelay(ScenarioDelayNodeDTO dto) =>
         new ScenarioDelayNode
@@ -878,18 +878,6 @@ namespace MultiplayerInfrastructure.Scenario
           Direction = ParseTimeDirection(dto.Direction),
           DurationSeconds = dto.DurationSeconds ?? 0f,
           StartSeconds = dto.StartSeconds ?? 0f,
-          NextIdentifier = dto.NextIdentifier
-        };
-
-    private static ScenarioInteractionNode ConvertInteraction(ScenarioInteractionNodeDTO dto) =>
-        new ScenarioInteractionNode
-        {
-          Identifier = dto.Identifier,
-          ActorScope = ParseInteractionActorScope(dto.ActorScope),
-          TargetIdentifier = dto.TargetIdentifier,
-          RequiredItemIdentifier = dto.RequiredItemIdentifier,
-          InteractionType = ParseInteractionType(dto.InteractionType),
-          CompletionConditionIdentifier = dto.CompletionConditionIdentifier,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -1013,6 +1001,7 @@ namespace MultiplayerInfrastructure.Scenario
           RotationY = dto.RotationY ?? 0f,
           RotationZ = dto.RotationZ ?? 0f,
           ResultStateKey = dto.ResultStateKey,
+          Tags = dto.Tags?.Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value.Trim()).Distinct(StringComparer.Ordinal).ToList() ?? new List<string>(),
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -1082,137 +1071,9 @@ namespace MultiplayerInfrastructure.Scenario
           RotationY = node.RotationY,
           RotationZ = node.RotationZ,
           ResultStateKey = node.ResultStateKey,
+          Tags = node.Tags != null && node.Tags.Count > 0 ? new List<string>(node.Tags) : null,
           NextIdentifier = node.NextIdentifier
         };
-
-    private static ScenarioItemSubmissionConfigNode ConvertItemSubmissionConfig(ScenarioItemSubmissionConfigNodeDTO dto)
-    {
-      var requirements = new List<ScenarioItemRequirement>();
-      if (dto.RequiredItems != null)
-      {
-        foreach (var reqDto in dto.RequiredItems)
-        {
-          if (reqDto == null || string.IsNullOrWhiteSpace(reqDto.ItemIdentifier))
-            continue;
-
-          requirements.Add(new ScenarioItemRequirement
-          {
-            ItemIdentifier = reqDto.ItemIdentifier,
-            Count = reqDto.Count.HasValue && reqDto.Count.Value > 0 ? reqDto.Count.Value : 1
-          });
-        }
-      }
-
-      return new ScenarioItemSubmissionConfigNode
-      {
-        Identifier = dto.Identifier,
-        PresetIdentifier = dto.PresetIdentifier,
-        SpawnedEntityIdentifier = dto.SpawnedEntityIdentifier,
-        PositionSourceEntityIdentifier = dto.PositionSourceEntityIdentifier,
-        PositionX = dto.PositionX ?? 0f,
-        PositionY = dto.PositionY ?? 0f,
-        PositionZ = dto.PositionZ ?? 0f,
-        TargetIdentifier = dto.TargetIdentifier,
-        TargetStateKey = dto.TargetStateKey,
-        RequiredItems = requirements,
-        CompletionSignalIdentifier = dto.CompletionSignalIdentifier,
-        Enabled = dto.Enabled ?? true,
-        ResultStateKey = dto.ResultStateKey,
-        NextIdentifier = dto.NextIdentifier
-      };
-    }
-
-    private static ScenarioItemSubmissionConfigNodeDTO ConvertToDTO(ScenarioItemSubmissionConfigNode node)
-    {
-      List<ScenarioItemRequirementDTO> requirements = null;
-      if (node.RequiredItems != null && node.RequiredItems.Count > 0)
-      {
-        requirements = new List<ScenarioItemRequirementDTO>();
-        foreach (var req in node.RequiredItems)
-        {
-          if (req == null || string.IsNullOrWhiteSpace(req.ItemIdentifier))
-            continue;
-
-          requirements.Add(new ScenarioItemRequirementDTO
-          {
-            ItemIdentifier = req.ItemIdentifier,
-            Count = req.Count > 0 ? req.Count : 1
-          });
-        }
-      }
-
-      return new ScenarioItemSubmissionConfigNodeDTO
-      {
-        NodeType = "ItemSubmissionConfig",
-        Identifier = node.Identifier,
-        PresetIdentifier = node.PresetIdentifier,
-        SpawnedEntityIdentifier = node.SpawnedEntityIdentifier,
-        PositionSourceEntityIdentifier = node.PositionSourceEntityIdentifier,
-        PositionX = node.PositionX,
-        PositionY = node.PositionY,
-        PositionZ = node.PositionZ,
-        TargetIdentifier = node.TargetIdentifier,
-        TargetStateKey = node.TargetStateKey,
-        RequiredItems = requirements,
-        CompletionSignalIdentifier = node.CompletionSignalIdentifier,
-        Enabled = node.Enabled ? (bool?)null : false,
-        ResultStateKey = node.ResultStateKey,
-        NextIdentifier = node.NextIdentifier
-      };
-    }
-
-    private static ScenarioNPCControlNode ConvertNpcInteractControl(ScenarioNpcInteractControlNodeDTO dto)
-    {
-      var operation = ParseNpcInteractControlOperation(dto.Operation);
-      return new ScenarioNPCControlNode
-      {
-        Identifier = dto.Identifier,
-        Mode = ScenarioNPCControlMode.Update,
-        NPCIdentifier = dto.NpcIdentifier,
-        InteractableIdentifier = dto.InteractableIdentifier,
-        InteractOperation = operation switch
-        {
-          ScenarioNpcInteractControlOperation.Add => ScenarioNPCInteractCrudOperation.Create,
-          ScenarioNpcInteractControlOperation.Remove => ScenarioNPCInteractCrudOperation.Delete,
-          ScenarioNpcInteractControlOperation.Enable => ScenarioNPCInteractCrudOperation.Update,
-          ScenarioNpcInteractControlOperation.Disable => ScenarioNPCInteractCrudOperation.Update,
-          _ => ScenarioNPCInteractCrudOperation.None,
-        },
-        InteractEnabled = operation switch
-        {
-          ScenarioNpcInteractControlOperation.Enable => true,
-          ScenarioNpcInteractControlOperation.Disable => false,
-          _ => null,
-        },
-        DisplayName = dto.DisplayName,
-        ShowOverheadName = dto.ShowOverheadName,
-        NextIdentifier = dto.NextIdentifier
-      };
-    }
-
-    private static ScenarioNpcInteractControlNodeDTO ConvertToDTO(ScenarioNpcInteractControlNode node) =>
-        new ScenarioNpcInteractControlNodeDTO
-        {
-          NodeType = "NpcInteractControl",
-          Identifier = node.Identifier,
-          NpcIdentifier = node.NpcIdentifier,
-          InteractableIdentifier = node.InteractableIdentifier,
-          Operation = node.Operation.ToString(),
-          DisplayName = node.DisplayName,
-          ShowOverheadName = node.ShowOverheadName,
-          NextIdentifier = node.NextIdentifier
-        };
-
-    private static ScenarioNpcInteractControlOperation ParseNpcInteractControlOperation(string value)
-    {
-      if (!string.IsNullOrWhiteSpace(value)
-          && System.Enum.TryParse<ScenarioNpcInteractControlOperation>(value, ignoreCase: true, out var parsed))
-      {
-        return parsed;
-      }
-
-      return ScenarioNpcInteractControlOperation.Add;
-    }
 
     private static ScenarioEntityTagNodeDTO ConvertToDTO(ScenarioEntityTagNode node) =>
         new ScenarioEntityTagNodeDTO
@@ -1418,36 +1279,6 @@ namespace MultiplayerInfrastructure.Scenario
       throw new JsonException($"Unknown ScenarioTimeDirection '{value}'.");
     }
 
-    private static ScenarioInteractionActorScope ParseInteractionActorScope(string value)
-    {
-      if (string.IsNullOrWhiteSpace(value))
-      {
-        return ScenarioInteractionActorScope.Player;
-      }
-
-      if (Enum.TryParse(value, ignoreCase: true, out ScenarioInteractionActorScope parsed))
-      {
-        return parsed;
-      }
-
-      throw new JsonException($"Unknown ScenarioInteractionActorScope '{value}'.");
-    }
-
-    private static ScenarioInteractionType ParseInteractionType(string value)
-    {
-      if (string.IsNullOrWhiteSpace(value))
-      {
-        return ScenarioInteractionType.Use;
-      }
-
-      if (Enum.TryParse(value, ignoreCase: true, out ScenarioInteractionType parsed))
-      {
-        return parsed;
-      }
-
-      throw new JsonException($"Unknown ScenarioInteractionType '{value}'.");
-    }
-
     private static ScenarioPlayerTagOperationType ParsePlayerTagOperationType(string value)
     {
       if (string.IsNullOrWhiteSpace(value))
@@ -1522,6 +1353,7 @@ namespace MultiplayerInfrastructure.Scenario
         ClientSignalPrefixes = NormalizeSignalSpecification(graph.ClientSignalPrefixes).ToList(),
         QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(graph.QuestDefinitionIncludes).ToList(),
         ActingNpcs = ConvertActingNpcsToDTO(graph.ActingNpcs),
+        Interactions = ScenarioInteractionDefinitionConverter.ConvertInteractionsToDTO(graph.Interactions),
         Waypoints = ConvertWaypointsToDTO(graph.Waypoints),
         TtsVoiceProfiles = graph.TtsVoiceProfiles?.Select(ConvertVoiceProfileToDTO).ToList(),
         DefaultEntrypoint = string.IsNullOrWhiteSpace(graph.DefaultEntrypoint) ? null : graph.DefaultEntrypoint.Trim(),
@@ -1620,7 +1452,7 @@ namespace MultiplayerInfrastructure.Scenario
         RotationZ = actingNpc.RotationZ,
         SpawnOnStart = actingNpc.SpawnOnStart,
         DespawnOnScenarioEnd = actingNpc.DespawnOnScenarioEnd,
-        Interactions = actingNpc.Interactions == null
+        Interactions = actingNpc.Interactions == null || actingNpc.Interactions.Count == 0
           ? null
           : actingNpc.Interactions.Where(value => value != null).Select(interaction =>
             new ScenarioActingNpcInteractionDefinitionDTO
@@ -1689,7 +1521,6 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioQuestWaypointHighlightNode waypointHighlight => ConvertToDTO(waypointHighlight),
           ScenarioQuestMarkNode questMark => ConvertToDTO(questMark),
           ScenarioDelayNode delay => ConvertToDTO(delay),
-          ScenarioInteractionNode interaction => ConvertToDTO(interaction),
           ScenarioCombineItemNode combineItem => ConvertToDTO(combineItem),
           ScenarioQuizNode quiz => ConvertToDTO(quiz),
           ScenarioStateUpdateNode stateUpdate => ConvertToDTO(stateUpdate),
@@ -1700,8 +1531,6 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioEntityInitNode entityInit => ConvertToDTO(entityInit),
           ScenarioTriageAssessControlNode triageAssess => ConvertToDTO(triageAssess),
           ScenarioPatientMedicalStatePresetNode patientPreset => ConvertToDTO(patientPreset),
-          ScenarioItemSubmissionConfigNode itemSubmission => ConvertToDTO(itemSubmission),
-          ScenarioNpcInteractControlNode npcInteractControl => ConvertToDTO(npcInteractControl),
           ScenarioChatPrintNode chatPrint => ConvertToDTO(chatPrint),
           ScenarioExecuteCommandNode executeCommand => ConvertToDTO(executeCommand),
           ScenarioTimeControlNode timeControl => ConvertToDTO(timeControl),
@@ -1709,6 +1538,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioBedSnapNode bedSnap => ConvertToDTO(bedSnap),
           ScenarioReturnToOriginNode returnToOrigin => ConvertToDTO(returnToOrigin),
           ScenarioLifecycleNode lifecycle => ConvertToDTO(lifecycle),
+          ScenarioInteractionVisibilityNode interactionVisibility => ScenarioInteractionDefinitionConverter.ConvertVisibilityNodeToDTO(interactionVisibility),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
@@ -1879,10 +1709,6 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = node.Identifier,
           Mode = node.Mode.ToString(),
           NPCIdentifier = node.NPCIdentifier,
-          InteractOperation = node.InteractOperation.ToString(),
-          InteractableIdentifier = node.InteractableIdentifier,
-          InteractEnabled = node.InteractEnabled,
-          ResultStateKey = node.ResultStateKey,
           DisplayName = node.DisplayName,
           ShowOverheadName = node.ShowOverheadName,
           DestinationType = node.DestinationType.ToString(),
@@ -2050,8 +1876,9 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = node.NextIdentifier
         };
 
-    private static ScenarioValidatorNodeDTO ConvertToDTO(ScenarioValidatorNode node) =>
-        new ScenarioValidatorNodeDTO
+    private static ScenarioValidatorNodeDTO ConvertToDTO(ScenarioValidatorNode node)
+    {
+      var dto = new ScenarioValidatorNodeDTO
         {
           NodeType = "Validator",
           Identifier = node.Identifier,
@@ -2064,8 +1891,12 @@ namespace MultiplayerInfrastructure.Scenario
           OnWaitTimeout = node.OnWaitTimeout != ScenarioValidatorWaitTimeoutBehavior.KeepWaiting
               ? node.OnWaitTimeout.ToString()
               : null,
+          IdleWhileWaiting = node.IdleWhileWaiting ? true : (bool?)null,
           NextIdentifier = node.NextIdentifier
         };
+      ScenarioInteractionDefinitionConverter.ApplyValidatorConditionsToDTO(node, dto);
+      return dto;
+    }
 
     private static ScenarioDelayNodeDTO ConvertToDTO(ScenarioDelayNode node) =>
         new ScenarioDelayNodeDTO
@@ -2087,19 +1918,6 @@ namespace MultiplayerInfrastructure.Scenario
           Direction = node.Direction.ToString(),
           DurationSeconds = node.DurationSeconds,
           StartSeconds = node.StartSeconds,
-          NextIdentifier = node.NextIdentifier
-        };
-
-    private static ScenarioInteractionNodeDTO ConvertToDTO(ScenarioInteractionNode node) =>
-        new ScenarioInteractionNodeDTO
-        {
-          NodeType = "Interaction",
-          Identifier = node.Identifier,
-          ActorScope = node.ActorScope.ToString(),
-          TargetIdentifier = node.TargetIdentifier,
-          RequiredItemIdentifier = node.RequiredItemIdentifier,
-          InteractionType = node.InteractionType.ToString(),
-          CompletionConditionIdentifier = node.CompletionConditionIdentifier,
           NextIdentifier = node.NextIdentifier
         };
 

@@ -1,27 +1,13 @@
-﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.InteractableEntity
 {
   /// <summary>
+  /// 플레이어가 고른 <see cref="IInteract"/> 를 실행한다. 핸들러 목록은 프리팹이 아니라 인터렉션 레지스트리가 관리한다.
   /// </summary>
   [DisallowMultipleComponent]
   public class InteractableEntityResolver : MonoBehaviour
   {
-    [SerializeField] private List<MonoBehaviour> handlerSources = new List<MonoBehaviour>();
-    private readonly List<IInteractable> handlers = new List<IInteractable>();
-
-    private void Awake()
-    {
-      handlers.Clear();
-      foreach (var eachSource in handlerSources)
-      {
-        if (eachSource is IInteractable handler)
-          handlers.Add(handler);
-        else if (eachSource != null)
-          Debug.LogWarning($"{eachSource.name} does not implement IInteractable interface", eachSource);
-      }
-    }
 
     public void Resolve(IInteract interact, Transform interactor)
     {

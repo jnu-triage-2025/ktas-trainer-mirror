@@ -245,7 +245,7 @@
           "activation": "CompletionCriteria",
           "completionCriteriaIdentifier": "install-suction-patient-a",
           "targetType": "Interaction",
-          "entityIdentifier": "patient_a_wall_suction",
+          "entityIdentifier": "zone_a:wall_suction",
           "interactionIdentifier": "wall_suction_install",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
@@ -254,7 +254,7 @@
           "activation": "CompletionCriteria",
           "completionCriteriaIdentifier": "connect-yankauer-patient-a",
           "targetType": "Interaction",
-          "entityIdentifier": "patient_a_wall_suction",
+          "entityIdentifier": "zone_a:wall_suction",
           "interactionIdentifier": "connect_yankauer",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
@@ -421,7 +421,7 @@
           "activation": "CompletionCriteria",
           "completionCriteriaIdentifier": "install-oxyflowmeter-patient-a",
           "targetType": "Interaction",
-          "entityIdentifier": "patient_a_oxyflowmeter",
+          "entityIdentifier": "zone_a:oxyflowmeter",
           "interactionIdentifier": "oxyflowmeter",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
@@ -448,7 +448,7 @@
           "activation": "CompletionCriteria",
           "completionCriteriaIdentifier": "set-oxygen-flow-patient-a",
           "targetType": "Interaction",
-          "entityIdentifier": "patient_a_oxyflowmeter",
+          "entityIdentifier": "zone_a:oxyflowmeter",
           "interactionIdentifier": "oxyflowmeter",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"

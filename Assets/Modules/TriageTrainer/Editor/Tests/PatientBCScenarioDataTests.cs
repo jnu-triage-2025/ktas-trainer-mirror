@@ -7,6 +7,7 @@ using FishNet.Managing.Object;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Entity;
+using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
@@ -998,17 +999,45 @@ namespace TriageTrainer.Tests
     [TestCase("Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBFemale.prefab")]
     [TestCase(PatientDummyDAPrefabPath)]
     [TestCase(PatientDummyDBPrefabPath)]
-    public void PatientBCScenarioPrefabsDisableStandardAssessActions(string prefabPath)
+    public void PatientBCScenarioPrefabsDoNotSerializeInteractionDataAndHideStandardAssessActions(string prefabPath)
     {
-      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-      var patient = prefab != null ? prefab.GetComponent<PatientController>() : null;
-      var field = FindInstanceField(typeof(PatientController), "_assessActions");
+      string yaml = File.ReadAllText(prefabPath);
+      foreach (string field in new[]
+               {
+                 "_assessActions:", "_interactConfigs:", "_liftDisplayText:", "_carryDisplayText:",
+                 "_monitorSelectDisplayText:"
+               })
+      {
+        Assert.That(yaml, Does.Not.Contain(field),
+          $"{Path.GetFileName(prefabPath)}: 인터렉션 데이터('{field}')는 프리팹이 아니라 코드 리터럴·시나리오 데이터가 정의합니다.");
+      }
 
-      Assert.That(patient, Is.Not.Null);
-      Assert.That(field, Is.Not.Null);
-      var actions = field.GetValue(patient) as List<PatientController.AssessActionConfig>;
-      Assert.That(actions, Has.Count.EqualTo(4));
-      Assert.That(actions.All(action => !action.Enabled), Is.True);
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+      Assert.That(prefab, Is.Not.Null);
+      var instance = Object.Instantiate(prefab);
+      try
+      {
+        var patient = instance.GetComponent<PatientController>();
+        Assert.That(patient, Is.Not.Null);
+        var identifierField = FindInstanceField(typeof(PatientController), "_identifier");
+        Assert.That(identifierField, Is.Not.Null);
+        identifierField.SetValue(patient, "test-bc-code-declaration-patient");
+        Assert.That(patient.Interacts, Is.Not.Empty);
+
+        var declared = patient.DeclareInteractions().ToDictionary(
+          declaration => declaration.Definition.InteractionIdentifier,
+          declaration => declaration.Definition);
+        foreach (string identifier in new[] { "assess_vital", "assess_avpu_gcs", "assess_pulse", "assess_gcs" })
+        {
+          Assert.That(declared, Contains.Key(identifier));
+          Assert.That(declared[identifier].InitialVisible, Is.False,
+            $"표준 사정 동작 '{identifier}'은 시나리오 데이터가 열기 전에는 숨겨져야 합니다.");
+        }
+      }
+      finally
+      {
+        Object.DestroyImmediate(instance);
+      }
     }
 
     [Test]

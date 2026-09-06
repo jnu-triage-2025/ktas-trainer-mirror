@@ -6,8 +6,10 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Tag;
 using NUnit.Framework;
 using TriageTrainer.Editor.Utils;
 using TriageTrainer.Entity;
@@ -489,17 +491,15 @@ namespace TriageTrainer.Tests
         tPiecePort.GetComponent<TriageTrainer.Entity.OxyLine.OxyLinePairInteractable>(),
         Is.Not.Null);
 
-      var scenarioActions = prefab.GetComponentsInChildren<ScenarioActionInteractable>(true);
-      var tPieceAction = Array.Find(
-        scenarioActions,
-        each => each != null && each.CompletionSignal == "interact_tpiece");
-      Assert.That(tPieceAction, Is.Not.Null);
-      Assert.That(typeof(ScenarioActionInteractable).GetField(
-          "_requiredItemIdentifier", BindingFlags.Instance | BindingFlags.NonPublic)
-        ?.GetValue(tPieceAction), Is.EqualTo("tpiece_set"));
-      Assert.That(typeof(ScenarioActionInteractable).GetField(
-          "_consumeRequiredItemCount", BindingFlags.Instance | BindingFlags.NonPublic)
-        ?.GetValue(tPieceAction), Is.EqualTo(1));
+      var graph = LoadPatientAGraph();
+      var tPieceAction = FindInteractionDefinition(graph, "patient_a", "interact_tpiece");
+      Assert.That(tPieceAction.Kind, Is.EqualTo(InteractionKind.Action));
+      Assert.That(tPieceAction.CompletionSignal, Is.EqualTo("interact_tpiece"));
+      Assert.That(tPieceAction.ConsumeItems.Select(each => (each.ItemIdentifier, each.Count)),
+        Is.EquivalentTo(new[] { ("tpiece_set", 1) }),
+        "T-piece 연결은 tpiece_set 1개를 소비해야 합니다.");
+      Assert.That(tPieceAction.ActivateObjects, Does.Contain("TPieceSet_A"),
+        "T-piece 연결은 프리팹의 TPieceSet_A 표시를 켜야 합니다.");
     }
 
     [Test]
@@ -535,10 +535,9 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void PatientADoctorSubmissionNodesConfigureExistingNpcInteractions()
+    public void PatientADoctorSubmissionNodesShowDataDefinedNpcInteractions()
     {
-      var graph = ScenarioGraphLoader.LoadFromJson(
-        File.ReadAllText(PatientAScenarioPath), validateWithSchema: true);
+      var graph = LoadPatientAGraph();
 
       foreach (string nodeIdentifier in new[]
                {
@@ -548,12 +547,20 @@ namespace TriageTrainer.Tests
                  "ISC_PASS_CENTRAL_LINE_SET"
                })
       {
-        var node = graph.Nodes[nodeIdentifier] as ScenarioItemSubmissionConfigNode;
-        Assert.That(node, Is.Not.Null, nodeIdentifier);
-        Assert.That(node.PresetIdentifier, Is.Null,
-          $"{nodeIdentifier}는 존재하지 않는 프리셋을 스폰하지 않고 의사 NPC의 기존 상호작용을 설정해야 합니다.");
-        Assert.That(node.TargetIdentifier, Is.Not.Null.And.Not.Empty, nodeIdentifier);
-        Assert.That(node.Enabled, Is.True, nodeIdentifier);
+        var node = graph.Nodes[nodeIdentifier] as ScenarioInteractionVisibilityNode;
+        Assert.That(node, Is.Not.Null,
+          $"{nodeIdentifier}는 프리셋을 스폰하지 않고 의사 NPC의 전달 상호작용을 여는 InteractionVisibility 노드여야 합니다.");
+        Assert.That(node.Operation, Is.EqualTo(ScenarioInteractionVisibilityOperation.Show), nodeIdentifier);
+        Assert.That(node.Targets, Has.Count.EqualTo(1), nodeIdentifier);
+
+        var target = node.Targets[0];
+        Assert.That(target.Entity.Identifier, Is.EqualTo("npc-doctor-patient-a-critical"), nodeIdentifier);
+        var definition = FindInteractionDefinition(graph, target.Entity.Identifier, target.InteractionIdentifier);
+        Assert.That(definition.Kind, Is.EqualTo(InteractionKind.ItemSubmission), nodeIdentifier);
+        Assert.That(definition.InitialVisible, Is.False,
+          $"{nodeIdentifier}가 열기 전에는 전달 상호작용이 숨겨져 있어야 합니다.");
+        Assert.That(definition.AfterInteract, Is.EqualTo(InteractionAfterInteract.HideForAll),
+          $"{nodeIdentifier}의 전달 상호작용은 한 번 수행하면 모두에게 숨겨져야 합니다.");
       }
     }
 
@@ -896,21 +903,13 @@ namespace TriageTrainer.Tests
       StringAssert.Contains("\"nodeType\": \"ManualEntrypoint\"", scenario);
       StringAssert.IsMatch("(?s)\"P004\".*?\"nextIdentifier\": \"arrest\"", scenario);
 
-      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
-      var patient = prefab.GetComponent<PatientController>();
-      var actions = typeof(PatientController).GetField(
-          "_assessActions", BindingFlags.Instance | BindingFlags.NonPublic)
-        ?.GetValue(patient) as System.Collections.IEnumerable;
-      PatientController.AssessActionConfig pulseAction = null;
-      foreach (object action in actions ?? Array.Empty<object>())
-      {
-        if (action is PatientController.AssessActionConfig config && config.Identifier == "assess_pulse_r1")
-          pulseAction = config;
-      }
-
-      Assert.That(pulseAction, Is.Not.Null);
-      Assert.That(pulseAction.ActionDialogue, Is.Null.Or.Empty);
-      Assert.That(pulseAction.ResultDialogue, Is.Null.Or.Empty);
+      var graph = LoadPatientAGraph();
+      var pulseAction = FindInteractionDefinition(graph, "patient_a", "assess_pulse_r1");
+      Assert.That(pulseAction.GetExtra("actionDialogue"), Is.Null.Or.Empty,
+        "맥박 확인 대사는 상호작용 정의가 아니라 시나리오 대화 노드가 재생합니다.");
+      Assert.That(pulseAction.GetExtra("resultDialogue"), Is.Null.Or.Empty);
+      Assert.That(HasQuestCondition(pulseAction, "Quest_Check_Pulse", "assess-pulse-patient-a-r1"), Is.True,
+        "첫 맥박 확인은 심정지 맥박 확인 퀘스트가 현재일 때만 열려야 합니다.");
       StringAssert.Contains("\"identifier\": \"D_PULSE_R1_ACTION\"", scenario);
       StringAssert.Contains("\"dialogueContent\": \"(환자의 목에 손을 대고 경동맥을 촉지한다.)\"", scenario);
       StringAssert.Contains("\"identifier\": \"D_PULSE_R1_RESULT\"", scenario);
@@ -1225,311 +1224,187 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void SecondChestCompressionActionRequiresFirstRoundCompletion()
+    public void SecondChestCompressionActionRequiresAssignedRoleAndCurrentQuest()
     {
-      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
-      Assert.That(prefab, Is.Not.Null);
-      var instance = UnityEngine.Object.Instantiate(prefab);
-      var interactor = new GameObject("chest-compression-interactor");
-      try
-      {
-        interactor.AddComponent<MultiplayerInfrastructure.Player.PlayerController>();
-        var secondRoundAction = System.Array.Find(
-          instance.GetComponentsInChildren<ScenarioActionInteractable>(true),
-          action => action != null && action.CompletionSignal == "interact_chest");
-        Assert.That(secondRoundAction, Is.Not.Null);
+      var graph = LoadPatientAGraph();
+      var secondRound = FindInteractionDefinition(graph, "patient_a", "interact_chest");
+      Assert.That(secondRound.InitialVisible, Is.False,
+        "2차 가슴압박은 시나리오 활성화 전에는 노출되지 않아야 합니다.");
+      Assert.That(secondRound.MatchMode, Is.EqualTo(ScenarioConditionMatchMode.All));
+      Assert.That(HasTagCondition(secondRound, "nurse_a"), Is.True);
+      Assert.That(HasQuestCondition(secondRound, "Quest_ChestComp_A", "start-chest-compression-r2-patient-a"), Is.True);
 
-        ScenarioInteractionSignals.Clear("click_to_start_comp");
-        Assert.That(secondRoundAction.CanInteract(interactor.transform), Is.False,
-          "2차 가슴압박은 시나리오 활성화 전에는 노출되지 않아야 합니다.");
-
-        secondRoundAction.SetEnabled(true);
-        ScenarioInteractionSignals.Raise("click_to_start_comp");
-        Assert.That(secondRoundAction.CanInteract(interactor.transform), Is.False,
-          "역할 식별자가 없는 플레이어에게 담당자 전용 가슴압박을 노출하면 안 됩니다.");
-      }
-      finally
-      {
-        ScenarioInteractionSignals.Clear("click_to_start_comp");
-        UnityEngine.Object.DestroyImmediate(interactor);
-        UnityEngine.Object.DestroyImmediate(instance);
-      }
+      const string playerIdentifier = "test-chest-compression-no-role";
+      PlayerTagService.ClearTags(playerIdentifier);
+      bool visible = ScenarioConditionEvaluator.Evaluate(
+        secondRound.VisibilityConditions, secondRound.MatchMode,
+        ScenarioConditionContext.ForPlayerIdentifier(playerIdentifier), out string reason);
+      Assert.That(visible, Is.False,
+        $"역할 식별자가 없는 플레이어에게 담당자 전용 가슴압박을 노출하면 안 됩니다. ({reason})");
     }
 
     [Test]
-    public void PatientAStageGatedActionsStartDisabled()
+    public void PatientAStageGatedActionsStartHiddenInScenarioData()
     {
-      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
-      Assert.That(prefab, Is.Not.Null);
-      var instance = UnityEngine.Object.Instantiate(prefab);
-      var interactor = new GameObject("stage-gate-interactor");
-      try
+      var graph = LoadPatientAGraph();
+      string[] stageSignals =
       {
-        interactor.AddComponent<MultiplayerInfrastructure.Player.PlayerController>();
-        string[] stageSignals =
-        {
-          "click_to_start_comp", "interact_chest", "start_ambu_r1", "start_ambu_r2",
-          "interact_patient_chest", "remove_tpiece", "remove_patient_clothing",
-          "interact_tpiece", "remove_intu_stylet"
-        };
-        foreach (string signal in stageSignals)
-        {
-          var action = System.Array.Find(
-            instance.GetComponentsInChildren<ScenarioActionInteractable>(true),
-            each => each != null && each.CompletionSignal == signal);
-          Assert.That(action, Is.Not.Null, $"신호 '{signal}' 상호작용을 프리팹에서 찾지 못했습니다.");
-          Assert.That(action.CanInteract(interactor.transform), Is.False,
-            $"상호작용 '{signal}'은 시나리오 활성화 전에는 노출되면 안 됩니다.");
-        }
+        "click_to_start_comp", "interact_chest", "start_ambu_r1", "start_ambu_r2",
+        "interact_patient_chest", "remove_tpiece", "remove_patient_clothing",
+        "interact_tpiece", "remove_intu_stylet"
+      };
+      foreach (string signal in stageSignals)
+      {
+        var definition = FindInteractionDefinitionBySignal(graph, "patient_a", signal);
+        Assert.That(definition.InitialVisible, Is.False,
+          $"상호작용 '{signal}'은 시나리오 활성화 전에는 노출되면 안 됩니다.");
+        Assert.That(IsOpenedByScenarioData(graph, definition), Is.True,
+          $"상호작용 '{signal}'을 여는 조건 절이나 가시성 노드가 없습니다.");
+      }
 
-        var controller = instance.GetComponent<PatientController>();
-        Assert.That(controller, Is.Not.Null);
-        var getAssessAction = typeof(PatientController).GetMethod(
-          "GetAssessAction", BindingFlags.Instance | BindingFlags.NonPublic);
-        Assert.That(getAssessAction, Is.Not.Null);
-        var pulseAction = getAssessAction.Invoke(controller, new object[] { "assess_pulse_r1" })
-          as PatientController.AssessActionConfig;
-        Assert.That(pulseAction, Is.Not.Null);
-        Assert.That(pulseAction.Enabled, Is.False,
-          "맥박 확인(r1)은 심정지 구간 활성화 전에는 노출되면 안 됩니다.");
-      }
-      finally
-      {
-        UnityEngine.Object.DestroyImmediate(interactor);
-        UnityEngine.Object.DestroyImmediate(instance);
-      }
+      var pulseAction = FindInteractionDefinition(graph, "patient_a", "assess_pulse_r1");
+      Assert.That(pulseAction.InitialVisible, Is.False,
+        "맥박 확인(r1)은 심정지 구간 활성화 전에는 노출되면 안 됩니다.");
+      Assert.That(pulseAction.HasVisibilityConditions, Is.True);
     }
 
     [Test]
     public void RoscGcsAssessmentStartsHidden()
     {
-      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
-      Assert.That(prefab, Is.Not.Null);
-      var instance = UnityEngine.Object.Instantiate(prefab);
-      try
-      {
-        var controller = instance.GetComponent<PatientController>();
-        Assert.That(controller, Is.Not.Null);
-        var getAssessAction = typeof(PatientController).GetMethod(
-          "GetAssessAction", BindingFlags.Instance | BindingFlags.NonPublic);
-        Assert.That(getAssessAction, Is.Not.Null);
-        var action = getAssessAction.Invoke(controller, new object[] { "assess_gcs_rosc" })
-          as PatientController.AssessActionConfig;
-        Assert.That(action, Is.Not.Null);
-        Assert.That(action.Enabled, Is.False);
-      }
-      finally
-      {
-        UnityEngine.Object.DestroyImmediate(instance);
-      }
+      var graph = LoadPatientAGraph();
+      var data = FindInteractionDefinition(graph, "patient_a", "assess_gcs_rosc");
+      Assert.That(data.InitialVisible, Is.False);
+      Assert.That(HasQuestCondition(data, "Quest_Check_GCS_ROSC", "assess-gcs-rosc-patient-a"), Is.True);
+
+      var codeDefinitions = DeclarePatientCodeDefinitions(PatientAPrefabPath);
+      Assert.That(codeDefinitions, Contains.Key("assess_gcs_rosc"));
+      Assert.That(codeDefinitions["assess_gcs_rosc"].InitialVisible, Is.False,
+        "코드 리터럴 기본값도 숨김이어야 시나리오 데이터 없이 노출되지 않습니다.");
     }
 
     [Test]
-    public void PatientAUnusedAssessAndLiftInteractionsStartDisabled()
+    public void PatientAUnusedAssessAndLiftInteractionsStartHiddenInCode()
     {
-      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
-      Assert.That(prefab, Is.Not.Null);
-      var patient = prefab.GetComponent<PatientController>();
-      Assert.That(patient, Is.Not.Null);
-
-      var enabledByAssessIdentifier = ReadAssessActionEnabledStates(patient);
-
-      // AddAssessInteracts는 프리팹에 없는 표준 사정 동작을 코드 기본값(활성)으로 보충한다.
-      // 따라서 노출을 막으려면 프리팹에 항목을 명시하고 비활성으로 저장해야 한다.
-      foreach (string identifier in new[] { "assess_vital", "assess_avpu_gcs", "assess_pulse", "assess_gcs", "assess_gcs_rosc" })
+      string yaml = File.ReadAllText(PatientAPrefabPath);
+      foreach (string field in new[]
+               {
+                 "_assessActions:", "_interactConfigs:", "_liftDisplayText:", "_carryDisplayText:",
+                 "_monitorSelectDisplayText:"
+               })
       {
-        Assert.That(enabledByAssessIdentifier, Contains.Key(identifier),
-          $"사정 동작 '{identifier}'을 프리팹에 명시해야 코드 기본값 보충이 활성 상태로 되살리지 않습니다.");
-        Assert.That(enabledByAssessIdentifier[identifier], Is.False,
-          $"사정 동작 '{identifier}'은 시나리오가 활성화하기 전에는 노출되면 안 됩니다.");
+        Assert.That(yaml, Does.Not.Contain(field),
+          $"프리팹은 더 이상 인터렉션 데이터('{field}')를 직렬화하면 안 됩니다. 코드 리터럴과 시나리오 데이터가 정의합니다.");
       }
 
-      var interactConfigs = typeof(PatientController).GetField(
-          "_interactConfigs", BindingFlags.Instance | BindingFlags.NonPublic)
-        ?.GetValue(patient) as System.Collections.IEnumerable;
-      Assert.That(interactConfigs, Is.Not.Null);
-
-      object liftConfig = null;
-      foreach (object each in interactConfigs)
+      var codeDefinitions = DeclarePatientCodeDefinitions(PatientAPrefabPath);
+      foreach (string identifier in new[]
+               {
+                 "assess_vital", "assess_avpu_gcs", "assess_pulse", "assess_gcs", "assess_gcs_rosc", "lift_from_bed"
+               })
       {
-        string identifier = each?.GetType().GetProperty("Identifier")?.GetValue(each) as string;
-        if (identifier == "lift_from_bed")
-          liftConfig = each;
+        Assert.That(codeDefinitions, Contains.Key(identifier),
+          $"'{identifier}'은 코드 리터럴로 레지스트리에 선언되어야 합니다.");
+        Assert.That(codeDefinitions[identifier].InitialVisible, Is.False,
+          $"'{identifier}'은 시나리오가 열기 전에는 노출되면 안 됩니다.");
       }
-      Assert.That(liftConfig, Is.Not.Null);
-      Assert.That(liftConfig.GetType().GetProperty("Enabled")?.GetValue(liftConfig), Is.False,
-        "'환자를 들어올리기'는 patient_a_critical에서 사용하지 않으므로 비활성이어야 합니다.");
+
+      Assert.That(codeDefinitions["carry_patient"].InitialVisible, Is.True,
+        "환자 업기는 시나리오 데이터 없이도 보이는 내재 상호작용입니다.");
     }
 
     [Test]
-    public void PatientAScenarioActivatesGatedAssessmentsBeforeTheirValidators()
+    public void PatientAGatedAssessmentsOpenByQuestConditionsInsteadOfActivationNodes()
     {
-      var graph = ScenarioGraphLoader.LoadFromJson(
-        File.ReadAllText(Path.Combine(Application.dataPath,
-          "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json")),
-        validateWithSchema: true);
+      var graph = LoadPatientAGraph();
 
-      AssertAssessActivationPrecedesValidator(graph, "Q007",
-        "ACT_VITAL_ASSESS_A", "activate_patient_a_vital_assess", "V011_1");
-      AssertAssessActivationPrecedesValidator(graph, "Q008",
-        "ACT_AVPU_GCS_ASSESS_A", "activate_patient_a_avpu_gcs_assess", "V012");
+      Assert.That(graph.Nodes.Keys.Where(key => key.StartsWith("ACT_", StringComparison.Ordinal)), Is.Empty,
+        "단계 개방(ACT_*) 노드는 시나리오 데이터의 조건 절로 대체되어야 합니다.");
+      Assert.That(graph.Nodes, Contains.Key("V011_1"));
+      Assert.That(graph.Nodes, Contains.Key("V012"));
+
+      var vital = FindInteractionDefinition(graph, "patient_a", "assess_vital");
+      Assert.That(HasQuestCondition(vital, "Quest_Check_Vital_PatientA", "assess-vital-patient-a"), Is.True,
+        "활력징후 사정은 해당 퀘스트 기준이 현재일 때만 열려야 합니다.");
+      var gcs = FindInteractionDefinition(graph, "patient_a", "assess_avpu_gcs");
+      Assert.That(HasQuestCondition(gcs, "Quest_Check_GCS_PatientA", "assess-gcs-patient-a"), Is.True,
+        "의식상태 사정은 해당 퀘스트 기준이 현재일 때만 열려야 합니다.");
     }
 
     /// <summary>
-    /// 단계 개방 이벤트는 플레이어별 퀘스트 상태 플래그 풀을 갱신한다. 풀 변경은 서버 권위이므로
-    /// 배정 클라이언트에서만 실행되면(InvokeOnRoleClient) 아무 플레이어에게도 반영되지 않는다.
+    /// 단계 개방 이벤트와 플레이어별 퀘스트 상태 플래그는 폐기됐다. 노출은 시나리오 데이터의 조건 절이
+    /// 각 피어에서 복제된 퀘스트·태그 상태로 판정하므로 서버 전용 이벤트가 필요 없다.
     /// </summary>
     [Test]
-    public void PatientAStageActivationsRunOnServerSoQuestStateFlagsReplicate()
+    public void PatientAStageActivationEventsAreRetired()
     {
-      var graph = ScenarioGraphLoader.LoadFromJson(
-        File.ReadAllText(Path.Combine(Application.dataPath,
-          "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json")),
-        validateWithSchema: true);
+      var graph = LoadPatientAGraph();
+      var leftovers = graph.Nodes.Values.OfType<ScenarioInvokeEventNode>()
+        .Where(node => node.EventIdentifier != null
+                       && node.EventIdentifier.StartsWith("activate_patient_a_", StringComparison.Ordinal))
+        .Select(node => node.EventIdentifier)
+        .ToList();
+      Assert.That(leftovers, Is.Empty, "단계 개방 이벤트는 가시성 조건·노드로 대체되어야 합니다.");
 
-      var activationEvents = new HashSet<string>(StringComparer.Ordinal)
+      string bootstrapDirectory = Path.Combine(Directory.GetParent(Application.dataPath).FullName,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario");
+      foreach (string file in Directory.GetFiles(bootstrapDirectory, "TriageScenarioEventBootstrap*.cs"))
       {
-        "activate_patient_a_vital_assess",
-        "activate_patient_a_avpu_gcs_assess",
-        "activate_patient_a_arrest_actions",
-        "activate_patient_a_stylet_removal",
-        "activate_patient_a_tpiece_attach",
-        "activate_patient_a_cpr2_actions",
-        "activate_patient_a_clothing_removal",
-        "rosc_monitor_ui",
-      };
-
-      var found = new HashSet<string>(StringComparer.Ordinal);
-      foreach (var pair in graph.Nodes)
-      {
-        if (pair.Value is not ScenarioInvokeEventNode invoke
-            || !activationEvents.Contains(invoke.EventIdentifier))
-          continue;
-
-        found.Add(invoke.EventIdentifier);
-        Assert.That(invoke.InvokeOnRoleClient, Is.False,
-          $"'{pair.Key}'({invoke.EventIdentifier})는 서버에서 실행되어야 퀘스트 상태 플래그가 복제됩니다.");
+        Assert.That(File.ReadAllText(file), Does.Not.Contain("activate_patient_a_"),
+          $"{Path.GetFileName(file)}에 단계 개방 이벤트 잔재가 남아 있습니다.");
       }
-
-      CollectionAssert.AreEquivalent(activationEvents, found,
-        "단계 개방 이벤트가 그래프에서 사라졌습니다.");
     }
 
     /// <summary>
-    /// 개방 이벤트가 올리는 플래그와, 그 플래그가 여는 상호작용 표가 서로 맞물려야 한다.
-    /// 어느 한쪽만 바뀌면 상호작용이 영영 열리지 않거나 처음부터 열려 있게 된다.
+    /// 단계별 상호작용은 모두 숨김으로 시작하고, 각자를 여는 퀘스트 조건이 시나리오 데이터에 있어야 한다.
+    /// 어느 한쪽이 빠지면 상호작용이 영영 열리지 않거나 처음부터 열려 있게 된다.
     /// </summary>
     [Test]
-    public void PatientAQuestStateFlagGateCoversEveryStageInteraction()
+    public void PatientAEveryStageInteractionHasAnOpenerInScenarioData()
     {
+      var graph = LoadPatientAGraph();
       var expected = new Dictionary<string, string>(StringComparer.Ordinal)
       {
-        { "patient_a/assess_vital", PatientACriticalQuestStateFlags.VitalAssess },
-        { "patient_a/assess_avpu_gcs", PatientACriticalQuestStateFlags.AvpuGcsAssess },
-        { "patient_a/assess_pulse_r1", PatientACriticalQuestStateFlags.ArrestPulseAssess },
-        { "patient_a/click_to_start_comp", PatientACriticalQuestStateFlags.Cpr1Actions },
-        { "patient_a/start_ambu_r1", PatientACriticalQuestStateFlags.Cpr1Actions },
-        { "patient_a/interact_patient_chest", PatientACriticalQuestStateFlags.Cpr1Actions },
-        { "patient_a/remove_tpiece", PatientACriticalQuestStateFlags.Cpr1Actions },
-        { "patient_a/remove_intu_stylet", PatientACriticalQuestStateFlags.StyletRemoval },
-        { "patient_a/interact_tpiece", PatientACriticalQuestStateFlags.TpieceAttach },
-        { "patient_a/interact_chest", PatientACriticalQuestStateFlags.Cpr2Actions },
-        { "patient_a/start_ambu_r2", PatientACriticalQuestStateFlags.Cpr2Actions },
-        { "patient_a/remove_patient_clothing", PatientACriticalQuestStateFlags.ClothingRemoval },
-        { "patient_a/assess_pulse_r2", PatientACriticalQuestStateFlags.RoscPulseAssess },
-        { "patient_a/assess_gcs_rosc", PatientACriticalQuestStateFlags.RoscGcsAssess },
+        { "assess_vital", "Quest_Check_Vital_PatientA" },
+        { "assess_avpu_gcs", "Quest_Check_GCS_PatientA" },
+        { "assess_pulse_r1", "Quest_Check_Pulse" },
+        { "click_to_start_comp", "Quest_ChestComp_B" },
+        { "start_ambu_r1", "Quest_Ambu_A" },
+        { "interact_patient_chest", "Quest_Defibrillator_C" },
+        { "remove_tpiece", "Quest_Ambu_A" },
+        { "remove_intu_stylet", "Quest_Intubation_PatientA" },
+        { "interact_tpiece", "Quest_Oxygen_PatientA" },
+        { "interact_chest", "Quest_ChestComp_A" },
+        { "start_ambu_r2", "Quest_Ambu_B" },
+        { "remove_patient_clothing", "Quest_Cut_Clothing" },
+        { "assess_pulse_r2", "Quest_Check_Pulse_ROSC" },
+        { "assess_gcs_rosc", "Quest_Check_GCS_ROSC" },
       };
-
-      CollectionAssert.AreEquivalent(
-        expected.Keys, PatientACriticalQuestStateFlags.GatedInteractionAddresses,
-        "게이트 대상 상호작용 목록이 달라졌습니다.");
 
       foreach (var pair in expected)
       {
-        string[] address = pair.Key.Split('/');
-        Assert.That(PatientACriticalQuestStateFlags.FindFlag(address[0], address[1]),
-          Is.EqualTo(pair.Value), $"'{pair.Key}'을 여는 플래그가 달라졌습니다.");
+        var definition = FindInteractionDefinition(graph, "patient_a", pair.Key);
+        Assert.That(definition.InitialVisible, Is.False, $"'{pair.Key}'은 숨김으로 시작해야 합니다.");
+        Assert.That(HasQuestCondition(definition, pair.Value, null), Is.True,
+          $"'{pair.Key}'을 여는 퀘스트 조건이 달라졌습니다.");
       }
 
-      Assert.That(PatientACriticalQuestStateFlags.RoscPulseAssess,
-        Is.Not.EqualTo(PatientACriticalQuestStateFlags.RoscGcsAssess),
-        "ROSC 맥박 확인을 마쳐도 뒤의 의식상태 재사정이 잠기지 않도록 두 단계는 독립 플래그를 써야 합니다.");
+      Assert.That(expected["assess_pulse_r2"], Is.Not.EqualTo(expected["assess_gcs_rosc"]),
+        "ROSC 맥박 확인을 마쳐도 뒤의 의식상태 재사정이 잠기지 않도록 두 단계는 다른 퀘스트로 열어야 합니다.");
     }
 
     [Test]
-    public void PatientADefibrillatorPadAlsoRequiresItsActiveQuestBinding()
+    public void PatientADefibrillatorPadOpensOnlyWhileItsQuestCriteriaIsCurrent()
     {
-      try
-      {
-        PatientACriticalQuestStateFlags.ArmFor(PatientACriticalQuestStateFlags.ScenarioIdentifier);
+      var graph = LoadPatientAGraph();
+      var pad = FindInteractionDefinition(graph, "patient_a", "interact_patient_chest");
+      Assert.That(HasQuestCondition(pad, "Quest_Defibrillator_C", "attach-defibrillator-pad-patient-a"), Is.True);
+      Assert.That(pad.ActivateObjects,
+        Is.EquivalentTo(new[] { "defibrillatorpad_midaxillary_A", "defibrillatorpad_subclavicle_A" }),
+        "패드 부착은 프리팹의 두 패드 표시를 켜야 합니다.");
 
-        Assert.That(
-          PatientACriticalQuestStateFlags.RequiresActiveQuestBinding(
-            "patient_a", "interact_patient_chest"),
-          Is.True);
-        Assert.That(
-          PatientACriticalQuestStateFlags.RequiresActiveQuestBinding(
-            "patient_a", "click_to_start_comp"),
-          Is.False,
-          "제세동 패드 외 CPR 동작은 각 담당 퀘스트의 표시 바인딩에 종속되면 안 됩니다.");
-      }
-      finally
-      {
-        PatientACriticalQuestStateFlags.Disarm();
-      }
-    }
-
-    /// <summary>
-    /// 게이트가 꺼져 있으면(다른 시나리오) 판정에 관여하지 않아야 한다. 이 시나리오에서만 적용한다는
-    /// 범위 제한이 코드로 남아 있는지 확인한다.
-    /// </summary>
-    [Test]
-    public void PatientAQuestStateFlagGateIsInertWhileDisarmed()
-    {
-      PatientACriticalQuestStateFlags.Disarm();
-      Assert.That(PatientACriticalQuestStateFlags.IsArmed, Is.False);
-      Assert.That(
-        PatientACriticalQuestStateFlags.TryEvaluate("patient_a", "assess_vital", null, out _),
-        Is.False, "게이트가 꺼져 있으면 기존 판정 경로를 그대로 써야 합니다.");
-
-      PatientACriticalQuestStateFlags.ArmFor("patient_b_c_ct");
-      Assert.That(PatientACriticalQuestStateFlags.IsArmed, Is.False,
-        "다른 시나리오 식별자로는 게이트가 켜지면 안 됩니다.");
-    }
-
-    /// <summary>
-    /// 게이트를 켜면 이 시나리오의 플래그 어휘가 등록되어야 한다. 인스펙터가 목록에서 플래그를 고를 수
-    /// 있게 하는 근거이며, 풀이 아직 비어 있는 시점에도 어떤 값이 의미를 갖는지 알려 준다.
-    /// </summary>
-    [Test]
-    public void ArmingPublishesQuestStateFlagVocabulary()
-    {
-      try
-      {
-        PatientACriticalQuestStateFlags.ArmFor(PatientACriticalQuestStateFlags.ScenarioIdentifier);
-
-        var expected = new[]
-        {
-          PatientACriticalQuestStateFlags.VitalAssess,
-          PatientACriticalQuestStateFlags.AvpuGcsAssess,
-          PatientACriticalQuestStateFlags.ArrestPulseAssess,
-          PatientACriticalQuestStateFlags.Cpr1Actions,
-          PatientACriticalQuestStateFlags.StyletRemoval,
-          PatientACriticalQuestStateFlags.TpieceAttach,
-          PatientACriticalQuestStateFlags.Cpr2Actions,
-          PatientACriticalQuestStateFlags.ClothingRemoval,
-          PatientACriticalQuestStateFlags.RoscPulseAssess,
-          PatientACriticalQuestStateFlags.RoscGcsAssess,
-        };
-        CollectionAssert.AreEquivalent(expected, PlayerQuestStateFlagService.KnownFlags);
-      }
-      finally
-      {
-        PatientACriticalQuestStateFlags.Disarm();
-      }
-
-      Assert.That(PlayerQuestStateFlagService.KnownFlags, Is.Empty,
-        "시나리오가 끝나면 어휘도 함께 내려가야 다른 시나리오의 도구 화면을 오염시키지 않습니다.");
+      var compression = FindInteractionDefinition(graph, "patient_a", "click_to_start_comp");
+      Assert.That(HasTagCondition(compression, "nurse_b"), Is.True,
+        "1주기 가슴압박은 담당 간호사 태그로 제한되어야 합니다.");
     }
 
     /// <summary>플래그 풀은 플레이어별 집합이므로, 한 사람의 상태가 다른 사람에게 새면 안 된다.</summary>
@@ -1538,25 +1413,18 @@ namespace TriageTrainer.Tests
     {
       const string nurseB = "test-user-nurse-b";
       const string nurseC = "test-user-nurse-c";
+      const string vitalFlag = "test-flag-vital-assess";
+      const string cprFlag = "test-flag-cpr1-actions";
       try
       {
-        PlayerQuestStateFlagService.ReplaceFlags(
-          nurseB, new[] { PatientACriticalQuestStateFlags.VitalAssess });
+        PlayerQuestStateFlagService.ReplaceFlags(nurseB, new[] { vitalFlag });
         PlayerQuestStateFlagService.ReplaceFlags(nurseC, Array.Empty<string>());
 
-        Assert.That(
-          PlayerQuestStateFlagService.Has(nurseB, PatientACriticalQuestStateFlags.VitalAssess),
-          Is.True);
-        Assert.That(
-          PlayerQuestStateFlagService.Has(nurseC, PatientACriticalQuestStateFlags.VitalAssess),
-          Is.False);
+        Assert.That(PlayerQuestStateFlagService.Has(nurseB, vitalFlag), Is.True);
+        Assert.That(PlayerQuestStateFlagService.Has(nurseC, vitalFlag), Is.False);
 
         // 같은 값을 두 번 넣어도 집합이므로 하나만 남는다.
-        PlayerQuestStateFlagService.ReplaceFlags(nurseC, new[]
-        {
-          PatientACriticalQuestStateFlags.Cpr1Actions,
-          PatientACriticalQuestStateFlags.Cpr1Actions,
-        });
+        PlayerQuestStateFlagService.ReplaceFlags(nurseC, new[] { cprFlag, cprFlag });
         Assert.That(PlayerQuestStateFlagService.GetFlags(nurseC).Count, Is.EqualTo(1));
       }
       finally
@@ -1564,43 +1432,6 @@ namespace TriageTrainer.Tests
         PlayerQuestStateFlagService.ClearFlags(nurseB);
         PlayerQuestStateFlagService.ClearFlags(nurseC);
       }
-    }
-
-    private static Dictionary<string, bool> ReadAssessActionEnabledStates(PatientController patient)
-    {
-      var assessActions = typeof(PatientController).GetField(
-          "_assessActions", BindingFlags.Instance | BindingFlags.NonPublic)
-        ?.GetValue(patient) as System.Collections.IEnumerable;
-      Assert.That(assessActions, Is.Not.Null);
-
-      var states = new Dictionary<string, bool>(StringComparer.Ordinal);
-      foreach (object action in assessActions)
-      {
-        string identifier = action?.GetType().GetProperty("Identifier")?.GetValue(action) as string;
-        if (string.IsNullOrWhiteSpace(identifier))
-          continue;
-
-        states[identifier] = (bool)action.GetType().GetProperty("Enabled").GetValue(action);
-      }
-      return states;
-    }
-
-    private static void AssertAssessActivationPrecedesValidator(
-      ScenarioGraph graph, string predecessorIdentifier, string activationIdentifier,
-      string expectedEventIdentifier, string validatorIdentifier)
-    {
-      Assert.That(graph.Nodes, Contains.Key(predecessorIdentifier));
-      Assert.That(graph.Nodes, Contains.Key(activationIdentifier));
-      Assert.That(graph.Nodes, Contains.Key(validatorIdentifier));
-
-      Assert.That(graph.Nodes[predecessorIdentifier].NextIdentifier, Is.EqualTo(activationIdentifier),
-        $"'{predecessorIdentifier}'은 검증 노드보다 먼저 '{activationIdentifier}'으로 이어져야 합니다.");
-
-      var activation = graph.Nodes[activationIdentifier] as ScenarioInvokeEventNode;
-      Assert.That(activation, Is.Not.Null);
-      Assert.That(activation.EventIdentifier, Is.EqualTo(expectedEventIdentifier));
-      Assert.That(activation.NextIdentifier, Is.EqualTo(validatorIdentifier),
-        $"'{activationIdentifier}' 다음에는 대기 검증 노드 '{validatorIdentifier}'가 와야 합니다.");
     }
 
     [Test]
@@ -1762,29 +1593,26 @@ namespace TriageTrainer.Tests
         "우측 정맥로 연결에는 플라즈마 솔루션이 걸려 있어야 합니다.");
     }
 
-    /// <summary>
-    /// CPR 1주기 진입 시점에는 첫 맥박 확인이 이미 끝나 있고, 그 단계의 처치 상호작용만 열려야 한다.
-    /// 맥박 확인을 함께 열면 CPR 1주기 목표와 지나간 단계의 메뉴가 동시에 노출된다.
-    /// </summary>
     [Test]
-    public void PatientACpr1ManualEntryOpensOnlyCpr1Actions()
+    public void PatientAManualEntryResetsInteractionOverridesInsteadOfReopeningStages()
     {
       string projectRoot = Directory.GetParent(Application.dataPath).FullName;
       string source = File.ReadAllText(Path.Combine(projectRoot,
         "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.prepare_patient_a_manual_entry.cs"));
 
-      int method = source.IndexOf("private void OpenPatientACpr1Actions()", StringComparison.Ordinal);
+      int method = source.IndexOf("private void ResetPatientAStagePresentation()", StringComparison.Ordinal);
       Assert.That(method, Is.GreaterThanOrEqualTo(0));
       string body = source.Substring(method,
         source.IndexOf("\n    private ", method + 1, StringComparison.Ordinal) - method);
 
-      StringAssert.Contains("PatientACriticalQuestStateFlags.Cpr1Actions", body,
-        "CPR 1주기 처치 상호작용 플래그를 올려야 합니다.");
-      Assert.That(body, Does.Not.Contain("ArrestPulseAssess"),
-        "이미 끝난 첫 맥박 확인 상호작용을 다시 열어서는 안 됩니다.");
-      StringAssert.Contains("PlacePatientADefibrillatorCartAtInitialPosition()", body,
+      StringAssert.Contains("ResetPatientAInteractionOverrides()", body,
+        "앞 단계로 수동 진입하면 수행 뒤 숨김 오버라이드를 지워 처치를 다시 할 수 있어야 합니다.");
+      StringAssert.Contains("InteractionRegistry.ResetOverridesForEntity", source,
+        "오버라이드 초기화는 레지스트리 API 로 해야 합니다.");
+      Assert.That(source, Does.Not.Contain("OpenPatientACpr1Actions"),
+        "단계별 상호작용 개방은 시나리오 데이터의 퀘스트 조건이 담당하므로 코드가 다시 열면 안 됩니다.");
+      StringAssert.Contains("PlacePatientADefibrillatorCartAtInitialPosition()", source,
         "제세동기 카트를 환자 침대에서 상호작용 가능한 초기 위치에 두어야 합니다.");
-
       StringAssert.Contains("PatientAStageArrestPulseChecked", source,
         "첫 맥박 확인은 완료 상태로 기록되어야 합니다.");
     }
@@ -1817,10 +1645,8 @@ namespace TriageTrainer.Tests
     [Test]
     public void PatientASecondCprRoundStartsDefibrillationWithoutRoleAssignmentInteraction()
     {
-      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(DefibrillatorCartPrefabPath);
-      Assert.That(prefab, Is.Not.Null);
-      Assert.That(prefab.GetComponentsInChildren<ScenarioActionInteractable>(true)
-          .Any(action => action.CompletionSignal == "interact_defibrillator"), Is.False,
+      var graph = LoadPatientAGraph();
+      Assert.That(graph.Interactions.Any(each => each.CompletionSignal == "interact_defibrillator"), Is.False,
         "제세동 카트에는 역할 부여 상호작용이 없어야 합니다.");
 
       string scenario = File.ReadAllText(PatientAScenarioPath);
@@ -2259,22 +2085,25 @@ namespace TriageTrainer.Tests
     [Test]
     public void PatientAActionInteractionsRestoreDedicatedIconsAfterQuestMarkOverride()
     {
-      var patientPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
-      Assert.That(patientPrefab, Is.Not.Null);
-
+      var graph = LoadPatientAGraph();
       var expectedIcons = new Dictionary<string, string>
       {
-        { "remove_tpiece", "unlink" },
-        { "click_to_start_comp", "cpr" },
-        { "interact_chest", "cpr" },
-        { "remove_patient_clothing", "cut-cloth" }
+        { "remove_tpiece", "interaction-unlink" },
+        { "click_to_start_comp", "interaction-cpr" },
+        { "interact_chest", "interaction-cpr" },
+        { "remove_patient_clothing", "interaction-cut-cloth" }
       };
-      var interactions = patientPrefab.GetComponentsInChildren<ScenarioActionInteractable>(true);
       foreach (var expected in expectedIcons)
       {
-        var interaction = interactions.Single(each => each.CompletionSignal == expected.Key);
-        Assert.That(interaction.DisplayIcon, Is.Not.Null, $"{expected.Key} 아이콘이 지정되어야 합니다.");
-        Assert.That(interaction.DisplayIcon.name, Is.EqualTo(expected.Value));
+        var interaction = FindInteractionDefinition(graph, "patient_a", expected.Key);
+        Assert.That(interaction.Display.IconIdentifiers, Is.EqualTo(new[] { expected.Value }),
+          $"{expected.Key} 아이콘 식별자가 시나리오 데이터에 지정되어야 합니다.");
+      }
+      foreach (string texture in new[] { "cpr", "unlink", "cut-cloth" })
+      {
+        Assert.That(AssetDatabase.LoadAssetAtPath<Sprite>(
+            $"Assets/Modules/TriageTrainer/Resources/Textures/Interactions/{texture}.png"),
+          Is.Not.Null, $"상호작용 아이콘 '{texture}' 스프라이트가 있어야 합니다.");
       }
 
       string projectRoot = Directory.GetParent(Application.dataPath).FullName;
@@ -2296,15 +2125,12 @@ namespace TriageTrainer.Tests
     [Test]
     public void PatientAAmbuOxygenConnectionUsesAmbuBagIconAndAllowsQuestOverride()
     {
-      var patientPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
-      Assert.That(patientPrefab, Is.Not.Null);
-
-      var interaction = patientPrefab.GetComponentsInChildren<ScenarioActionInteractable>(true)
-        .Single(each => each.CompletionSignal == "connect_o2_to_ambu");
-      Assert.That(interaction.DisplayIcon, Is.Not.Null,
+      var graph = LoadPatientAGraph();
+      var interaction = FindInteractionDefinition(graph, "patient_a", "connect_o2_to_ambu");
+      Assert.That(interaction.Display.IconIdentifiers, Is.EqualTo(new[] { "ambubag" }),
         "산소 저장낭 연결 상호작용은 fallback 대신 앰부백 아이템 아이콘을 사용해야 합니다.");
-      Assert.That(AssetDatabase.GetAssetPath(interaction.DisplayIcon),
-        Is.EqualTo("Assets/Modules/TriageTrainer/Resources/Textures/Items/ambubag.png"));
+      Assert.That(AssetDatabase.LoadAssetAtPath<Sprite>(
+          "Assets/Modules/TriageTrainer/Resources/Textures/Items/ambubag.png"), Is.Not.Null);
 
       string projectRoot = Directory.GetParent(Application.dataPath).FullName;
       var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -2349,6 +2175,107 @@ namespace TriageTrainer.Tests
       var kindType = typeof(Level1RapidInfuserController).GetNestedType("FluidKind", BindingFlags.NonPublic);
       Assert.That(kindType, Is.Not.Null);
       return Enum.Parse(kindType, kindName);
+    }
+    // ── 인터렉션 레지스트리·시나리오 데이터 도우미 ─────────────────────────────
+
+    private static ScenarioGraph LoadPatientAGraph()
+      => ScenarioGraphLoader.LoadFromJson(File.ReadAllText(PatientAScenarioPath), validateWithSchema: true);
+
+    private static InteractionDefinition FindInteractionDefinition(
+      ScenarioGraph graph, string entityIdentifier, string interactionIdentifier)
+    {
+      var definition = graph.Interactions?.FirstOrDefault(each =>
+        each?.Entity != null && !each.Entity.IsTagReference
+        && each.Entity.Identifier == entityIdentifier
+        && each.InteractionIdentifier == interactionIdentifier);
+      Assert.That(definition, Is.Not.Null,
+        $"시나리오 데이터에 '{entityIdentifier}/{interactionIdentifier}' 인터렉션 정의가 없습니다.");
+      return definition;
+    }
+
+    private static InteractionDefinition FindInteractionDefinitionBySignal(
+      ScenarioGraph graph, string entityIdentifier, string completionSignal)
+    {
+      var definition = graph.Interactions?.FirstOrDefault(each =>
+        each?.Entity != null && !each.Entity.IsTagReference
+        && each.Entity.Identifier == entityIdentifier
+        && each.CompletionSignal == completionSignal);
+      Assert.That(definition, Is.Not.Null,
+        $"완료 신호 '{completionSignal}'을 올리는 '{entityIdentifier}' 인터렉션 정의가 없습니다.");
+      return definition;
+    }
+
+    private static IEnumerable<ScenarioCondition> FlattenConditions(IEnumerable<ScenarioCondition> conditions)
+    {
+      foreach (var condition in conditions ?? Enumerable.Empty<ScenarioCondition>())
+      {
+        if (condition == null)
+          continue;
+        if (condition.Type == ScenarioConditionType.Group)
+        {
+          foreach (var nested in FlattenConditions(condition.Conditions))
+            yield return nested;
+        }
+        else
+        {
+          yield return condition;
+        }
+      }
+    }
+
+    private static bool HasQuestCondition(
+      InteractionDefinition definition, string questIdentifier, string completionCriteriaIdentifier)
+      => FlattenConditions(definition.VisibilityConditions).Any(each =>
+        each.Type == ScenarioConditionType.PlayerHasQuest
+        && !each.Negate
+        && each.QuestIdentifier == questIdentifier
+        && (completionCriteriaIdentifier == null
+            || each.CompletionCriteriaIdentifier == completionCriteriaIdentifier));
+
+    private static bool HasTagCondition(InteractionDefinition definition, string tag)
+      => FlattenConditions(definition.VisibilityConditions).Any(each =>
+        each.Type == ScenarioConditionType.PlayerHasTag && !each.Negate && each.Tag == tag);
+
+    /// <summary>조건 절이 있거나, Show 가시성 노드가 이 인터렉션을 가리키면 시나리오 데이터가 여는 것으로 본다.</summary>
+    private static bool IsOpenedByScenarioData(ScenarioGraph graph, InteractionDefinition definition)
+    {
+      if (definition.HasVisibilityConditions)
+        return true;
+      return graph.Nodes.Values.OfType<ScenarioInteractionVisibilityNode>().Any(node =>
+        node.Operation == ScenarioInteractionVisibilityOperation.Show
+        && node.Targets.Any(target =>
+          target?.Entity != null
+          && target.Entity.Identifier == definition.Entity.Identifier
+          && target.InteractionIdentifier == definition.InteractionIdentifier));
+    }
+
+    /// <summary>
+    /// 프리팹 인스턴스가 코드 리터럴로 선언하는 인터렉션 정의를 식별자별로 모은다. 레지스트리에는 넣지 않는다.
+    /// </summary>
+    private static Dictionary<string, InteractionDefinition> DeclarePatientCodeDefinitions(string prefabPath)
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+      Assert.That(prefab, Is.Not.Null);
+      var instance = UnityEngine.Object.Instantiate(prefab);
+      try
+      {
+        var patient = instance.GetComponent<PatientController>();
+        Assert.That(patient, Is.Not.Null);
+        var identifierField = typeof(PatientController).GetField(
+          "_identifier", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(identifierField, Is.Not.Null);
+        identifierField.SetValue(patient, "test-code-declaration-patient");
+        Assert.That(patient.Interacts, Is.Not.Empty);
+
+        return patient.DeclareInteractions().ToDictionary(
+          declaration => declaration.Definition.InteractionIdentifier,
+          declaration => declaration.Definition,
+          StringComparer.Ordinal);
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(instance);
+      }
     }
   }
 }

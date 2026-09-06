@@ -28,6 +28,7 @@
 - [2026-07-08-settings-ui-unification-and-detached-root-fix.md](./2026-07-08-settings-ui-unification-and-detached-root-fix.md): 설정 UI 통합(탭) + 오버레이 detached root 표시 버그 수정 + 카메라 POV 설정 (2026-07-08)
 - [2026-08-03-mppm-memory-optimization.md](./2026-08-03-mppm-memory-optimization.md): MPPM 카메라 유지 및 자산 임포트 메모리 최적화
 - [2026-08-29-dedicated-server-build.md](./2026-08-29-dedicated-server-build.md): 데디케이티드 서버(헤드리스) 빌드 및 실행 경로 추가
+- [2026-09-06-interaction-registry-visibility.md](./2026-09-06-interaction-registry-visibility.md): 인터렉션 레지스트리와 가시성 체계 도입
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->

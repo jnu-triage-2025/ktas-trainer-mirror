@@ -729,30 +729,35 @@ namespace MultiplayerInfrastructure.Tests.Quest
     }
 
     [Test]
-    public void ScenarioActionUsesConfiguredPresentationAddressOrCompletionSignal()
+    public void DataDefinedActionInteractionUsesItsRegistryAddressAsPresentationTarget()
     {
-      var actionObject = new GameObject("QuestPresentationTests.ScenarioAction");
+      const string scenarioIdentifier = "quest-presentation-tests-action-scenario";
+      const string entityIdentifier = "quest-presentation-tests-patient";
       try
       {
-        var action = actionObject.AddComponent<ScenarioActionInteractable>();
-        SetPrivateField(action, "_presentationEntityIdentifier", "patient-a");
-        SetPrivateField(action, "_completionSignal", "interact-chest");
+        var definition = new InteractionDefinition
+        {
+          Entity = ScenarioEntityReference.ForIdentifier(entityIdentifier),
+          InteractionIdentifier = "interact-chest",
+          Kind = InteractionKind.Action,
+          KindSpecified = true,
+          CompletionSignal = "interact-chest",
+          Display = new InteractionDisplay { Text = "가슴압박" },
+        };
+        using (InteractionRegistry.BeginScenarioInitCycle(scenarioIdentifier))
+          InteractionRegistry.ApplyScenarioDefinitions(scenarioIdentifier, new[] { definition });
 
-        Assert.That(action.PresentationEntityIdentifier, Is.EqualTo("patient-a"));
-        Assert.That(action.InteractionIdentifier, Is.EqualTo("interact-chest"));
+        Assert.That(InteractionRegistry.TryGet(
+          new InteractionAddress(entityIdentifier, "interact-chest"), out var entry), Is.True);
+        var target = entry.Handler as IQuestPresentationTarget;
+        Assert.That(target, Is.Not.Null, "데이터 전용 Action 정의에는 레지스트리가 범용 핸들러를 만들어야 합니다.");
+        Assert.That(target.PresentationEntityIdentifier, Is.EqualTo(entityIdentifier));
+        Assert.That(target.InteractionIdentifier, Is.EqualTo("interact-chest"));
       }
       finally
       {
-        Object.DestroyImmediate(actionObject);
+        InteractionRegistry.ClearScenarioDefinitions(scenarioIdentifier);
       }
-    }
-
-    private static void SetPrivateField<T>(object target, string fieldName, T value)
-    {
-      var field = target.GetType().GetField(fieldName,
-        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-      Assert.That(field, Is.Not.Null, $"Missing field '{fieldName}'.");
-      field.SetValue(target, value);
     }
   }
 }

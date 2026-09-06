@@ -46,7 +46,6 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.QuestWaypointHighlight => new ScenarioQuestWaypointHighlightNode(),
       ScenarioNodeType.QuestMark => new ScenarioQuestMarkNode(),
       ScenarioNodeType.Delay => new ScenarioDelayNode(),
-      ScenarioNodeType.Interaction => new ScenarioInteractionNode(),
       ScenarioNodeType.CombineItem => new ScenarioCombineItemNode
       {
         InputItemIdentifiers = new System.Collections.Generic.List<string>()
@@ -70,11 +69,6 @@ namespace MultiplayerInfrastructure.Editor
         StateOperations = new System.Collections.Generic.List<ScenarioEntityStateOperation>()
       },
       ScenarioNodeType.PatientMedicalStatePreset => new ScenarioPatientMedicalStatePresetNode(),
-      ScenarioNodeType.ItemSubmissionConfig => new ScenarioItemSubmissionConfigNode
-      {
-        RequiredItems = new System.Collections.Generic.List<ScenarioItemRequirement>()
-      },
-      ScenarioNodeType.NpcInteractControl => new ScenarioNpcInteractControlNode(),
       ScenarioNodeType.TimeControl => new ScenarioTimeControlNode(),
       ScenarioNodeType.EntityStateSignalBinding => new ScenarioEntityStateSignalBindingNode(),
       ScenarioNodeType.SignalCounter => new ScenarioSignalCounterNode(),
@@ -82,6 +76,13 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.BedSnap => new ScenarioBedSnapNode(),
       ScenarioNodeType.ReturnToOrigin => new ScenarioReturnToOriginNode(),
       ScenarioNodeType.Lifecycle => new ScenarioLifecycleNode(),
+      ScenarioNodeType.InteractionVisibility => new ScenarioInteractionVisibilityNode
+      {
+        Targets = new System.Collections.Generic.List<ScenarioInteractionTarget>
+        {
+          new ScenarioInteractionTarget()
+        }
+      },
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

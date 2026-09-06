@@ -21,12 +21,10 @@ namespace TriageTrainer.Entity
   /// </para>
   /// </summary>
   [RequireComponent(typeof(NetworkObject))]
-  public sealed class StretcherController : NetworkBehaviour, IInteractable, IInteract, IInteractorConditional
+  public sealed class StretcherController : NetworkBehaviour, IInteractable, IInteract, IInteractorConditional, IInteractionRegistryExempt
   {
     private const int HandleCount = 6;
     private const int InvalidClientId = -1;
-
-    [SerializeField] private string _displayText = "들것";
     [SerializeField] private Transform _visualRoot;
     [SerializeField, Min(0f)] private float _balancedVisualYOffset = 0.2f;
     [SerializeField, Min(0f)] private float _moveSpeed = 3.5f;
@@ -50,7 +48,7 @@ namespace TriageTrainer.Entity
     // 로컬 피어: 자신이 점유 중인 손잡이의 Transform 캐시
     private Transform _localFollowAnchor;
 
-    public string DisplayText => _displayText;
+    public string DisplayText => "들것";
     public Sprite DisplayIcon => null;
     public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => Color.white;

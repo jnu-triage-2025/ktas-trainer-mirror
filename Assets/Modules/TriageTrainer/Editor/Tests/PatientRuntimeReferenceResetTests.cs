@@ -41,22 +41,17 @@ namespace TriageTrainer.Tests
         Assert.That(controller.SupportExternalRefs.SuctionWalls, Is.Empty);
         Assert.That(controller.SupportExternalRefs.Oxyflowmeters, Is.Empty);
 
-        var assessActionsField = typeof(PatientController).GetField(
-          "_assessActions", BindingFlags.Instance | BindingFlags.NonPublic);
-        Assert.That(assessActionsField?.GetValue(controller), Is.InstanceOf<System.Collections.IList>());
-        var assessActions = (System.Collections.IList)assessActionsField.GetValue(controller);
-        Assert.That(assessActions, Has.Count.EqualTo(4));
-        for (int i = 0; i < assessActions.Count; i++)
-          Assert.That(((PatientController.AssessActionConfig)assessActions[i]).Enabled, Is.False);
+        // 사정 동작 목록은 더 이상 직렬화하지 않는다(코드 리터럴 + 시나리오 데이터).
+        Assert.That(typeof(PatientController).GetField(
+            "_assessActions", BindingFlags.Instance | BindingFlags.NonPublic), Is.Null,
+          "사정 동작 설정은 프리팹 필드가 아니라 레지스트리 정의여야 합니다.");
 
         // Inspector의 Reset 메뉴는 Reset 훅 대신 기본 직렬화값 적용 후 OnValidate가
         // 실행될 수 있으므로, 그 경로도 동일하게 이전 프리팹 기본값을 복구해야 한다.
-        assessActionsField.SetValue(controller, new System.Collections.Generic.List<PatientController.AssessActionConfig>());
         controller.IntravenousLineCannulaSupported = false;
         InvokeOnValidate(controller);
 
         Assert.That(controller.IntravenousLineCannulaSupported, Is.True);
-        Assert.That((System.Collections.IList)assessActionsField.GetValue(controller), Has.Count.EqualTo(4));
       }
       finally
       {

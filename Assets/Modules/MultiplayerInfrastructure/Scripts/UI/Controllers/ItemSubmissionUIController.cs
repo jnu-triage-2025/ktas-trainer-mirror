@@ -180,7 +180,7 @@ namespace MultiplayerInfrastructure.UI
       }
 
       // 3) 완료 통지: 서버 세션 전역 신호를 올린다(소유자 → 서버 권한 라우팅).
-      _activeInteractable.NotifySubmissionCompleted();
+      _activeInteractable.NotifySubmissionCompleted(_activePlayer);
 
       Close();
     }

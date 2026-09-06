@@ -3,6 +3,7 @@ using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -12,7 +13,7 @@ namespace MultiplayerInfrastructure.Player
   /// <summary>
   /// Interactables과의 상호작용을 정의합니다.
   /// </summary>
-  public partial class PlayerController
+  public partial class PlayerController : IConditionStateProvider
   {
     [SerializeField] private NearbyInteractablesDetector _detector;
     [SerializeField] private InteractableObjectHintUIController _interactableHintUI;
@@ -122,8 +123,14 @@ namespace MultiplayerInfrastructure.Player
       // 순차 퀘스트의 완료 조건이 바뀌면 같은 감지 범위 안에서도 다음 상호작용을 즉시 다시 고른다.
       // 표시 UI만 다시 그리면 CanInteract 결과는 이전 목록에 고정되어 범위를 나갔다 들어와야 갱신된다.
       QuestPresentationService.PresentationChanged += RefreshInteractableHintsNow;
+      // 레지스트리의 정의·오버라이드 변경과 신호 변경은 조건 판정 입력이므로 힌트를 즉시 다시 계산한다.
+      InteractionRegistry.HintRefreshRequested += RefreshInteractableHintsNow;
+      ScenarioInteractionSignals.OnSignalRegistered += HandleSignalChangedForHints;
+      ScenarioInteractionSignals.OnSignalCleared += HandleSignalChangedForHints;
       return true;
     }
+
+    private void HandleSignalChangedForHints(string signal) => RefreshInteractableHintsNow();
 
     private void OnDestroy()
     {
@@ -138,6 +145,9 @@ namespace MultiplayerInfrastructure.Player
         _interactableHintUI.InteractionClicked -= HandleInteractionMenuClicked;
 
       QuestPresentationService.PresentationChanged -= RefreshInteractableHintsNow;
+      InteractionRegistry.HintRefreshRequested -= RefreshInteractableHintsNow;
+      ScenarioInteractionSignals.OnSignalRegistered -= HandleSignalChangedForHints;
+      ScenarioInteractionSignals.OnSignalCleared -= HandleSignalChangedForHints;
 
       OnDestroy_Item();
       OnDestroy_PlaceableItemPreview();
@@ -227,7 +237,11 @@ namespace MultiplayerInfrastructure.Player
     }
 
     private static int GetDisplayPriority(IInteract interact)
-      => interact is IInteractDisplayPriority prioritized ? prioritized.DisplayPriority : 0;
+    {
+      if (InteractionRegistry.TryGetDataDisplay(interact, out var display) && display.PrioritySpecified)
+        return display.Priority;
+      return interact is IInteractDisplayPriority prioritized ? prioritized.DisplayPriority : 0;
+    }
 
     public void RefreshInteractableHintsNow()
     {
@@ -280,6 +294,8 @@ namespace MultiplayerInfrastructure.Player
       }
 
       interact.Interact(transform);
+      // 범용 핸들러는 실제 완료 시점에 직접 통지한다(제출 UI 열기는 완료가 아니다).
+      InteractionRegistry.NotifyCustomInteracted(interact, this);
     }
 
     private bool IsCurrentlyAvailableInteract(IInteract selected)
@@ -320,6 +336,16 @@ namespace MultiplayerInfrastructure.Player
           var interact = eachInteracts[j];
           if (interact == null)
             continue;
+          // 레지스트리 항목은 가시성(오버라이드 → 조건 → 초기값)을 먼저 판정하고, 그다음 내재 능력 조건을 본다.
+          if (InteractionRegistry.TryGetByHandler(interact, out var registryEntry))
+          {
+            if (!InteractionRegistry.IsVisible(registryEntry, this, out _))
+              continue;
+          }
+          else
+          {
+            InteractionRegistry.WarnUnregisteredHandler(interact);
+          }
           if (interact is IInteractorConditional conditional && !conditional.CanInteract(transform))
             continue;
           interacts.Add(interact);
@@ -355,6 +381,40 @@ namespace MultiplayerInfrastructure.Player
         _interactableHintUI.MoveSelected(1);
 
       RefreshLocalInteractionFocus();
+    }
+
+    // ── IConditionStateProvider ───────────────────────────────────────────
+
+    private static readonly string[] PlayerConditionKeys =
+    {
+      "carrying",
+      "patient_selection_mode",
+      "user_identifier",
+      "is_owner"
+    };
+
+    public IEnumerable<string> ConditionKeys => PlayerConditionKeys;
+
+    public bool TryGetConditionValue(string key, string qualifier, out ConditionValue value)
+    {
+      switch (key)
+      {
+        case "carrying":
+          value = ConditionValue.From(IsCarryingReposable);
+          return true;
+        case "patient_selection_mode":
+          value = ConditionValue.From(IsPatientSelectionMode);
+          return true;
+        case "user_identifier":
+          value = ConditionValue.From(UserIdentifier ?? string.Empty);
+          return true;
+        case "is_owner":
+          value = ConditionValue.From(NetworkObject != null && IsOwner);
+          return true;
+        default:
+          value = default;
+          return false;
+      }
     }
 
     private void RefreshLocalInteractionFocus()

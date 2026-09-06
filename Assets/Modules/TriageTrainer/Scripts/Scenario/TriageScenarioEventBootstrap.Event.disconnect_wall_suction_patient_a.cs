@@ -22,7 +22,7 @@ namespace TriageTrainer.Scenario
       for (int i = 0; i < wallSuctions.Length; i++)
       {
         var wallSuction = wallSuctions[i];
-        if (wallSuction != null && wallSuction.IsPatientAInstallationTarget)
+        if (wallSuction != null && wallSuction.IsScenarioDeclaredTarget)
           wallSuction.DisconnectYankauer();
       }
 

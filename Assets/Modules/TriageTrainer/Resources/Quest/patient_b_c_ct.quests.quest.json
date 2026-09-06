@@ -168,7 +168,31 @@
           "activation": "WholeQuest",
           "targetType": "Interaction",
           "entityIdentifier": "patient_b",
-          "interactionIdentifier": "recognition_check",
+          "interactionIdentifier": "recognition_1",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "WholeQuest",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_b",
+          "interactionIdentifier": "recognition_2",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "WholeQuest",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_b",
+          "interactionIdentifier": "recognition_3",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "WholeQuest",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_b",
+          "interactionIdentifier": "recognition_4",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }
@@ -214,7 +238,7 @@
           "completionCriteriaIdentifier": "patient-b-strength-checked",
           "targetType": "Interaction",
           "entityIdentifier": "patient_b",
-          "interactionIdentifier": "recognition_check",
+          "interactionIdentifier": "strength_check",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }
@@ -314,7 +338,7 @@
           "completionCriteriaIdentifier": "patient-b-pupil-checked",
           "targetType": "Interaction",
           "entityIdentifier": "patient_b",
-          "interactionIdentifier": "recognition_check",
+          "interactionIdentifier": "pupil_check",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         },
@@ -484,7 +508,31 @@
           "activation": "WholeQuest",
           "targetType": "Interaction",
           "entityIdentifier": "patient_c",
-          "interactionIdentifier": "recognition_check",
+          "interactionIdentifier": "recognition_1",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "WholeQuest",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "recognition_2",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "WholeQuest",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "recognition_3",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "WholeQuest",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "recognition_4",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }
@@ -530,7 +578,7 @@
           "completionCriteriaIdentifier": "patient-c-strength-checked",
           "targetType": "Interaction",
           "entityIdentifier": "patient_c",
-          "interactionIdentifier": "recognition_check",
+          "interactionIdentifier": "strength_check",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }
@@ -630,7 +678,7 @@
           "completionCriteriaIdentifier": "patient-c-pupil-checked",
           "targetType": "Interaction",
           "entityIdentifier": "patient_c",
-          "interactionIdentifier": "recognition_check",
+          "interactionIdentifier": "pupil_check",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         },

@@ -40,7 +40,6 @@ namespace MultiplayerInfrastructure.Scenario
         "QuestWaypointHighlight" => Deserialize<ScenarioQuestWaypointHighlightNodeDTO>(root, options),
         "QuestMark" => Deserialize<ScenarioQuestMarkNodeDTO>(root, options),
         "Delay" => Deserialize<ScenarioDelayNodeDTO>(root, options),
-        "Interaction" => Deserialize<ScenarioInteractionNodeDTO>(root, options),
         "CombineItem" => Deserialize<ScenarioCombineItemNodeDTO>(root, options),
         "Quiz" => Deserialize<ScenarioQuizNodeDTO>(root, options),
         "StateUpdate" => Deserialize<ScenarioStateUpdateNodeDTO>(root, options),
@@ -52,8 +51,6 @@ namespace MultiplayerInfrastructure.Scenario
         "EntityInit" => Deserialize<ScenarioEntityInitNodeDTO>(root, options),
         "TriageAssessControl" => Deserialize<ScenarioTriageAssessControlNodeDTO>(root, options),
         "PatientMedicalStatePreset" => Deserialize<ScenarioPatientMedicalStatePresetNodeDTO>(root, options),
-        "ItemSubmissionConfig" => Deserialize<ScenarioItemSubmissionConfigNodeDTO>(root, options),
-        "NpcInteractControl" => Deserialize<ScenarioNpcInteractControlNodeDTO>(root, options),
         "ChatPrint" => Deserialize<ScenarioChatPrintNodeDTO>(root, options),
         "ExecuteCommand" => Deserialize<ScenarioExecuteCommandNodeDTO>(root, options),
         "TimeControl" => Deserialize<ScenarioTimeControlNodeDTO>(root, options),
@@ -63,6 +60,7 @@ namespace MultiplayerInfrastructure.Scenario
         "BedSnap" => Deserialize<ScenarioBedSnapNodeDTO>(root, options),
         "ReturnToOrigin" => Deserialize<ScenarioReturnToOriginNodeDTO>(root, options),
         "Lifecycle" => Deserialize<ScenarioLifecycleNodeDTO>(root, options),
+        "InteractionVisibility" => Deserialize<ScenarioInteractionVisibilityNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }

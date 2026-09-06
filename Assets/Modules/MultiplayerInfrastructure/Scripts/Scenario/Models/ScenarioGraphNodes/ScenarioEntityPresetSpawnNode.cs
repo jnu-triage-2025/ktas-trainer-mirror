@@ -39,5 +39,8 @@
     public float RotationZ { get; set; }
 
     public string ResultStateKey { get; set; }
+
+    /// <summary>스폰된 엔티티에 부여할 태그. 태그 참조 인터렉션 정의와 조건 절이 이 태그로 엔티티를 찾는다.</summary>
+    public System.Collections.Generic.List<string> Tags { get; set; } = new System.Collections.Generic.List<string>();
   }
 }

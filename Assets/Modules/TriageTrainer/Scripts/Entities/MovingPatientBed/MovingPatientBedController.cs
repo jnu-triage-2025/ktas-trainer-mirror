@@ -17,11 +17,22 @@ using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
 {
-  public partial class MovingPatientBedController : MinecraftBoatLikeControl, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver, IQuestPresentationTarget, IScenarioArrivalSignalEntityResolver
+  public partial class MovingPatientBedController : MinecraftBoatLikeControl, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver, IQuestPresentationTarget, IScenarioArrivalSignalEntityResolver, IInteractionDefinitionSource
   {
     private const string DefaultPlayerAttachPointName = "PlayerAttachPoint";
     private const string DefaultPatientAttachPointName = "PatientAttachPoint";
     public const string InteractionIdentifierMoveBed = "move_bed";
+    public const string InteractionIdentifierRepose = "repose_patient";
+    private const string MoveDisplayText = "침대로 움직이기";
+    private const string ReposeDisplayText = "환자 침대에 내려놓기";
+
+    /// <summary>코드 리터럴 정의. 침대 조종과 눕히기는 시나리오가 제한하지 않는 한 항상 보인다.</summary>
+    public IEnumerable<InteractionDeclaration> DeclareInteractions()
+    {
+      yield return new InteractionDeclaration(InteractionDefinition.Code(Identifier, InteractionIdentifierMoveBed, MoveDisplayText, initialVisible: true), this);
+      if (_reposeInteract != null)
+        yield return new InteractionDeclaration(InteractionDefinition.Code(Identifier, InteractionIdentifierRepose, ReposeDisplayText, initialVisible: true), _reposeInteract);
+    }
 
     public IScenarioIdentifiedEntity ResolveArrivalSignalEntity() => ReposedTarget as IScenarioIdentifiedEntity;
 
@@ -44,7 +55,7 @@ namespace TriageTrainer.Entity
         _owner = owner;
       }
 
-      public string DisplayText => _owner._reposeDisplayText;
+      public string DisplayText => ReposeDisplayText;
       public Sprite DisplayIcon => _owner._reposeDisplayIcon;
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
@@ -87,9 +98,7 @@ namespace TriageTrainer.Entity
     private string _entityRuntimeIdentifier;
 
     [Header("Display")]
-    [SerializeField] private string _displayText = "침대로 움직이기";
     [SerializeField] private Sprite _displayIcon = null;
-    [SerializeField] private string _reposeDisplayText = "환자 침대에 내려놓기";
     [SerializeField] private Sprite _reposeDisplayIcon = null;
 
     [Header("Bed")]
@@ -242,7 +251,7 @@ namespace TriageTrainer.Entity
         return $"{patient.Descriptor.name.Trim()}의 침대 움직이기";
       }
 
-      return "침대로 움직이기";
+      return MoveDisplayText;
     }
 
     private void Awake()

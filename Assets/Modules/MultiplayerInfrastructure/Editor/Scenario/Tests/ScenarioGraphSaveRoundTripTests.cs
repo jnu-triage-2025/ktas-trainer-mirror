@@ -66,25 +66,6 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
-    public void ItemSubmissionConfigSavesWithSchemaValidation()
-    {
-      var graph = new ScenarioGraph { Identifier = "item-submission-schema", DefaultEntrypoint = "configure-submission" };
-      graph.Add(new ScenarioItemSubmissionConfigNode
-      {
-        Identifier = "configure-submission",
-        PresetIdentifier = "submission-preset",
-        TargetIdentifier = "guide-submission",
-        RequiredItems = new List<ScenarioItemRequirement>
-        {
-          new ScenarioItemRequirement { ItemIdentifier = "handy_clock", Count = 1 }
-        },
-        CompletionSignalIdentifier = "clock-submitted"
-      });
-
-      Assert.DoesNotThrow(() => ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true));
-    }
-
-    [Test]
     public void ClientSignalSpecificationSavesAndRoundTripsWithSchemaValidation()
     {
       var graph = new ScenarioGraph
@@ -338,21 +319,8 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         Identifier = "update",
         Mode = ScenarioNPCControlMode.Update,
         NPCIdentifier = "npc",
-        InteractOperation = ScenarioNPCInteractCrudOperation.Update,
-        InteractableIdentifier = "talk",
-        InteractEnabled = false,
         DisplayName = "???",
         ShowOverheadName = true,
-        NextIdentifier = "read"
-      });
-      graph.Add(new ScenarioNPCControlNode
-      {
-        Identifier = "read",
-        Mode = ScenarioNPCControlMode.Update,
-        NPCIdentifier = "npc",
-        InteractOperation = ScenarioNPCInteractCrudOperation.Read,
-        InteractableIdentifier = "talk",
-        ResultStateKey = "npc.talk.exists",
         NextIdentifier = "move"
       });
       graph.Add(new ScenarioNPCControlNode
@@ -369,14 +337,12 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
       var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
       var update = (ScenarioNPCControlNode)reloaded.Nodes["update"];
-      var read = (ScenarioNPCControlNode)reloaded.Nodes["read"];
       var move = (ScenarioNPCControlNode)reloaded.Nodes["move"];
 
-      Assert.That(update.InteractOperation, Is.EqualTo(ScenarioNPCInteractCrudOperation.Update));
-      Assert.That(update.InteractEnabled, Is.False);
+      Assert.That(update.Mode, Is.EqualTo(ScenarioNPCControlMode.Update));
       Assert.That(update.DisplayName, Is.EqualTo("???"));
       Assert.That(update.ShowOverheadName, Is.True);
-      Assert.That(read.ResultStateKey, Is.EqualTo("npc.talk.exists"));
+      Assert.That(update.NextIdentifier, Is.EqualTo("move"));
       Assert.That(move.Mode, Is.EqualTo(ScenarioNPCControlMode.Control));
       Assert.That(move.DestinationIdentifier, Is.EqualTo("destination"));
       Assert.That(move.MoveSpeed, Is.EqualTo(2f));
@@ -927,6 +893,43 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
       var reloadedValidator = (ScenarioValidatorNode)reloaded.Nodes["validator"];
       Assert.That(reloadedValidator.RootConditions[0].MatchMode, Is.EqualTo(ScenarioValidatorMatchMode.All));
+    }
+
+    /// <summary>
+    /// Validator 의 idleWhileWaiting 은 true 일 때만 기록되고, 다시 읽으면 그대로 복원되어야 한다.
+    /// 기본값(false)은 저장 시 생략되어야 기존 그래프의 재저장 결과가 달라지지 않는다.
+    /// </summary>
+    [Test]
+    public void ValidatorIdleWhileWaitingRoundTrips()
+    {
+      var graph = new ScenarioGraph { Identifier = "validator-idle", DefaultEntrypoint = "validator" };
+      graph.Add(new ScenarioValidatorNode
+      {
+        Identifier = "validator",
+        WaitForCondition = true,
+        IdleWhileWaiting = true,
+        RootConditions = new List<ScenarioValidatorRootCondition>
+        {
+          new ScenarioValidatorRootCondition
+          {
+            Condition = ScenarioValidatorCondition.PlayerCountGreaterThanOrEqual,
+            TargetCount = 1
+          }
+        }
+      });
+
+      var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      Assert.That(json, Does.Contain("idleWhileWaiting"));
+
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+      var reloadedValidator = (ScenarioValidatorNode)reloaded.Nodes["validator"];
+      Assert.That(reloadedValidator.WaitForCondition, Is.True);
+      Assert.That(reloadedValidator.IdleWhileWaiting, Is.True);
+
+      reloadedValidator.IdleWhileWaiting = false;
+      var resaved = ScenarioGraphLoader.SaveToJson(reloaded, validateWithSchema: true);
+      Assert.That(resaved, Does.Not.Contain("idleWhileWaiting"), "기본값 false 는 저장 시 생략되어야 한다.");
+      Assert.That(((ScenarioValidatorNode)ScenarioGraphLoader.LoadFromJson(resaved, validateWithSchema: true).Nodes["validator"]).IdleWhileWaiting, Is.False);
     }
 
     /// <summary>

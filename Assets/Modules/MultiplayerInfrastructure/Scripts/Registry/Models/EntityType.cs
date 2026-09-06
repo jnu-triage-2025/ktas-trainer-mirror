@@ -21,5 +21,9 @@
     StaticPlacedItem,
     /// <summary>제세동 카트. 1인 조종 이동체(DefibrillatorCartController)로 동작한다.</summary>
     DefibrillatorCart,
+    /// <summary>환자 모니터. 상호작용 주소와 태그 참조를 위해 등록한다.</summary>
+    PatientMonitor,
+    /// <summary>씬에 배치된 소품(튜토리얼 미끼 등). 인터렉션 주소를 갖기 위해 등록한다.</summary>
+    Prop,
   }
 }

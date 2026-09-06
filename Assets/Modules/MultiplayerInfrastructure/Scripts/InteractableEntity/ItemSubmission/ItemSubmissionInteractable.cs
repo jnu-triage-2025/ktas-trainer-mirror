@@ -244,7 +244,12 @@ namespace MultiplayerInfrastructure.InteractableEntity
     /// UI 에서 제출이 성공적으로 완료(아이템 소모 완료)되었을 때 호출된다.
     /// 서버 세션 전역 신호를 올리고, consumeOnce 이면 이후 상호작용을 잠근다.
     /// </summary>
-    internal void NotifySubmissionCompleted()
+    /// <summary>제출이 완료될 때 (컴포넌트, 제출한 플레이어) 를 전달한다. 레지스트리의 범용 제출 핸들러가 구독한다.</summary>
+    public static event System.Action<ItemSubmissionInteractable, PlayerController> SubmissionCompleted;
+
+    internal void NotifySubmissionCompleted() => NotifySubmissionCompleted(null);
+
+    internal void NotifySubmissionCompleted(PlayerController player)
     {
       var def = Definition;
       if (def != null && !string.IsNullOrWhiteSpace(def.completionSignalIdentifier))
@@ -256,6 +261,7 @@ namespace MultiplayerInfrastructure.InteractableEntity
         _completed = true;
 
       RefreshHints();
+      SubmissionCompleted?.Invoke(this, player);
     }
 
     private static void RefreshHints()

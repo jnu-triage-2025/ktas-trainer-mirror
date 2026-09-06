@@ -22,27 +22,8 @@ namespace TriageTrainer.Entity.IntravenousLine
 
     public static Material DefaultMaterial => Resources.Load<Material>(MaterialResourcePath);
 
-    [Serializable]
-    public class InteractConfig
-    {
-      [SerializeField] private string _identifier;
-      [SerializeField] private bool _enabled = true;
 
-      public InteractConfig(string identifier, bool enabled = true)
-      {
-        _identifier = identifier;
-        _enabled = enabled;
-      }
-
-      public string Identifier => _identifier;
-      public bool Enabled
-      {
-        get => _enabled;
-        set => _enabled = value;
-      }
-    }
-
-    private sealed class StartConnectionInteract : IInteract, IInteractorConditional,
+    private sealed class StartConnectionInteract : IInteract, IInteractorConditional, IInteractionRegistryExempt,
       IInteractDisplayIcons, IQuestPresentationTarget
     {
       private readonly IntravenousLineConnectionPoint _owner;
@@ -95,7 +76,7 @@ namespace TriageTrainer.Entity.IntravenousLine
       ? _intravenousSetIcon
       : _intravenousSetIcon = Resources.Load<Sprite>(IntravenousSetIconPath);
 
-    private sealed class ConnectHereInteract : IInteract, IInteractorConditional
+    private sealed class ConnectHereInteract : IInteract, IInteractorConditional, IInteractionRegistryExempt
     {
       private readonly IntravenousLineConnectionPoint _owner;
       public ConnectHereInteract(IntravenousLineConnectionPoint owner) { _owner = owner; }
@@ -152,7 +133,7 @@ namespace TriageTrainer.Entity.IntravenousLine
       }
     }
 
-    private sealed class DisconnectInteract : IInteract, IInteractorConditional, INearestOnlyInteract
+    private sealed class DisconnectInteract : IInteract, IInteractorConditional, INearestOnlyInteract, IInteractionRegistryExempt
     {
       private readonly IntravenousLineConnectionPoint _owner;
       public DisconnectInteract(IntravenousLineConnectionPoint owner) { _owner = owner; }
@@ -233,8 +214,8 @@ namespace TriageTrainer.Entity.IntravenousLine
 
     /// <summary>
     /// 플레이어가 직접 수액 줄을 잇는 상호작용("수액 줄 연결 시작" · "여기에 수액 줄 연결")은
-    /// 유형과 무관하게 모든 연결 지점에서 항상 잠근다. 프리팹·씬에 저장된 InteractConfig 값이
-    /// 켜져 있거나 <see cref="SetAllInteractionsEnabled"/> 로 일괄로 켜더라도 노출되지 않는다.
+    /// 유형과 무관하게 모든 연결 지점에서 항상 잠근다. 프리팹·씬에는 더 이상 인터렉션 활성 데이터를
+    /// 두지 않으며(인터렉션 레지스트리 규약), 이 잠금은 코드 리터럴로만 표현한다.
     /// 수액 줄 연결은 환자·장비 쪽 전용 상호작용과 시나리오 처리로만 이루어진다.
     /// </summary>
     private static readonly string[] AlwaysDisabledInteractIds =
@@ -272,10 +253,8 @@ namespace TriageTrainer.Entity.IntravenousLine
 
     [Header("Interact")]
     [SerializeField] private Sprite _displayIcon;
-    [SerializeField] private List<InteractConfig> _interactConfigs = new();
 
     private List<IInteract> _interacts = new();
-    private Dictionary<string, InteractConfig> _interactConfigMap = new(StringComparer.Ordinal);
 
     /// <summary>
     /// 이 지점에서 수액 줄 연결 작업이 시작될 때(한 점만 연결된 상태) 발생한다.
@@ -317,7 +296,7 @@ namespace TriageTrainer.Entity.IntravenousLine
 
     private void BuildInteracts()
     {
-      RebuildInteractConfigMap();
+      EnsureRuntimeCollections();
 
       _interacts.Clear();
       _interacts.Add(new StartConnectionInteract(this));
@@ -330,12 +309,6 @@ namespace TriageTrainer.Entity.IntravenousLine
     {
       EnsureRuntimeCollections();
       EnsureIdentifier();
-
-      EnsureInteractConfig(InteractIdStartConnectionMode, false);
-      EnsureInteractConfig(InteractIdConnectHere, false);
-      // 플레이어 경험을 위해 수액 줄 해제 인터랙션은 사용하지 않는 것으로 결정했다.
-      // EnsureInteractConfig(InteractIdDisconnect, true);
-      RebuildInteractConfigMap();
     }
 
     private void EnsureIdentifier()
@@ -419,9 +392,7 @@ namespace TriageTrainer.Entity.IntravenousLine
 
     private void EnsureRuntimeCollections()
     {
-      _interactConfigs ??= new List<InteractConfig>();
       _interacts ??= new List<IInteract>();
-      _interactConfigMap ??= new Dictionary<string, InteractConfig>(StringComparer.Ordinal);
     }
 
     private void EnsureDetectionCollider()
@@ -435,63 +406,12 @@ namespace TriageTrainer.Entity.IntravenousLine
         sphere.radius = 0.35f;
     }
 
-    private void EnsureInteractConfig(string identifier, bool enabled)
-    {
-      if (string.IsNullOrWhiteSpace(identifier))
-        return;
-
-      for (int i = 0; i < _interactConfigs.Count; i++)
-      {
-        var each = _interactConfigs[i];
-        if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
-          continue;
-
-        return;
-      }
-
-      _interactConfigs.Add(new InteractConfig(identifier, enabled));
-    }
-
-    private void RebuildInteractConfigMap()
-    {
-      EnsureRuntimeCollections();
-
-      _interactConfigMap.Clear();
-      for (int i = 0; i < _interactConfigs.Count; i++)
-      {
-        var each = _interactConfigs[i];
-        if (each == null || string.IsNullOrWhiteSpace(each.Identifier))
-          continue;
-
-        _interactConfigMap[each.Identifier] = each;
-      }
-    }
-
+    /// <summary>
+    /// 이 지점의 플레이어 상호작용이 내재적으로 열려 있는지. 항상 잠긴 항목(<see cref="AlwaysDisabledInteractIds"/>)만
+    /// 거른다. 시나리오별 노출은 인터렉션 레지스트리가 판정한다.
+    /// </summary>
     public bool IsInteractEnabled(string identifier)
-    {
-      if (string.IsNullOrWhiteSpace(identifier))
-        return false;
-
-      if (IsAlwaysDisabledInteract(identifier))
-        return false;
-
-      if (_interactConfigMap.TryGetValue(identifier, out var cfg))
-        return cfg.Enabled;
-
-      return false;
-    }
-
-    /// <summary>이 연결 지점이 제공하는 모든 플레이어 상호작용을 일괄로 켜거나 끈다.</summary>
-    public void SetAllInteractionsEnabled(bool enabled)
-    {
-      EnsureDefaults();
-      for (int i = 0; i < _interactConfigs.Count; i++)
-      {
-        if (_interactConfigs[i] != null)
-          _interactConfigs[i].Enabled = enabled && !IsAlwaysDisabledInteract(_interactConfigs[i].Identifier);
-      }
-      RebuildInteractConfigMap();
-    }
+      => !string.IsNullOrWhiteSpace(identifier) && !IsAlwaysDisabledInteract(identifier);
 
     /// <summary>
     /// 연결 작업 시작(한 점 연결)을 알린다. C# 이벤트를 발화하고, 인게임 서버에

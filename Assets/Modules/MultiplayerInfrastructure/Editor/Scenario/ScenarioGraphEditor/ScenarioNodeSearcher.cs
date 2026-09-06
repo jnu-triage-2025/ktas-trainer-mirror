@@ -283,11 +283,6 @@ namespace MultiplayerInfrastructure.Editor
               Add($"options[{i}]", quiz.Options[i]);
           break;
 
-        case ScenarioInteractionNode inter:
-          Add("targetIdentifier", inter.TargetIdentifier);
-          Add("requiredItemIdentifier", inter.RequiredItemIdentifier);
-          Add("completionConditionIdentifier", inter.CompletionConditionIdentifier);
-          break;
 
         case ScenarioCombineItemNode ci:
           Add("outputItemIdentifier", ci.OutputItemIdentifier);
@@ -303,8 +298,6 @@ namespace MultiplayerInfrastructure.Editor
 
         case ScenarioNPCControlNode nc:
           Add("npcIdentifier", nc.NPCIdentifier);
-          Add("interactableIdentifier", nc.InteractableIdentifier);
-          Add("resultStateKey", nc.ResultStateKey);
           Add("displayName", nc.DisplayName);
           Add("destinationIdentifier", nc.DestinationIdentifier);
           break;
@@ -319,6 +312,23 @@ namespace MultiplayerInfrastructure.Editor
 
         case ScenarioReturnToOriginNode rto:
           Add("description", rto.Description);
+          break;
+
+        case ScenarioInteractionVisibilityNode iv:
+          Add("operation", iv.Operation.ToString());
+          Add("playerScope", iv.PlayerScope.ToString());
+          if (iv.PlayerTags != null)
+            foreach (var tag in iv.PlayerTags) Add("playerTag", tag);
+          if (iv.Targets != null)
+          {
+            foreach (var target in iv.Targets)
+            {
+              if (target == null) continue;
+              Add("entityIdentifier", target.Entity?.Identifier);
+              Add("entityTag", target.Entity?.Tag);
+              Add("interactionIdentifier", target.InteractionIdentifier);
+            }
+          }
           break;
 
         case ScenarioBedSnapNode bs:

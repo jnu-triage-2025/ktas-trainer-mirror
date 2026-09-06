@@ -7,10 +7,6 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("mode")] public string Mode { get; set; }
     [JsonPropertyName("npcIdentifier")] public string NPCIdentifier { get; set; }
 
-    [JsonPropertyName("interactOperation")] public string InteractOperation { get; set; }
-    [JsonPropertyName("interactableIdentifier")] public string InteractableIdentifier { get; set; }
-    [JsonPropertyName("interactEnabled")] public bool? InteractEnabled { get; set; }
-    [JsonPropertyName("resultStateKey")] public string ResultStateKey { get; set; }
     [JsonPropertyName("displayName")] public string DisplayName { get; set; }
     [JsonPropertyName("showOverheadName")] public bool? ShowOverheadName { get; set; }
 

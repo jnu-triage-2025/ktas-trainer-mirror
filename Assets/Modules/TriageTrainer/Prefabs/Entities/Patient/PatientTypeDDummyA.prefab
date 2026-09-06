@@ -61,7 +61,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5330254993002308441}
   - component: {fileID: 611098286998408320}
-  - component: {fileID: 8232170827347212882}
   m_Layer: 0
   m_Name: DummyATriageAssessInteractPoint
   m_TagString: Untagged
@@ -105,35 +104,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.7, y: 0.7, z: 0.7}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &8232170827347212882
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8951462474995534552}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uD658\uC790 \uD65C\uB825\uC9D5\uD6C4 \uBC0F \uC678\uC591 \uD3C9\uAC00 \uC2DC\uD589\uD558\uAE30"
-  _displayIcon: {fileID: 0}
-  _displayIcons: []
-  _completionSignal: assess_patient_dummy_d_a_triage
-  _presentationEntityIdentifier:
-  _interactionIdentifier:
-  _requiredRaisedSignals:
-  - click_vital_set
-  _requiredPlayerTag:
-  _enabled: 1
-  _consumeOnce: 1
-  _requiredItemIdentifier:
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue:
-  _findItemDialogue:
-  _activateOnInteract: []
-  _deactivateOnInteract: []
 --- !u!114 &3850785483627365576
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -272,43 +242,6 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 6759064965544079288}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
   _animatorObject: {fileID: 830000000000000001}
-  _assessActions:
-  - _identifier: assess_avpu_gcs
-    _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC0AC\uC815(AVPU/GCS)"
-    _assessSignal: 
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_pulse
-    _displayText: "\uB9E5\uBC15 \uD655\uC778"
-    _assessSignal: 
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_gcs
-    _displayText: "GCS \uC7AC\uC0AC\uC815"
-    _assessSignal: 
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_vital
-    _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"
-    _assessSignal: 
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
   _capsuleCollider: {fileID: 6481162045202206273}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
   _standingCapsuleHeight: 1.8
@@ -319,9 +252,6 @@ MonoBehaviour:
   _lyingCapsuleRadius: 0.3
   _lyingCapsuleDirection: 2
   _identifier: patient_dummy_d_a
-  _liftDisplayText: "\uD658\uC790\uB97C \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _carryDisplayText: "\uD658\uC790 \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
   _initiallyHiddenChildNames: []
   _weight: 4
   _supportExternalRefs:
@@ -341,16 +271,8 @@ MonoBehaviour:
   _isPlayerAttached: 0
   _debugTreatmentDisplay: 11
   _debugItemIdentifier: gauze
-  _interactConfigs:
-  - _identifier: lift_from_bed
-    _enabled: 1
-  - _identifier: carry_patient
-    _enabled: 1
-  - _identifier: monitor_select
-    _enabled: 1
   _intravenousLineCannulaConfig:
     _supported: 0
-    _displayText: 
   _intravenousLineCannulaInteractable: 0
   _medicalState:
     isCardiacArrest: 0
@@ -412,7 +334,6 @@ MonoBehaviour:
   _triageConfig:
     _assessable: 0
     _changeAssessableOnAssessDone: 2
-    _displayText: 
   _triageLabelAnchor: {fileID: 0}
 --- !u!114 &6759064965544079288
 MonoBehaviour:

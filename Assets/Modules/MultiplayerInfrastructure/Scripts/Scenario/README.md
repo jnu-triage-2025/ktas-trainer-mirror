@@ -169,6 +169,7 @@
 | `waitForCondition`       | bool    | `true`이면 조건 충족까지 진행을 막는 게이트로 동작(기본 `false`)     |
 | `waitTimeoutSeconds`     | number  | (옵션) 게이트 타임아웃(초). 미지정/0 이하면 무한 대기(기존 동작)     |
 | `onWaitTimeout`          | string  | 타임아웃 시 행동: `KeepWaiting`(기본) \| `FailBranch` \| `ForceAdvance` \| `WarnAndKeepWaiting` |
+| `idleWhileWaiting`       | bool    | `true`이면 게이트가 조건을 기다리는 동안 이 노드를 담은 병렬 분기를 "다른 참여자를 기다리는 idle 상태"로 표시(기본 `false`). 한 담당자에게 태그별 분기가 여럿 배정되어 순차 실행될 때, idle 분기는 끝난 것과 같이 취급되어 같은 담당자의 다음 분기가 바로 시작됨. 다른 역할이 올릴 신호를 기다리는 게이트에 지정 |
 | `nextIdentifier`         | string  | 검증 성공 시(또는 `onWaitTimeout=ForceAdvance`) 이동할 노드 ID       |
 
 #### 3.9 QuestControl (`ScenarioQuestControlNodeDTO`)

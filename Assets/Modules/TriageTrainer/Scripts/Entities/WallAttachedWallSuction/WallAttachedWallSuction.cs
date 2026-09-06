@@ -37,8 +37,39 @@ namespace TriageTrainer.Entity
   /// </summary>
   [DisallowMultipleComponent]
   public class WallAttachedWallSuction : StaticObjectDisplayment, INearestOnlyInteract,
-    IAttachCompletionSignalConfigurable
+    IAttachCompletionSignalConfigurable, IInteractionDefinitionSource
   {
+    public const string InstallInteractionIdentifier = "wall_suction_install";
+    public const string YankauerInteractionIdentifier = "connect_yankauer";
+
+    /// <summary>
+    /// 코드 리터럴 정의. 설치·회수는 항상 보이고, 양커 연결은 시나리오 데이터가 이 흡인기의 정의를 선언할 때만 열린다
+    /// (환자 A 처치실 흡인기). 완료 신호는 데이터 정의의 completionSignal 이 우선한다.
+    /// </summary>
+    public IEnumerable<InteractionDeclaration> DeclareInteractions()
+    {
+      yield return new InteractionDeclaration(
+        InteractionDefinition.Code(EntityIdentifier, InstallInteractionIdentifier, "흡인기 설치", initialVisible: true), this);
+      yield return new InteractionDeclaration(
+        InteractionDefinition.Code(EntityIdentifier, YankauerInteractionIdentifier, "양커 팁 연결", initialVisible: false),
+        _yankauerInteract ??= new YankauerConnectionInteract(this));
+    }
+
+    /// <summary>
+    /// 시나리오 데이터가 이 흡인기의 설치 인터렉션 정의를 선언했는지 여부. 시나리오 이벤트가 "현재 시나리오의 흡인기"만
+    /// 골라 조작할 때 사용한다(환자 A 고정 판별 대체).
+    /// </summary>
+    public bool IsScenarioDeclaredTarget =>
+      InteractionRegistry.TryGet(new InteractionAddress(EntityIdentifier, InstallInteractionIdentifier), out var entry)
+      && entry.DataDefinition != null;
+
+    private string ResolveAttachCompletionSignal()
+    {
+      if (InteractionRegistry.TryGet(new InteractionAddress(EntityIdentifier, InstallInteractionIdentifier), out var entry)
+          && !string.IsNullOrWhiteSpace(entry.Definition?.CompletionSignal))
+        return entry.Definition.CompletionSignal;
+      return _attachCompletionSignal;
+    }
     public override bool TryGetServerSharedItemExchange(out string itemIdentifier, out int consumeCount)
     {
       itemIdentifier = RequiredItemIdentifier;
@@ -51,14 +82,15 @@ namespace TriageTrainer.Entity
       private readonly WallAttachedWallSuction _owner;
       public YankauerConnectionInteract(WallAttachedWallSuction owner) => _owner = owner;
       public string DisplayText => _owner._yankauerConnected ? "양커를 흡인기에서 분리" : "양커 팁 연결";
-      public string PresentationEntityIdentifier => "patient_a_wall_suction";
+      public string PresentationEntityIdentifier => _owner.EntityIdentifier;
       public string InteractionIdentifier => "connect_yankauer";
       public Sprite DisplayIcon => null;
       public IReadOnlyList<Sprite> DisplayIcons => _owner.YankauerConnectionDisplayIcons;
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
+      // 노출(어느 흡인기에 여는지)은 레지스트리의 데이터 정의가 정한다. 여기서는 설치 상태만 본다.
       public bool CanInteract(Transform interactor) =>
-        _owner.IsPatientAInstallationTarget && _owner.IsAttached
+        _owner.IsAttached
         && interactor?.GetComponentInParent<PlayerController>() != null;
       public void Interact(Transform interactor)
       {
@@ -90,11 +122,7 @@ namespace TriageTrainer.Entity
     [Tooltip("설치 시 인벤토리에서 소비할 흡인기 수량입니다.")]
     [SerializeField] private int _consumeCount = 1;
 
-    [Tooltip("상호작용 힌트에 표시할 문구입니다.")]
-    [SerializeField] private string _attachDisplayText = "흡인기 설치";
 
-    [Tooltip("설치된 흡인기를 회수할 때 표시할 문구입니다.")]
-    [SerializeField] private string _detachDisplayText = "흡인기 회수";
 
     [Tooltip("설치(적용) 완료 시 인게임 서버로 올릴 시나리오 신호입니다. 비우면 신호를 올리지 않습니다.")]
     [SerializeField] private string _attachCompletionSignal;
@@ -129,12 +157,7 @@ namespace TriageTrainer.Entity
     public bool IsAttached => _isAttached;
     /// <summary>석션 라인 자동 연결에 사용할 장비 측 포트. 프리팹에 설정되지 않으면 null이다.</summary>
     public SuctionLineConnectionPoint SuctionLineConnectionPoint => _suctionLineConnectionPoint;
-    internal bool IsPatientAInstallationTarget =>
-      string.Equals(_attachCompletionSignal, "connect_wall_component_1", StringComparison.Ordinal);
-    public override string PresentationEntityIdentifier =>
-      IsPatientAInstallationTarget ? "patient_a_wall_suction" : base.PresentationEntityIdentifier;
-    public override string InteractionIdentifier =>
-      IsPatientAInstallationTarget ? "wall_suction_install" : base.InteractionIdentifier;
+    public override string InteractionIdentifier => InstallInteractionIdentifier;
     private Sprite _installationItemIcon;
     private Sprite _yankauerItemIcon;
 
@@ -155,10 +178,7 @@ namespace TriageTrainer.Entity
         if (!string.IsNullOrWhiteSpace(baseText))
           return baseText;
 
-        if (IsAttached)
-          return string.IsNullOrWhiteSpace(_detachDisplayText) ? "흡인기 회수" : _detachDisplayText;
-
-        return string.IsNullOrWhiteSpace(_attachDisplayText) ? "흡인기 설치" : _attachDisplayText;
+        return IsAttached ? "흡인기 회수" : "흡인기 설치";
       }
     }
 
@@ -434,10 +454,11 @@ namespace TriageTrainer.Entity
 
     private void RaiseCompletionSignalIfAny()
     {
-      if (string.IsNullOrWhiteSpace(_attachCompletionSignal))
+      string signal = ResolveAttachCompletionSignal();
+      if (string.IsNullOrWhiteSpace(signal))
         return;
 
-      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(_attachCompletionSignal);
+      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(signal);
     }
   }
 }

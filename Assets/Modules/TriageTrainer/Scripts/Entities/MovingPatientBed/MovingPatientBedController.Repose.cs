@@ -150,12 +150,18 @@ namespace TriageTrainer.Entity
       {
         Debug.LogWarning($"[MovingPatientBed] Failed to register entity '{id}': {ex.Message}");
       }
+
+      MultiplayerInfrastructure.InteractableEntity.InteractionRegistry.RemoveCodeDefinitions(id);
+      MultiplayerInfrastructure.InteractableEntity.InteractionRegistry.DeclareCode(id, this);
     }
 
     private void UnregisterBedEntity()
     {
       if (!string.IsNullOrWhiteSpace(_entityRuntimeIdentifier))
+      {
+        MultiplayerInfrastructure.InteractableEntity.InteractionRegistry.RemoveCodeDefinitions(_entityRuntimeIdentifier);
         Registry.UnregisterEntity(_entityRuntimeIdentifier);
+      }
     }
 
     private void OnReposedTargetIdentifierChanged(string previous, string next, bool asServer)

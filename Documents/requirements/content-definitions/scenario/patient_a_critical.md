@@ -1758,7 +1758,18 @@ M1으로 고치고, `playTTS`가 켜져 있는데 프리셋이 비어 있던 `D0
    `(...을 갖고 있지 않다.)`, `(...을 찾자.)` 두 줄을 재생하는지 상호작용 단위로 확인해야 한다.
 4. 위 TTS-5 항목의 재bake가 필요하다.
 
-## 2026-08-27 상호작용 개방을 퀘스트 상태 플래그 풀로 이전
+## 2026-09-06 상호작용 개방을 인터렉션 레지스트리 조건 절로 이전
+
+2026-08-27에 도입한 퀘스트 상태 플래그 풀 게이트(`PatientACriticalQuestStateFlags`)와 단계 개방 이벤트
+(`ACT_*` 노드, `activate_patient_a_*` 이벤트)는 폐기했다. 단계별 상호작용은 `patient_a_critical.scenario.json`
+최상위 `interactions` 구역에 정의하고, 노출은 `visibility.conditions`의 `PlayerHasQuest`(담당 퀘스트의 현재
+기준)와 `PlayerHasTag`(역할)로 각 피어가 자기 플레이어 기준으로 판정한다. 프리팹의 `ScenarioActionInteractable`
+컴포넌트와 `_assessActions`/`_interactConfigs` 필드도 제거했고, 같은 내용이 `kind: "Action"` 정의로 옮겨졌다.
+의사 NPC 제출 상호작용은 `ItemSubmission` 정의와 `InteractionVisibility` 노드(`ISC_PASS_*`)로 연다.
+수동 진입은 오버라이드만 초기화한다(`ResetPatientAInteractionOverrides`). 자세한 형식은
+`Documents/changes/2026-09-06-interaction-registry-visibility.md`를 참고한다. 아래 2026-08-27 절은 이력이다.
+
+## 2026-08-27 상호작용 개방을 퀘스트 상태 플래그 풀로 이전 (폐기됨, 이력)
 
 활력징후 측정 퀘스트(`Quest_Check_Vital_PatientA`)가 발행되어도 담당 간호사에게 "활력징후 사정"
 상호작용이 나타나지 않았다. 원인은 단계별 상호작용 개방을 **환자 엔티티에 저장된 활성 플래그**로
@@ -2087,14 +2098,14 @@ SPAWN_A
 |---|---|---|---|---|---|
 | SPAWN-A-1 | Runtime | 해결(2026-07-28) | FishNet Spawnable 등록 + 재직렬화는 완료, Production profile capability 최종 검증만 잔여 | 구현자 | `PatientTypeA.prefab` spawn 정상, ObjectId 65535 미재현 |
 | ROLE-2 | Design+Runtime | 해결(2026-07-28) | P004 정책 A안 확정 및 반영(`requiredPlayerTagsMatchMode=Any`) | 주도자 | P004 교착 없음, 문서/JSON 동일 |
-| S-1 | Runtime | 부분해결(2026-07-31) | 잔여 과업은 실플레이 검증. B-02/B-03/B-05/B-06은 `ItemSubmissionConfig` 노드(`ISC_PASS_*`) 추가로 그래프 배선 완료 | 구현자 | `N008_1 -> ISC_PASS_LARYNGOSCOPE -> V014_1`, `N008_2 -> ISC_PASS_ET_TUBE -> V014_2`, `N008_4 -> ISC_PASS_SYRINGE -> V014_4`, `Q014 -> ISC_PASS_CENTRAL_LINE_SET -> V018` |
+| S-1 | Runtime | 부분해결(2026-07-31) | 잔여 과업은 실플레이 검증. B-02/B-03/B-05/B-06은 `InteractionVisibility` 노드(`ISC_PASS_*`, 2026-09-06 이전 `ItemSubmissionConfig`) 추가로 그래프 배선 완료 | 구현자 | `N008_1 -> ISC_PASS_LARYNGOSCOPE -> V014_1`, `N008_2 -> ISC_PASS_ET_TUBE -> V014_2`, `N008_4 -> ISC_PASS_SYRINGE -> V014_4`, `Q014 -> ISC_PASS_CENTRAL_LINE_SET -> V018` |
 | IV-1 | Design | 해결(2026-07-28) | V017 18G 순차 획득·소비 및 좌/우 삽입 분리 확정 반영 | 주도자 | V017~V017_3 규칙 문서/JSON 일치 |
 | END-1 | Design+Content | 해결(2026-07-28) | 종료 정책 확정(`D037 -> null` 독립 종료) | 주도자 | D037 이후 종료 조건 문서/JSON 일치 |
 
 ### 의사 NPC 제출 producer 콘텐츠 확정
 
-환자 A의 10개 producer 콘텐츠 대상 중 `pass_*` 네 건은 `ItemSubmissionConfig`와
-`ItemSubmissionInteractable`로 구현한다. 의사 NPC 식별자는 모두 **`npc-doctor-patient-a-critical`**로 고정한다.
+환자 A의 10개 producer 콘텐츠 대상 중 `pass_*` 네 건은 시나리오 `interactions` 구역의 `ItemSubmission` 정의와
+`InteractionVisibility` 노드로 구현한다(2026-09-06 이전에는 `ItemSubmissionConfig` 노드). 의사 NPC 식별자는 모두 **`npc-doctor-patient-a-critical`**로 고정한다.
 제출 상호작용은 별도 바닥 오브젝트를 만들지 않고 **`npc-doctor-patient-a-critical`에 부착**한다. 즉,
 `positionSourceEntityIdentifier`는 `npc-doctor-patient-a-critical`이고, 제출 위치는 시나리오 진행 시점의 의사 NPC
 현재 위치다.
@@ -2114,15 +2125,15 @@ SPAWN_A
 | TaskID | Signal | 소비 Validator | Producer 위치(오브젝트/프리팹) | 콜백/트리거 | 상태 | 검증 |
 |---|---|---|---|---|---|---|
 | B-01 | sig.show_vital_patient_a | V011_1 | patient_a / PatientController.AssessActions(assess_vital) | PatientController.PerformAssess() (assess_vital) 완료 시 ScenarioInteractionSignals.Raise("show_vital_patient_a") | 배선완료(2026-07-28, PatientTypeA.assess_vital._assessSignal 정합 + PerformAssess Raise 경로 확인) | 미검증 |
-| B-02 | sig.pass_laryngoscope | V014_1 | `ISC_PASS_LARYNGOSCOPE` (`ItemSubmissionConfig`) -> `patient-a-doctor-submit-laryngoscope` | ItemSubmission 완료 | 배선완료(2026-07-31, `N008_1` 다음에 `ISC_PASS_LARYNGOSCOPE` 추가) | 미검증 |
-| B-03 | sig.pass_et_tube_ready | V014_2 | `ISC_PASS_ET_TUBE` (`ItemSubmissionConfig`) -> `patient-a-doctor-submit-et-tube` | ItemSubmission 완료 | 배선완료(2026-07-31, `N008_2` 다음에 `ISC_PASS_ET_TUBE` 추가) | 미검증 |
-| B-04 | sig.remove_intu_stylet | V014_3 | OverworldScene / endotracheal_tube_ready_A / EtTubeStyletInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_intu_stylet") | 배선완료(2026-07-28, PatientTypeA.EtTubeStyletInteractPoint._completionSignal 정합 확인) | 미검증 |
-| B-05 | sig.pass_syringe | V014_4 | `ISC_PASS_SYRINGE` (`ItemSubmissionConfig`) -> `patient-a-doctor-submit-5cc-syringe` | ItemSubmission 완료 | 배선완료(2026-07-31, `N008_4` 다음에 `ISC_PASS_SYRINGE` 추가) | 미검증 |
-| B-06 | sig.pass_central_line_set | V018 | `ISC_PASS_CENTRAL_LINE_SET` (`ItemSubmissionConfig`) -> `patient-a-doctor-submit-central-line-set` | ItemSubmission 완료 | 배선완료(2026-07-31, `Q014` 다음에 `ISC_PASS_CENTRAL_LINE_SET` 추가) | 미검증 |
-| B-07 | sig.remove_tpiece | V023_1 | OverworldScene / patient_a T-piece connected visual / TPieceRemoveInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_tpiece") | 배선완료(2026-07-28, PatientTypeA.TPieceRemoveInteractPoint._completionSignal 정합 확인) | 미검증 |
-| B-08 | sig.click_to_start_comp | V024 | OverworldScene / patient_a chest interaction point / ChestCompStartInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("click_to_start_comp") | 배선완료(2026-07-28, PatientTypeA.ChestCompStartInteractPoint._completionSignal 정합 확인) | 미검증 |
+| B-02 | sig.pass_laryngoscope | V014_1 | `ISC_PASS_LARYNGOSCOPE` (`InteractionVisibility`) -> `patient-a-doctor-submit-laryngoscope` | ItemSubmission 완료 | 배선완료(2026-07-31, `N008_1` 다음에 `ISC_PASS_LARYNGOSCOPE` 추가) | 미검증 |
+| B-03 | sig.pass_et_tube_ready | V014_2 | `ISC_PASS_ET_TUBE` (`InteractionVisibility`) -> `patient-a-doctor-submit-et-tube` | ItemSubmission 완료 | 배선완료(2026-07-31, `N008_2` 다음에 `ISC_PASS_ET_TUBE` 추가) | 미검증 |
+| B-04 | sig.remove_intu_stylet | V014_3 | OverworldScene / endotracheal_tube_ready_A / EtTubeStyletInteractPoint(시나리오 `interactions` Action 정의) | 레지스트리 Action 핸들러 수행 시 ScenarioInteractionSignals.Raise("remove_intu_stylet") | 배선완료(2026-07-28, PatientTypeA.EtTubeStyletInteractPoint._completionSignal 정합 확인) | 미검증 |
+| B-05 | sig.pass_syringe | V014_4 | `ISC_PASS_SYRINGE` (`InteractionVisibility`) -> `patient-a-doctor-submit-5cc-syringe` | ItemSubmission 완료 | 배선완료(2026-07-31, `N008_4` 다음에 `ISC_PASS_SYRINGE` 추가) | 미검증 |
+| B-06 | sig.pass_central_line_set | V018 | `ISC_PASS_CENTRAL_LINE_SET` (`InteractionVisibility`) -> `patient-a-doctor-submit-central-line-set` | ItemSubmission 완료 | 배선완료(2026-07-31, `Q014` 다음에 `ISC_PASS_CENTRAL_LINE_SET` 추가) | 미검증 |
+| B-07 | sig.remove_tpiece | V023_1 | OverworldScene / patient_a T-piece connected visual / TPieceRemoveInteractPoint(시나리오 `interactions` Action 정의) | 레지스트리 Action 핸들러 수행 시 ScenarioInteractionSignals.Raise("remove_tpiece") | 배선완료(2026-07-28, PatientTypeA.TPieceRemoveInteractPoint._completionSignal 정합 확인) | 미검증 |
+| B-08 | sig.click_to_start_comp | V024 | OverworldScene / patient_a chest interaction point / ChestCompStartInteractPoint(시나리오 `interactions` Action 정의) | 레지스트리 Action 핸들러 수행 시 ScenarioInteractionSignals.Raise("click_to_start_comp") | 배선완료(2026-07-28, PatientTypeA.ChestCompStartInteractPoint._completionSignal 정합 확인) | 미검증 |
 | B-09 | sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient | V025 | Defib cart(MovingPatientBedController: `defib_cart_a`) + defibcart_to_patient(MovingPatientBedPositioningPoint) | PublishPositioningPointReached() -> Raise("patient_bed_position_reached_defib_cart_a_defibcart_to_patient") | 배선완료(2026-07-28, MovingPatientBedController scoped signal 발신 + OverworldScene defib_cart_a/defibcart_to_patient 정합 확인) | 미검증 |
-| B-10 | sig.remove_patient_clothing | V033 | OverworldScene / patient_a 흉부 클릭 포인트(PatientClothingCutPoint) / ScenarioActionInteractable | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_patient_clothing") 발신 | 배선완료(2026-07-28, PatientTypeA.PatientClothingCutPoint._completionSignal 정합 확인) | 미검증 |
+| B-10 | sig.remove_patient_clothing | V033 | OverworldScene / patient_a 흉부 클릭 포인트(PatientClothingCutPoint) / 시나리오 `interactions` Action 정의 | 레지스트리 Action 핸들러 수행 시 ScenarioInteractionSignals.Raise("remove_patient_clothing") 발신 | 배선완료(2026-07-28, PatientTypeA.PatientClothingCutPoint._completionSignal 정합 확인) | 미검증 |
 
 ### **결정 카드 (주도자 확정 필요)**
 

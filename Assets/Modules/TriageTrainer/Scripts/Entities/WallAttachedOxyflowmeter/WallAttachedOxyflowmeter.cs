@@ -37,9 +37,43 @@ namespace TriageTrainer.Entity
   /// </summary>
   [DisallowMultipleComponent]
   public class WallAttachedOxyflowmeter : StaticObjectDisplayment, INearestOnlyInteract,
-    IAttachCompletionSignalConfigurable
+    IAttachCompletionSignalConfigurable, IInteractionDefinitionSource
   {
     public const string QuestPresentationInteractionIdentifier = "oxyflowmeter";
+
+    /// <summary>코드 리터럴 정의. 설치·조작·회수는 하나의 핸들러(이 컴포넌트)가 상태에 따라 수행한다.</summary>
+    public IEnumerable<InteractionDeclaration> DeclareInteractions()
+    {
+      yield return new InteractionDeclaration(
+        InteractionDefinition.Code(EntityIdentifier, QuestPresentationInteractionIdentifier, "산소 유량계 설치", initialVisible: true), this);
+    }
+
+    /// <summary>레지스트리의 유효 정의(시나리오 데이터 덮개 포함). 없으면 null.</summary>
+    private InteractionDefinition RegistryDefinition =>
+      InteractionRegistry.TryGet(new InteractionAddress(EntityIdentifier, QuestPresentationInteractionIdentifier), out var entry)
+        ? entry.Definition
+        : null;
+
+    /// <summary>시나리오 데이터가 이 유량계의 정의를 명시했는지. 환자 A 처치실 유량계처럼 퀘스트 목표인 설치 지점을 뜻한다.</summary>
+    private bool IsScenarioDeclaredTarget =>
+      InteractionRegistry.TryGet(new InteractionAddress(EntityIdentifier, QuestPresentationInteractionIdentifier), out var entry)
+      && entry.DataDefinition != null;
+
+    /// <summary>조작 신호. 시나리오 데이터의 extras.attachedInteractSignal 이 프리팹 값보다 우선한다.</summary>
+    private string EffectiveAttachedInteractSignal
+    {
+      get
+      {
+        string fromData = RegistryDefinition?.GetExtra("attachedInteractSignal");
+        return string.IsNullOrWhiteSpace(fromData) ? _attachedInteractSignal : fromData.Trim();
+      }
+    }
+
+    private string ResolveAttachCompletionSignal()
+    {
+      string fromData = RegistryDefinition?.CompletionSignal;
+      return string.IsNullOrWhiteSpace(fromData) ? _attachCompletionSignal : fromData;
+    }
     public const string UnmarkedInteractionIdentifier = "oxyflowmeter_unmarked";
 
     /// <summary>
@@ -59,22 +93,12 @@ namespace TriageTrainer.Entity
     [Tooltip("설치 시 인벤토리에서 소비할 산소 유량계 수량입니다.")]
     [SerializeField] private int _consumeCount = 1;
 
-    [Tooltip("상호작용 힌트에 표시할 문구입니다.")]
-    [SerializeField] private string _attachDisplayText = "산소 유량계 설치";
-
-    [Tooltip("설치된 산소 유량계를 회수할 때 표시할 문구입니다.")]
-    [SerializeField] private string _detachDisplayText = "산소 유량계 회수";
-
     [Tooltip("설치(적용) 완료 시 인게임 서버로 올릴 시나리오 신호입니다. 비우면 신호를 올리지 않습니다.")]
     [SerializeField] private string _attachCompletionSignal;
 
     [Tooltip("설치 상태에서 상호작용했을 때 올릴 시나리오 신호입니다. 이 신호가 아직 올라가 있지 않다면 " +
       "상호작용은 신호만 올리고 회수는 수행하지 않습니다(이미 올라가 있으면 기존처럼 회수). 비우면 설치 상태 상호작용은 항상 회수입니다.")]
     [SerializeField] private string _attachedInteractSignal;
-
-    [Tooltip("_attachedInteractSignal 이 아직 올라가지 않은 설치 상태에서 상호작용 힌트에 표시할 문구입니다. " +
-      "비우면 '산소 유량계 조작'을 표시합니다.")]
-    [SerializeField] private string _attachedInteractDisplayText = "산소 유량계 조작";
 
     [Tooltip("자동 산소 라인 연결에 사용할 유량계 측 포트입니다.")]
     [SerializeField] private OxyLineConnectionPoint _oxyLineConnectionPoint;
@@ -94,23 +118,14 @@ namespace TriageTrainer.Entity
       return true;
     }
 
-    /// <summary>
-    /// 환자 A 시나리오가 지시하는 벽면 설치 지점인지 여부. 유량계 프리팹은 모든 구역이 공유하므로
-    /// 설치 완료 신호로 구분한다(흡인기의 <c>connect_wall_component_1</c> 판정과 같은 방식).
-    /// </summary>
-    private bool IsPatientAInstallationTarget =>
-      string.Equals(_attachCompletionSignal, "connect_wall_component_2", StringComparison.Ordinal);
-
-    public override string PresentationEntityIdentifier =>
-      IsPatientAInstallationTarget ? "patient_a_oxyflowmeter" : EntityIdentifier;
     public override string InteractionIdentifier
     {
       get
       {
         if (IsDetachInteraction)
           return DetachInteractionIdentifier;
-        // 환자 A는 설치와 유량 조절이 모두 퀘스트 목표다. 회수 상태가 아니면 항상 퀘스트 표시 대상이다.
-        if (IsPatientAInstallationTarget)
+        // 시나리오 데이터가 이 유량계를 지정했다면 설치와 유량 조절이 모두 퀘스트 목표다. 회수 상태가 아니면 항상 퀘스트 표시 대상이다.
+        if (IsScenarioDeclaredTarget)
           return QuestPresentationInteractionIdentifier;
         return IsQuestOxygenConnectionTarget()
           ? QuestPresentationInteractionIdentifier
@@ -131,7 +146,7 @@ namespace TriageTrainer.Entity
     {
       get
       {
-        if (string.IsNullOrWhiteSpace(_attachedInteractSignal))
+        if (string.IsNullOrWhiteSpace(EffectiveAttachedInteractSignal))
           return true;
         return MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.IsRaised(
           ResolveAttachedInteractSignal());
@@ -145,19 +160,22 @@ namespace TriageTrainer.Entity
     /// </summary>
     public string ResolveAttachedInteractSignal()
     {
-      if (string.IsNullOrWhiteSpace(_attachedInteractSignal))
+      string attachedInteractSignal = EffectiveAttachedInteractSignal;
+      if (string.IsNullOrWhiteSpace(attachedInteractSignal))
         return null;
 
       // 힌트 갱신과 퀘스트 표시가 매 프레임 이 값을 읽는다. 엔티티 식별자는 레이아웃 적용
       // 시점에 정해지므로, 식별자가 바뀔 때만 다시 만든다.
       string identifier = EntityIdentifier;
       if (_cachedAttachedInteractSignal == null
-          || !string.Equals(_cachedAttachedInteractSignalSource, identifier, StringComparison.Ordinal))
+          || !string.Equals(_cachedAttachedInteractSignalSource, identifier, StringComparison.Ordinal)
+          || !string.Equals(_cachedAttachedInteractSignalBase, attachedInteractSignal, StringComparison.Ordinal))
       {
         _cachedAttachedInteractSignalSource = identifier;
+        _cachedAttachedInteractSignalBase = attachedInteractSignal;
         _cachedAttachedInteractSignal = string.IsNullOrWhiteSpace(identifier)
-          ? _attachedInteractSignal
-          : $"{_attachedInteractSignal}_{identifier}";
+          ? attachedInteractSignal
+          : $"{attachedInteractSignal}_{identifier}";
       }
 
       return _cachedAttachedInteractSignal;
@@ -165,6 +183,7 @@ namespace TriageTrainer.Entity
 
     private string _cachedAttachedInteractSignal;
     private string _cachedAttachedInteractSignalSource;
+    private string _cachedAttachedInteractSignalBase;
     /// <summary>산소 라인 자동 연결에 사용할 유량계 측 포트. 프리팹에 설정되지 않으면 null이다.</summary>
     public OxyLineConnectionPoint OxyLineConnectionPoint => _oxyLineConnectionPoint;
     private Sprite _installationItemIcon;
@@ -191,12 +210,12 @@ namespace TriageTrainer.Entity
           // 설치 상태에서 첫 상호작용이 신호 발행(회수가 아님)으로 동작하는 동안은
           // 힌트도 그에 맞게 표시한다(실제 동작과 힌트의 불일치 방지).
           if (!IsDetachInteraction)
-            return string.IsNullOrWhiteSpace(_attachedInteractDisplayText) ? "산소 유량계 조작" : _attachedInteractDisplayText;
+            return "산소 유량계 조작";
 
-          return string.IsNullOrWhiteSpace(_detachDisplayText) ? "산소 유량계 회수" : _detachDisplayText;
+          return "산소 유량계 회수";
         }
 
-        return string.IsNullOrWhiteSpace(_attachDisplayText) ? "산소 유량계 설치" : _attachDisplayText;
+        return "산소 유량계 설치";
       }
     }
 
@@ -264,7 +283,7 @@ namespace TriageTrainer.Entity
         if (!IsDetachInteraction)
         {
           // 유량계별 신호와 별개로, 기존 시나리오(환자 A 계열)가 대기하는 공용 신호도 유지한다.
-          MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(_attachedInteractSignal);
+          MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(EffectiveAttachedInteractSignal);
           MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(ResolveAttachedInteractSignal());
           // 산소 라인은 신호가 모든 피어에 미러링된 뒤 CareZone이 만든다. 조작한 피어에서는
           // 힌트/라인이 한 프레임이라도 늦지 않도록 여기서도 한 번 시도한다.
@@ -440,10 +459,11 @@ namespace TriageTrainer.Entity
 
     private void RaiseCompletionSignalIfAny()
     {
-      if (string.IsNullOrWhiteSpace(_attachCompletionSignal))
+      string signal = ResolveAttachCompletionSignal();
+      if (string.IsNullOrWhiteSpace(signal))
         return;
 
-      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(_attachCompletionSignal);
+      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(signal);
     }
   }
 }

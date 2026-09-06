@@ -21,16 +21,6 @@
       "nodeType": "Delay",
       "duration": { "value": 1.5, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "inspect_patient_a"
-    },
-    "inspect_patient_a": {
-      "identifier": "inspect_patient_a",
-      "nodeType": "Interaction",
-      "actorScope": "Player",
-      "targetIdentifier": "patient_a_eye",
-      "requiredItemIdentifier": null,
-      "interactionType": "Inspect",
-      "completionConditionIdentifier": "interaction.inspect.patient_a_eye",
       "nextIdentifier": "combine_laryngoscope"
     },
     "combine_laryngoscope": {

@@ -158,10 +158,9 @@
 ## 8. 인스펙터 핵심 필드
 
 - Identity: `_identifier`
-- Display: `_liftDisplayText`, `_carryDisplayText`, `_monitorSelectDisplayText` 및 각 아이콘
 - Patient: `_weight`
 - Medical: `_patientDescriptor`, `_medicalState`
-- Interact: `_interactConfigs`
+- Interact: 인스펙터 필드 없음. 인터렉션은 `PatientController.InteractionRegistry.cs`가 코드 리터럴로 선언하고(`DeclareInteractions`), 표시 문구·노출 조건은 시나리오 JSON `interactions` 구역이 덮어쓴다. 사정 동작 목록은 `DefaultAssessActions` 코드 상수다
 - Collider: `_capsuleCenter`, `_capsuleHeight`, `_capsuleRadius`
 - Visual: `_attachableItemVisualPairs`
 

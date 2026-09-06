@@ -8,8 +8,50 @@ using UnityEngine;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
 {
-  public partial class PatientMonitorController : IInteractable, PatientController.IMonitorSelectionRequester, PatientController.IMedicalStateListener
+  public partial class PatientMonitorController : IInteractable, IInteractionDefinitionSource, PatientController.IMonitorSelectionRequester, PatientController.IMedicalStateListener
   {
+    /// <summary>모든 환자 모니터가 초기화 사이클에서 받는 태그. 시나리오 데이터가 태그 참조로 모니터 전체에 정의를 붙일 때 쓴다.</summary>
+    public const string EntityTag = "patient_monitor";
+
+    [Header("Identity")]
+    [Tooltip("레지스트리 주소와 엔티티 레지스트리에 쓰는 식별자. 비우면 자동 생성된다.")]
+    [SerializeField] private string _entityIdentifier;
+    private string _registeredEntityIdentifier;
+
+    public string EntityIdentifier => _entityIdentifier;
+
+    public IEnumerable<InteractionDeclaration> DeclareInteractions()
+    {
+      for (int i = 0; i < _interacts.Count; i++)
+      {
+        if (_interacts[i] is not IQuestPresentationTarget target)
+          continue;
+        yield return new InteractionDeclaration(
+          InteractionDefinition.Code(_entityIdentifier, target.InteractionIdentifier, _interacts[i].DisplayText, initialVisible: true),
+          _interacts[i]);
+      }
+    }
+
+    private void RegisterMonitorEntity()
+    {
+      if (string.IsNullOrWhiteSpace(_entityIdentifier))
+        _entityIdentifier = MultiplayerInfrastructure.Registry.EntityId.Ensure(_entityIdentifier, gameObject, "patient_monitor");
+      _registeredEntityIdentifier = _entityIdentifier;
+      MultiplayerInfrastructure.Registry.Registry.RegisterEntity(
+        _registeredEntityIdentifier, MultiplayerInfrastructure.Registry.EntityType.PatientMonitor, gameObject, displayName: gameObject.name);
+      InteractionRegistry.RemoveCodeDefinitions(_registeredEntityIdentifier);
+      InteractionRegistry.DeclareCode(_registeredEntityIdentifier, this);
+      InteractionRegistry.AssignEntityTag(_registeredEntityIdentifier, EntityTag);
+    }
+
+    private void UnregisterMonitorEntity()
+    {
+      if (string.IsNullOrWhiteSpace(_registeredEntityIdentifier))
+        return;
+      InteractionRegistry.RemoveCodeDefinitions(_registeredEntityIdentifier);
+      MultiplayerInfrastructure.Registry.Registry.UnregisterEntity(_registeredEntityIdentifier);
+      _registeredEntityIdentifier = null;
+    }
     private sealed class MonitorSelectModeInteract : IInteract, IInteractorConditional, INearestOnlyInteract, IQuestPresentationTarget
     {
       private readonly PatientMonitorController _owner;
@@ -26,7 +68,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       public Transform NearestOnlyDistanceOrigin => _owner.transform;
       public Collider NearestOnlyCollider => _owner.GetComponent<Collider>();
       public int NearestOnlyTieBreaker => _owner.GetInstanceID();
-      public bool CanInteract(Transform interactor) => _owner.IsInteractEnabled(InteractIdSelectPatient);
+      // 노출(시나리오 조건)은 레지스트리가 판정한다. 여기서는 모니터의 추적 방식만 본다.
+      public bool CanInteract(Transform interactor) => _owner.IsPatientTrackingMethodEnabled(PatientTrackingMethod.Interactable);
       public void Interact(Transform interactor)
       {
         if (!CanInteract(interactor))
@@ -49,16 +92,22 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       public Transform NearestOnlyDistanceOrigin => _owner.transform;
       public Collider NearestOnlyCollider => _owner.GetComponent<Collider>();
       public int NearestOnlyTieBreaker => _owner.GetInstanceID();
-      public bool CanInteract(Transform interactor) => _owner.IsInteractEnabled(InteractIdDetailOverlay);
+      public bool CanInteract(Transform interactor) => _owner.EnableDetailedContentOverlay;
       public void Interact(Transform interactor)
       {
         if (!CanInteract(interactor))
           return;
+        // 닫기 완료 신호는 시나리오 데이터가 정의의 extras(closeSignal, closeSignalPatient)로 지정한다.
         var patient = _owner.MonitoringPatient;
-        if (patient != null
-            && string.Equals(patient.Identifier, "patient_a", System.StringComparison.Ordinal)
-            && ScenarioController.Instance?.CurrentGraph?.Identifier == "patient_a_critical")
-          _owner.ArmScenarioClose(patient, "close_vital_ui_a");
+        if (patient != null && InteractionRegistry.TryGetDefinition(this, out var definition))
+        {
+          string closeSignal = definition.GetExtra("closeSignal");
+          string closePatient = definition.GetExtra("closeSignalPatient");
+          if (!string.IsNullOrWhiteSpace(closeSignal)
+              && (string.IsNullOrWhiteSpace(closePatient)
+                  || string.Equals(patient.Identifier, closePatient.Trim(), System.StringComparison.Ordinal)))
+            _owner.ArmScenarioClose(patient, closeSignal.Trim());
+        }
         _owner.OpenDetailedContentOverlay();
       }
     }
@@ -78,32 +127,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       public Collider NearestOnlyCollider => _owner.GetComponent<Collider>();
       public int NearestOnlyTieBreaker => _owner.GetInstanceID();
       public bool CanInteract(Transform interactor)
-        => _owner.IsInteractEnabled(InteractIdDisconnectPatient) && _owner._monitoringPatient != null;
+        => _owner._monitoringPatient != null;
       public void Interact(Transform interactor)
       {
         if (!CanInteract(interactor))
           return;
         _owner.SetMonitoringPatient(null);
-      }
-    }
-
-    [Serializable]
-    public class InteractEntry
-    {
-      [SerializeField] private string _identifier;
-      [SerializeField] private bool _enabled = true;
-
-      public string Identifier => _identifier;
-      public bool Enabled
-      {
-        get => _enabled;
-        set => _enabled = value;
-      }
-
-      public InteractEntry(string identifier, bool enabled = true)
-      {
-        _identifier = identifier;
-        _enabled = enabled;
       }
     }
 
@@ -135,10 +164,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     [Header("Interact")]
     [SerializeField] private Sprite _interactIcon;
-    [SerializeField] private List<InteractEntry> _interactEntries = new();
 
     private readonly List<IInteract> _interacts = new();
-    private readonly Dictionary<string, InteractEntry> _interactEntryMap = new(StringComparer.Ordinal);
     private readonly Dictionary<int, PlayerController> _selectionModePlayers = new();
 
     public IInteract[] Interacts => _interacts.ToArray();
@@ -149,6 +176,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       // OnEnable에서 생성한다.
       EnsureInteractionCollider(allowCreate: false);
       BuildInteracts();
+      RegisterMonitorEntity();
     }
 
     protected virtual void OnDisable()
@@ -164,6 +192,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     protected virtual void OnDestroy()
     {
+      UnregisterMonitorEntity();
       ExitSelectionModeForAll();
       UnconfigurePatientTracking();
       if (_monitoringPatient != null)
@@ -174,104 +203,15 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void BuildInteracts()
     {
-      EnsureInteractEntry(InteractIdSelectPatient, IsPatientTrackingMethodEnabled(PatientTrackingMethod.Interactable));
-      EnsureInteractEntry(InteractIdDetailOverlay, EnableDetailedContentOverlay);
-      EnsureInteractEntry(InteractIdDisconnectPatient, true);
-      RebuildInteractEntryMap();
-
       _interacts.Clear();
       _interacts.Add(new MonitorSelectModeInteract(this));
       _interacts.Add(new MonitorDetailInteract(this));
       _interacts.Add(new MonitorDisconnectPatientInteract(this));
     }
 
-    private void EnsureInteractEntry(string identifier, bool enabled)
-    {
-      for (int i = 0; i < _interactEntries.Count; i++)
-      {
-        var each = _interactEntries[i];
-        if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
-          continue;
-
-        if (string.Equals(identifier, InteractIdSelectPatient, StringComparison.Ordinal) ||
-            string.Equals(identifier, InteractIdDetailOverlay, StringComparison.Ordinal))
-          each.Enabled = enabled;
-        return;
-      }
-
-      _interactEntries.Add(new InteractEntry(identifier, enabled));
-    }
-
-    private void RebuildInteractEntryMap()
-    {
-      _interactEntryMap.Clear();
-      for (int i = 0; i < _interactEntries.Count; i++)
-      {
-        var each = _interactEntries[i];
-        if (each == null || string.IsNullOrWhiteSpace(each.Identifier))
-          continue;
-
-        _interactEntryMap[each.Identifier] = each;
-      }
-    }
-
-    public void SetInteractEnabled(string identifier, bool enabled)
-    {
-      if (string.IsNullOrWhiteSpace(identifier))
-        return;
-
-      for (int i = 0; i < _interactEntries.Count; i++)
-      {
-        var each = _interactEntries[i];
-        if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
-          continue;
-
-        each.Enabled = enabled;
-        RebuildInteractEntryMap();
-        return;
-      }
-
-      _interactEntries.Add(new InteractEntry(identifier, enabled));
-      RebuildInteractEntryMap();
-    }
-
-    public void AddInteract(string identifier, bool enabled = true)
-    {
-      if (string.IsNullOrWhiteSpace(identifier))
-        return;
-
-      EnsureInteractEntry(identifier, enabled);
-      RebuildInteractEntryMap();
-    }
-
-    public void RemoveInteract(string identifier)
-    {
-      if (string.IsNullOrWhiteSpace(identifier))
-        return;
-
-      for (int i = _interactEntries.Count - 1; i >= 0; i--)
-      {
-        var each = _interactEntries[i];
-        if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
-          continue;
-
-        _interactEntries.RemoveAt(i);
-      }
-
-      RebuildInteractEntryMap();
-    }
-
-    public bool IsInteractEnabled(string identifier)
-    {
-      if (string.IsNullOrWhiteSpace(identifier))
-        return false;
-
-      return _interactEntryMap.TryGetValue(identifier, out var entry) && entry.Enabled;
-    }
-
     private void EnterSelectionMode(Transform interactor)
     {
-      if (!IsInteractEnabled(InteractIdSelectPatient))
+      if (!IsPatientTrackingMethodEnabled(PatientTrackingMethod.Interactable))
         return;
 
       var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;

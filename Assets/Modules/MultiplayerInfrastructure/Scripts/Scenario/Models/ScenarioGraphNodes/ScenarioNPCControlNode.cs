@@ -6,14 +6,6 @@
     Control,
   }
 
-  public enum ScenarioNPCInteractCrudOperation
-  {
-    None,
-    Create,
-    Read,
-    Update,
-    Delete,
-  }
 
   /// <summary>
   /// NPC의 런타임 데이터/Interact를 갱신하거나 이동을 지시하는 통합 노드.
@@ -28,11 +20,6 @@
     public string NPCIdentifier { get; set; }
 
     // Update
-    public ScenarioNPCInteractCrudOperation InteractOperation { get; set; }
-      = ScenarioNPCInteractCrudOperation.None;
-    public string InteractableIdentifier { get; set; }
-    public bool? InteractEnabled { get; set; }
-    public string ResultStateKey { get; set; }
     public string DisplayName { get; set; }
     public bool? ShowOverheadName { get; set; }
 

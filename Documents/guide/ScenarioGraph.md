@@ -127,16 +127,12 @@ flags: []
 
 ### NPCControl
 
-NPC의 런타임 설정과 이동을 한 노드에서 제어합니다. `mode: Update`는 Interact CRUD 및 이름 표시를 갱신하고, `mode: Control`은 NPC 이동을 지시합니다.
+NPC의 런타임 설정과 이동을 한 노드에서 제어합니다. `mode: Update`는 이름 표시를 갱신하고, `mode: Control`은 NPC 이동을 지시합니다. NPC 인터렉션의 추가·제거·활성 전환은 최상위 `interactions` 구역과 `InteractionVisibility` 노드가 담당합니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
 | `mode` | `string` (`Update`\|`Control`) | 갱신 또는 이동 제어 | `Control` |
 | `npcIdentifier` | `string` | 대상 NPC의 식별자 | `npc_doctor` |
-| `interactOperation` | `string` (`None`\|`Create`\|`Read`\|`Update`\|`Delete`) | (`Update`일 때) Interact CRUD | `Update` |
-| `interactableIdentifier` | `string` | CRUD 대상 Interactable 식별자 | `submission_a` |
-| `interactEnabled` | `bool` | (`interactOperation: Update`일 때) 활성 상태 | `true` |
-| `resultStateKey` | `string` | (`interactOperation: Read`일 때) 존재 여부를 `true`/`false`로 기록할 상태 키 | `npc.interact.exists` |
 | `displayName` | `string` | (`Update`일 때) NPC 머리 위 표시 이름 | `???` |
 | `showOverheadName` | `bool` | (`Update`일 때) 머리 위 이름 표시 여부 | `true` |
 | `destinationType` | `string` (`Position`\|`Waypoint`) | 목적지 지정 방식 | `Position` |
@@ -213,7 +209,7 @@ NPC의 런타임 설정과 이동을 한 노드에서 제어합니다. `mode: Up
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
-| `rootConditions` | `ScenarioValidatorRootCondition[]` | 평가할 조건 목록(하단 참고) | - |
+| `rootConditions` | `ScenarioValidatorRootCondition[]` | 평가할 조건 목록(하단 참고). `condition: Conditions`이면 루트 조건의 `conditions`(인터렉션 정의와 같은 `ScenarioCondition` 목록)를 판정합니다 | - |
 | `onFailure` | `string` (`Panic`\|`Branching`\|`Ignore`) | 조건 실패 시 동작. `Panic`=오류 처리, `Branching`=`failureNextIdentifier`로 분기, `Ignore`=무시하고 계속 진행 | `Branching` |
 | `failureReportTargets` | `string` (flags: `UnityConsole`\|`InGameChat`) | 실패 보고 대상(플래그 조합 가능) | `UnityConsole` |
 | `failureNextIdentifier` | `string` | (`onFailure`가 `Branching`일 때) 실패 시 이동할 노드 식별자 | `validator-fail-branch` |
@@ -328,17 +324,16 @@ NPC의 런타임 설정과 이동을 한 노드에서 제어합니다. `mode: Up
 
 > **주의**: `Create`만 한 상태에서 `Show` 없이 타이머가 화면에 나타나기를 기대하면 안 됩니다. 표시는 오직 `Show`로만 켜집니다. 반대로 `Hide`는 타이머를 삭제하지 않으므로, 표시를 꺼도 흐름은 계속되고 `Show`로 다시 켤 수 있습니다.
 
-### Interaction
+### InteractionVisibility
 
-플레이어가 어떤 오브젝트를 직접 조작(사용/조사/부착/탈착)해야만 다음으로 넘어갈 수 있는 노드입니다. 예를 들어 "문을 직접 열어야 다음 장면으로 넘어간다"처럼, 플레이어가 능동적으로 행동하게 만들고 싶을 때 Dialogue 대신 이 노드를 사용하면 몰입감을 높일 수 있습니다.
+인터렉션 레지스트리에 등록된 인터렉션의 노출 상태를 시점 기준으로 바꾸는 노드입니다. "의사가 지시한 다음부터 후두경 전달 상호작용이 보인다"처럼 조건 절로 쓰기 어려운 개방·차단을 표현할 때 사용합니다. 대부분의 노출 규칙은 최상위 `interactions` 구역의 `visibility.conditions`(퀘스트 단계, 역할 태그 등)로 쓰고, 이 노드는 그 위에 얹는 오버라이드입니다. 오버라이드는 서버가 기록해 모든 플레이어에게 복제되고, 늦게 접속한 플레이어에게도 복원됩니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
-| `actorScope` | `string` (`Player`\|`Any`) | 상호작용을 수행해야 하는 주체 범위(기본값 `Player`) | `Player` |
-| `targetIdentifier` | `string` | 상호작용 대상의 식별자 | `door_01` |
-| `requiredItemIdentifier` | `string` | (optional) 상호작용에 필요한 아이템 식별자 | `keycard` |
-| `interactionType` | `string` (`Use`\|`Inspect`\|`Attach`\|`Detach`) | 상호작용 종류(기본값 `Use`) | `Use` |
-| `completionConditionIdentifier` | `string` | (optional) 완료 신호/이벤트 식별자 | `door-opened` |
+| `operation` | `string` (`Show`\|`Hide`\|`Reset`) | 표시 / 숨김 / 오버라이드 제거(조건·초기값으로 복귀). 기본값 `Show` | `Show` |
+| `targets` | `{ entity: { id \| tag }, interaction }[]` | 대상 인터렉션 주소 목록. `tag`를 쓰면 그 태그를 가진 모든 엔티티 | `[{"entity":{"id":"npc_doctor"},"interaction":"submit_laryngoscope"}]` |
+| `playerScope` | `string` (`All`\|`Current`\|`ByTag`) | 전역 오버라이드(`All`) 또는 플레이어별 오버라이드(`Current`=이 노드를 실행한 플레이어, `ByTag`=태그 보유자) | `All` |
+| `playerTags` / `tagMatchMode` | `string[]` / `string` (`Any`\|`All`) | `ByTag`일 때 대상 플레이어를 고르는 태그 | `["nurse_a"]` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 
 ### CombineItem
@@ -419,6 +414,7 @@ Dialogue 노드처럼 화면에 텍스트 창을 띄우지 않고, 순수하게 
 | `positionSourceEntityIdentifier` | `string` | (optional) 다른 엔티티의 위치를 기준으로 스폰할 때 그 엔티티의 식별자 | `bed_a` |
 | `positionX` / `positionY` / `positionZ` | `float` | 스폰 좌표(`positionSourceEntityIdentifier`가 없을 때 사용) | `0.0` |
 | `resultStateKey` | `string` | (optional) 결과로 생성된 엔티티 식별자를 상태 저장소에 기록할 키 | `patient_a.entityId` |
+| `tags` | `string[]` | (optional) 스폰 직후 부여할 엔티티 태그. `interactions[].entity.tag`와 조건 절의 `EntityHasTag`가 참조합니다 | `["patient_monitor"]` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 
 ### EntityTag
@@ -506,32 +502,48 @@ Dialogue 노드처럼 화면에 텍스트 창을 띄우지 않고, 순수하게 
 | `isCardiacArrest` | `bool` (nullable) | 심정지 여부 | `false` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 
-### ItemSubmissionConfig
+### 최상위 `interactions` 구역
 
-플레이어가 특정 아이템을 모아서 "제출"해야 하는 상호작용을 설정하는 노드입니다. 예를 들어 "의사 NPC에게 지정된 약품 2개를 가져다줘야 다음으로 넘어간다" 같은 미션을 만들 때 사용합니다. `requiredItems`로 어떤 아이템이 몇 개 필요한지 지정하고, 제출이 완료되면 `completionSignalIdentifier`로 신호를 올려줍니다.
-
-이 노드 하나로 상호작용 대상을 새로 스폰할 수도 있고, 이미 배치된 대상(예: NPC에 붙어 있는 제출 슬롯)을 재사용할 수도 있습니다. 제출 완료 신호는 뒤따르는 `Validator` 노드에서 `waitForCondition`으로 기다리게 만들면, "제출이 끝날 때까지 다음 장면으로 넘어가지 않는" 흐름을 자연스럽게 구성할 수 있습니다.
+노드가 아니라 `nodes`와 나란히 두는 최상위 구역입니다. 시나리오가 시작될 때 인터렉션 레지스트리에 일괄 등록되고 끝날 때 해제됩니다. 아이템 제출("의사에게 후두경을 전달한다"), 월드 오브젝트 조작("T-piece를 연결한다"), NPC 대화 시작처럼 플레이어가 고를 수 있는 상호작용을 여기서 정의하고, 노출 조건은 `visibility.conditions`로 씁니다. 엔티티 코드가 이미 선언한 인터렉션(환자 사정 동작 등)과 같은 주소를 쓰면 표시 문구·아이콘·완료 신호·노출 조건만 덮어씁니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
-| `presetIdentifier` | `string` | (optional) 스폰할 EntityPreset 식별자(ItemSubmissionInteractable 프리팹). 지정 시 프리셋 스폰 경로 사용(서버/오프라인 컨텍스트에서만 수행) | `item_submission_preset` |
-| `spawnedEntityIdentifier` | `string` | (optional) 스폰된 인스턴스에 부여할 엔티티 식별자. 비어 있으면 자동 생성 | `submission_a` |
-| `positionSourceEntityIdentifier` | `string` | (optional) 스폰 위치 기준이 되는 기존 엔티티 식별자 | `npc_doctor` |
-| `positionX` / `positionY` / `positionZ` | `float` | 스폰 좌표 | `0.0` |
-| `targetIdentifier` | `string` | (optional) 프리셋을 스폰하지 않고 기존 Interactable을 참조할 때의 식별자 | `submission_a` |
-| `targetStateKey` | `string` | (optional) 대상 식별자를 상태 저장소 키에서 해석할 때 사용(예: 이전 스폰 노드의 결과) | `submission_a.entityId` |
-| `requiredItems` | `ScenarioItemRequirement[]` | 요구 아이템 목록(식별자+수량). 비어 있으면 프리셋 기본값 유지 | `[{"itemIdentifier":"gauze","count":2}]` |
-| `completionSignalIdentifier` | `string` | (optional) 제출 성공 시 올릴 서버 세션 전역 신호 식별자(`sig.` 접두사는 자동 정규화) | `sig.item-submitted` |
-| `enabled` | `bool` | 대상 Interactable의 활성/비활성(기본값 true) | `true` |
-| `resultStateKey` | `string` | (optional) 확정된 대상 식별자를 기록할 상태 저장소 키 | `submission_a.entityId` |
-| `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
+| `entity` | `{ "id": string }` 또는 `{ "tag": string }` | 대상 엔티티(식별자 또는 엔티티 태그) | `{"id":"patient_a"}` |
+| `interaction` | `string` | 인터렉션 식별자 | `interact_tpiece` |
+| `kind` | `string` (`Custom`\|`Action`\|`Signal`\|`StartScenario`\|`ItemSubmission`) | 범용 핸들러 종류(기본값 `Custom`) | `Action` |
+| `handlerKey` | `string` | (optional) `Custom` 데이터 전용 정의의 핸들러를 엔티티 코드가 만들 때 쓰는 키 | `recognition_check` |
+| `display` | `{ text, iconIdentifiers, color, allowIconFallback, priority }` | 표시 문구, 아이콘 식별자 목록, 색, 힌트 정렬 우선순위 | `{"text":"T-Piece 연결","priority":900}` |
+| `completionSignal` | `string` | (optional) 수행 완료 시 올릴 신호(`sig.` 자동 정규화) | `interact_tpiece` |
+| `afterInteract` | `string` (`None`\|`HideForPlayer`\|`HideForAll`) | 수행 뒤 숨김 범위(기본값 `None`) | `HideForAll` |
+| `requiredItems` / `consumeItems` | `{ itemIdentifier, count }[]` | 필요한(유지) 아이템 / 소비하는 아이템 | `[{"itemIdentifier":"tpiece_set","count":1}]` |
+| `extras` | `{ string: string }` | 핸들러별 부가 값(`missingItemDialogue`, `closeSignal` 등) | `{"missingItemDialogue":"T-piece를 갖고 있지 않다."}` |
+| `itemSubmission` | `{ title, submitButtonText, requiredItems }` | `ItemSubmission` 종류의 제출 UI 설정 | `{"title":"의사에게 전달"}` |
+| `scenarioIdentifier` / `startNodeIdentifier` | `string` | `StartScenario` 종류가 시작할 그래프와 시작 노드 | `disaster_intro` / `D001` |
+| `activateObjects` / `deactivateObjects` | `string[]` | `Action` 종류가 켜고 끌 엔티티 하위 오브젝트 경로 | `["TPieceSet_A"]` |
+| `visibility.initial` | `bool` | 조건 절이 없을 때의 초기 노출(기본값 `false`) | `true` |
+| `visibility.matchMode` | `string` (`All`\|`Any`) | 조건 절 결합 방식(기본값 `All`) | `All` |
+| `visibility.conditions` | `ScenarioCondition[]` | 노출 조건 절 목록 | `[{"type":"PlayerHasTag","tag":"nurse_b"}]` |
 
-#### ScenarioItemRequirement
+#### ScenarioCondition
 
-| 필드 이름 | 값 타입 | 값 | 예시 |
-|---|---|---|---|
-| `itemIdentifier` | `string` | 요구 아이템 식별자 | `gauze` |
-| `count` | `int` | 요구 수량(기본값 1) | `2` |
+`Validator`의 `Conditions` 루트 조건도 같은 형식을 씁니다. `type`에 따라 아래 필드 중 필요한 것만 채웁니다.
+
+| `type` | 쓰는 필드 | 뜻 |
+|---|---|---|
+| `PlayerHasTag` | `tag` | 플레이어가 역할 태그를 가진다 |
+| `PlayerHasQuestFlag` | `flag` | 플레이어별 퀘스트 상태 플래그를 가진다 |
+| `PlayerHasQuest` | `questIdentifier`, `questState`, `completionCriteriaIdentifier` | 퀘스트가 활성(기본)이며, 기준 식별자를 주면 그 기준이 현재 단계다 |
+| `PlayerHasItem` | `itemIdentifier`, `count` | 아이템을 수량 이상 가진다 |
+| `PlayerState` / `EntityState` | `key`, `qualifier`, `compare`, `value`, (`entity`) | 코드가 노출하는 상태 값을 비교한다(`Equal`, `NotEqual`, `Greater`, `GreaterOrEqual`, `Less`, `LessOrEqual`) |
+| `PlayerWithinDistance` | `entity`, `meters` | 엔티티와의 거리가 이내다 |
+| `SignalRaised` | `signal` | 시나리오 신호가 올라와 있다 |
+| `RegistryContains` | `registryType`, `identifier` | 레지스트리에 항목이 있다 |
+| `EntityHasTag` | `entity`, `tag` | 엔티티가 태그를 가진다 |
+| `PlayerCount` | `compare`, `value` | 접속 플레이어 수 비교 |
+| `ScenarioActive` | `scenarioIdentifier` | 해당 시나리오가 실행 중이다 |
+| `Group` | `matchMode`, `conditions` | 중첩 조건 |
+
+모든 조건은 `negate: true`로 뒤집을 수 있습니다.
 
 ### ChatPrint
 

@@ -26,7 +26,7 @@ namespace TriageTrainer.Entity
   /// defibrillator_cart_snap_point_reached_{카트 식별자}_{포인트 식별자} 를 발생시킨다.
   /// </summary>
   public sealed class DefibrillatorCartController : MinecraftBoatLikeControl,
-    IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver
+    IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IInteractionDefinitionSource
   {
     [Header("Identity")]
     [Tooltip("씬에 사전 배치된 이 카트 인스턴스의 고유 식별자입니다. EntityPreset으로 스폰되면 스폰 요청의 식별자로 대체됩니다.")]
@@ -34,8 +34,15 @@ namespace TriageTrainer.Entity
     [SerializeField] private string _entityTypeIdentifier = "defibrillator_cart_a";
 
     [Header("Display")]
-    [SerializeField] private string _displayText = "제세동 카트 조종";
     [SerializeField] private Sprite _displayIcon;
+    private const string ControlDisplayText = "제세동 카트 조종";
+    public const string InteractIdControl = "control";
+
+    /// <summary>코드 리터럴 정의. 카트 조종은 시나리오가 제한하지 않는 한 항상 보인다.</summary>
+    public IEnumerable<InteractionDeclaration> DeclareInteractions()
+    {
+      yield return new InteractionDeclaration(InteractionDefinition.Code(Identifier, InteractIdControl, ControlDisplayText, initialVisible: true), this);
+    }
 
     [Header("Snap Point")]
     [FormerlySerializedAs("_enablePositioningSnap")]
@@ -118,7 +125,7 @@ namespace TriageTrainer.Entity
         return list.ToArray();
       }
     }
-    public string DisplayText => _displayText;
+    public string DisplayText => ControlDisplayText;
     public Sprite DisplayIcon => _displayIcon != null ? _displayIcon : ResolvedDefaultControlIcon;
     public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => Color.white;
@@ -256,7 +263,7 @@ namespace TriageTrainer.Entity
           id,
           EntityType.DefibrillatorCart,
           gameObject,
-          displayName: _displayText,
+          displayName: ControlDisplayText,
           ownerUserIdentifier: null,
           clientId: null,
           isNetworked: IsClientStarted || IsServerStarted);
@@ -265,12 +272,18 @@ namespace TriageTrainer.Entity
       {
         Debug.LogWarning($"[DefibrillatorCart] Failed to register entity '{id}': {ex.Message}");
       }
+
+      InteractionRegistry.RemoveCodeDefinitions(id);
+      InteractionRegistry.DeclareCode(id, this);
     }
 
     private void UnregisterCartEntity()
     {
       if (!string.IsNullOrWhiteSpace(_entityRuntimeIdentifier))
+      {
+        InteractionRegistry.RemoveCodeDefinitions(_entityRuntimeIdentifier);
         Registry.UnregisterEntity(_entityRuntimeIdentifier);
+      }
       _entityRuntimeIdentifier = null;
     }
 

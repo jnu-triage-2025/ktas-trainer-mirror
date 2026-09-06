@@ -21,7 +21,7 @@ namespace TriageTrainer.DebugTools
   /// 디버그 전용이며 빌드/프로덕션 씬에는 배치하지 않는 것을 전제로 한다.
   /// </summary>
   [DisallowMultipleComponent]
-  public sealed class ScenarioDevStub : MonoBehaviour, IInteractable, IInteract
+  public sealed class ScenarioDevStub : MonoBehaviour, IInteractable, IInteract, IInteractionRegistryExempt
   {
     public enum StubMode
     {

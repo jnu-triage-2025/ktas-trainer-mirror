@@ -227,93 +227,763 @@
       "rotationY": 0,
       "rotationZ": 0,
       "spawnOnStart": false,
-      "despawnOnScenarioEnd": true,
-      "interactions": [
+      "despawnOnScenarioEnd": true
+    }
+  ],
+  "interactions": [
+    {
+      "entity": {
+        "id": "npc-doctor-patient-a-critical"
+      },
+      "interaction": "patient-a-doctor-submit-laryngoscope",
+      "kind": "ItemSubmission",
+      "display": {
+        "text": "후두경 전달"
+      },
+      "completionSignal": "pass_laryngoscope",
+      "afterInteract": "HideForAll",
+      "itemSubmission": {
+        "title": "후두경 전달",
+        "submitButtonText": "전달",
+        "requiredItems": [
+          {
+            "itemIdentifier": "laryngoscope",
+            "count": 1
+          }
+        ]
+      },
+      "visibility": {
+        "initial": false
+      }
+    },
+    {
+      "entity": {
+        "id": "npc-doctor-patient-a-critical"
+      },
+      "interaction": "patient-a-doctor-submit-et-tube",
+      "kind": "ItemSubmission",
+      "display": {
+        "text": "준비된 기관내관 전달"
+      },
+      "completionSignal": "pass_et_tube_ready",
+      "afterInteract": "HideForAll",
+      "itemSubmission": {
+        "title": "준비된 기관내관 전달",
+        "submitButtonText": "전달",
+        "requiredItems": [
+          {
+            "itemIdentifier": "endotracheal_tube_ready",
+            "count": 1
+          }
+        ]
+      },
+      "visibility": {
+        "initial": false
+      }
+    },
+    {
+      "entity": {
+        "id": "npc-doctor-patient-a-critical"
+      },
+      "interaction": "patient-a-doctor-submit-5cc-syringe",
+      "kind": "ItemSubmission",
+      "display": {
+        "text": "5cc 주사기 전달"
+      },
+      "completionSignal": "pass_syringe",
+      "afterInteract": "HideForAll",
+      "itemSubmission": {
+        "title": "5cc 주사기 전달",
+        "submitButtonText": "전달",
+        "requiredItems": [
+          {
+            "itemIdentifier": "syringe_5cc",
+            "count": 1
+          }
+        ]
+      },
+      "visibility": {
+        "initial": false
+      }
+    },
+    {
+      "entity": {
+        "id": "npc-doctor-patient-a-critical"
+      },
+      "interaction": "patient-a-doctor-submit-central-line-set",
+      "kind": "ItemSubmission",
+      "display": {
+        "text": "중심정맥관 전달"
+      },
+      "completionSignal": "pass_central_line_set",
+      "afterInteract": "HideForAll",
+      "itemSubmission": {
+        "title": "중심정맥관 전달",
+        "submitButtonText": "전달",
+        "requiredItems": [
+          {
+            "itemIdentifier": "central_line_set",
+            "count": 1
+          }
+        ]
+      },
+      "visibility": {
+        "initial": false
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "assess_vital",
+      "display": {
+        "text": "활력징후 사정"
+      },
+      "completionSignal": "show_vital_patient_a",
+      "afterInteract": "HideForPlayer",
+      "requiredItems": [
         {
-          "identifier": "patient-a-doctor-submit-laryngoscope",
-          "interactionType": "ItemSubmission",
-          "displayText": "후두경 전달",
-          "iconIdentifier": null,
-          "scenarioIdentifier": null,
-          "scenarioStartNodeIdentifier": null,
-          "title": "후두경 전달",
-          "submitButtonText": "전달",
-          "requiredItems": [
-            {
-              "itemIdentifier": "laryngoscope",
-              "count": 1
-            }
-          ],
-          "completionSignalIdentifier": "sig.pass_laryngoscope",
-          "consumeOnce": true,
-          "enabled": false
-        },
-        {
-          "identifier": "patient-a-doctor-submit-et-tube",
-          "interactionType": "ItemSubmission",
-          "displayText": "준비된 기관내관 전달",
-          "iconIdentifier": null,
-          "scenarioIdentifier": null,
-          "scenarioStartNodeIdentifier": null,
-          "title": "준비된 기관내관 전달",
-          "submitButtonText": "전달",
-          "requiredItems": [
-            {
-              "itemIdentifier": "endotracheal_tube_ready",
-              "count": 1
-            }
-          ],
-          "completionSignalIdentifier": "sig.pass_et_tube_ready",
-          "consumeOnce": true,
-          "enabled": false
-        },
-        {
-          "identifier": "patient-a-doctor-submit-5cc-syringe",
-          "interactionType": "ItemSubmission",
-          "displayText": "5cc 주사기 전달",
-          "iconIdentifier": null,
-          "scenarioIdentifier": null,
-          "scenarioStartNodeIdentifier": null,
-          "title": "5cc 주사기 전달",
-          "submitButtonText": "전달",
-          "requiredItems": [
-            {
-              "itemIdentifier": "syringe_5cc",
-              "count": 1
-            }
-          ],
-          "completionSignalIdentifier": "sig.pass_syringe",
-          "consumeOnce": true,
-          "enabled": false
-        },
-        {
-          "identifier": "patient-a-doctor-submit-central-line-set",
-          "interactionType": "ItemSubmission",
-          "displayText": "중심정맥관 전달",
-          "iconIdentifier": null,
-          "scenarioIdentifier": null,
-          "scenarioStartNodeIdentifier": null,
-          "title": "중심정맥관 전달",
-          "submitButtonText": "전달",
-          "requiredItems": [
-            {
-              "itemIdentifier": "central_line_set",
-              "count": 1
-            }
-          ],
-          "completionSignalIdentifier": "sig.pass_central_line_set",
-          "consumeOnce": true,
-          "enabled": false
+          "itemIdentifier": "vital_set",
+          "count": 1
         }
-      ]
+      ],
+      "extras": {
+        "missingItemDialogue": "활력징후 측정도구를 갖고 있지 않다.",
+        "findItemDialogue": "활력징후 측정도구를 찾자.",
+        "actionDialogue": "(조금 더 정확한 값을 확인하자. 모니터를 연결하자.)"
+      },
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Check_Vital_PatientA",
+            "completionCriteriaIdentifier": "assess-vital-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "assess_avpu_gcs",
+      "display": {
+        "text": "말 걸기(의식상태 사정)"
+      },
+      "afterInteract": "HideForPlayer",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Check_GCS_PatientA",
+            "completionCriteriaIdentifier": "assess-gcs-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "assess_pulse_r1",
+      "display": {
+        "text": "맥박 확인"
+      },
+      "afterInteract": "HideForPlayer",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Check_Pulse",
+            "completionCriteriaIdentifier": "assess-pulse-patient-a-r1"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "assess_pulse_r2",
+      "display": {
+        "text": "맥박 확인"
+      },
+      "afterInteract": "HideForPlayer",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Check_Pulse_ROSC",
+            "completionCriteriaIdentifier": "assess-pulse-patient-a-r2"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "assess_gcs_rosc",
+      "display": {
+        "text": "의식상태 재사정"
+      },
+      "afterInteract": "HideForPlayer",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Check_GCS_ROSC",
+            "completionCriteriaIdentifier": "assess-gcs-rosc-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "remove_tpiece",
+      "kind": "Action",
+      "display": {
+        "text": "T-piece 연결 해제",
+        "iconIdentifiers": [
+          "interaction-unlink"
+        ]
+      },
+      "completionSignal": "remove_tpiece",
+      "afterInteract": "HideForAll",
+      "deactivateObjects": [
+        "TPieceSet_A"
+      ],
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Ambu_A",
+            "completionCriteriaIdentifier": "detach-tpiece-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "connect_ambubag",
+      "kind": "Action",
+      "display": {
+        "text": "기관내관에 앰부백 연결"
+      },
+      "completionSignal": "connect_ambubag",
+      "afterInteract": "HideForAll",
+      "activateObjects": [
+        "Ambu_ready_A"
+      ],
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Ambu_A",
+            "completionCriteriaIdentifier": "attach-ambubag-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "connect_o2_to_ambu",
+      "kind": "Action",
+      "display": {
+        "text": "앰부백에 산소 저장낭 연결",
+        "iconIdentifiers": [
+          "ambubag"
+        ]
+      },
+      "completionSignal": "connect_o2_to_ambu",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Ambu_A",
+            "completionCriteriaIdentifier": "connect-ambubag-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "start_ambu_r1",
+      "kind": "Action",
+      "display": {
+        "text": "앰부배깅 시작",
+        "priority": 1000
+      },
+      "completionSignal": "start_ambu_r1",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Ambu_A",
+            "completionCriteriaIdentifier": "start-ambubagging-r1-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "click_to_start_comp",
+      "kind": "Action",
+      "display": {
+        "text": "가슴압박 수행",
+        "iconIdentifiers": [
+          "interaction-cpr"
+        ]
+      },
+      "completionSignal": "click_to_start_comp",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_b"
+          },
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_ChestComp_B",
+            "completionCriteriaIdentifier": "start-chest-compression-r1-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "interact_patient_chest",
+      "kind": "Action",
+      "display": {
+        "text": "제세동 패드 부착"
+      },
+      "completionSignal": "interact_patient_chest",
+      "afterInteract": "HideForAll",
+      "activateObjects": [
+        "defibrillatorpad_midaxillary_A",
+        "defibrillatorpad_subclavicle_A"
+      ],
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Defibrillator_C",
+            "completionCriteriaIdentifier": "attach-defibrillator-pad-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "remove_intu_stylet",
+      "kind": "Action",
+      "display": {
+        "text": "스타일렛 제거"
+      },
+      "completionSignal": "remove_intu_stylet",
+      "afterInteract": "HideForAll",
+      "activateObjects": [
+        "endotracheal_tube_A"
+      ],
+      "deactivateObjects": [
+        "endotracheal_tube_ready_A"
+      ],
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Intubation_PatientA",
+            "completionCriteriaIdentifier": "remove-stylet-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "interact_tpiece",
+      "kind": "Action",
+      "display": {
+        "text": "T-Piece 연결"
+      },
+      "completionSignal": "interact_tpiece",
+      "afterInteract": "HideForAll",
+      "consumeItems": [
+        {
+          "itemIdentifier": "tpiece_set",
+          "count": 1
+        }
+      ],
+      "extras": {
+        "missingItemDialogue": "T-piece를 갖고 있지 않다.",
+        "findItemDialogue": "T-piece를 찾자."
+      },
+      "activateObjects": [
+        "TPieceSet_A"
+      ],
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Oxygen_PatientA",
+            "completionCriteriaIdentifier": "attach-tpiece-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "interact_chest",
+      "kind": "Action",
+      "display": {
+        "text": "가슴압박 수행",
+        "iconIdentifiers": [
+          "interaction-cpr"
+        ]
+      },
+      "completionSignal": "interact_chest",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          },
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_ChestComp_A",
+            "completionCriteriaIdentifier": "start-chest-compression-r2-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "start_ambu_r2",
+      "kind": "Action",
+      "display": {
+        "text": "앰부배깅 시작",
+        "priority": 1000
+      },
+      "completionSignal": "start_ambu_r2",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Ambu_B",
+            "completionCriteriaIdentifier": "start-ambubagging-r2-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "remove_patient_clothing",
+      "kind": "Action",
+      "display": {
+        "text": "의복 제거",
+        "iconIdentifiers": [
+          "interaction-cut-cloth"
+        ],
+        "priority": 900
+      },
+      "completionSignal": "remove_patient_clothing",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Cut_Clothing",
+            "completionCriteriaIdentifier": "remove-clothing-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "patient_a_use_cervical_collar",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Stabilizer_And_Suction_PatientA",
+            "completionCriteriaIdentifier": "stabilize-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "wall_suction_use",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Stabilizer_And_Suction_PatientA",
+            "completionCriteriaIdentifier": "suction-mouth-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "patient_a_use_gauze",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_BleedingControl_PatientA",
+            "completionCriteriaIdentifier": "apply-gauze-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "patient_a_use_plaster_on_gauze",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_BleedingControl_PatientA",
+            "completionCriteriaIdentifier": "apply-plaster-gauze-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "patient_a_use_plaster_on_intubation",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_Intubation_PatientA",
+            "completionCriteriaIdentifier": "plaster-intubation-patient-a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "patient_a_use_epinephrine_5cc_syringe",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "Group",
+            "matchMode": "Any",
+            "conditions": [
+              {
+                "type": "PlayerHasQuest",
+                "questIdentifier": "Quest_Epi_D",
+                "completionCriteriaIdentifier": "push-epinephrine-r1-patient-a"
+              },
+              {
+                "type": "PlayerHasQuest",
+                "questIdentifier": "Quest_Epi_C",
+                "completionCriteriaIdentifier": "push-epinephrine-r2-patient-a"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "patient_a_use_normal_saline_20cc_syringe",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "Group",
+            "matchMode": "Any",
+            "conditions": [
+              {
+                "type": "PlayerHasQuest",
+                "questIdentifier": "Quest_Epi_D",
+                "completionCriteriaIdentifier": "push-normal-saline-r1-patient-a"
+              },
+              {
+                "type": "PlayerHasQuest",
+                "questIdentifier": "Quest_Epi_C",
+                "completionCriteriaIdentifier": "push-normal-saline-r2-patient-a"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "item_apply",
+      "visibility": {
+        "initial": false
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "intravenous_line_cannula",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "Group",
+            "matchMode": "Any",
+            "conditions": [
+              {
+                "type": "PlayerHasQuest",
+                "questIdentifier": "Quest_IV_Line_PatientA",
+                "completionCriteriaIdentifier": "patient-a-iv-left"
+              },
+              {
+                "type": "PlayerHasQuest",
+                "questIdentifier": "Quest_IV_Line_PatientA",
+                "completionCriteriaIdentifier": "patient-a-iv-right"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "patient_a_normal_saline_connect",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_IV_Line_PatientA",
+            "completionCriteriaIdentifier": "patient-a-ns-left"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "patient_a_plasma_solution_connect",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasQuest",
+            "questIdentifier": "Quest_IV_Line_PatientA",
+            "completionCriteriaIdentifier": "patient-a-ps-right"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "tag": "patient_monitor"
+      },
+      "interaction": "detail_overlay",
+      "extras": {
+        "closeSignal": "close_vital_ui_a",
+        "closeSignalPatient": "patient_a"
+      },
+      "visibility": {
+        "initial": true
+      }
+    },
+    {
+      "entity": {
+        "id": "zone_a:wall_suction"
+      },
+      "interaction": "wall_suction_install",
+      "completionSignal": "connect_wall_component_1",
+      "visibility": {
+        "initial": true
+      }
+    },
+    {
+      "entity": {
+        "id": "zone_a:wall_suction"
+      },
+      "interaction": "connect_yankauer",
+      "visibility": {
+        "initial": true
+      }
+    },
+    {
+      "entity": {
+        "id": "zone_a:oxyflowmeter"
+      },
+      "interaction": "oxyflowmeter",
+      "completionSignal": "connect_wall_component_2",
+      "extras": {
+        "attachedInteractSignal": "interact_oxyflow_wall"
+      },
+      "visibility": {
+        "initial": true
+      }
     }
   ],
   "waypoints": null,
   "ttsVoiceProfiles": [
-    { "preset": "F1", "voiceIdentifier": "narrator", "voiceStyleName": "F1" },
-    { "preset": "M1", "voiceIdentifier": "dispatcher", "voiceStyleName": "M1" },
-    { "preset": "M2", "voiceIdentifier": "doctor", "voiceStyleName": "M2" },
-    { "preset": "F3", "voiceIdentifier": "patient", "voiceStyleName": "F3" }
+    {
+      "preset": "F1",
+      "voiceIdentifier": "narrator",
+      "voiceStyleName": "F1"
+    },
+    {
+      "preset": "M1",
+      "voiceIdentifier": "dispatcher",
+      "voiceStyleName": "M1"
+    },
+    {
+      "preset": "M2",
+      "voiceIdentifier": "doctor",
+      "voiceStyleName": "M2"
+    },
+    {
+      "preset": "F3",
+      "voiceIdentifier": "patient",
+      "voiceStyleName": "F3"
+    }
   ],
   "nodes": {
     "GIVE_CHECKLIST_PAPER_IF_MISSING": {
@@ -2763,13 +3433,6 @@
       "moveNextBehavior": "Immediately",
       "identifier": "E025",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "ACT_ARREST_A"
-    },
-    "ACT_ARREST_A": {
-      "eventIdentifier": "activate_patient_a_arrest_actions",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_ARREST_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "D023"
     },
     "E026": {
@@ -2819,13 +3482,6 @@
       "moveNextBehavior": "WaitUntilDone",
       "identifier": "E032",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "ACT_CPR2_A"
-    },
-    "ACT_CPR2_A": {
-      "eventIdentifier": "activate_patient_a_cpr2_actions",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_CPR2_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "D029"
     },
     "E033": {
@@ -2854,13 +3510,6 @@
       "moveNextBehavior": "WaitUntilDone",
       "identifier": "E036",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "ACT_CLOTHING_REMOVE_A"
-    },
-    "ACT_CLOTHING_REMOVE_A": {
-      "eventIdentifier": "activate_patient_a_clothing_removal",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_CLOTHING_REMOVE_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "D034"
     },
     "E037": {
@@ -2872,91 +3521,59 @@
       "nextIdentifier": "Q028_1"
     },
     "ISC_PASS_CENTRAL_LINE_SET": {
-      "presetIdentifier": null,
-      "spawnedEntityIdentifier": null,
-      "positionSourceEntityIdentifier": null,
-      "positionX": 0,
-      "positionY": 0,
-      "positionZ": 0,
-      "targetIdentifier": "patient-a-doctor-submit-central-line-set",
-      "targetStateKey": null,
-      "requiredItems": [
+      "identifier": "ISC_PASS_CENTRAL_LINE_SET",
+      "nodeType": "InteractionVisibility",
+      "operation": "Show",
+      "targets": [
         {
-          "itemIdentifier": "central_line_set",
-          "count": 1
+          "entity": {
+            "id": "npc-doctor-patient-a-critical"
+          },
+          "interaction": "patient-a-doctor-submit-central-line-set"
         }
       ],
-      "completionSignalIdentifier": "sig.pass_central_line_set",
-      "enabled": null,
-      "resultStateKey": null,
-      "identifier": "ISC_PASS_CENTRAL_LINE_SET",
-      "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "V018"
     },
     "ISC_PASS_ET_TUBE": {
-      "presetIdentifier": null,
-      "spawnedEntityIdentifier": null,
-      "positionSourceEntityIdentifier": null,
-      "positionX": 0,
-      "positionY": 0,
-      "positionZ": 0,
-      "targetIdentifier": "patient-a-doctor-submit-et-tube",
-      "targetStateKey": null,
-      "requiredItems": [
+      "identifier": "ISC_PASS_ET_TUBE",
+      "nodeType": "InteractionVisibility",
+      "operation": "Show",
+      "targets": [
         {
-          "itemIdentifier": "endotracheal_tube_ready",
-          "count": 1
+          "entity": {
+            "id": "npc-doctor-patient-a-critical"
+          },
+          "interaction": "patient-a-doctor-submit-et-tube"
         }
       ],
-      "completionSignalIdentifier": "sig.pass_et_tube_ready",
-      "enabled": null,
-      "resultStateKey": null,
-      "identifier": "ISC_PASS_ET_TUBE",
-      "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "V014_2"
     },
     "ISC_PASS_LARYNGOSCOPE": {
-      "presetIdentifier": null,
-      "spawnedEntityIdentifier": null,
-      "positionSourceEntityIdentifier": null,
-      "positionX": 0,
-      "positionY": 0,
-      "positionZ": 0,
-      "targetIdentifier": "patient-a-doctor-submit-laryngoscope",
-      "targetStateKey": null,
-      "requiredItems": [
+      "identifier": "ISC_PASS_LARYNGOSCOPE",
+      "nodeType": "InteractionVisibility",
+      "operation": "Show",
+      "targets": [
         {
-          "itemIdentifier": "laryngoscope",
-          "count": 1
+          "entity": {
+            "id": "npc-doctor-patient-a-critical"
+          },
+          "interaction": "patient-a-doctor-submit-laryngoscope"
         }
       ],
-      "completionSignalIdentifier": "sig.pass_laryngoscope",
-      "enabled": null,
-      "resultStateKey": null,
-      "identifier": "ISC_PASS_LARYNGOSCOPE",
-      "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "V014_1"
     },
     "ISC_PASS_SYRINGE": {
-      "presetIdentifier": null,
-      "spawnedEntityIdentifier": null,
-      "positionSourceEntityIdentifier": null,
-      "positionX": 0,
-      "positionY": 0,
-      "positionZ": 0,
-      "targetIdentifier": "patient-a-doctor-submit-5cc-syringe",
-      "targetStateKey": null,
-      "requiredItems": [
+      "identifier": "ISC_PASS_SYRINGE",
+      "nodeType": "InteractionVisibility",
+      "operation": "Show",
+      "targets": [
         {
-          "itemIdentifier": "syringe_5cc",
-          "count": 1
+          "entity": {
+            "id": "npc-doctor-patient-a-critical"
+          },
+          "interaction": "patient-a-doctor-submit-5cc-syringe"
         }
       ],
-      "completionSignalIdentifier": "sig.pass_syringe",
-      "enabled": null,
-      "resultStateKey": null,
-      "identifier": "ISC_PASS_SYRINGE",
-      "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "V014_4"
     },
     "N006_3": {
@@ -4166,6 +4783,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -4207,6 +4825,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -4248,6 +4867,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -4289,6 +4909,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -4345,13 +4966,6 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q007",
       "nodeType": "QuestControl",
-      "nextIdentifier": "ACT_VITAL_ASSESS_A"
-    },
-    "ACT_VITAL_ASSESS_A": {
-      "eventIdentifier": "activate_patient_a_vital_assess",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_VITAL_ASSESS_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "V011_1"
     },
     "Q_WAIT_INITIAL_A": {
@@ -4395,6 +5009,7 @@
       "onFailure": "Ignore",
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 600,
       "onWaitTimeout": "ForceAdvance",
@@ -4527,13 +5142,6 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q008",
       "nodeType": "QuestControl",
-      "nextIdentifier": "ACT_AVPU_GCS_ASSESS_A"
-    },
-    "ACT_AVPU_GCS_ASSESS_A": {
-      "eventIdentifier": "activate_patient_a_avpu_gcs_assess",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_AVPU_GCS_ASSESS_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "V012"
     },
     "Q008_1": {
@@ -5610,13 +6218,6 @@
       "onWaitTimeout": "ForceAdvance",
       "identifier": "V014_2",
       "nodeType": "Validator",
-      "nextIdentifier": "ACT_STYLET_REMOVE_A"
-    },
-    "ACT_STYLET_REMOVE_A": {
-      "eventIdentifier": "activate_patient_a_stylet_removal",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_STYLET_REMOVE_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "N008_3"
     },
     "V014_3": {
@@ -5725,13 +6326,6 @@
       "onWaitTimeout": "ForceAdvance",
       "identifier": "V015_2",
       "nodeType": "Validator",
-      "nextIdentifier": "ACT_TPIECE_ATTACH_A"
-    },
-    "ACT_TPIECE_ATTACH_A": {
-      "eventIdentifier": "activate_patient_a_tpiece_attach",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_TPIECE_ATTACH_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "V015_3_1"
     },
     "V015_3_1": {
@@ -6171,7 +6765,9 @@
       "interactionRequired": null,
       "playTTS": false,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "None" },
+      "ttsVoiceProfile": {
+        "preset": "None"
+      },
       "identifier": "D_PULSE_R1_ACTION",
       "nodeType": "Dialogue",
       "nextIdentifier": "D_PULSE_R1_RESULT"
@@ -6184,7 +6780,9 @@
       "interactionRequired": null,
       "playTTS": false,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "None" },
+      "ttsVoiceProfile": {
+        "preset": "None"
+      },
       "identifier": "D_PULSE_R1_RESULT",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q018_1"
@@ -6554,7 +7152,9 @@
       "interactionRequired": null,
       "playTTS": false,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "None" },
+      "ttsVoiceProfile": {
+        "preset": "None"
+      },
       "identifier": "D_PULSE_R2_ACTION",
       "nodeType": "Dialogue",
       "nextIdentifier": "D_PULSE_R2_RESULT"
@@ -6567,7 +7167,9 @@
       "interactionRequired": null,
       "playTTS": false,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "None" },
+      "ttsVoiceProfile": {
+        "preset": "None"
+      },
       "identifier": "D_PULSE_R2_RESULT",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q027_1"
@@ -6694,6 +7296,7 @@
       "onFailure": "Ignore",
       "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 600,
       "onWaitTimeout": "ForceAdvance",

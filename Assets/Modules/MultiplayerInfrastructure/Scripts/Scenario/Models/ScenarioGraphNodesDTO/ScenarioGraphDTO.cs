@@ -35,6 +35,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("actingNpcs")]
     public List<ScenarioActingNpcDefinitionDTO> ActingNpcs { get; set; }
 
+    [JsonPropertyName("interactions")]
+    public List<ScenarioInteractionDefinitionDTO> Interactions { get; set; }
+
     [JsonPropertyName("waypoints")]
     public List<ScenarioWaypointDefinitionDTO> Waypoints { get; set; }
 

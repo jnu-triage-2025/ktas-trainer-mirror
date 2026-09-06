@@ -2,8 +2,9 @@
 
 ## 지원 범위
 
-시나리오 JSON의 최상위 `actingNpcs`에서 NPC의 인스턴스 식별자, 표시 이름, 위치, 회전,
-기본 상호작용과 종료 정리를 정의한다. `actingNpcs`는 NPC 정의 카탈로그이며, 실제 생성 시점은
+시나리오 JSON의 최상위 `actingNpcs`에서 NPC의 인스턴스 식별자, 표시 이름, 위치, 회전과 종료 정리를
+정의한다. NPC 상호작용은 최상위 `interactions` 구역에 `entity.id`를 actingNpc 식별자로 두고 정의한다
+(`actingNpcs[].interactions`는 폐기됐으며, 남아 있으면 로더가 `interactions`로 옮기고 에디터에서 경고한다). `actingNpcs`는 NPC 정의 카탈로그이며, 실제 생성 시점은
 `spawnOnStart` 또는 `EntityPresetSpawn` 노드의 `actingNpcIdentifier`가 결정한다. 캐릭터 메시, Animator, Collider,
 `NetworkObject`는 Unity 프리팹이므로 기존 EntityPreset에 한 번 등록해야 한다.
 
@@ -37,22 +38,23 @@
       "positionZ": 8.0,
       "rotationY": 180.0,
       "spawnOnStart": false,
-      "despawnOnScenarioEnd": true,
-      "interactions": [
-        {
-          "identifier": "doctor_submission",
-          "interactionType": "ItemSubmission",
-          "displayText": "물품 전달",
-          "title": "의사에게 물품 전달",
-          "submitButtonText": "전달",
-          "requiredItems": [
-            { "itemIdentifier": "laryngoscope", "count": 1 }
-          ],
-          "completionSignalIdentifier": "sig.doctor-item-received",
-          "consumeOnce": true,
-          "enabled": true
-        }
-      ]
+      "despawnOnScenarioEnd": true
+    }
+  ],
+  "interactions": [
+    {
+      "entity": { "id": "npc_doctor" },
+      "interaction": "doctor_submission",
+      "kind": "ItemSubmission",
+      "display": { "text": "물품 전달" },
+      "itemSubmission": {
+        "title": "의사에게 물품 전달",
+        "submitButtonText": "전달",
+        "requiredItems": [ { "itemIdentifier": "laryngoscope", "count": 1 } ]
+      },
+      "completionSignal": "doctor-item-received",
+      "afterInteract": "HideForAll",
+      "visibility": { "initial": false }
     }
   ],
   "defaultEntrypoint": "spawn-doctor",
@@ -80,20 +82,21 @@
 }
 ```
 
-`EntityPresetSpawn.actingNpcIdentifier`를 지정하면 actingNpc의 preset, 위치, 회전, 이름과 상호작용을
-한꺼번에 적용한다. 이때 기존 `presetIdentifier`, 위치 관련 필드와 `spawnedEntityIdentifier`는 사용하지 않는다.
+`EntityPresetSpawn.actingNpcIdentifier`를 지정하면 actingNpc의 preset, 위치, 회전, 이름을 한꺼번에 적용한다.
+상호작용은 시나리오 시작 시 레지스트리에 등록돼 있다가 NPC가 등록되는 순간 붙는다. 이때 기존 `presetIdentifier`, 위치 관련 필드와 `spawnedEntityIdentifier`는 사용하지 않는다.
 기존처럼 일반 EntityPreset만 스폰하려면 `actingNpcIdentifier` 없이 `presetIdentifier`를 사용한다.
 
-`StartScenario` 상호작용은 다음처럼 작성한다.
+`StartScenario` 상호작용은 `interactions`에 다음처럼 작성한다.
 
 ```json
 {
-  "identifier": "doctor_order",
-  "interactionType": "StartScenario",
-  "displayText": "지시 듣기",
-  "iconIdentifier": "message-circle",
+  "entity": { "id": "npc_doctor" },
+  "interaction": "doctor_order",
+  "kind": "StartScenario",
+  "display": { "text": "지시 듣기", "iconIdentifiers": [ "message-circle" ] },
   "scenarioIdentifier": "doctor-order-dialogue",
-  "scenarioStartNodeIdentifier": "intro"
+  "startNodeIdentifier": "intro",
+  "visibility": { "initial": true }
 }
 ```
 
@@ -101,12 +104,18 @@
 
 ```json
 {
-  "identifier": "npc-talk",
-  "interactionType": "Signal",
-  "displayText": "말 걸기",
-  "completionSignalIdentifier": "npc_talk_started"
+  "entity": { "id": "npc_doctor" },
+  "interaction": "npc-talk",
+  "kind": "Signal",
+  "display": { "text": "말 걸기" },
+  "completionSignal": "npc_talk_started",
+  "afterInteract": "HideForAll",
+  "visibility": { "initial": true }
 }
 ```
+
+특정 시점부터 보여야 하는 상호작용은 `visibility.initial`을 `false`로 두고 `InteractionVisibility` 노드로 열거나,
+`visibility.conditions`(퀘스트 단계·역할 태그)로 조건을 쓴다.
 
 ## 실행과 정리
 
@@ -118,8 +127,8 @@
 - preset 누락, 중복 actingNpc identifier 또는 `Npc` 컴포넌트 누락 시 시작을 중단하고 부분 생성물을 정리한다.
 - `despawnOnScenarioEnd: false`인 actingNpc는 시나리오 종료 후 월드에 남는다. 이후 수명주기를 담당할
   다른 시스템이 있을 때만 사용한다.
-- 네트워크 preset인 경우 서버가 actingNpc를 spawn·구성한 뒤 원격 클라이언트에도 actingNpc 식별자와
-  인라인 상호작용 구성을 전달한다. 실행 씬에는 spawn 시점부터 활성화된 `ScenarioNetworkRelay`가
+- 네트워크 preset인 경우 서버가 actingNpc를 spawn·구성한 뒤 원격 클라이언트에도 actingNpc 식별자를
+  전달한다. 상호작용 정의는 각 피어가 같은 시나리오 데이터에서 만들고, 가시성 오버라이드만 서버가 복제한다. 실행 씬에는 spawn 시점부터 활성화된 `ScenarioNetworkRelay`가
   있어야 한다.
 
 ## 검증
@@ -127,7 +136,7 @@
 1. `Tools > Multiplayer Infrastructure > Validate Scenario Requirements`를 실행한다.
 2. Play Mode에서 시나리오를 시작한다.
 3. Hierarchy에서 NPC 위치와 회전을 확인한다.
-4. 상호작용 UI에 선언한 항목이 나타나는지 확인한다.
+4. 상호작용 UI에 선언한 항목이 나타나는지 확인한다(`Tools > Multiplayer Infrastructure > Interaction Registry`에서 판정 사유를 볼 수 있다).
 5. 아이템 제출 후 `completionSignalIdentifier` 신호를 기다리는 노드가 진행되는지 확인한다.
 6. 시나리오 종료 후 NPC가 Hierarchy와 `RegistryType.Npc`에서 제거되는지 확인한다.
 
@@ -135,5 +144,5 @@
 
 - `Entity preset ... is not registered`: EntityPreset SO 등록과 시스템 support prefab 연결을 확인한다.
 - `does not contain an Npc component`: preset이 가리키는 프리팹에 `Npc`를 추가한다.
-- 제출 항목이 보이지 않음: `requiredItems`의 identifier와 count가 유효한지 확인한다.
+- 제출 항목이 보이지 않음: `itemSubmission.requiredItems`의 identifier와 count, 그리고 `visibility`(초기값·조건·`InteractionVisibility` 노드)를 확인한다.
 - 다른 시나리오 시작 실패: 대상 `.scenario.json`이 `Resources/Scenario`에 있고 identifier가 일치하는지 확인한다.

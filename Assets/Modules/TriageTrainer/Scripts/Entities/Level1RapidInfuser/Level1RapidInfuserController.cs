@@ -82,7 +82,7 @@ namespace TriageTrainer.Entity
   /// <see cref="MinecraftBoatLikeControl"/> 에 위임한다.
   /// </summary>
   public sealed class Level1RapidInfuserController : MinecraftBoatLikeControl,
-    IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver
+    IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IInteractionDefinitionSource
   {
     private const string FlowTag = "RapidInfuserFlow";
     private void LogFlow(string message, bool warning = false)
@@ -201,7 +201,6 @@ namespace TriageTrainer.Entity
     [Header("Identity / interaction")]
     [Tooltip("씬에 사전 배치된 이 주입기 인스턴스의 고유 식별자입니다. EntityPreset으로 스폰되면 스폰 요청의 식별자로 대체됩니다.")]
     [SerializeField] private string _entityIdentifier = "level1_rapid_infuser_a";
-    [SerializeField] private string _displayText = "Level 1 급속 주입기 조종";
     [SerializeField] private Sprite _displayIcon;
 
     private readonly SyncVar<bool> _hasNormalSaline = new(false);
@@ -247,6 +246,20 @@ namespace TriageTrainer.Entity
     public event Action<RapidInfuserFluidLifecycleEvent> OnPlasmaApplied;
     public event Action<RapidInfuserFluidLifecycleEvent> OnBloodApplied;
 
+    public const string InteractIdControl = "control";
+    private const string ControlDisplayText = "Level 1 급속 주입기 조종";
+
+    /// <summary>코드 리터럴 정의. 조종과 수액·C라인 연결은 시나리오가 제한하지 않는 한 항상 보인다(내재 능력 조건은 CanInteract).</summary>
+    public IEnumerable<InteractionDeclaration> DeclareInteractions()
+    {
+      yield return new InteractionDeclaration(InteractionDefinition.Code(Identifier, InteractIdControl, ControlDisplayText, initialVisible: true), this);
+      foreach (var interact in AdditionalInteracts)
+      {
+        if (interact is IQuestPresentationTarget target)
+          yield return new InteractionDeclaration(InteractionDefinition.Code(Identifier, target.InteractionIdentifier, interact.DisplayText, initialVisible: true), interact);
+      }
+    }
+
     public IEnumerable<IInteract> AdditionalInteracts =>
       _fluidInteracts ??= new IInteract[]
       {
@@ -265,7 +278,7 @@ namespace TriageTrainer.Entity
         return result.ToArray();
       }
     }
-    public string DisplayText => _displayText;
+    public string DisplayText => ControlDisplayText;
     public Sprite DisplayIcon => _displayIcon != null ? _displayIcon : ResolvedDefaultControlIcon;
     public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => Color.white;
@@ -409,14 +422,19 @@ namespace TriageTrainer.Entity
         identifier,
         EntityType.Level1RapidInfuser,
         gameObject,
-        _displayText,
+        ControlDisplayText,
         isNetworked: IsClientStarted || IsServerStarted);
+      InteractionRegistry.RemoveCodeDefinitions(identifier);
+      InteractionRegistry.DeclareCode(identifier, this);
     }
 
     private void UnregisterEntity()
     {
       if (!string.IsNullOrWhiteSpace(_registeredIdentifier))
+      {
+        InteractionRegistry.RemoveCodeDefinitions(_registeredIdentifier);
         Registry.UnregisterEntity(_registeredIdentifier);
+      }
       _registeredIdentifier = null;
     }
 

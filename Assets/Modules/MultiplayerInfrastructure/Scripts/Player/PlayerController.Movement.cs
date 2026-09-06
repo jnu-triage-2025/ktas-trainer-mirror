@@ -374,6 +374,67 @@ namespace MultiplayerInfrastructure.Player
       _characterController.Move(motion);
     }
 
+    // PushOutOfCapsule 에서 밀어낼 방향을 정규화해도 되는 최소 축간 거리(m).
+    private const float MinimumPushSeparation = 0.001f;
+
+    /// <summary>
+    /// 겹쳐 있는 외부 수직 캡슐(연출 이동 중인 NPC 등) 밖으로 이 플레이어를 수평으로 밀어낸다.
+    /// 캡슐은 월드 기준 축 하단 중심·축 상단 중심·반지름으로 준다.
+    /// 밀어내기는 CharacterController.Move 로 적용하므로 벽 너머로 밀려나지는 않으며,
+    /// 입력 이동을 막지 않아 밀리는 동안에도 플레이어는 스스로 움직일 수 있다.
+    /// </summary>
+    /// <param name="fallbackDirection">
+    /// 두 캡슐 축이 거의 일치해 밀어낼 방향을 정할 수 없을 때 사용할 수평 방향.
+    /// </param>
+    /// <returns>실제로 밀어냈으면 true.</returns>
+    public bool PushOutOfCapsule(
+      Vector3 capsuleAxisBottom, Vector3 capsuleAxisTop, float capsuleRadius, Vector3 fallbackDirection)
+    {
+      if (_characterController == null || !_characterController.enabled)
+        return false;
+
+      Vector3 scale = transform.lossyScale;
+      float ownRadius = _characterController.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z));
+      float ownHeight = _characterController.height * Mathf.Abs(scale.y);
+      Vector3 ownCenter = transform.TransformPoint(_characterController.center);
+      float ownHalfSpan = Mathf.Max(0f, (ownHeight * 0.5f) - ownRadius);
+
+      // 높이 구간이 겹치지 않으면(예: 위층·아래층) 밀어낼 이유가 없다.
+      float ownLow = ownCenter.y - ownHalfSpan - ownRadius;
+      float ownHigh = ownCenter.y + ownHalfSpan + ownRadius;
+      float otherLow = Mathf.Min(capsuleAxisBottom.y, capsuleAxisTop.y) - capsuleRadius;
+      float otherHigh = Mathf.Max(capsuleAxisBottom.y, capsuleAxisTop.y) + capsuleRadius;
+      if (ownHigh <= otherLow || ownLow >= otherHigh)
+        return false;
+
+      // 두 캡슐 축 모두 월드 Y축과 나란하므로 축 사이 거리는 수평 거리로 구한다.
+      Vector3 separation = ownCenter - capsuleAxisBottom;
+      separation.y = 0f;
+
+      float contactDistance = ownRadius + capsuleRadius;
+      float distance = separation.magnitude;
+      if (distance >= contactDistance)
+        return false;
+
+      Vector3 direction;
+      if (distance > MinimumPushSeparation)
+      {
+        direction = separation / distance;
+      }
+      else
+      {
+        // 축이 겹쳐 바깥 방향을 정할 수 없으면 미는 쪽의 진행 방향으로 내보낸다.
+        direction = fallbackDirection;
+        direction.y = 0f;
+        if (direction.sqrMagnitude <= MinimumPushSeparation * MinimumPushSeparation)
+          return false;
+        direction.Normalize();
+      }
+
+      _characterController.Move(direction * (contactDistance - distance));
+      return true;
+    }
+
     private void UpdateSpectateFollowTarget()
     {
       if (!_isSpectateFollowing)

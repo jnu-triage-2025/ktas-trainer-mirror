@@ -17,27 +17,68 @@
     "nurse_c",
     "nurse_d"
   ],
-  "activeRoleTags": ["nurse_a", "nurse_b", "nurse_c", "nurse_d"],
+  "activeRoleTags": [
+    "nurse_a",
+    "nurse_b",
+    "nurse_c",
+    "nurse_d"
+  ],
   "skipAbsentRoleBranches": true,
   "checklistItemSetsByPlayerTag": {
     "nurse_a": [],
     "nurse_b": [
-      { "identifier": "vital_set", "count": 1 }
+      {
+        "identifier": "vital_set",
+        "count": 1
+      }
     ],
     "nurse_c": [
-      { "identifier": "penlight", "count": 1 },
-      { "identifier": "cannula_20g", "count": 2 },
-      { "identifier": "intravenous_set", "count": 2 },
-      { "identifier": "normal_saline_1000ml", "count": 2 }
+      {
+        "identifier": "penlight",
+        "count": 1
+      },
+      {
+        "identifier": "cannula_20g",
+        "count": 2
+      },
+      {
+        "identifier": "intravenous_set",
+        "count": 2
+      },
+      {
+        "identifier": "normal_saline_1000ml",
+        "count": 2
+      }
     ],
     "nurse_d": [
-      { "identifier": "humidifier_bottle", "count": 2 },
-      { "identifier": "sterile_distilled_water", "count": 2 },
-      { "identifier": "flowmeter", "count": 2 },
-      { "identifier": "nasal_cannula", "count": 2 },
-      { "identifier": "sterile_gloves", "count": 2 },
-      { "identifier": "gauze", "count": 2 },
-      { "identifier": "plaster", "count": 2 }
+      {
+        "identifier": "humidifier_bottle",
+        "count": 2
+      },
+      {
+        "identifier": "sterile_distilled_water",
+        "count": 2
+      },
+      {
+        "identifier": "flowmeter",
+        "count": 2
+      },
+      {
+        "identifier": "nasal_cannula",
+        "count": 2
+      },
+      {
+        "identifier": "sterile_gloves",
+        "count": 2
+      },
+      {
+        "identifier": "gauze",
+        "count": 2
+      },
+      {
+        "identifier": "plaster",
+        "count": 2
+      }
     ]
   },
   "questDefinitionIncludes": [
@@ -57,15 +98,344 @@
       "rotationY": 0,
       "rotationZ": 0,
       "spawnOnStart": false,
-      "despawnOnScenarioEnd": true,
-      "interactions": []
+      "despawnOnScenarioEnd": true
+    }
+  ],
+  "interactions": [
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "recognition_1",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "말 걸기"
+      },
+      "completionSignal": "patient_b_recognition_1",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "recognition_2",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "계속해서 말 걸기"
+      },
+      "completionSignal": "patient_b_recognition_2",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "recognition_3",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "계속해서 말 걸기"
+      },
+      "completionSignal": "patient_b_recognition_3",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "recognition_4",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "계속해서 말 걸기"
+      },
+      "completionSignal": "patient_b_recognition_4",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "strength_check",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "근력 확인"
+      },
+      "completionSignal": "patient_b_strength_checked",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "pupil_check",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "동공반사 확인"
+      },
+      "completionSignal": "patient_b_pupil_checked",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_c"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "patient_bc_nasal_cannula",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_d"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "intravenous_line_cannula",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_c"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "normal_saline_connect",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_c"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "recognition_1",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "말 걸기"
+      },
+      "completionSignal": "patient_c_recognition_1",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "recognition_2",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "말 걸기"
+      },
+      "completionSignal": "patient_c_recognition_2",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "recognition_3",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "말 걸기"
+      },
+      "completionSignal": "patient_c_recognition_3",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "recognition_4",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "말 걸기"
+      },
+      "completionSignal": "patient_c_recognition_4",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "strength_check",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "근력 확인"
+      },
+      "completionSignal": "patient_c_strength_checked",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "pupil_check",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "동공반사 확인"
+      },
+      "completionSignal": "patient_c_pupil_checked",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_c"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "patient_bc_nasal_cannula",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_d"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "intravenous_line_cannula",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_c"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "normal_saline_connect",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_c"
+          }
+        ]
+      }
     }
   ],
   "ttsVoiceProfiles": [
-    { "preset": "F1", "voiceIdentifier": "narrator", "voiceStyleName": "F1" },
-    { "preset": "M1", "voiceIdentifier": "dispatcher", "voiceStyleName": "M1" },
-    { "preset": "M2", "voiceIdentifier": "doctor", "voiceStyleName": "M2" },
-    { "preset": "F3", "voiceIdentifier": "patient", "voiceStyleName": "F3" }
+    {
+      "preset": "F1",
+      "voiceIdentifier": "narrator",
+      "voiceStyleName": "F1"
+    },
+    {
+      "preset": "M1",
+      "voiceIdentifier": "dispatcher",
+      "voiceStyleName": "M1"
+    },
+    {
+      "preset": "M2",
+      "voiceIdentifier": "doctor",
+      "voiceStyleName": "M2"
+    },
+    {
+      "preset": "F3",
+      "voiceIdentifier": "patient",
+      "voiceStyleName": "F3"
+    }
   ],
   "nodes": {
     "GIVE_CHECKLIST_PAPER_IF_MISSING": {
@@ -429,7 +799,9 @@
       "interactionRequired": false,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      }
     },
     "P_ARRIVAL": {
       "identifier": "P_ARRIVAL",
@@ -506,6 +878,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -549,6 +922,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -592,6 +966,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -635,6 +1010,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -968,6 +1344,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -1011,6 +1388,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -1054,6 +1432,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -1165,6 +1544,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -1214,6 +1594,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -1263,6 +1644,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -1312,6 +1694,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -1382,7 +1765,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": {
+        "preset": "M2"
+      }
     },
     "DOC_D": {
       "identifier": "DOC_D",
@@ -1394,7 +1779,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": {
+        "preset": "M2"
+      }
     },
     "P_B_CARE": {
       "identifier": "P_B_CARE",
@@ -1450,10 +1837,42 @@
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
-        { "identifier": "A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_B_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "B_VITAL_REMOVE", "completionConditionIdentifier": "CC_B_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_B_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "D_REMOVE", "completionConditionIdentifier": "CC_B_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
+        {
+          "identifier": "A_STRENGTH_REMOVE",
+          "completionConditionIdentifier": "CC_B_A",
+          "requiredPlayerTags": [
+            "nurse_a"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "B_VITAL_REMOVE",
+          "completionConditionIdentifier": "CC_B_B",
+          "requiredPlayerTags": [
+            "nurse_b"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "C_PUPIL_REMOVE",
+          "completionConditionIdentifier": "CC_B_C",
+          "requiredPlayerTags": [
+            "nurse_c"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "D_REMOVE",
+          "completionConditionIdentifier": "CC_B_D",
+          "requiredPlayerTags": [
+            "nurse_d"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        }
       ]
     },
     "A_RECOG_Q": {
@@ -1515,7 +1934,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      }
     },
     "A_REC1_NOTE": {
       "identifier": "A_REC1_NOTE",
@@ -1577,7 +1998,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      }
     },
     "A_REC2_NOTE": {
       "identifier": "A_REC2_NOTE",
@@ -1639,7 +2062,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      }
     },
     "A_REC3_DOTS": {
       "identifier": "A_REC3_DOTS",
@@ -1711,7 +2136,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      }
     },
     "A_REC4_NOTE": {
       "identifier": "A_REC4_NOTE",
@@ -2964,7 +3391,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": {
+        "preset": "M2"
+      }
     },
     "care_patient_c": {
       "identifier": "care_patient_c",
@@ -2984,7 +3413,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": {
+        "preset": "M2"
+      }
     },
     "C_DOC_D": {
       "identifier": "C_DOC_D",
@@ -2996,7 +3427,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": {
+        "preset": "M2"
+      }
     },
     "P_C_CARE": {
       "identifier": "P_C_CARE",
@@ -3052,10 +3485,42 @@
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
-        { "identifier": "C_A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_C_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "C_B_VITAL_REMOVE", "completionConditionIdentifier": "CC_C_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "C_C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_C_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "C_D_REMOVE", "completionConditionIdentifier": "CC_C_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
+        {
+          "identifier": "C_A_STRENGTH_REMOVE",
+          "completionConditionIdentifier": "CC_C_A",
+          "requiredPlayerTags": [
+            "nurse_a"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "C_B_VITAL_REMOVE",
+          "completionConditionIdentifier": "CC_C_B",
+          "requiredPlayerTags": [
+            "nurse_b"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "C_C_PUPIL_REMOVE",
+          "completionConditionIdentifier": "CC_C_C",
+          "requiredPlayerTags": [
+            "nurse_c"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "C_D_REMOVE",
+          "completionConditionIdentifier": "CC_C_D",
+          "requiredPlayerTags": [
+            "nurse_d"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        }
       ]
     },
     "C_A_RECOG_Q": {
@@ -3117,7 +3582,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      }
     },
     "C_A_REC1_NOTE": {
       "identifier": "C_A_REC1_NOTE",
@@ -3179,7 +3646,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      }
     },
     "C_A_REC2_NOTE": {
       "identifier": "C_A_REC2_NOTE",
@@ -3241,7 +3710,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      }
     },
     "C_A_REC3_DOTS": {
       "identifier": "C_A_REC3_DOTS",
@@ -3313,7 +3784,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      }
     },
     "C_A_REC4_NOTE": {
       "identifier": "C_A_REC4_NOTE",
@@ -4566,7 +5039,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": {
+        "preset": "M2"
+      }
     },
     "move_patients": {
       "identifier": "move_patients",
@@ -4637,7 +5112,10 @@
       "identifier": "CT_DELAY",
       "nodeType": "Delay",
       "nextIdentifier": "CT_DOCTOR_THINK",
-      "duration": { "value": 2, "unit": "Seconds" },
+      "duration": {
+        "value": 2,
+        "unit": "Seconds"
+      },
       "waitUntil": "WaitUntilDone"
     },
     "CT_DOCTOR_THINK": {
@@ -4647,11 +5125,22 @@
       "speakerName": "의사",
       "dialogueContent": "음..",
       "portraitSpriteIdentifier": null,
-      "fadeInDuration": { "value": 0.2, "unit": "Seconds" },
-      "displayDuration": { "value": 1, "unit": "Seconds" },
-      "fadeOutDuration": { "value": 0.2, "unit": "Seconds" },
+      "fadeInDuration": {
+        "value": 0.2,
+        "unit": "Seconds"
+      },
+      "displayDuration": {
+        "value": 1,
+        "unit": "Seconds"
+      },
+      "fadeOutDuration": {
+        "value": 0.2,
+        "unit": "Seconds"
+      },
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": {
+        "preset": "M2"
+      }
     },
     "CT_DOCTOR_B_SUMMARY": {
       "identifier": "CT_DOCTOR_B_SUMMARY",
@@ -4663,7 +5152,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": {
+        "preset": "M2"
+      }
     },
     "CT_DOCTOR_C_SUMMARY": {
       "identifier": "CT_DOCTOR_C_SUMMARY",
@@ -4675,7 +5166,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": {
+        "preset": "M2"
+      }
     },
     "CT_DOCTOR_ORDER": {
       "identifier": "CT_DOCTOR_ORDER",
@@ -4687,7 +5180,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": {
+        "preset": "M2"
+      }
     },
     "CT_DOCTOR_MARK_HIDE": {
       "identifier": "CT_DOCTOR_MARK_HIDE",
@@ -4708,10 +5203,42 @@
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
-        { "identifier": "CT_A_Q", "completionConditionIdentifier": "CC_CT_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "CT_B_Q", "completionConditionIdentifier": "CC_CT_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "CT_C_Q", "completionConditionIdentifier": "CC_CT_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "CT_D_Q", "completionConditionIdentifier": "CC_CT_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
+        {
+          "identifier": "CT_A_Q",
+          "completionConditionIdentifier": "CC_CT_A",
+          "requiredPlayerTags": [
+            "nurse_a"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "CT_B_Q",
+          "completionConditionIdentifier": "CC_CT_B",
+          "requiredPlayerTags": [
+            "nurse_b"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "CT_C_Q",
+          "completionConditionIdentifier": "CC_CT_C",
+          "requiredPlayerTags": [
+            "nurse_c"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "CT_D_Q",
+          "completionConditionIdentifier": "CC_CT_D",
+          "requiredPlayerTags": [
+            "nurse_d"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        }
       ]
     },
     "CT_DETACH_BEDS": {
@@ -4726,7 +5253,10 @@
       "identifier": "CT_FINAL_DELAY",
       "nodeType": "Delay",
       "nextIdentifier": "CT_SCENARIO_COMPLETE",
-      "duration": { "value": 1, "unit": "Seconds" },
+      "duration": {
+        "value": 1,
+        "unit": "Seconds"
+      },
       "waitUntil": "WaitUntilDone"
     },
     "CT_A_Q": {
@@ -4743,12 +5273,28 @@
       "identifier": "CT_A_WAIT",
       "nodeType": "Validator",
       "nextIdentifier": "CT_A_REMOVE",
-      "rootConditions": [{ "condition": "RegistryContains", "validationRules": [
-        { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.ct_patient_arrived_patient_b" },
-        { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.ct_patient_arrived_patient_c" }
-      ] }],
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.ct_patient_arrived_patient_b"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.ct_patient_arrived_patient_c"
+            }
+          ]
+        }
+      ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -4777,12 +5323,28 @@
       "identifier": "CT_B_WAIT",
       "nodeType": "Validator",
       "nextIdentifier": "CT_B_REMOVE",
-      "rootConditions": [{ "condition": "RegistryContains", "validationRules": [
-        { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.ct_patient_arrived_patient_b" },
-        { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.ct_patient_arrived_patient_c" }
-      ] }],
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.ct_patient_arrived_patient_b"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.ct_patient_arrived_patient_c"
+            }
+          ]
+        }
+      ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -4811,12 +5373,28 @@
       "identifier": "CT_C_WAIT",
       "nodeType": "Validator",
       "nextIdentifier": "CT_C_REMOVE",
-      "rootConditions": [{ "condition": "RegistryContains", "validationRules": [
-        { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.ct_patient_arrived_patient_b" },
-        { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.ct_patient_arrived_patient_c" }
-      ] }],
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.ct_patient_arrived_patient_b"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.ct_patient_arrived_patient_c"
+            }
+          ]
+        }
+      ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -4845,12 +5423,28 @@
       "identifier": "CT_D_WAIT",
       "nodeType": "Validator",
       "nextIdentifier": "CT_D_REMOVE",
-      "rootConditions": [{ "condition": "RegistryContains", "validationRules": [
-        { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.ct_patient_arrived_patient_b" },
-        { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.ct_patient_arrived_patient_c" }
-      ] }],
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.ct_patient_arrived_patient_b"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.ct_patient_arrived_patient_c"
+            }
+          ]
+        }
+      ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "idleWhileWaiting": true,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance"
@@ -4872,11 +5466,22 @@
       "speakerName": "시스템",
       "dialogueContent": "시나리오를 완료하였습니다.",
       "portraitSpriteIdentifier": null,
-      "fadeInDuration": { "value": 0.2, "unit": "Seconds" },
-      "displayDuration": { "value": 3, "unit": "Seconds" },
-      "fadeOutDuration": { "value": 0.2, "unit": "Seconds" },
+      "fadeInDuration": {
+        "value": 0.2,
+        "unit": "Seconds"
+      },
+      "displayDuration": {
+        "value": 3,
+        "unit": "Seconds"
+      },
+      "fadeOutDuration": {
+        "value": 0.2,
+        "unit": "Seconds"
+      },
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": {
+        "preset": "F1"
+      }
     }
   }
 }

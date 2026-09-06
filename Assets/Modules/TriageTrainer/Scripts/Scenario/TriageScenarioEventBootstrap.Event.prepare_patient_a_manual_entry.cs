@@ -170,7 +170,7 @@ namespace TriageTrainer.Scenario
     {
       QuestPresentationService.ClearScenarioMarks();
       PlayerQuestStateFlagService.ClearAll();
-      ResetPatientAScenarioActionConsumption();
+      ResetPatientAInteractionOverrides();
 
       ResolvePatientVitalMonitor(_patientAObject,
         ref _patientAVitalMonitorObject,
@@ -181,39 +181,20 @@ namespace TriageTrainer.Scenario
     }
 
     /// <summary>
-    /// 환자 A의 단계별 상호작용에서 "이미 수행함" 표시를 지운다. 이 상호작용들은 한 번 수행하면
-    /// 다시 노출되지 않으므로, 같은 세션에서 앞 단계로 수동 진입하면 그 단계의 처치를 수행할 수
-    /// 없게 된다. 노출 여부는 플레이어별 퀘스트 상태 플래그가 계속 결정하므로, 표시만 지워도
-    /// 단계 밖 상호작용이 열리지는 않는다.
-    ///
+    /// 환자 A 상호작용의 가시성 오버라이드(수행 뒤 숨김 등)를 지운다. 같은 세션에서 앞 단계로 수동
+    /// 진입하면 그 단계의 처치를 다시 수행할 수 있어야 한다. 노출 여부는 시나리오 데이터의 퀘스트
+    /// 조건이 계속 결정하므로, 오버라이드만 지워도 단계 밖 상호작용이 열리지는 않는다.
     /// </summary>
-    private static void ResetPatientAScenarioActionConsumption()
-    {
-      foreach (var action in FindObjectsByType<ScenarioActionInteractable>(
-                 FindObjectsInactive.Include, FindObjectsSortMode.None))
-      {
-        if (action != null && IsPatientAScenarioEntity(action.PresentationEntityIdentifier))
-          action.ResetCompletionForScenario();
-      }
-    }
-
-    private static bool IsPatientAScenarioEntity(string entityIdentifier)
+    private static void ResetPatientAInteractionOverrides()
     {
       for (int i = 0; i < PatientAScenarioEntityIdentifiers.Length; i++)
-      {
-        if (string.Equals(entityIdentifier, PatientAScenarioEntityIdentifiers[i],
-              System.StringComparison.Ordinal))
-          return true;
-      }
-      return false;
+        MultiplayerInfrastructure.InteractableEntity.InteractionRegistry.ResetOverridesForEntity(PatientAScenarioEntityIdentifiers[i]);
     }
 
     /// <summary>퀘스트 표시와 상호작용 게이트가 환자 A를 가리킬 때 쓰는 엔티티 식별자.</summary>
     private const string PatientAScenarioEntityIdentifier = "patient_a";
 
-    /// <summary>
-    /// 이 시나리오의 단계별 <see cref="ScenarioActionInteractable"/> 이 소속된 엔티티 식별자.
-    /// </summary>
+    /// <summary>이 시나리오의 단계별 상호작용이 소속된 엔티티 식별자.</summary>
     private static readonly string[] PatientAScenarioEntityIdentifiers =
     {
       PatientAScenarioEntityIdentifier,
@@ -339,7 +320,6 @@ namespace TriageTrainer.Scenario
           ApplyCpr1EntryTreatmentState(patient);
           RestorePatientAPreArrestEquipment(patient);
           ApplyPeaState(patient);
-          OpenPatientACpr1Actions();
           return;
         case ManualPatientAStage.Cpr2:
         case ManualPatientAStage.RoscFollowup:
@@ -392,32 +372,13 @@ namespace TriageTrainer.Scenario
     /// 끝난 처치이므로 완료 상태로 함께 기록한다.
     ///
     /// <para>
-    /// 이 기록이 맥박 확인 상호작용을 닫는 것은 아니다. 그 노출은
-    /// <see cref="PatientACriticalQuestStateFlags.ArrestPulseAssess"/> 플래그만으로 결정되고,
-    /// 준비 체인이 앞서 모든 플래그를 내려 둔 뒤 다시 올리지 않기 때문에 닫혀 있다.
-    /// 여기서의 상태값은 단계 진행 기록일 뿐이다.
+    /// 이 기록이 맥박 확인 상호작용을 닫는 것은 아니다. 그 노출은 시나리오 데이터의 퀘스트 조건이
+    /// 결정한다. 여기서의 상태값은 단계 진행 기록일 뿐이다.
     /// </para>
     /// </summary>
     private void ApplyCpr1EntryTreatmentState(PatientController patient)
     {
       ApplyManualTreatmentSnapshot(patient, PatientACpr1EntryTreatments);
-    }
-
-    /// <summary>
-    /// CPR 1주기 처치 동작(T-piece 분리·앰부백 연결·산소 저장낭 연결·가슴압박·제세동 패드)을
-    /// 전원에게 연다. 일반 진행에서는 <c>activate_patient_a_arrest_actions</c> 가 이 역할을 하지만
-    /// 수동 진입은 그 노드를 건너뛰므로 준비 체인이 직접 열어야 한다. 역할 배정은 이어지는
-    /// 병렬 노드(P005)가 다시 수행한다.
-    ///
-    /// <para>
-    /// 같은 이벤트가 여는 첫 맥박 확인(<c>assess_pulse_r1</c>)은 열지 않는다. 그 확인은 CPR 1주기
-    /// 진입 전에 이미 끝난 처치이고, 열어 둔 채 진입하면 CPR 1주기 목표와 맥박 확인 메뉴가 함께
-    /// 노출된다. 준비 체인은 앞서 모든 플래그를 내려 두므로 여기서 따로 닫을 필요는 없다.
-    /// </para>
-    /// </summary>
-    private void OpenPatientACpr1Actions()
-    {
-      PlayerQuestStateFlagService.SetForAll(PatientACriticalQuestStateFlags.Cpr1Actions);
     }
 
     private void ApplyCpr1TreatmentState(PatientController patient)

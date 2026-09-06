@@ -190,43 +190,6 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 6759064965544079288}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
   _animatorObject: {fileID: 820000000000000001}
-  _assessActions:
-  - _identifier: assess_avpu_gcs
-    _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC0AC\uC815(AVPU/GCS)"
-    _assessSignal: 
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_pulse
-    _displayText: "\uB9E5\uBC15 \uD655\uC778"
-    _assessSignal: 
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_gcs
-    _displayText: "GCS \uC7AC\uC0AC\uC815"
-    _assessSignal: 
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_vital
-    _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"
-    _assessSignal: 
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
   _capsuleCollider: {fileID: 6481162045202206273}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
   _standingCapsuleHeight: 1.8
@@ -237,9 +200,6 @@ MonoBehaviour:
   _lyingCapsuleRadius: 0.3
   _lyingCapsuleDirection: 2
   _identifier: patient
-  _liftDisplayText: "\uD658\uC790\uB97C \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _carryDisplayText: "\uD658\uC790 \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
   _initiallyHiddenChildNames: []
   _weight: 4
   _supportExternalRefs:
@@ -259,16 +219,8 @@ MonoBehaviour:
   _isPlayerAttached: 0
   _debugTreatmentDisplay: 11
   _debugItemIdentifier: gauze
-  _interactConfigs:
-  - _identifier: lift_from_bed
-    _enabled: 0
-  - _identifier: carry_patient
-    _enabled: 1
-  - _identifier: monitor_select
-    _enabled: 1
   _intravenousLineCannulaConfig:
     _supported: 1
-    _displayText: 
   _intravenousLineCannulaInteractable: 1
   _medicalState:
     isCardiacArrest: 0
@@ -330,7 +282,6 @@ MonoBehaviour:
   _triageConfig:
     _assessable: 0
     _changeAssessableOnAssessDone: 0
-    _displayText: "\uD2B8\uB9AC\uC544\uC9C0 \uBD84\uB958"
   _triageLabelAnchor: {fileID: 0}
 --- !u!114 &6759064965544079288
 MonoBehaviour:
@@ -541,13 +492,6 @@ MonoBehaviour:
   _identifier: veinintravenousconnectionpoint_001
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
-  _interactConfigs:
-  - _identifier: intravenous_line_connect_mode_start
-    _enabled: 1
-  - _identifier: intravenous_line_connect_here
-    _enabled: 1
-  - _identifier: intravenous_line_disconnect
-    _enabled: 1
 --- !u!1 &7200000000000000001
 GameObject:
   m_ObjectHideFlags: 0

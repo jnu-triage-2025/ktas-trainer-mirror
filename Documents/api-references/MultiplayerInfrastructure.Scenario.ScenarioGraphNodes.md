@@ -42,7 +42,6 @@
 | `QuestWaypointHighlight` | `ScenarioQuestWaypointHighlightNode` | 웨이포인트 강조 |
 | `QuestMark` | `ScenarioQuestMarkNode` | 퀘스트 마크 표시/해제 |
 | `Delay` | `ScenarioDelayNode` | 시간 대기 |
-| `Interaction` | `ScenarioInteractionNode` | 인터랙션 완료 대기 |
 | `CombineItem` | `ScenarioCombineItemNode` | 아이템 합성 |
 | `Quiz` | `ScenarioQuizNode` | 정답/오답 분기 퀴즈 |
 | `StateUpdate` | `ScenarioStateUpdateNode` | 엔티티 상태 변수 갱신 |
@@ -53,7 +52,7 @@
 | `EntityInit` | `ScenarioEntityInitNode` | 엔티티 초기 상태 설정 |
 | `TriageAssessControl` | `ScenarioTriageAssessControlNode` | 트리아지 평가 활성/비활성 |
 | `PatientMedicalStatePreset` | `ScenarioPatientMedicalStatePresetNode` | 환자 의료 상태 일괄 설정 |
-| `ItemSubmissionConfig` | `ScenarioItemSubmissionConfigNode` | 아이템 제출 Interactable 설정 |
+| `InteractionVisibility` | `ScenarioInteractionVisibilityNode` | 레지스트리 인터렉션 가시성 오버라이드(표시/숨김/초기화) |
 | `ChatPrint` | `ScenarioChatPrintNode` | 채팅/콘솔 텍스트 출력 |
 | `ExecuteCommand` | `ScenarioExecuteCommandNode` | 인게임 커맨드 실행 |
 | `TimeControl` | `ScenarioTimeControlNode` | HUD 타이머 제어 |
@@ -204,16 +203,12 @@ Dialogue와 Choice의 화자·본문, 병렬 브랜치 안내 문자열은 다�
 
 ### 3.5 `NPCControl` — NPC 갱신 및 이동 제어
 
-`mode`에 따라 NPC의 표시/Interact를 갱신하거나 이동을 지시한다.
+`mode`에 따라 NPC의 표시 이름을 갱신하거나 이동을 지시한다. 인터렉션 부여·토글은 최상위 `interactions` 구역과 `InteractionVisibility` 노드가 담당한다.
 
 | 필드 | 타입 | 설명 |
 |---|---|---|
 | `mode` | `ScenarioNPCControlMode` | `Update` 또는 `Control` |
 | `npcIdentifier` | `string` | 대상 NPC 엔티티 식별자 |
-| `interactOperation` | `ScenarioNPCInteractCrudOperation` | `None` / `Create` / `Read` / `Update` / `Delete` |
-| `interactableIdentifier` | `string` | Interact CRUD 대상 식별자 |
-| `interactEnabled` | `bool?` | `Update` 시 Interactable 활성 상태 |
-| `resultStateKey` | `string` | `Read` 결과를 `true`/`false`로 기록할 상태 키 |
 | `displayName` | `string` | NPC 표시 이름 |
 | `showOverheadName` | `bool?` | 머리 위 이름 표시 여부 |
 | `destinationType` 이하 | PlayerMove와 동일 | `Control` 모드의 이동 설정 |
@@ -392,7 +387,8 @@ Dialogue와 Choice의 화자·본문, 병렬 브랜치 안내 문자열은 다�
 | `targetCount` | `int` | `PlayerCount*` 조건 비교 대상 수 |
 | `playerTag` | `string` | `PlayerAssignedTag` 조건 대상 태그 |
 | `playerScope` | `ScenarioValidatorPlayerScope` | `Any`(누구든) / `All`(모두) / `Owner`(소유자) |
-| `matchMode` | `ScenarioValidatorMatchMode` | `RegistryContains` 규칙 결합 방식. `All`(기본)=모든 규칙 충족, `Any`=하나 이상 충족 |
+| `matchMode` | `ScenarioValidatorMatchMode` | `RegistryContains` 규칙 / `Conditions` 조건 절 결합 방식. `All`(기본)=모든 규칙 충족, `Any`=하나 이상 충족 |
+| `conditions` | `ScenarioCondition[]` | `Conditions` 조건이 판정할 조건 절 목록(3.25의 `ScenarioCondition` 형식) |
 | `validationRules` | `IReadOnlyList<ScenarioValidatorRule>` | 추가 규칙 목록 |
 
 **`ScenarioValidatorCondition` 값:**
@@ -407,6 +403,7 @@ Dialogue와 Choice의 화자·본문, 병렬 브랜치 안내 문자열은 다�
 | `PlayerCountGreaterThanOrEqual` | >= targetCount |
 | `RegistryContains` | 레지스트리에 특정 항목 존재 여부 |
 | `PlayerAssignedTag` | 플레이어가 특정 태그 보유 여부 |
+| `Conditions` | 루트 조건의 `conditions`(일반화된 `ScenarioCondition` 목록, 3.25 참고)를 `matchMode`로 결합해 판정. `playerScope`에 따라 플레이어별로 판정한다 |
 
 **게이트 타임아웃 (`waitForCondition: true` 시):**
 
@@ -518,28 +515,30 @@ Dialogue와 Choice의 화자·본문, 병렬 브랜치 안내 문자열은 다�
 
 ---
 
-### 3.14 `Interaction` — 인터랙션 완료 대기
+### 3.14 `InteractionVisibility` — 인터렉션 가시성 트리거
+
+레지스트리에 등록된 인터렉션의 가시성 오버라이드를 서버 권위로 기록한다. 조건 절로 표현하기 어려운 시점 기반 개방·차단에
+쓴다. 오버라이드는 전 피어에 복제되고 늦게 접속한 피어에도 복원된다.
 
 ```json
 {
-  "nodeType": "Interaction",
-  "identifier": "wait_iv_attach",
-  "nextIdentifier": "next",
-  "actorScope": "Player",
-  "targetIdentifier": "iv_attach_point",
-  "requiredItemIdentifier": "intravenous_set",
-  "interactionType": "Attach",
-  "completionConditionIdentifier": null
+  "nodeType": "InteractionVisibility",
+  "identifier": "ISC_PASS_LARYNGOSCOPE",
+  "nextIdentifier": "V014_1",
+  "operation": "Show",
+  "targets": [
+    { "entity": { "id": "npc-doctor-patient-a-critical" }, "interaction": "patient-a-doctor-submit-laryngoscope" }
+  ],
+  "playerScope": "All"
 }
 ```
 
 | 필드 | 타입 | 기본값 | 설명 |
 |---|---|---|---|
-| `actorScope` | `ScenarioInteractionActorScope` | `Player` | `Player`(플레이어만) / `Any`(모든 행위자) |
-| `targetIdentifier` | `string` | — | 인터랙션 대상 엔티티 식별자 |
-| `requiredItemIdentifier` | `string` | `null` | 인터랙션에 필요한 아이템 식별자 |
-| `interactionType` | `ScenarioInteractionType` | `Use` | `Use` / `Inspect` / `Attach` / `Detach` |
-| `completionConditionIdentifier` | `string` | `null` | 인터랙션 완료 조건 식별자 |
+| `operation` | `Show` / `Hide` / `Reset` | `Show` | 표시 / 숨김 / 오버라이드 제거(조건·초기값으로 복귀) |
+| `targets` | `[{ entity: { id \| tag }, interaction }]` | — | 대상 주소 목록. `tag`이면 그 태그를 가진 모든 엔티티 |
+| `playerScope` | `All` / `Current` / `ByTag` | `All` | 전역(`All`) 또는 플레이어별(`Current`=실행 주체, `ByTag`=태그 보유자) 오버라이드 |
+| `playerTags`, `tagMatchMode` | `string[]`, `Any` / `All` | — | `ByTag` 대상 플레이어 선택 |
 
 ---
 
@@ -696,6 +695,7 @@ Dialogue와 Choice의 화자·본문, 병렬 브랜치 안내 문자열은 다�
 | `positionSourceEntityIdentifier` | `string` | 스폰 위치를 제공하는 기준 엔티티 식별자 |
 | `positionX/Y/Z` | `float` | 직접 스폰 좌표 (positionSourceEntityIdentifier 미지정 시 사용) |
 | `resultStateKey` | `string` | 스폰된 인스턴스 식별자를 기록할 상태 저장소 키 |
+| `tags` | `string[]` | 스폰 직후 인스턴스에 부여할 엔티티 태그. `interactions[].entity.tag`, 조건 절의 `EntityHasTag`가 참조한다 |
 
 ---
 
@@ -848,64 +848,102 @@ Dialogue와 Choice의 화자·본문, 병렬 브랜치 안내 문자열은 다�
 
 ---
 
-### 3.25 `ItemSubmissionConfig` — 아이템 제출 Interactable 설정
+### 3.25 최상위 `interactions` 구역 — 인터렉션 정의
+
+노드가 아니라 그래프 최상위 구역이다. 시나리오가 시작될 때 인터렉션 레지스트리(`InteractionRegistry`)에 일괄 등록되고,
+시나리오가 끝나면 함께 해제된다. 엔티티 코드가 선언한 코드 리터럴 정의와 같은 주소(`엔티티/인터렉션`)를 가지면
+데이터 값이 코드 값을 덮어쓴다(오버레이). 코드 정의가 없는 주소는 `kind`에 따라 레지스트리가 범용 핸들러를 만든다.
 
 ```json
-{
-  "nodeType": "ItemSubmissionConfig",
-  "identifier": "config_item_submission",
-  "nextIdentifier": "next",
-  "presetIdentifier": null,
-  "spawnedEntityIdentifier": null,
-  "positionSourceEntityIdentifier": "doctor_npc",
-  "targetIdentifier": "doctor_submission_point",
-  "requiredItems": [
-    { "itemIdentifier": "intravenous_set", "count": 1 }
-  ],
-  "completionSignalIdentifier": "sig.iv_submitted",
-  "enabled": true,
-  "resultStateKey": null
-}
-```
-
-| 필드 | 타입 | 설명 |
-|---|---|---|
-| `presetIdentifier` | `string` | 스폰할 EntityPreset 식별자 (null이면 기존 참조 방식) |
-| `spawnedEntityIdentifier` | `string` | 스폰 시 부여할 식별자 |
-| `positionSourceEntityIdentifier` | `string` | 스폰 위치 기준 엔티티 식별자 |
-| `targetIdentifier` | `string` | 기존 ItemSubmissionInteractable 식별자 |
-| `targetStateKey` | `string` | 상태 저장소로 간접 조회 |
-| `requiredItems` | `List<ScenarioItemRequirement>` | 요구 아이템 목록 |
-| `completionSignalIdentifier` | `string` | 제출 성공 시 올릴 신호 식별자 |
-| `enabled` | `bool` | 활성/비활성 |
-| `resultStateKey` | `string` | 결과 식별자를 기록할 상태 저장소 키 |
-
----
-
-### 3.26 `NPCControl(Update)` — NPC Interact 및 표시 갱신
-
-```json
-{
-  "nodeType": "NPCControl",
-  "identifier": "enable_doctor_submit",
-  "nextIdentifier": "next",
-  "mode": "Update",
-  "npcIdentifier": "doctor_npc",
-  "interactOperation": "Update",
-  "interactableIdentifier": "doctor_submission_interact",
-  "interactEnabled": true,
-  "displayName": "???",
-  "showOverheadName": true
-}
+"interactions": [
+  {
+    "entity": { "id": "patient_a" },
+    "interaction": "interact_tpiece",
+    "kind": "Action",
+    "display": { "text": "T-Piece 연결", "iconIdentifiers": ["interaction-unlink"], "priority": 900 },
+    "completionSignal": "interact_tpiece",
+    "afterInteract": "HideForAll",
+    "consumeItems": [ { "itemIdentifier": "tpiece_set", "count": 1 } ],
+    "extras": { "missingItemDialogue": "T-piece를 갖고 있지 않다." },
+    "activateObjects": [ "TPieceSet_A" ],
+    "visibility": {
+      "conditions": [
+        { "type": "PlayerHasQuest", "questIdentifier": "Quest_Oxygen_PatientA",
+          "completionCriteriaIdentifier": "attach-tpiece-patient-a" }
+      ]
+    }
+  },
+  {
+    "entity": { "tag": "patient_monitor" },
+    "interaction": "detail_overlay",
+    "extras": { "closeSignal": "close_vital_ui_a" },
+    "visibility": { "initial": true }
+  }
+]
 ```
 
 | 필드 | 타입 | 기본값 | 설명 |
 |---|---|---|---|
+| `entity` | `{ "id" }` 또는 `{ "tag" }` | — | 대상 엔티티. `tag`이면 그 엔티티 태그를 가진 모든 엔티티에 적용된다 |
+| `interaction` | `string` | — | 인터렉션 식별자. 코드 리터럴의 `IQuestPresentationTarget.InteractionIdentifier`와 같은 값이면 오버레이 |
+| `kind` | `Custom` / `Action` / `Signal` / `StartScenario` / `ItemSubmission` | `Custom` | 범용 핸들러 종류. `Custom`은 코드 핸들러가 있거나 `handlerKey`로 엔티티가 만들어 준다 |
+| `handlerKey` | `string` | `null` | `Custom` 데이터 전용 정의의 핸들러 생성 키(`IInteractionHandlerFactory`) |
+| `display` | `{ text, iconIdentifiers[], color, allowIconFallback, priority }` | — | 표시 문구·아이콘 식별자·색·힌트 정렬 우선순위 |
+| `completionSignal` | `string` | `null` | 수행 완료 시 올릴 신호(`sig.` 접두사 자동 정규화) |
+| `afterInteract` | `None` / `HideForPlayer` / `HideForAll` | `None` | 수행 뒤 가시성 오버라이드(수행자만 숨김 / 전원 숨김) |
+| `requiredItems` / `consumeItems` | `[{ itemIdentifier, count }]` | `[]` | 수행에 필요한(유지) 아이템 / 수행 시 소비하는 아이템 |
+| `extras` | `{ string: string }` | `{}` | 핸들러별 부가 값(`missingItemDialogue`, `findItemDialogue`, `closeSignal` 등) |
+| `itemSubmission` | `{ title, submitButtonText, requiredItems[] }` | — | `ItemSubmission` 종류의 제출 UI 설정 |
+| `scenarioIdentifier` / `startNodeIdentifier` | `string` | — | `StartScenario` 종류가 시작할 그래프와 시작 노드 |
+| `activateObjects` / `deactivateObjects` | `string[]` | `[]` | `Action` 종류가 켜고 끌 엔티티 하위 오브젝트 경로 |
+| `visibility.initial` | `bool` | `false` | 조건 절이 없을 때의 초기 노출 여부 |
+| `visibility.matchMode` | `All` / `Any` | `All` | 조건 절 결합 방식 |
+| `visibility.conditions` | `ScenarioCondition[]` | `[]` | 노출 조건. 비어 있으면 `initial`을 따른다 |
+
+가시성 판정 순서는 **오버라이드(플레이어별 → 전역) → 조건 절 → `initial`** 이다. 오버라이드는 서버 권위로 기록되어
+전 피어에 복제되고, 늦게 접속한 피어에도 스냅샷으로 복원된다. 조건 절은 각 피어가 자기 플레이어 기준으로 판정한다.
+
+**`ScenarioCondition` 필드:**
+
+| 필드 | 설명 |
+|---|---|
+| `type` | `PlayerHasTag` / `PlayerHasQuestFlag` / `PlayerHasQuest` / `PlayerHasItem` / `PlayerState` / `PlayerWithinDistance` / `SignalRaised` / `RegistryContains` / `EntityHasTag` / `EntityState` / `PlayerCount` / `ScenarioActive` / `Group` |
+| `negate` | 판정 결과를 뒤집는다 |
+| `tag` | `PlayerHasTag` / `EntityHasTag` 대상 태그 |
+| `flag` | `PlayerHasQuestFlag` 플래그 |
+| `questIdentifier`, `questState`, `completionCriteriaIdentifier` | `PlayerHasQuest`. 기준 식별자를 주면 그 기준이 현재 단계일 때만 참 |
+| `itemIdentifier`, `count` | `PlayerHasItem` 보유 수량 |
+| `key`, `qualifier`, `compare`, `value` | `PlayerState` / `EntityState`. `IConditionStateProvider`가 노출하는 상태 키를 `Equal`/`NotEqual`/`Greater`... 로 비교 |
+| `entity`, `meters` | `PlayerWithinDistance` / `EntityHasTag` / `EntityState` 대상 엔티티(`id` 또는 `tag`)와 거리 |
+| `signal` | `SignalRaised` 신호 |
+| `registryType`, `identifier` | `RegistryContains` |
+| `scenarioIdentifier` | `ScenarioActive` |
+| `matchMode`, `conditions` | `Group` 중첩 조건 |
+
+같은 조건 형식을 `Validator` 노드의 `Conditions` 루트 조건이 사용한다.
+
+---
+
+### 3.26 `NPCControl(Update)` — NPC 표시 갱신
+
+```json
+{
+  "nodeType": "NPCControl",
+  "identifier": "reveal_doctor_name",
+  "nextIdentifier": "next",
+  "mode": "Update",
+  "npcIdentifier": "doctor_npc",
+  "displayName": "담당 의사",
+  "showOverheadName": true
+}
+```
+
+NPC 인터렉션의 추가·제거·활성 전환은 이 노드가 아니라 최상위 `interactions` 구역(정의)과 `InteractionVisibility`
+노드(가시성)가 담당한다.
+
+| 필드 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
 | `npcIdentifier` | `string` | — | 대상 NPC 엔티티 식별자 |
-| `interactableIdentifier` | `string` | — | 대상 Interactable 식별자 |
-| `interactOperation` | `ScenarioNPCInteractCrudOperation` | `None` | `Create`(NPC 소스 추가) / `Read`(존재 확인) / `Update`(활성 상태 변경) / `Delete`(NPC 소스 제거) |
-| `interactEnabled` | `bool?` | `null` | `Update`에서 적용할 활성 상태 |
-| `resultStateKey` | `string` | `null` | `Read`에서 Interactable 존재 여부를 기록할 상태 키 |
 | `displayName` | `string` | `null` | 변경할 표시 이름 |
 | `showOverheadName` | `bool?` | `null` | 머리 위 이름 표시 여부 |
 
@@ -1101,6 +1139,8 @@ Dialogue와 Choice의 화자·본문, 병렬 브랜치 안내 문자열은 다�
 ## 4. 관련 문서
 
 - [ScenarioController API 레퍼런스](./MultiplayerInfrastructure.Scenario.ScenarioController.md)
+- [InteractableEntity API 레퍼런스(인터렉션 레지스트리)](./MultiplayerInfrastructure.InteractableEntity.md)
+- [2026-09-06 변경 노트: 인터렉션 레지스트리와 가시성 체계](../changes/2026-09-06-interaction-registry-visibility.md)
 - [ScenarioEventIdentifierRegistry API 레퍼런스](./MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md)
 - [ScenarioGraph 작성 가이드](../working-guide/features/scenario/)
 - [scenario-graph-spec.md](../requirements/content-definitions/scenario/scenario-graph-spec.md)

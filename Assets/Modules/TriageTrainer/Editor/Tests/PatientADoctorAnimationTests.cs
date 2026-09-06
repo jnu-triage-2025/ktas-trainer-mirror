@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Scenario;
@@ -30,6 +31,8 @@ namespace TriageTrainer.Tests
     private const string ChestCompressionClipGuid = "d534f618ed2984abe9dbc1b5eb29b15a";
     private const string PatientPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeA.prefab";
+    private const string PatientAScenarioPath =
+      "Assets/Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json";
     private const string IngameScenePath = "Assets/Scenes/IngameScene.unity";
     private const string OverworldScenePath = "Assets/Scenes/OverworldScene.unity";
     private const string IngameSceneBootstrapperSourcePath =
@@ -642,7 +645,7 @@ namespace TriageTrainer.Tests
       Assert.That(enableIndex, Is.GreaterThanOrEqualTo(0));
       int claimIndex = source.IndexOf("TryBecomeActiveInstance()", enableIndex, StringComparison.Ordinal);
       int subscribeIndex = source.IndexOf(
-        "ScenarioActionInteractable.OnInteractionCompleted +=", enableIndex, StringComparison.Ordinal);
+        "InteractionRegistry.Interacted +=", enableIndex, StringComparison.Ordinal);
       Assert.That(claimIndex, Is.GreaterThanOrEqualTo(0));
       Assert.That(subscribeIndex, Is.GreaterThanOrEqualTo(0));
       Assert.That(claimIndex, Is.LessThan(subscribeIndex),
@@ -653,7 +656,7 @@ namespace TriageTrainer.Tests
       Assert.That(disableIndex, Is.GreaterThanOrEqualTo(0));
       int guardIndex = source.IndexOf("_activeInstance != this", disableIndex, StringComparison.Ordinal);
       int unsubscribeIndex = source.IndexOf(
-        "ScenarioActionInteractable.OnInteractionCompleted -=", disableIndex, StringComparison.Ordinal);
+        "InteractionRegistry.Interacted -=", disableIndex, StringComparison.Ordinal);
       Assert.That(guardIndex, Is.GreaterThanOrEqualTo(0));
       Assert.That(unsubscribeIndex, Is.GreaterThanOrEqualTo(0));
       Assert.That(guardIndex, Is.LessThan(unsubscribeIndex),
@@ -684,79 +687,72 @@ namespace TriageTrainer.Tests
     [Test]
     public void ChestCompressionInteractionsAreExplicitAndRoleRestricted()
     {
-      GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientPrefabPath);
-      Assert.That(prefab, Is.Not.Null);
+      var graph = LoadPatientAGraph();
+      var roundOne = FindPatientAInteraction(graph, "click_to_start_comp");
+      var roundTwo = FindPatientAInteraction(graph, "interact_chest");
 
-      ScenarioActionInteractable[] actions =
-        prefab.GetComponentsInChildren<ScenarioActionInteractable>(true);
-      ScenarioActionInteractable roundOne = actions.Single(action =>
-        action.CompletionSignal == "click_to_start_comp");
-      ScenarioActionInteractable roundTwo = actions.Single(action =>
-        action.CompletionSignal == "interact_chest");
-
-      Assert.That(roundOne.DisplayText, Is.EqualTo("가슴압박 수행"));
-      Assert.That(roundOne.RequiredPlayerTag, Is.EqualTo("nurse_b"));
-      Assert.That(roundTwo.DisplayText, Is.EqualTo("가슴압박 수행"));
-      Assert.That(roundTwo.RequiredPlayerTag, Is.EqualTo("nurse_a"));
+      Assert.That(roundOne.Display.Text, Is.EqualTo("가슴압박 수행"));
+      Assert.That(RequiredPlayerTags(roundOne), Is.EqualTo(new[] { "nurse_b" }));
+      Assert.That(roundTwo.Display.Text, Is.EqualTo("가슴압박 수행"));
+      Assert.That(RequiredPlayerTags(roundTwo), Is.EqualTo(new[] { "nurse_a" }));
     }
 
     [Test]
     public void ChestCompressionInteractionsAreVisibleOnlyToTheirAssignedRole()
     {
-      GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientPrefabPath);
-      Assert.That(prefab, Is.Not.Null);
-
-      GameObject patient = UnityEngine.Object.Instantiate(prefab);
-      var nurseAObject = new GameObject("nurse-a");
-      var nurseBObject = new GameObject("nurse-b");
       const string nurseAIdentifier = "test-cpr-nurse-a";
       const string nurseBIdentifier = "test-cpr-nurse-b";
       try
       {
-        PlayerController nurseA = nurseAObject.AddComponent<PlayerController>();
-        PlayerController nurseB = nurseBObject.AddComponent<PlayerController>();
-        SetUserIdentifier(nurseA, nurseAIdentifier);
-        SetUserIdentifier(nurseB, nurseBIdentifier);
         PlayerTagService.ReplaceTags(nurseAIdentifier, new[] { "nurse_a" });
         PlayerTagService.ReplaceTags(nurseBIdentifier, new[] { "nurse_b" });
 
-        ScenarioActionInteractable[] actions =
-          patient.GetComponentsInChildren<ScenarioActionInteractable>(true);
-        ScenarioActionInteractable roundOne = actions.Single(action =>
-          action.CompletionSignal == "click_to_start_comp");
-        ScenarioActionInteractable roundTwo = actions.Single(action =>
-          action.CompletionSignal == "interact_chest");
-        roundOne.SetEnabled(true);
-        roundTwo.SetEnabled(true);
-        ScenarioInteractionSignals.Raise("click_to_start_comp");
+        var graph = LoadPatientAGraph();
+        var roundOne = FindPatientAInteraction(graph, "click_to_start_comp");
+        var roundTwo = FindPatientAInteraction(graph, "interact_chest");
 
-        Assert.That(roundOne.CanInteract(nurseB.transform), Is.True);
-        Assert.That(roundOne.CanInteract(nurseA.transform), Is.False,
+        Assert.That(TagConditionsPass(roundOne, nurseBIdentifier), Is.True);
+        Assert.That(TagConditionsPass(roundOne, nurseAIdentifier), Is.False,
           "1주기 가슴압박은 nurse_b가 아닌 플레이어에게 노출되면 안 됩니다.");
-        Assert.That(roundTwo.CanInteract(nurseA.transform), Is.True);
-        Assert.That(roundTwo.CanInteract(nurseB.transform), Is.False,
+        Assert.That(TagConditionsPass(roundTwo, nurseAIdentifier), Is.True);
+        Assert.That(TagConditionsPass(roundTwo, nurseBIdentifier), Is.False,
           "교대 후 가슴압박은 nurse_a가 아닌 플레이어에게 노출되면 안 됩니다.");
       }
       finally
       {
-        ScenarioInteractionSignals.Clear("click_to_start_comp");
         PlayerTagService.ClearTags(nurseAIdentifier);
         PlayerTagService.ClearTags(nurseBIdentifier);
-        UnityEngine.Object.DestroyImmediate(nurseAObject);
-        UnityEngine.Object.DestroyImmediate(nurseBObject);
-        UnityEngine.Object.DestroyImmediate(patient);
       }
     }
 
-    private static void SetUserIdentifier(PlayerController player, string identifier)
+    private static ScenarioGraph LoadPatientAGraph()
+      => ScenarioGraphLoader.LoadFromJson(File.ReadAllText(PatientAScenarioPath), validateWithSchema: true);
+
+    private static InteractionDefinition FindPatientAInteraction(ScenarioGraph graph, string interactionIdentifier)
     {
-      FieldInfo field = typeof(PlayerController).GetField(
-        "_userIdentifier", BindingFlags.Instance | BindingFlags.NonPublic);
-      Assert.That(field, Is.Not.Null);
-      object syncVar = field.GetValue(player);
-      PropertyInfo value = syncVar.GetType().GetProperty("Value");
-      Assert.That(value, Is.Not.Null);
-      value.SetValue(syncVar, identifier);
+      var definition = graph.Interactions.FirstOrDefault(each =>
+        each?.Entity != null && each.Entity.Identifier == "patient_a"
+        && each.InteractionIdentifier == interactionIdentifier);
+      Assert.That(definition, Is.Not.Null, $"시나리오 데이터에 'patient_a/{interactionIdentifier}' 정의가 없습니다.");
+      return definition;
+    }
+
+    private static string[] RequiredPlayerTags(InteractionDefinition definition)
+      => definition.VisibilityConditions
+        .Where(each => each.Type == ScenarioConditionType.PlayerHasTag && !each.Negate)
+        .Select(each => each.Tag)
+        .ToArray();
+
+    /// <summary>태그 조건만 떼어 판정한다. 퀘스트 조건은 별도 퀘스트 상태가 필요하므로 여기서는 다루지 않는다.</summary>
+    private static bool TagConditionsPass(InteractionDefinition definition, string playerIdentifier)
+    {
+      var tagConditions = definition.VisibilityConditions
+        .Where(each => each.Type == ScenarioConditionType.PlayerHasTag)
+        .ToList();
+      Assert.That(tagConditions, Is.Not.Empty);
+      return ScenarioConditionEvaluator.Evaluate(
+        tagConditions, ScenarioConditionMatchMode.All,
+        ScenarioConditionContext.ForPlayerIdentifier(playerIdentifier), out _);
     }
 
     [TestCase("Assets/Scenes/OverworldScene.unity")]

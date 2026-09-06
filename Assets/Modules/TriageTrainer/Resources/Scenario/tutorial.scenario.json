@@ -30,42 +30,72 @@
       "rotationY": 45,
       "rotationZ": 0,
       "spawnOnStart": true,
-      "despawnOnScenarioEnd": true,
-      "interactions": [
-        {
-          "identifier": "npc-tutorial-guide-hat__interaction-talk-start",
-          "interactionType": "Signal",
-          "displayText": "말 걸기",
-          "iconIdentifier": null,
-          "scenarioIdentifier": null,
-          "scenarioStartNodeIdentifier": null,
-          "title": null,
-          "submitButtonText": null,
-          "requiredItems": [],
-          "completionSignalIdentifier": "tutorial_hat_talk_start",
-          "consumeOnce": true,
-          "enabled": true
-        },
-        {
-          "identifier": "tutorial-guide-hat-package-submission",
-          "interactionType": "ItemSubmission",
-          "displayText": "물품 전달",
-          "iconIdentifier": null,
-          "scenarioIdentifier": null,
-          "scenarioStartNodeIdentifier": null,
-          "title": "물품 전달",
-          "submitButtonText": "전달",
-          "requiredItems": [
-            {
-              "itemIdentifier": "tutorial_delivery_package",
-              "count": 1
-            }
-          ],
-          "completionSignalIdentifier": "tutorial.delivery.package.submitted",
-          "consumeOnce": false,
-          "enabled": false
-        }
-      ]
+      "despawnOnScenarioEnd": true
+    }
+  ],
+  "interactions": [
+    {
+      "entity": {
+        "id": "npc-tutorial-guide-hat"
+      },
+      "interaction": "npc-tutorial-guide-hat__interaction-talk-start",
+      "kind": "Signal",
+      "display": {
+        "text": "말 걸기"
+      },
+      "completionSignal": "tutorial_hat_talk_start",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "initial": true
+      }
+    },
+    {
+      "entity": {
+        "id": "npc-tutorial-guide-hat"
+      },
+      "interaction": "submit_package",
+      "kind": "ItemSubmission",
+      "display": {
+        "text": "물품 전달"
+      },
+      "completionSignal": "tutorial.delivery.package.submitted",
+      "itemSubmission": {
+        "title": "물품 전달",
+        "submitButtonText": "전달",
+        "requiredItems": [
+          {
+            "itemIdentifier": "tutorial_delivery_package",
+            "count": 1
+          }
+        ]
+      },
+      "visibility": {
+        "initial": false
+      }
+    },
+    {
+      "entity": {
+        "id": "npc-tutorial-guide-hat"
+      },
+      "interaction": "submit_clock",
+      "kind": "ItemSubmission",
+      "display": {
+        "text": "물품 전달"
+      },
+      "completionSignal": "tutorial.crafting.clock.submitted",
+      "itemSubmission": {
+        "title": "물품 전달",
+        "submitButtonText": "전달",
+        "requiredItems": [
+          {
+            "itemIdentifier": "handy_clock",
+            "count": 1
+          }
+        ]
+      },
+      "visibility": {
+        "initial": false
+      }
     }
   ],
   "waypoints": [
@@ -82,64 +112,45 @@
   ],
   "nodes": {
     "CONFIG_CLOCK_SUBMISSION": {
-      "presetIdentifier": null,
-      "spawnedEntityIdentifier": null,
-      "positionSourceEntityIdentifier": null,
-      "positionX": 0,
-      "positionY": 0,
-      "positionZ": 0,
-      "targetIdentifier": "tutorial-guide-hat-package-submission",
-      "targetStateKey": null,
-      "requiredItems": [
+      "identifier": "CONFIG_CLOCK_SUBMISSION",
+      "nodeType": "InteractionVisibility",
+      "operation": "Show",
+      "targets": [
         {
-          "itemIdentifier": "handy_clock",
-          "count": 1
+          "entity": {
+            "id": "npc-tutorial-guide-hat"
+          },
+          "interaction": "submit_clock"
         }
       ],
-      "completionSignalIdentifier": "tutorial.crafting.clock.submitted",
-      "enabled": null,
-      "resultStateKey": null,
-      "identifier": "CONFIG_CLOCK_SUBMISSION",
-      "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "Q_TUT_DELIVERY_REMOVE"
     },
     "CONFIG_PACKAGE_SUBMISSION": {
-      "presetIdentifier": null,
-      "spawnedEntityIdentifier": null,
-      "positionSourceEntityIdentifier": null,
-      "positionX": 0,
-      "positionY": 0,
-      "positionZ": 0,
-      "targetIdentifier": "tutorial-guide-hat-package-submission",
-      "targetStateKey": null,
-      "requiredItems": [
+      "identifier": "CONFIG_PACKAGE_SUBMISSION",
+      "nodeType": "InteractionVisibility",
+      "operation": "Show",
+      "targets": [
         {
-          "itemIdentifier": "tutorial_delivery_package",
-          "count": 1
+          "entity": {
+            "id": "npc-tutorial-guide-hat"
+          },
+          "interaction": "submit_package"
         }
       ],
-      "completionSignalIdentifier": "tutorial.delivery.package.submitted",
-      "enabled": null,
-      "resultStateKey": "tutorial.delivery.submission.identifier",
-      "identifier": "CONFIG_PACKAGE_SUBMISSION",
-      "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "DECOY_WATCHER_FORK"
     },
     "CONFIG_PACKAGE_SUBMISSION_HIDE": {
-      "presetIdentifier": null,
-      "spawnedEntityIdentifier": null,
-      "positionSourceEntityIdentifier": null,
-      "positionX": 0,
-      "positionY": 0,
-      "positionZ": 0,
-      "targetIdentifier": "tutorial-guide-hat-package-submission",
-      "targetStateKey": null,
-      "requiredItems": null,
-      "completionSignalIdentifier": null,
-      "enabled": false,
-      "resultStateKey": null,
       "identifier": "CONFIG_PACKAGE_SUBMISSION_HIDE",
-      "nodeType": "ItemSubmissionConfig",
+      "nodeType": "InteractionVisibility",
+      "operation": "Hide",
+      "targets": [
+        {
+          "entity": {
+            "id": "npc-tutorial-guide-hat"
+          },
+          "interaction": "submit_package"
+        }
+      ],
       "nextIdentifier": "CONFIG_CLOCK_SUBMISSION"
     },
     "C_TUT_CRAFTING_ACCEPT": {
@@ -242,7 +253,7 @@
       "dialogueContent": "저기요! 잠시만요!",
       "portraitSpriteIdentifier": null,
       "fadeInDuration": {
-        "value": 0.20000000000000001,
+        "value": 0.2,
         "unit": "Seconds"
       },
       "displayDuration": {
@@ -250,7 +261,7 @@
         "unit": "Seconds"
       },
       "fadeOutDuration": {
-        "value": 0.20000000000000001,
+        "value": 0.2,
         "unit": "Seconds"
       },
       "playTTS": true,
@@ -300,7 +311,7 @@
       "dialogueContent": "이 물건은 아닌 것 같다.",
       "portraitSpriteIdentifier": null,
       "fadeInDuration": {
-        "value": 0.20000000000000001,
+        "value": 0.2,
         "unit": "Seconds"
       },
       "displayDuration": {
@@ -308,7 +319,7 @@
         "unit": "Seconds"
       },
       "fadeOutDuration": {
-        "value": 0.20000000000000001,
+        "value": 0.2,
         "unit": "Seconds"
       },
       "playTTS": null,
@@ -465,7 +476,7 @@
       "dialogueContentTTSPassing": "아이템 앞에서 에프 키를 눌러 택배를 획득하자.",
       "portraitSpriteIdentifier": null,
       "fadeInDuration": {
-        "value": 0.20000000000000001,
+        "value": 0.2,
         "unit": "Seconds"
       },
       "displayDuration": {
@@ -473,7 +484,7 @@
         "unit": "Seconds"
       },
       "fadeOutDuration": {
-        "value": 0.20000000000000001,
+        "value": 0.2,
         "unit": "Seconds"
       },
       "playTTS": null,
@@ -510,10 +521,6 @@
     "NPC_TUT_REVEAL_HAT_NAME": {
       "mode": "Update",
       "npcIdentifier": "npc-tutorial-guide-hat",
-      "interactOperation": "None",
-      "interactableIdentifier": null,
-      "interactEnabled": null,
-      "resultStateKey": null,
       "displayName": "모자",
       "showOverheadName": true,
       "destinationType": "Position",

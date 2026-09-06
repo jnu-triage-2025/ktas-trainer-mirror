@@ -51,7 +51,6 @@
 - `connectionService`
 - `_identifier`, `_autoGenerateIdentifier`
 - `_displayIcon`
-- `_interactConfigs`
 - `_connectedLineObjects`(런타임 확인용)
 
 ## 2. `IntravenousLineConnectionService`

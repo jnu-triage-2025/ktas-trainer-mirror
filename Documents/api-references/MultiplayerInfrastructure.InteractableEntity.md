@@ -8,7 +8,9 @@
 ## 0. 문서 목적
 
 이 모듈은 플레이어가 월드 오브젝트와 상호작용하는 구조를 정의합니다.  
-새 상호작용을 추가할 때는 `IInteract`를 구현하여 `Interactable` 컴포넌트에 연결합니다.
+새 상호작용은 엔티티 코드가 `IInteractionDefinitionSource`로 선언하거나 시나리오 JSON의 최상위 `interactions`
+구역에 정의하고, 인터렉션 레지스트리(`InteractionRegistry`, 8절)가 노출 여부를 판정합니다. 프리팹 직렬화 필드는
+정의 출처가 아닙니다.
 
 ---
 
@@ -104,11 +106,8 @@ public class ExamRoomDoor : Interactable
 public class InteractableEntityResolver : MonoBehaviour
 ```
 
-### Inspector 직렬화 필드
-
-| 필드 | 설명 |
-|---|---|
-| `handlerSources` | `MonoBehaviour` 목록 (IInteractable 구현체 연결) |
+직렬화 필드는 없습니다. 실행할 핸들러는 `NearbyInteractablesDetector`가 찾은 `IInteractable`의 `Interacts`와
+인터렉션 레지스트리가 정합니다.
 
 ### 공개 메서드
 
@@ -217,19 +216,91 @@ public class AEDDevice : Interactable
 
 GameObject에 `AEDDevice` 컴포넌트 추가 + Collider 추가 + 적절한 레이어(interactionLayerMask) 설정.
 
-**방법 2: `IInteract` 직접 구현 + `Interactable` 결합**
+**방법 2: `IInteract` 직접 구현 + 레지스트리 선언**
 
-여러 액션을 하나의 오브젝트에서 제공할 때 사용합니다.
+여러 액션을 하나의 오브젝트에서 제공할 때 사용합니다. 각 `IInteract`는 `IQuestPresentationTarget`으로
+주소(`엔티티/인터렉션`)를 드러내고, 엔티티는 `IInteractionDefinitionSource`로 코드 리터럴 정의를 선언합니다.
 
 ```csharp
-public class MedCart : MonoBehaviour, IInteractable
+public class MedCart : MonoBehaviour, IInteractable, IInteractionDefinitionSource
 {
-    [SerializeField] private TakeSuppliesInteract _takeSupplies;
-    [SerializeField] private LockCartInteract _lockCart;
+    private readonly List<IInteract> _interacts = new();
 
-    public IInteract[] Interacts => new IInteract[] { _takeSupplies, _lockCart };
+    public IInteract[] Interacts => _interacts.ToArray();
+
+    public IEnumerable<InteractionDeclaration> DeclareInteractions()
+    {
+        yield return new InteractionDeclaration(
+            InteractionDefinition.Code(EntityIdentifier, "take_supplies", "물품 꺼내기", initialVisible: true),
+            _takeSupplies);
+        yield return new InteractionDeclaration(
+            InteractionDefinition.Code(EntityIdentifier, "lock_cart", "카트 잠금"), // 시나리오 데이터가 연다
+            _lockCart);
+    }
 }
 ```
+
+엔티티를 `Registry.RegisterEntity`로 등록한 직후 `InteractionRegistry.DeclareCode(EntityIdentifier, this)`를
+호출하고, 등록 해제 시 `RemoveCodeDefinitions`를 호출합니다. 레지스트리에 없는 핸들러는 에디터 런타임에서 경고를 남기며
+그대로 노출됩니다(`IInteractionRegistryExempt`로 의도적 제외를 표시할 수 있습니다).
+
+---
+
+## 8. 인터렉션 레지스트리 `InteractionRegistry`
+
+경로: `Assets/Modules/MultiplayerInfrastructure/Scripts/InteractableEntity/Registry/`
+
+정의(무엇이 있는가)와 가시성(누구에게 보이는가)을 한 곳에서 관리하는 정적 레지스트리입니다. 초기화 시 비어 있고,
+엔티티 초기화 사이클(코드 리터럴)과 시나리오 초기화 사이클(시나리오 JSON `interactions`, 전역 카탈로그
+`Resources/Interactions/*.json`)에서만 채워집니다. 그 밖의 시점에 등록하면 에디터 런타임에서 경고를 남깁니다.
+
+| 구성 | 역할 |
+|---|---|
+| `InteractionDefinition` | 정의 모델. 코드 리터럴과 데이터 오버레이를 `MergeOverlay`로 합친다 |
+| `InteractionAddress` | `엔티티식별자/인터렉션식별자` 주소 |
+| `InteractionRegistryEntry` | 주소별 항목. `CodeDefinition`, `DataDefinition`, 합쳐진 `Definition`, `Handler` |
+| `IInteractionDefinitionSource` | 엔티티 코드가 코드 리터럴을 선언하는 인터페이스 |
+| `IInteractionHandlerFactory` | 데이터 전용 `Custom` 정의의 핸들러를 `handlerKey`로 만들어 주는 인터페이스 |
+| `IConditionStateProvider` | 조건 절 `PlayerState`/`EntityState`가 읽는 상태 키를 노출하는 인터페이스 |
+| `InteractionVisibilityState` | 오버라이드 저장소(전역 층 + 플레이어별 층). 스냅샷 직렬화 제공 |
+| `RegistryActionInteract` 등 | `Action`/`Signal`/`StartScenario`/`ItemSubmission` 종류의 범용 핸들러 |
+
+주요 API:
+
+```csharp
+// 정의
+IDisposable BeginEntityInitCycle(string entityIdentifier);
+IDisposable BeginScenarioInitCycle(string scenarioIdentifier);
+void DeclareCode(string entityIdentifier, IInteractionDefinitionSource source);
+void RemoveCodeDefinitions(string entityIdentifier);
+void ApplyScenarioDefinitions(string scenarioIdentifier, IReadOnlyList<InteractionDefinition> definitions);
+void ClearScenarioDefinitions(string scenarioIdentifier);
+
+// 조회
+bool TryGet(InteractionAddress address, out InteractionRegistryEntry entry);
+bool TryGetByHandler(IInteract handler, out InteractionRegistryEntry entry);
+IEnumerable<InteractionRegistryEntry> EntriesForEntity(string entityIdentifier);
+
+// 가시성: 오버라이드(플레이어별 → 전역) → 조건 절 → initial
+bool IsVisible(InteractionRegistryEntry entry, PlayerController viewer, out string reason);
+void SetVisibilityOverride(InteractionAddress address, InteractionVisibilityOverride value,
+    InteractionVisibilityScope scope, IReadOnlyList<string> playerIdentifiers = null);
+void ResetOverridesForEntity(string entityIdentifier);
+
+// 수행 통지(afterInteract 적용, Interacted 이벤트)
+void NotifyInteracted(IInteract handler, PlayerController player);
+void AssignEntityTag(string entityIdentifier, string tag);
+```
+
+멀티플레이 규약:
+
+- 정의는 각 피어가 같은 코드·데이터에서 로컬로 만들므로 복제하지 않습니다.
+- 오버라이드와 엔티티 태그는 서버 권위입니다. 클라이언트 호출은 `ScenarioNetworkRelay`를 거쳐 서버가 기록하고
+  `ObserversRpc`로 미러링하며, 늦게 접속한 피어는 신호 스냅샷 요청 때 함께 복원됩니다.
+- 조건 절은 각 피어가 자기 플레이어 기준으로 판정합니다. 입력(퀘스트, 태그, 신호, 엔티티 상태)은 이미 복제된 값입니다.
+
+디버그 인스펙터: `Tools > Multiplayer Infrastructure > Interaction Registry`. 항목별 정의·판정 사유를 보여 주고,
+Unity 에디터에서만 오버라이드를 직접 바꿀 수 있습니다.
 
 ---
 
@@ -238,3 +309,5 @@ public class MedCart : MonoBehaviour, IInteractable
 - [api-references/architecture/multiplayer-infrastructure-overview.md](architecture/multiplayer-infrastructure-overview.md) — 인터랙터블 시스템 개요
 - [requirements/gameplay/interaction/interaction-feature-spec.md](../requirements/gameplay/interaction/interaction-feature-spec.md) — 상세 기능 요구사항
 - [api-references/MultiplayerInfrastructure.Player.PlayerController.md](MultiplayerInfrastructure.Player.PlayerController.md) — PlayerController API
+- [changes/2026-09-06-interaction-registry-visibility.md](../changes/2026-09-06-interaction-registry-visibility.md) — 인터렉션 레지스트리 도입 변경 노트
+- [api-references/MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md](MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md) — `interactions` 구역과 `InteractionVisibility` 노드

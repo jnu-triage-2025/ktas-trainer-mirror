@@ -1,0 +1,67 @@
+{
+  "interactions": [
+    {
+      "entity": {
+        "id": "demo_scenario_giving_npc"
+      },
+      "interaction": "start_disaster_intro",
+      "kind": "StartScenario",
+      "display": {
+        "text": "[NPC] 데모 시나리오 시작"
+      },
+      "scenarioIdentifier": "disaster_intro",
+      "startNodeIdentifier": "D001",
+      "visibility": {
+        "initial": true
+      }
+    },
+    {
+      "entity": {
+        "id": "DummyInteractTrainer/parcel_8909"
+      },
+      "interaction": "inspect",
+      "handlerKey": "tutorial_decoy",
+      "display": {
+        "text": "택배: 8909"
+      },
+      "extras": {
+        "dialogue": "이 물건은 아닌 것 같다"
+      },
+      "visibility": {
+        "initial": true
+      }
+    },
+    {
+      "entity": {
+        "id": "DummyInteractTrainer/mail_kim_gangsan"
+      },
+      "interaction": "inspect",
+      "handlerKey": "tutorial_decoy",
+      "display": {
+        "text": "우편: 김강산님"
+      },
+      "extras": {
+        "dialogue": "이 물건은 아닌 것 같다"
+      },
+      "visibility": {
+        "initial": true
+      }
+    },
+    {
+      "entity": {
+        "id": "DummyInteractTrainer/delivery_overnight_youth"
+      },
+      "interaction": "inspect",
+      "handlerKey": "tutorial_decoy",
+      "display": {
+        "text": "배달: 밤샘 청년"
+      },
+      "extras": {
+        "dialogue": "이 물건은 아닌 것 같다"
+      },
+      "visibility": {
+        "initial": true
+      }
+    }
+  ]
+}

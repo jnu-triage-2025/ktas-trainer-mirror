@@ -25,10 +25,6 @@ namespace TriageTrainer.Entity
     [Header("Identity")]
     [SerializeField] private string _identifier = "patient";
 
-    [Header("Display")]
-    [SerializeField] private string _liftDisplayText = "환자를 들어올리기";
-    [SerializeField] private string _carryDisplayText = "환자 들어올리기";
-    [SerializeField] private string _monitorSelectDisplayText = "이 환자를 모니터링";
     [Tooltip("프리팹에서는 배치되어 있지만 시나리오 이벤트 전에는 숨겨야 하는 자식 오브젝트 이름입니다.")]
     [SerializeField] private string[] _initiallyHiddenChildNames = Array.Empty<string>();
 
@@ -402,7 +398,6 @@ namespace TriageTrainer.Entity
       InitializeCollider();
       EnsureMedicalStateDefaults();
       _weight = Mathf.Max(0, _weight);
-      EnsureDefaultInteractConfigs();
       var state = GetPatientState();
       RestoreLegacyDefaultsAfterInspectorResetIfNeeded(state);
       state?.InitializeRuntimeReferences(this);
@@ -422,13 +417,11 @@ namespace TriageTrainer.Entity
 
       // Inspector 문맥 메뉴 Reset은 Unity 기본 직렬화값을 적용한 뒤 OnValidate를 호출한다.
       // B Male/Female의 이전 프리팹 값과 구별되는 이 조합일 때만 코드 리터럴을 복구한다.
-      bool hasResetSignature = (_assessActions == null || _assessActions.Count == 0)
-                               && !_intravenousLineCannulaConfig.Supported;
+      bool hasResetSignature = !_intravenousLineCannulaConfig.Supported;
       if (!hasResetSignature)
         return;
 
       _supportExternalRefs.InitializeEmptyCollections();
-      ApplySerializedDefaultAssessActions();
       _intravenousLineCannulaConfig.Supported = true;
       EnsureDefaultRuntimeAnimatorController();
       BuildInteractEntries();
@@ -441,9 +434,6 @@ namespace TriageTrainer.Entity
     private void ApplySerializedDefaultsForInspectorReset()
     {
       _identifier = "patient";
-      _liftDisplayText = "환자를 들어올리기";
-      _carryDisplayText = "환자 들어올리기";
-      _monitorSelectDisplayText = "이 환자를 모니터링";
       _initiallyHiddenChildNames = Array.Empty<string>();
       _weight = 4;
       _supportExternalRefs = default;
@@ -470,8 +460,6 @@ namespace TriageTrainer.Entity
 
       _patientDescriptor = new PatientDescriptor();
       _medicalState = new PatientMedicalState();
-      _interactConfigs = new List<InteractConfig>();
-      ApplySerializedDefaultAssessActions();
       _intravenousLineCannulaConfig = default;
       _intravenousLineCannulaConfig.Supported = true;
       _intravenousLineCannulaInteractable = true;
@@ -484,7 +472,6 @@ namespace TriageTrainer.Entity
       EnsureDefaultRuntimeAnimatorController();
       InitializeCollider();
       EnsureMedicalStateDefaults();
-      EnsureDefaultInteractConfigs();
       BuildInteractEntries();
     }
   }

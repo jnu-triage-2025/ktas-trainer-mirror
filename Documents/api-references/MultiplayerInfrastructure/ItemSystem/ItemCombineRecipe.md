@@ -40,7 +40,7 @@ var recipe = new ItemCombineRecipe()
 | `ItemId` | `string` | 재료 아이템 식별자 |
 | `RequiredCount` | `int` | 필요한 개수 |
 
-## 정적 메서드 (등록소)
+## 정적 메서드 (레지스트리)
 `ItemCombineRecipeRegistry` 클래스를 통해 레시피를 등록하고 조회합니다.
 
 | 메서드 | 설명 |

@@ -28,7 +28,7 @@ namespace MultiplayerInfrastructure.ItemSystem
   /// </summary>
   [DisallowMultipleComponent]
   [RequireComponent(typeof(Collider))]
-  public class StaticPlacedItem : Interactable, IInteractorConditional
+  public class StaticPlacedItem : Interactable, IInteractorConditional, IInteractionRegistryExempt
   {
     [Header("StaticPlacedItem")]
     [SerializeField] private string _entityIdentifier;

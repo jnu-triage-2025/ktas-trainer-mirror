@@ -49,6 +49,9 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// <summary>이 정적 오브젝트의 전역 식별자(서버/모든 클라이언트 동일).</summary>
     public string EntityIdentifier => _entityIdentifier;
 
+    /// <summary>퀘스트 표시·레지스트리 주소는 엔티티 식별자를 그대로 쓴다(프리팹 직렬화 필드를 쓰지 않는다).</summary>
+    public override string PresentationEntityIdentifier => _entityIdentifier;
+
     public void SetEntityIdentifier(string identifier)
     {
       string normalized = identifier == null ? string.Empty : identifier.Trim();
@@ -132,6 +135,12 @@ namespace MultiplayerInfrastructure.ItemSystem
         EntityType.StaticPlacedItem,
         gameObject,
         displayName: gameObject.name);
+      // 엔티티 초기화 사이클: 파생 구현이 선언하는 코드 리터럴 인터렉션을 등록한다.
+      if (this is IInteractionDefinitionSource source)
+      {
+        InteractionRegistry.RemoveCodeDefinitions(_registeredIdentifier);
+        InteractionRegistry.DeclareCode(_registeredIdentifier, source);
+      }
     }
 
     private void UnregisterFromRegistry()
@@ -139,6 +148,7 @@ namespace MultiplayerInfrastructure.ItemSystem
       if (string.IsNullOrWhiteSpace(_registeredIdentifier))
         return;
 
+      InteractionRegistry.RemoveCodeDefinitions(_registeredIdentifier);
       Registry.Registry.UnregisterEntity(_registeredIdentifier);
       _registeredIdentifier = null;
     }

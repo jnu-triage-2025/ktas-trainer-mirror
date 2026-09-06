@@ -36,18 +36,17 @@ namespace MultiplayerInfrastructure.Editor
             new SearchTreeEntry(new GUIContent("Quest Waypoint Highlight")) { level = 1, userData = ScenarioNodeType.QuestWaypointHighlight },
             new SearchTreeEntry(new GUIContent("Quest Mark")) { level = 1, userData = ScenarioNodeType.QuestMark },
             new SearchTreeEntry(new GUIContent("Delay")) { level = 1, userData = ScenarioNodeType.Delay },
-            new SearchTreeEntry(new GUIContent("Interaction")) { level = 1, userData = ScenarioNodeType.Interaction },
             new SearchTreeEntry(new GUIContent("Combine Item")) { level = 1, userData = ScenarioNodeType.CombineItem },
             new SearchTreeEntry(new GUIContent("Quiz")) { level = 1, userData = ScenarioNodeType.Quiz },
             new SearchTreeEntry(new GUIContent("State Update")) { level = 1, userData = ScenarioNodeType.StateUpdate },
             new SearchTreeEntry(new GUIContent("Tag Modification")) { level = 1, userData = ScenarioNodeType.PlayerTag },
             new SearchTreeEntry(new GUIContent("Play TTS")) { level = 1, userData = ScenarioNodeType.PlayTTS },
-            new SearchTreeEntry(new GUIContent("Item Submission Config")) { level = 1, userData = ScenarioNodeType.ItemSubmissionConfig },
             new SearchTreeEntry(new GUIContent("Time Control")) { level = 1, userData = ScenarioNodeType.TimeControl },
             new SearchTreeEntry(new GUIContent("Manual Entrypoint")) { level = 1, userData = ScenarioNodeType.ManualEntrypoint },
             new SearchTreeEntry(new GUIContent("Bed Snap")) { level = 1, userData = ScenarioNodeType.BedSnap },
             new SearchTreeEntry(new GUIContent("Return To Origin")) { level = 1, userData = ScenarioNodeType.ReturnToOrigin },
-            new SearchTreeEntry(new GUIContent("Lifecycle")) { level = 1, userData = ScenarioNodeType.Lifecycle }
+            new SearchTreeEntry(new GUIContent("Lifecycle")) { level = 1, userData = ScenarioNodeType.Lifecycle },
+            new SearchTreeEntry(new GUIContent("Interaction Visibility")) { level = 1, userData = ScenarioNodeType.InteractionVisibility }
         };
     }
 

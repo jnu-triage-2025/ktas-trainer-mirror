@@ -143,6 +143,8 @@ namespace TriageTrainer.Entity
         ownerUserIdentifier: null,
         clientId: null,
         isNetworked: true);
+      // 엔티티 초기화 사이클: 등록 직후 코드 리터럴 인터렉션을 선언한다(보류된 시나리오 정의도 이때 붙는다).
+      DeclarePatientInteractions();
     }
 
     public void RefreshPatientDisplayName()
@@ -173,6 +175,7 @@ namespace TriageTrainer.Entity
       if (string.IsNullOrWhiteSpace(_registeredEntityIdentifier))
         return;
 
+      MultiplayerInfrastructure.InteractableEntity.InteractionRegistry.RemoveCodeDefinitions(_registeredEntityIdentifier);
       Registry.UnregisterEntity(_registeredEntityIdentifier);
       _registeredEntityIdentifier = null;
     }

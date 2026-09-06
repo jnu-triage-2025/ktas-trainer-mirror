@@ -2,7 +2,6 @@
 using System.Reflection;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
-using TriageTrainer.Entity.IntravenousLine;
 using UnityEngine;
 
 namespace TriageTrainer.Scenario
@@ -35,7 +34,6 @@ namespace TriageTrainer.Scenario
       if (FindArrivalZone() == null)
         CreateArrivalZone(FindWaypoint(PatientAArrivalAnchorId)?.transform.position
           ?? new Vector3(-72.525f, 0f, 0.7f));
-      DisableLegacyPatientAYankauerIvPort();
     }
 
     private static bool HasWaypoint(string identifier)
@@ -91,27 +89,6 @@ namespace TriageTrainer.Scenario
     {
       typeof(ScenarioTriggerZone).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
         ?.SetValue(zone, value);
-    }
-
-    private static void DisableLegacyPatientAYankauerIvPort()
-    {
-      foreach (var point in FindObjectsByType<IntravenousLineConnectionPoint>(
-                 FindObjectsInactive.Include, FindObjectsSortMode.None))
-      {
-        if (point == null
-            || !string.Equals(point.Identifier, "connect_wall_component_and_yankauer",
-              StringComparison.Ordinal))
-          continue;
-
-        var configs = typeof(IntravenousLineConnectionPoint).GetField(
-            "_interactConfigs", BindingFlags.Instance | BindingFlags.NonPublic)
-          ?.GetValue(point) as System.Collections.Generic.IEnumerable<IntravenousLineConnectionPoint.InteractConfig>;
-        if (configs == null)
-          continue;
-        foreach (var config in configs)
-          if (config != null)
-            config.Enabled = false;
-      }
     }
   }
 }

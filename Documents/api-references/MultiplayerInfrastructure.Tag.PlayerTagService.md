@@ -91,8 +91,17 @@ public static bool HasTag(string uuid, string tag)
 - 태그 분기(Scenario Parallel branch)는 대소문자 일관성을 유지합니다.
 - 플레이어 종료 시 ClearTags를 호출해 누수 데이터를 방지합니다.
 
+## 3-1. 엔티티 태그 (2026-09-06)
+
+같은 서비스가 플레이어가 아닌 엔티티(환자 모니터, 흡인기 등)의 태그도 식별자 키로 보관한다. 별도 저장소를 두지
+않는다(결정 5). `EntityPresetSpawn.tags`, `EntityTag` 노드, `InteractionRegistry.AssignEntityTag`가 서버에서
+기록하면, 소유 플레이어가 없는 식별자는 `ScenarioNetworkRelay.PublishEntityTags`로 전 피어에 미러링되고 늦은
+접속 스냅샷에도 포함된다. `interactions[].entity.tag`와 조건 절 `EntityHasTag`가 이 값을 읽으며, 변경 시
+`TagsChanged` 이벤트가 레지스트리의 가시성 재판정을 깨운다.
+
 ## 4. 관련 문서
 
 - api-references/MultiplayerInfrastructure.Scenario.ScenarioController.md
 - api-references/MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md
 - requirements/content-definitions/scenario/scenario-graph-spec.md
+- api-references/MultiplayerInfrastructure.InteractableEntity.md (인터렉션 레지스트리)

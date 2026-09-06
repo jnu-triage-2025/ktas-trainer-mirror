@@ -164,13 +164,6 @@ MonoBehaviour:
   _identifier: patient_a_cannula_right_port
   _autoGenerateIdentifier: 0
   _displayIcon: {fileID: 0}
-  _interactConfigs:
-  - _identifier: intravenous_line_connect_mode_start
-    _enabled: 1
-  - _identifier: intravenous_line_connect_here
-    _enabled: 1
-  - _identifier: intravenous_line_disconnect
-    _enabled: 1
 --- !u!114 &910000000000000104
 MonoBehaviour:
   m_ObjectHideFlags: 0

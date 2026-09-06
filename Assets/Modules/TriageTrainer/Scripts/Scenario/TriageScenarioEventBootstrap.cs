@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using FishNet;
+using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.Registry;
@@ -320,7 +321,6 @@ namespace TriageTrainer.Scenario
     [SerializeField, Min(0f)] private float _smokeTestStepDelaySeconds = 0.25f;
 
     private readonly List<string> _registeredEventIds = new();
-    private ScenarioController _questStateFlagScopeController;
     private ChatUIController _chatUi;
     private ChatService _chatService;
     private QuestUIController _questUi;
@@ -329,7 +329,7 @@ namespace TriageTrainer.Scenario
     /// 활성화된 부트스트랩 인스턴스. 두 번째 인스턴스가 붙는 상황을 막기 위한 기준값이다.
     ///
     /// <para>
-    /// 상호작용 처리는 <c>ScenarioActionInteractable.OnInteractionCompleted</c> 라는 static 이벤트를
+    /// 상호작용 처리는 <c>InteractionRegistry.Interacted</c> 라는 static 이벤트를
     /// 거치므로 살아 있는 인스턴스가 모두 실행하는 반면, 시나리오 이벤트 핸들러 사전은 식별자마다
     /// 마지막 등록만 남긴다. 그래서 인스턴스가 둘이면 CPR PlayableGraph 와 모델 Y 오프셋을 두 번
     /// 걸어 놓고 한 번만 해제하게 되어, 환자가 CPR 자세를 유지한 채 침대 아래로 내려앉는다.
@@ -364,11 +364,10 @@ namespace TriageTrainer.Scenario
         return;
       }
 
-      ScenarioActionInteractable.OnInteractionCompleted += HandleScenarioActionInteractionCompleted;
+      InteractionRegistry.Interacted += HandleRegistryInteractionCompleted;
       EnablePatientATreatmentSignalHandlers();
       RegisterIntroAndPatientAEvents();
       RegisterPatientBCEvents();
-      SubscribeQuestStateFlagScope();
 
       if (_logRegistrySnapshotOnEnable)
       {
@@ -427,10 +426,9 @@ namespace TriageTrainer.Scenario
       }
 
       _activeInstance = null;
-      ScenarioActionInteractable.OnInteractionCompleted -= HandleScenarioActionInteractionCompleted;
+      InteractionRegistry.Interacted -= HandleRegistryInteractionCompleted;
       StopPatientACprAnimations();
       DisablePatientATreatmentSignalHandlers();
-      UnsubscribeQuestStateFlagScope();
       DisposePatientBCFinalFadeOverlay();
       for (int i = 0; i < _registeredEventIds.Count; i++)
       {
@@ -562,62 +560,6 @@ namespace TriageTrainer.Scenario
       Registry.RegisterScenarioEvent(eventId, handler);
       _registeredEventIds.Add(eventId);
     }
-
-    // ── 퀘스트 상태 플래그 게이트 범위 ────────────────────────────────────
-    // patient_a_critical 은 상호작용 노출을 플레이어별 퀘스트 상태 플래그로 판정한다. 게이트는 그
-    // 시나리오가 도는 동안에만 켜져야 하므로, 시나리오 시작·종료에 맞춰 여닫는다. 표시 전용 피어에서도
-    // 같은 이벤트가 발생하므로 별도 분기 없이 모든 피어에서 동일하게 동작한다.
-
-    private void SubscribeQuestStateFlagScope()
-    {
-      ScenarioController.InstanceAvailable += HandleScenarioControllerAvailableForFlagScope;
-      BindQuestStateFlagScope(ScenarioController.Instance);
-    }
-
-    private void UnsubscribeQuestStateFlagScope()
-    {
-      ScenarioController.InstanceAvailable -= HandleScenarioControllerAvailableForFlagScope;
-      UnbindQuestStateFlagScope();
-      PatientACriticalQuestStateFlags.Disarm();
-    }
-
-    private void HandleScenarioControllerAvailableForFlagScope(ScenarioController controller)
-      => BindQuestStateFlagScope(controller);
-
-    private void BindQuestStateFlagScope(ScenarioController controller)
-    {
-      if (controller == null || ReferenceEquals(_questStateFlagScopeController, controller))
-        return;
-
-      UnbindQuestStateFlagScope();
-      _questStateFlagScopeController = controller;
-      controller.OnScenarioStarted += HandleScenarioStartedForFlagScope;
-      controller.OnScenarioEnded += HandleScenarioEndedForFlagScope;
-    }
-
-    private void UnbindQuestStateFlagScope()
-    {
-      if (_questStateFlagScopeController == null)
-        return;
-
-      _questStateFlagScopeController.OnScenarioStarted -= HandleScenarioStartedForFlagScope;
-      _questStateFlagScopeController.OnScenarioEnded -= HandleScenarioEndedForFlagScope;
-      _questStateFlagScopeController = null;
-    }
-
-    private void HandleScenarioStartedForFlagScope()
-    {
-      PatientACriticalQuestStateFlags.ArmFor(_questStateFlagScopeController?.CurrentGraph?.Identifier);
-      // 일회성 상호작용은 수행 표시를 되돌리지 않으면 재시작이나 수동 진입으로 되돌아간 단계에서
-      // 다시 열리지 않는다. 그 결과 완료 신호를 기다리는 게이트가 영원히 막히므로,
-      // 새 실행이 시작될 때마다 표시를 지운다.
-      ScenarioActionInteractable.ResetAllCompletionsForNewScenarioRun();
-    }
-
-    private void HandleScenarioEndedForFlagScope()
-      => PatientACriticalQuestStateFlags.Disarm();
-
-
 
     private void ResolveRuntimeReferencesIfNeeded()
     {

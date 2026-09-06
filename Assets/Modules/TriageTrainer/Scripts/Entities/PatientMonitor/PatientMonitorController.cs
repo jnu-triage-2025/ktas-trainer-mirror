@@ -839,8 +839,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       base.OnValidate();
       // OnValidate 중에는 AddComponent가 금지되므로 생성은 미루고 갱신만 수행한다.
       EnsureInteractionCollider(allowCreate: false);
-      EnsureInteractEntry(InteractIdSelectPatient, IsPatientTrackingMethodEnabled(PatientTrackingMethod.Interactable));
-      RebuildInteractEntryMap();
 
       _targetParameters = ResolveConfiguredParameters();
       ApplyTrackingLineSettings();

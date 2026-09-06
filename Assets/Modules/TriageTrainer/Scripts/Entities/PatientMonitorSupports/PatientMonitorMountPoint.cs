@@ -16,7 +16,7 @@ namespace TriageTrainer.Entity.PatientMonitor
   [RequireComponent(typeof(Collider))]
   public sealed class PatientMonitorMountPoint : StaticObjectDisplayment
   {
-    private sealed class InstallInteract : IInteract, IInteractorConditional, ILocalInteractionFocus, IInteractDisplayIcons
+    private sealed class InstallInteract : IInteract, IInteractorConditional, ILocalInteractionFocus, IInteractDisplayIcons, IInteractionRegistryExempt
     {
       private readonly PatientMonitorMountPoint _owner;
       public InstallInteract(PatientMonitorMountPoint owner) => _owner = owner;
@@ -30,7 +30,7 @@ namespace TriageTrainer.Entity.PatientMonitor
       public void SetLocalInteractionFocused(bool focused) => _owner.SetPreviewVisible(focused);
     }
 
-    private sealed class RetrieveInteract : IInteract, IInteractorConditional
+    private sealed class RetrieveInteract : IInteract, IInteractorConditional, IInteractionRegistryExempt
     {
       private readonly PatientMonitorMountPoint _owner;
       public RetrieveInteract(PatientMonitorMountPoint owner) => _owner = owner;

@@ -1,5 +1,12 @@
 # NPC Multi-Interact & Icon Reference API
 
+> **2026-09-06 갱신 안내.** NPC 상호작용 정의는 더 이상 `NPCBaseModelSO`·`Npc` 인스펙터 목록
+> (`_scenarioInteracts`, `_submissionInteracts`, `_customInteractSources`)에서 오지 않습니다. 시나리오 JSON 최상위
+> `interactions` 구역과 전역 카탈로그 `Resources/Interactions/*.json`이 정의하고, 인터렉션 레지스트리가 노출을 판정합니다.
+> 이 문서의 2절~7절은 아이콘 참조(`IconSpriteReference`) 부분만 유효하며, 인터렉션 목록에 관한 서술은 이력입니다.
+> 현재 구조는 [changes/2026-09-06-interaction-registry-visibility.md](../../changes/2026-09-06-interaction-registry-visibility.md)와
+> [MultiplayerInfrastructure.InteractableEntity.md](../MultiplayerInfrastructure.InteractableEntity.md) 8절을 보세요.
+
 ## 0. 이 문서의 목적
 
 이 문서는 `Npc`가 제공하는 상호작용 시스템을
@@ -29,11 +36,11 @@
 
 `Npc`는 `Interactable`을 상속하며, 내부적으로 다음 두 종류의 액션을 합쳐서 `Interacts`로 제공합니다.
 
-1) `scenarioInteracts` 기반 액션
-- `NPCScenarioInteractDefinition` 리스트에서 생성
+1) 인터렉션 레지스트리 항목
+- 시나리오 JSON `interactions` 구역과 전역 카탈로그가 이 NPC 식별자로 정의한 항목의 핸들러
+  (`InteractionRegistry.CollectInteractsForEntity`)
 
-2) `customInteractSources` 기반 액션
-- `MonoBehaviour` 목록 중 `IInteract`를 구현한 컴포넌트만 채택
+(이전의 `scenarioInteracts`/`customInteractSources` 목록은 2026-09-06에 제거됐습니다.)
 
 ---
 
@@ -45,13 +52,11 @@
 - `Assets/Modules/MultiplayerInfrastructure/Scripts/Entity/Npc.cs`
 
 중요 필드:
-- `_scenarioInteracts: List<NPCScenarioInteractDefinition>`
-- `_customInteractSources: List<MonoBehaviour>`
+- `_identifier`, `_npcBaseModel`(식별자·표시 이름·설명만)
 
 중요 동작:
-- `Interacts`: 내부 캐시를 재구성한 뒤 `IInteract[]` 반환
+- `Interacts`: 레지스트리 항목을 모아 `IInteract[]` 반환(`InteractionRegistry.Changed` 시 재구성)
 - `Interact(Transform)`: 기본적으로 `Interacts[0]` 실행
-- `ApplyBaseModel()`: `NPCBaseModelSO`의 리스트를 clone하여 반영
 
 ## 2-2. NPCBaseModelSO
 
@@ -169,14 +174,15 @@ Registry 조회는 `RegistryType.IconSprite`를 사용합니다.
 ## 5-3. NPC 프리팹 연결
 
 1. NPC 프리팹의 `Npc` 컴포넌트에서 `_npcBaseModel` 할당
-2. 필요하면 `_customInteractSources`에 `IInteract` 구현 컴포넌트 다중 추가
-3. Play 모드에서 상호작용 UI에 여러 항목이 노출되는지 확인
+2. 상호작용은 시나리오 JSON `interactions`(`entity.id` = NPC 식별자) 또는 `Resources/Interactions/*.json`에 정의
+3. Play 모드에서 상호작용 UI에 여러 항목이 노출되는지 확인(`Tools > Multiplayer Infrastructure > Interaction Registry`)
 
 ---
 
-## 6. Custom Interact 확장 예시
+## 6. Custom Interact 확장 예시 (이력)
 
-`_customInteractSources`에 넣을 컴포넌트는 `IInteract`를 구현해야 합니다.
+아래는 2026-09-06 이전의 `_customInteractSources` 방식입니다. 지금은 NPC 전용 코드 핸들러가 필요하면
+`IInteractionHandlerFactory`를 구현한 컴포넌트가 `handlerKey`로 핸들러를 만들고, 정의는 `interactions` 구역에 둡니다.
 
 ```csharp
 using MultiplayerInfrastructure.InteractableEntity;
@@ -198,8 +204,7 @@ public class NpcWaveInteract : MonoBehaviour, IInteract
 }
 ```
 
-이 컴포넌트를 NPC의 `_customInteractSources`에 추가하면,
-시나리오 시작 액션과 나란히 UI에 표시됩니다.
+(이력) 이 컴포넌트를 NPC의 `_customInteractSources`에 추가하면 시나리오 시작 액션과 나란히 UI에 표시됐습니다.
 
 ---
 
@@ -217,9 +222,10 @@ public class NpcWaveInteract : MonoBehaviour, IInteract
 
 - `Clone()`에서 신규 필드 복제 누락을 우선 의심
 
-### 증상 C: Custom 액션이 목록에 안 뜸
+### 증상 C: 액션이 목록에 안 뜸
 
-- `_customInteractSources`에 넣은 컴포넌트가 `IInteract`를 구현했는지 확인
+- 레지스트리 창(`Tools > Multiplayer Infrastructure > Interaction Registry`)에서 해당 주소의 판정 사유를 확인
+- `visibility.initial`이 `false`인데 여는 조건 절이나 `InteractionVisibility` 노드가 없는지 확인
 
 ---
 

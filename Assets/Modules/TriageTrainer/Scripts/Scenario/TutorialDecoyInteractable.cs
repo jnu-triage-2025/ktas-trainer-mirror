@@ -1,4 +1,5 @@
-﻿using System.Collections;
+using System.Collections;
+using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
@@ -8,41 +9,114 @@ using UnityEngine;
 namespace TriageTrainer.Scenario
 {
   /// <summary>
-  /// 튜토리얼의 오답 배송 물품에 사용하는 로컬 안내 상호작용.
-  /// 실행 중인 메인 시나리오를 중단하지 않고 비점유 다이얼로그만 표시한다.
+  /// 튜토리얼의 오답 배송 물품 소품. 실행 중인 메인 시나리오를 중단하지 않고 비점유 다이얼로그만 표시한다.
+  ///
+  /// <para>
+  /// 인터렉션 정의(문구, 안내 대사)는 상시 카탈로그(<c>Resources/Interactions/global.json</c>)가
+  /// handlerKey <c>tutorial_decoy</c> 로 선언하고, 이 컴포넌트는 엔티티 식별자(<c>DummyInteractTrainer/...</c>)로
+  /// 등록해 핸들러를 만들어 준다. 프리팹·씬에는 인터렉션 데이터를 두지 않는다.
+  /// </para>
   /// </summary>
   [DisallowMultipleComponent]
   [RequireComponent(typeof(Collider))]
-  public sealed class TutorialDecoyInteractable : MonoBehaviour, IInteractable, IInteract, IInteractorConditional
+  public sealed class TutorialDecoyInteractable : MonoBehaviour, IInteractable, IInteractionHandlerFactory
   {
-    [SerializeField] private string _displayText = "확인하기";
-    [SerializeField] private Sprite _displayIcon;
-    [SerializeField] private Color _displayColor = Color.white;
-    [SerializeField] private string _dialogueContent = "이 물건은 아닌 것 같다";
-    [SerializeField] private float _fadeInDuration = 0.2f;
-    [SerializeField] private float _displayDuration = 3f;
-    [SerializeField] private float _fadeOutDuration = 0.2f;
+    public const string HandlerKey = "tutorial_decoy";
+    public const string EntityIdentifierPrefix = "DummyInteractTrainer/";
+
+    [Header("Identity")]
+    [Tooltip("레지스트리 주소에 쓰는 엔티티 식별자. 관례상 DummyInteractTrainer/ 로 시작한다.")]
+    [SerializeField] private string _entityIdentifier;
+
+    private const float FadeInDuration = 0.2f;
+    private const float DisplayDuration = 3f;
+    private const float FadeOutDuration = 0.2f;
 
     private static TutorialDecoyInteractable _activePresenter;
     private Coroutine _dialogueRoutine;
+    private readonly List<IInteract> _interactBuffer = new();
+    private DecoyInteract _handler;
 
-    public IInteract[] Interacts => new IInteract[] { this };
-    public string DisplayText => _displayText;
-    public Sprite DisplayIcon => _displayIcon;
-    public bool AllowDisplayIconFallback => true;
-    public Color DisplayColor => _displayColor;
+    public string EntityIdentifier => _entityIdentifier;
 
-    public bool CanInteract(Transform interactor)
-      => interactor != null && interactor.GetComponentInParent<PlayerController>() != null;
-
-    public void Interact(Transform interactor)
+    public IInteract[] Interacts
     {
-      if (!CanInteract(interactor))
-        return;
+      get
+      {
+        _interactBuffer.Clear();
+        InteractionRegistry.CollectInteractsForEntity(_entityIdentifier, _interactBuffer);
+        return _interactBuffer.ToArray();
+      }
+    }
 
-      var dialogue = Registry.Get<DialoguePanelUIController>(
-        RegistryType.UI,
-        Registry.TypeKey<DialoguePanelUIController>());
+    private sealed class DecoyInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
+    {
+      private readonly TutorialDecoyInteractable _owner;
+      private readonly InteractionDefinition _definition;
+
+      public DecoyInteract(TutorialDecoyInteractable owner, InteractionDefinition definition)
+      {
+        _owner = owner;
+        _definition = definition;
+      }
+
+      public string PresentationEntityIdentifier => _owner._entityIdentifier;
+      public string InteractionIdentifier => _definition.InteractionIdentifier;
+      public string DisplayText => string.IsNullOrWhiteSpace(_definition.Display?.Text) ? "확인하기" : _definition.Display.Text;
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => Color.white;
+
+      public bool CanInteract(Transform interactor)
+        => interactor != null && interactor.GetComponentInParent<PlayerController>() != null;
+
+      public void Interact(Transform interactor)
+      {
+        if (!CanInteract(interactor))
+          return;
+        _owner.PresentDialogue(_definition.GetExtra("dialogue") ?? "이 물건은 아닌 것 같다");
+      }
+    }
+
+    private void Awake()
+    {
+      if (string.IsNullOrWhiteSpace(_entityIdentifier))
+        _entityIdentifier = MultiplayerInfrastructure.Registry.EntityId.Ensure(_entityIdentifier, gameObject, "DummyInteractTrainer");
+    }
+
+    private void OnEnable()
+    {
+      Registry.RegisterEntity(_entityIdentifier, EntityType.Prop, gameObject, displayName: gameObject.name);
+      InteractionRegistry.Changed += HandleRegistryChanged;
+    }
+
+    private void OnDisable()
+    {
+      InteractionRegistry.Changed -= HandleRegistryChanged;
+      if (_activePresenter == this)
+      {
+        var dialogue = Registry.Get<DialoguePanelUIController>(RegistryType.UI, Registry.TypeKey<DialoguePanelUIController>());
+        dialogue?.HideDisinteractableDialogue();
+        StopCurrentDialogue();
+      }
+      if (Registry.TryGetEntity(_entityIdentifier, out var descriptor) && descriptor?.GameObject == gameObject)
+        Registry.UnregisterEntity(_entityIdentifier);
+    }
+
+    private void HandleRegistryChanged() { }
+
+    public bool TryCreateInteractionHandler(InteractionDefinition definition, out IInteract handler)
+    {
+      handler = null;
+      if (definition == null || definition.HandlerKey != HandlerKey)
+        return false;
+      handler = _handler = new DecoyInteract(this, definition);
+      return true;
+    }
+
+    private void PresentDialogue(string content)
+    {
+      var dialogue = Registry.Get<DialoguePanelUIController>(RegistryType.UI, Registry.TypeKey<DialoguePanelUIController>());
       if (dialogue == null)
       {
         Debug.LogWarning("[TutorialDecoyInteractable] DialoguePanelUIController를 찾지 못했습니다.", this);
@@ -54,15 +128,15 @@ namespace TriageTrainer.Scenario
 
       StopCurrentDialogue();
       _activePresenter = this;
-      _dialogueRoutine = StartCoroutine(DisplayDialogue(dialogue));
+      _dialogueRoutine = StartCoroutine(DisplayDialogue(dialogue, content));
     }
 
-    private IEnumerator DisplayDialogue(DialoguePanelUIController dialogue)
+    private IEnumerator DisplayDialogue(DialoguePanelUIController dialogue, string content)
     {
-      dialogue.DisplayDisinteractableDialogue(null, _dialogueContent, null);
-      yield return Fade(dialogue, 0f, 1f, _fadeInDuration);
-      yield return WaitRealtime(_displayDuration);
-      yield return Fade(dialogue, 1f, 0f, _fadeOutDuration);
+      dialogue.DisplayDisinteractableDialogue(null, content, null);
+      yield return Fade(dialogue, 0f, 1f, FadeInDuration);
+      yield return WaitRealtime(DisplayDuration);
+      yield return Fade(dialogue, 1f, 0f, FadeOutDuration);
       dialogue.HideDisinteractableDialogue();
 
       _dialogueRoutine = null;
@@ -70,11 +144,7 @@ namespace TriageTrainer.Scenario
         _activePresenter = null;
     }
 
-    private static IEnumerator Fade(
-      DialoguePanelUIController dialogue,
-      float from,
-      float to,
-      float duration)
+    private static IEnumerator Fade(DialoguePanelUIController dialogue, float from, float to, float duration)
     {
       if (duration <= 0f)
       {
@@ -86,8 +156,7 @@ namespace TriageTrainer.Scenario
       while (elapsed < duration)
       {
         elapsed += Time.unscaledDeltaTime;
-        dialogue.SetDisinteractableDialogueOpacity(
-          Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / duration)));
+        dialogue.SetDisinteractableDialogueOpacity(Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / duration)));
         yield return null;
       }
 
@@ -114,18 +183,6 @@ namespace TriageTrainer.Scenario
 
       if (_activePresenter == this)
         _activePresenter = null;
-    }
-
-    private void OnDisable()
-    {
-      if (_activePresenter != this)
-        return;
-
-      var dialogue = Registry.Get<DialoguePanelUIController>(
-        RegistryType.UI,
-        Registry.TypeKey<DialoguePanelUIController>());
-      dialogue?.HideDisinteractableDialogue();
-      StopCurrentDialogue();
     }
   }
 }

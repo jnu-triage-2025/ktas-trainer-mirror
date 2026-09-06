@@ -24,6 +24,10 @@ namespace MultiplayerInfrastructure.Scenario
       [JsonPropertyName("matchMode")]
       [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
       public string MatchMode { get; set; }
+
+      [JsonPropertyName("conditions")]
+      [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+      public System.Collections.Generic.List<ScenarioConditionDTO> Conditions { get; set; }
     }
 
     internal sealed class ScenarioValidatorRuleDTO
@@ -61,5 +65,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("onWaitTimeout")]
     public string OnWaitTimeout { get; set; }
+
+    [JsonPropertyName("idleWhileWaiting")]
+    public bool? IdleWhileWaiting { get; set; }
   }
 }

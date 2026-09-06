@@ -14,7 +14,7 @@ namespace TriageTrainer.Entity
   /// <para>
   /// 이 환자에게 정맥라인 캐뉼라 상호작용이 <b>지원되는지(Preset/Config)</b>와, 현재 시점에
   /// <b>실제로 가능한지(State)</b>를 구분해서 관리한다. 다른 인터랙션 계열
-  /// (<see cref="InteractConfig"/>, <see cref="TriageAssessmentConfig"/>)과
+  /// (<see cref="TriageAssessmentConfig"/>)과
   /// 동일한 관례를 따른다: Config(정적/시나리오 제어) + 런타임 조건을 결합해 상호작용 가능 여부를 판정한다.
   /// </para>
   ///
@@ -39,16 +39,14 @@ namespace TriageTrainer.Entity
                "환자 유형별로 다르게 설정 가능하며(팔 모델 유무 등), 상호작용 노출 게이팅의 기준 데이터로 사용된다.")]
       [SerializeField] private bool _supported;
 
-      [Tooltip("상호작용 힌트에 표시할 문구.")]
-      [SerializeField] private string _displayText;
-
       public bool Supported
       {
         get => _supported;
         set => _supported = value;
       }
 
-      public string DisplayText => string.IsNullOrWhiteSpace(_displayText) ? "정맥 라인 확보" : _displayText;
+      /// <summary>기본 문구. 시나리오별 문구는 interactions 정의의 display.text 가 덮어쓴다.</summary>
+      public string DisplayText => "정맥 라인 확보";
     }
 
     [Header("Intravenous Line Cannula (정맥라인 캐뉼라)")]

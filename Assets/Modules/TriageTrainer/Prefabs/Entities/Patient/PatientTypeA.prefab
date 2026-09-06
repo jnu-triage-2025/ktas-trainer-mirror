@@ -79,7 +79,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1061566787071246315}
   - component: {fileID: 3031631455920444454}
-  - component: {fileID: 3831690334991073964}
   m_Layer: 0
   m_Name: AmbuReadyInteract_R2
   m_TagString: Untagged
@@ -123,34 +122,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.09, y: 0.05, z: 0.05}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3831690334991073964
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 395488033911256930}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uC570\uBD80\uBC30\uAE45 \uC2DC\uC791"
-  _displayIcon: {fileID: 0}
-  _displayIcons: []
-  _completionSignal: start_ambu_r2
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier: 
-  _requiredRaisedSignals: []
-  _requiredPlayerTag: 
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier:
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue:
-  _findItemDialogue:
-  _activateOnInteract: []
-  _deactivateOnInteract: []
 --- !u!1 &909999999999999991
 GameObject:
   m_ObjectHideFlags: 0
@@ -193,7 +164,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7773253716970843625}
   - component: {fileID: 665731370429126897}
-  - component: {fileID: 2514878013891004208}
   m_Layer: 0
   m_Name: ChestCompStartInteractPoint_2nd
   m_TagString: Untagged
@@ -237,35 +207,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.35, y: 0.25, z: 0.25}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2514878013891004208
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1381168070861292904}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uAC00\uC2B4\uC555\uBC15 \uC218\uD589"
-  _displayIcon: {fileID: 21300000, guid: 11637d2a4b61b43b59182a32ecb43170, type: 3}
-  _displayIcons: []
-  _completionSignal: interact_chest
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier: 
-  _requiredRaisedSignals:
-  - click_to_start_comp
-  _requiredPlayerTag: nurse_a
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier: 
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue: 
-  _findItemDialogue: 
-  _activateOnInteract: []
-  _deactivateOnInteract: []
 --- !u!1 &1533989979856596171
 GameObject:
   m_ObjectHideFlags: 0
@@ -276,7 +217,6 @@ GameObject:
   m_Component:
   - component: {fileID: 6086397247962047667}
   - component: {fileID: 1420158905838627957}
-  - component: {fileID: 1974408119851067527}
   m_Layer: 0
   m_Name: PatientChestInteractPoint
   m_TagString: Untagged
@@ -320,36 +260,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.35, y: 0.2, z: 0.3}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &1974408119851067527
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1533989979856596171}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uC81C\uC138\uB3D9 \uD328\uB4DC \uBD80\uCC29"
-  _displayIcon: {fileID: 0}
-  _displayIcons: []
-  _completionSignal: interact_patient_chest
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier: 
-  _requiredRaisedSignals: []
-  _requiredPlayerTag: 
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier: 
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue: 
-  _findItemDialogue: 
-  _activateOnInteract:
-  - {fileID: 8316904770520101598}
-  - {fileID: 2773350314614107974}
-  _deactivateOnInteract: []
 --- !u!1 &1582032648431365702
 GameObject:
   m_ObjectHideFlags: 0
@@ -447,7 +357,6 @@ GameObject:
   m_Component:
   - component: {fileID: 6739716524419680860}
   - component: {fileID: 6268667717625966582}
-  - component: {fileID: 2503204984754699386}
   m_Layer: 0
   m_Name: AmbuReadyInteract_R1
   m_TagString: Untagged
@@ -491,34 +400,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.09, y: 0.05, z: 0.05}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2503204984754699386
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2224266580779621743}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uC570\uBD80\uBC30\uAE45 \uC2DC\uC791"
-  _displayIcon: {fileID: 0}
-  _displayIcons: []
-  _completionSignal: start_ambu_r1
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier: 
-  _requiredRaisedSignals: []
-  _requiredPlayerTag: 
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier: 
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue: 
-  _findItemDialogue: 
-  _activateOnInteract: []
-  _deactivateOnInteract: []
 --- !u!1 &2407634092771371427
 GameObject:
   m_ObjectHideFlags: 0
@@ -529,7 +410,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4984117549430283029}
   - component: {fileID: 3192580214567909183}
-  - component: {fileID: 6025144472905493709}
   m_Layer: 0
   m_Name: TPieceRemoveInteractPoint
   m_TagString: Untagged
@@ -573,35 +453,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.3, y: 0.3, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &6025144472905493709
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2407634092771371427}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "T-piece \uC5F0\uACB0 \uD574\uC81C"
-  _displayIcon: {fileID: 21300000, guid: 1fb930eb96e97443592d1c1267b53c08, type: 3}
-  _displayIcons: []
-  _completionSignal: remove_tpiece
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier: 
-  _requiredRaisedSignals: []
-  _requiredPlayerTag: 
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier: 
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue: 
-  _findItemDialogue: 
-  _activateOnInteract: []
-  _deactivateOnInteract:
-  - {fileID: 8803091818943228428}
 --- !u!1 &2683400969937958946
 GameObject:
   m_ObjectHideFlags: 0
@@ -612,7 +463,6 @@ GameObject:
   m_Component:
   - component: {fileID: 225633107515043043}
   - component: {fileID: 4837070754434250309}
-  - component: {fileID: 1471788064717750025}
   m_Layer: 0
   m_Name: AmbuBagConnectInteractPoint
   m_TagString: Untagged
@@ -656,36 +506,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.2, y: 0.2, z: 0.2}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &1471788064717750025
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2683400969937958946}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uAE30\uAD00\uB0B4\uAD00\uC5D0 \uC570\uBD80\uBC31 \uC5F0\uACB0"
-  _displayIcon: {fileID: 0}
-  _displayIcons: []
-  _completionSignal: connect_ambubag
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier: 
-  _requiredRaisedSignals:
-  - remove_tpiece
-  _requiredPlayerTag: 
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier: 
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue: 
-  _findItemDialogue: 
-  _activateOnInteract:
-  - {fileID: 8264803836134063233}
-  _deactivateOnInteract: []
 --- !u!1 &2799302206937971700
 GameObject:
   m_ObjectHideFlags: 0
@@ -696,7 +516,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7284491137240215606}
   - component: {fileID: 372862413430502289}
-  - component: {fileID: 5675206618733745950}
   m_Layer: 0
   m_Name: PatientClothingCutPoint
   m_TagString: Untagged
@@ -740,34 +559,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.5, y: 1.1, z: 0.3}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &5675206618733745950
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2799302206937971700}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uC758\uBCF5 \uC81C\uAC70"
-  _displayIcon: {fileID: 21300000, guid: 9d37de109ae6d464c9b9134bd71cfd5e, type: 3}
-  _displayIcons: []
-  _completionSignal: remove_patient_clothing
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier: 
-  _requiredRaisedSignals: []
-  _requiredPlayerTag: 
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier: 
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue: 
-  _findItemDialogue: 
-  _activateOnInteract: []
-  _deactivateOnInteract: []
 --- !u!1 &3283719682526545730
 GameObject:
   m_ObjectHideFlags: 0
@@ -778,7 +569,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7322220135363801094}
   - component: {fileID: 6853731750005880858}
-  - component: {fileID: 5063431219485255396}
   m_Layer: 0
   m_Name: ChestCompStartInteractPoint
   m_TagString: Untagged
@@ -822,34 +612,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.35, y: 0.25, z: 0.25}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &5063431219485255396
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3283719682526545730}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uAC00\uC2B4\uC555\uBC15 \uC218\uD589"
-  _displayIcon: {fileID: 21300000, guid: 11637d2a4b61b43b59182a32ecb43170, type: 3}
-  _displayIcons: []
-  _completionSignal: click_to_start_comp
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier: 
-  _requiredRaisedSignals: []
-  _requiredPlayerTag: nurse_b
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier: 
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue: 
-  _findItemDialogue: 
-  _activateOnInteract: []
-  _deactivateOnInteract: []
 --- !u!1 &4077515750642718864
 GameObject:
   m_ObjectHideFlags: 0
@@ -913,7 +675,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1432123947683213623}
   - component: {fileID: 4880921421368220181}
-  - component: {fileID: 2539868158454917273}
   m_Layer: 0
   m_Name: PatientATriageAssessInteractPoint
   m_TagString: Untagged
@@ -957,35 +718,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.7, y: 0.7, z: 0.7}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2539868158454917273
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 385028501082225495}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uD658\uC790 \uD65C\uB825\uC9D5\uD6C4 \uBC0F \uC678\uC591 \uD3C9\uAC00 \uC2DC\uD589\uD558\uAE30"
-  _displayIcon: {fileID: 0}
-  _displayIcons: []
-  _completionSignal: assess_patient_a_triage
-  _presentationEntityIdentifier:
-  _interactionIdentifier:
-  _requiredRaisedSignals:
-  - click_vital_set
-  _requiredPlayerTag:
-  _enabled: 1
-  _consumeOnce: 1
-  _requiredItemIdentifier:
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue:
-  _findItemDialogue:
-  _activateOnInteract: []
-  _deactivateOnInteract: []
 --- !u!114 &6000008013074765727
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1124,72 +856,6 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 4111524619819356577}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
   _animatorObject: {fileID: 800000000000000001}
-  _assessActions:
-  - _identifier: assess_vital
-    _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"
-    _assessSignal: show_vital_patient_a
-    _requiredItemIdentifier: vital_set
-    _missingItemDialogue: "\uD65C\uB825\uC9D5\uD6C4 \uCE21\uC815\uB3C4\uAD6C\uB97C
-      \uAC16\uACE0 \uC788\uC9C0 \uC54A\uB2E4."
-    _findItemDialogue: "\uD65C\uB825\uC9D5\uD6C4 \uCE21\uC815\uB3C4\uAD6C\uB97C \uCC3E\uC790."
-    _actionDialogue: "(\uC870\uAE08 \uB354 \uC815\uD655\uD55C \uAC12\uC744 \uD655\uC778\uD558\uC790.
-      \uBAA8\uB2C8\uD130\uB97C \uC5F0\uACB0\uD558\uC790.)"
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_pulse_r1
-    _displayText: "\uB9E5\uBC15 \uD655\uC778"
-    _assessSignal: check_pulse_patient_a_r1
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_pulse_r2
-    _displayText: "\uB9E5\uBC15 \uD655\uC778"
-    _assessSignal: check_pulse_patient_a_r2
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_gcs_rosc
-    _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC7AC\uC0AC\uC815"
-    _assessSignal: check_gcs_a_rosc
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_avpu_gcs
-    _displayText: "\uB9D0 \uAC78\uAE30(\uC758\uC2DD\uC0C1\uD0DC \uC0AC\uC815)"
-    _assessSignal: check_avpu_gcs_patient_a
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_pulse
-    _displayText: "\uB9E5\uBC15 \uD655\uC778"
-    _assessSignal: check_pulse_patient_a
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
-  - _identifier: assess_gcs
-    _displayText: "GCS \uC7AC\uC0AC\uC815"
-    _assessSignal: check_gcs_patient_a
-    _requiredItemIdentifier: 
-    _missingItemDialogue: 
-    _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
-    _enabled: 0
   _capsuleCollider: {fileID: 3415111579364395856}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
   _standingCapsuleHeight: 1.8
@@ -1200,9 +866,6 @@ MonoBehaviour:
   _lyingCapsuleRadius: 0.3
   _lyingCapsuleDirection: 2
   _identifier: patient_a
-  _liftDisplayText: "\uD658\uC790\uB97C \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _carryDisplayText: "\uD658\uC790 \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
   _initiallyHiddenChildNames:
   - defibrillatorpad_midaxillary_A
   - defibrillatorpad_subclavicle_A
@@ -1226,16 +889,8 @@ MonoBehaviour:
   _isPlayerAttached: 0
   _debugTreatmentDisplay: 11
   _debugItemIdentifier: gauze
-  _interactConfigs:
-  - _identifier: lift_from_bed
-    _enabled: 0
-  - _identifier: carry_patient
-    _enabled: 1
-  - _identifier: monitor_select
-    _enabled: 1
   _intravenousLineCannulaConfig:
     _supported: 1
-    _displayText: 
   _intravenousLineCannulaInteractable: 1
   _medicalState:
     isCardiacArrest: 0
@@ -1297,7 +952,6 @@ MonoBehaviour:
   _triageConfig:
     _assessable: 0
     _changeAssessableOnAssessDone: 0
-    _displayText: 
   _triageLabelAnchor: {fileID: 0}
 --- !u!114 &4111524619819356577
 MonoBehaviour:
@@ -1367,7 +1021,6 @@ GameObject:
   m_Component:
   - component: {fileID: 356329490738936366}
   - component: {fileID: 747821738913170105}
-  - component: {fileID: 4859090575072212568}
   m_Layer: 0
   m_Name: AmbuO2ConnectInteractPoint
   m_TagString: Untagged
@@ -1411,35 +1064,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.2, y: 0.2, z: 0.2}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &4859090575072212568
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5536518702275176135}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uC570\uBD80\uBC31\uC5D0 \uC0B0\uC18C \uC800\uC7A5\uB0AD \uC5F0\uACB0"
-  _displayIcon: {fileID: 21300000, guid: bfd4cba41c2ec41d0bfe83c418e7f542, type: 3}
-  _displayIcons: []
-  _completionSignal: connect_o2_to_ambu
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier: 
-  _requiredRaisedSignals:
-  - connect_ambubag
-  _requiredPlayerTag: 
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier: 
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue: 
-  _findItemDialogue: 
-  _activateOnInteract: []
-  _deactivateOnInteract: []
 --- !u!1 &7300000000000000001
 GameObject:
   m_ObjectHideFlags: 0
@@ -1510,7 +1134,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2881257266150291502}
   - component: {fileID: 9064149477906735673}
-  - component: {fileID: 8076526843573955949}
   m_Layer: 0
   m_Name: EtTubeTPieceInteractPoint
   m_TagString: Untagged
@@ -1554,35 +1177,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.05, y: 0.05, z: 0.2}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &8076526843573955949
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7900168916465225989}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "T-Piece \uC5F0\uACB0"
-  _displayIcon: {fileID: 0}
-  _displayIcons: []
-  _completionSignal: interact_tpiece
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier: interact_tpiece
-  _requiredRaisedSignals: []
-  _requiredPlayerTag: 
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier: tpiece_set
-  _consumeRequiredItemCount: 1
-  _missingItemDialogue: "T-piece\uB97C \uAC16\uACE0 \uC788\uC9C0 \uC54A\uB2E4."
-  _findItemDialogue: "T-piece\uB97C \uCC3E\uC790."
-  _activateOnInteract:
-  - {fileID: 8803091818943228428}
-  _deactivateOnInteract: []
 --- !u!1 &8062058885430462183
 GameObject:
   m_ObjectHideFlags: 0
@@ -1656,13 +1250,6 @@ MonoBehaviour:
   _identifier: patient_a_cannula_left_port
   _autoGenerateIdentifier: 0
   _displayIcon: {fileID: 0}
-  _interactConfigs:
-  - _identifier: intravenous_line_connect_mode_start
-    _enabled: 1
-  - _identifier: intravenous_line_connect_here
-    _enabled: 1
-  - _identifier: intravenous_line_disconnect
-    _enabled: 1
 --- !u!1 &8082596318175774275
 GameObject:
   m_ObjectHideFlags: 0
@@ -1704,7 +1291,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8418213908808010236}
   - component: {fileID: 102187672869210030}
-  - component: {fileID: 4910555199380544013}
   m_Layer: 0
   m_Name: EtTubeStyletInteractPoint
   m_TagString: Untagged
@@ -1748,36 +1334,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.1, y: 0.1, z: 0.8}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &4910555199380544013
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8954836490946781210}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uC2A4\uD0C0\uC77C\uB81B \uC81C\uAC70"
-  _displayIcon: {fileID: 0}
-  _displayIcons: []
-  _completionSignal: remove_intu_stylet
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier: remove_intu_stylet
-  _requiredRaisedSignals: []
-  _requiredPlayerTag: 
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier: 
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue: 
-  _findItemDialogue: 
-  _activateOnInteract:
-  - {fileID: 8549509279935089400}
-  _deactivateOnInteract:
-  - {fileID: 6400276091787660353}
 --- !u!1001 &641690174949980753
 PrefabInstance:
   m_ObjectHideFlags: 0

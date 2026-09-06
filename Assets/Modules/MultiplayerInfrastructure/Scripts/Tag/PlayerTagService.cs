@@ -19,6 +19,12 @@ namespace MultiplayerInfrastructure.Tag
     /// </summary>
     public static event System.Action<string, string> TagAdded;
 
+    /// <summary>
+    /// 식별자(플레이어 또는 엔티티)의 태그 목록이 바뀌었을 때 그 식별자를 전달한다. 복제 스냅샷 적용을 포함한다.
+    /// 인터렉션 레지스트리가 태그 참조 정의와 힌트 재계산에 쓴다.
+    /// </summary>
+    public static event System.Action<string> TagsChanged;
+
     private static bool IsServerMutationAllowed()
     {
       if (InstanceFinder.IsServerStarted)
@@ -51,12 +57,15 @@ namespace MultiplayerInfrastructure.Tag
 
       if (!Registry.Registry.TryGetEntityByOwnerUserIdentifier(uuid, out var descriptor))
       {
+        // 플레이어 소유자가 없는 식별자는 엔티티 태그다. 같은 저장소를 쓰되 복제만 중계기 경로로 한다.
+        Scenario.ScenarioNetworkRelay.PublishEntityTags(uuid, GetTagsByIdentifier(uuid));
         return;
       }
 
       var playerObject = descriptor?.GameObject;
       if (playerObject == null || !playerObject.TryGetComponent<PlayerController>(out var controller) || controller == null)
       {
+        Scenario.ScenarioNetworkRelay.PublishEntityTags(uuid, GetTagsByIdentifier(uuid));
         return;
       }
 
@@ -85,6 +94,7 @@ namespace MultiplayerInfrastructure.Tag
         tags.Add(tag);
         SyncOwnerPlayerTags(identifier);
         TagAdded?.Invoke(identifier, tag);
+        TagsChanged?.Invoke(identifier);
       }
     }
 
@@ -108,6 +118,7 @@ namespace MultiplayerInfrastructure.Tag
       if (removed)
       {
         SyncOwnerPlayerTags(identifier);
+        TagsChanged?.Invoke(identifier);
       }
 
       return removed;
@@ -135,6 +146,7 @@ namespace MultiplayerInfrastructure.Tag
 
       tags[idx] = toTag;
       SyncOwnerPlayerTags(identifier);
+      TagsChanged?.Invoke(identifier);
       return true;
     }
 
@@ -150,6 +162,7 @@ namespace MultiplayerInfrastructure.Tag
       }
 
       Registry.Registry.Unregister(RegistryType.PlayerTag, uuid);
+      TagsChanged?.Invoke(uuid);
     }
 
     /// <summary>
@@ -166,21 +179,21 @@ namespace MultiplayerInfrastructure.Tag
       var current = GetOrCreateTagList(uuid);
       current.Clear();
 
-      if (tags == null)
+      if (tags != null)
       {
-        return;
-      }
-
-      for (int i = 0; i < tags.Count; i++)
-      {
-        var value = tags[i];
-        if (string.IsNullOrWhiteSpace(value) || current.Contains(value))
+        for (int i = 0; i < tags.Count; i++)
         {
-          continue;
-        }
+          var value = tags[i];
+          if (string.IsNullOrWhiteSpace(value) || current.Contains(value))
+          {
+            continue;
+          }
 
-        current.Add(value);
+          current.Add(value);
+        }
       }
+
+      TagsChanged?.Invoke(uuid);
     }
 
     /// <summary>

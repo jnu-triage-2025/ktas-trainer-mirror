@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using FishNet;
+using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Tag;
@@ -161,23 +162,30 @@ namespace TriageTrainer.Scenario
         ? PatientACprRoundTwoPresentationEventIdentifier
         : PatientACprRoundOnePresentationEventIdentifier;
 
-    private void HandleScenarioActionInteractionCompleted(
-      ScenarioActionInteractable action, PlayerController player)
+    /// <summary>
+    /// 레지스트리 항목이 수행되었을 때. 환자 A 의 가슴압박 액션(1주기 <c>click_to_start_comp</c>, 2주기 <c>interact_chest</c>)이면
+    /// 수행자를 환자 옆에 세우고 압박 애니메이션을 재생한다. 액션은 시나리오 데이터가 정의하고 레지스트리가 범용 핸들러로 수행한다.
+    /// </summary>
+    private void HandleRegistryInteractionCompleted(InteractionRegistryEntry entry, PlayerController player)
     {
-      if (action == null || player == null)
+      if (entry == null || player == null)
         return;
 
-      string signal = action.CompletionSignal;
-      if (signal != "click_to_start_comp" && signal != "interact_chest")
+      string interaction = entry.Address.InteractionIdentifier;
+      if (interaction != "click_to_start_comp" && interaction != "interact_chest")
         return;
 
       ResolveRuntimeReferencesIfNeeded();
-      PatientController patient = action.GetComponentInParent<PatientController>(true);
+      PatientController patient = null;
+      if (MultiplayerInfrastructure.Registry.Registry.TryGetEntity(entry.Address.EntityIdentifier, out var descriptor)
+          && descriptor?.GameObject != null)
+        patient = descriptor.GameObject.GetComponentInChildren<PatientController>(true);
       if (patient == null && _patientAObject != null)
         patient = _patientAObject.GetComponentInChildren<PatientController>(true);
 
+      string nurseTag = interaction == "interact_chest" ? PatientACprRoundTwoNurseTag : PatientACprRoundOneNurseTag;
       PositionPatientACprPerformer(player, patient);
-      PlayPatientACprNurseAnimation(player, action.RequiredPlayerTag);
+      PlayPatientACprNurseAnimation(player, nurseTag);
       PlayLoopingClip(ResolveAnimator(_patientAObject), _cprReceivingPatientAnimationClip, "patient A",
         _cprReceivingPatientPositionOffset);
     }

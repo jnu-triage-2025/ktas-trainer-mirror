@@ -54,9 +54,6 @@ namespace TriageTrainer.Entity
       [Tooltip("평가 후 재상호작용 정책.")]
       [SerializeField] private ChangeAssessableOnAssessDone _changeAssessableOnAssessDone;
 
-      [Tooltip("상호작용 힌트에 표시할 문구.")]
-      [SerializeField] private string _displayText;
-
       public bool Assessable
       {
         get => _assessable;
@@ -65,14 +62,14 @@ namespace TriageTrainer.Entity
 
       public ChangeAssessableOnAssessDone ChangeAssessableOnAssessDone => _changeAssessableOnAssessDone;
 
-      public string DisplayText => string.IsNullOrWhiteSpace(_displayText) ? "트리아지 분류" : _displayText;
+      /// <summary>기본 문구. 시나리오별 문구는 interactions 정의의 display.text 가 덮어쓴다.</summary>
+      public string DisplayText => "트리아지 분류";
 
       public static TriageAssessmentConfig Default()
       {
         var cfg = new TriageAssessmentConfig();
         cfg._assessable = false;
         cfg._changeAssessableOnAssessDone = ChangeAssessableOnAssessDone.DisableAssessable;
-        cfg._displayText = "트리아지 분류";
         return cfg;
       }
     }

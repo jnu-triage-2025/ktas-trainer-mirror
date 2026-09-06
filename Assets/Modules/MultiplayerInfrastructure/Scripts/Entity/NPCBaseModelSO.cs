@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Entity
@@ -12,21 +11,6 @@ namespace MultiplayerInfrastructure.Entity
     [SerializeField] public string displayName;
     [TextArea][SerializeField] public string description;
 
-    [Header("Scenario Interacts")]
-    [SerializeField] public List<NPCScenarioInteractDefinition> scenarioInteracts = new();
-
-    [Header("Item Submission Interacts")]
-    [Tooltip("이 NPC 에게 아이템을 제출하는 상호작용 목록. Npc 가 런타임에 ItemSubmissionInteractable 을 자동 생성한다.")]
-    [SerializeField] public List<NPCSubmissionInteractDefinition> submissionInteracts = new();
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-      if (scenarioInteracts == null)
-        scenarioInteracts = new List<NPCScenarioInteractDefinition>();
-      if (submissionInteracts == null)
-        submissionInteracts = new List<NPCSubmissionInteractDefinition>();
-    }
-#endif
+    // 인터렉션 정의는 시나리오 데이터(interactions)와 상시 카탈로그(Resources/Interactions)가 담당한다.
   }
 }

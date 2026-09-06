@@ -1141,7 +1141,7 @@ namespace MultiplayerInfrastructure.UI
   /// 시나리오 선택지를 IInteract로 래핑하는 클래스.
   /// InteractableObjectHintUIController에서 표시할 수 있도록 합니다.
   /// </summary>
-  public class ScenarioSelectionInteractable : IInteract
+  public class ScenarioSelectionInteractable : IInteract, InteractableEntity.IInteractionRegistryExempt
   {
     private readonly ScenarioChoiceOption _option;
     private readonly int _index;

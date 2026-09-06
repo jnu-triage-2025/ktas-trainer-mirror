@@ -229,7 +229,6 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingQuestWaypointHighlight,
       ExecutingQuestMark,
       ExecutingDelay,
-      ExecutingInteraction,
       ExecutingCombineItem,
       ExecutingQuiz,
       ExecutingStateUpdate,
@@ -240,8 +239,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingEntityInit,
       ExecutingTriageAssessControl,
       ExecutingPatientMedicalStatePreset,
-      ExecutingItemSubmissionConfig,
-      ExecutingNpcInteractControl,
+      ExecutingInteractionVisibility,
       ExecutingTimeControl,
       ExecutingDisinteractableDialogue,
       ExecutingManualEntrypoint,
@@ -489,7 +487,6 @@ namespace MultiplayerInfrastructure.Scenario
     private void Start()
     {
       // 이벤트 구독
-      ScenarioInteractable.OnScenarioRequested += HandleScenarioRequested;
       ScenarioTriggerZone.OnScenarioRequested += HandleScenarioRequested;
       if (InstanceFinder.ServerManager != null)
         InstanceFinder.ServerManager.OnRemoteConnectionState += HandleRemoteConnectionState;
@@ -575,7 +572,6 @@ namespace MultiplayerInfrastructure.Scenario
       CleanupScenarioActingNpcs();
       CleanupScenarioWaypoints();
       // 이벤트 구독 해제
-      ScenarioInteractable.OnScenarioRequested -= HandleScenarioRequested;
       ScenarioTriggerZone.OnScenarioRequested -= HandleScenarioRequested;
       if (InstanceFinder.ServerManager != null)
         InstanceFinder.ServerManager.OnRemoteConnectionState -= HandleRemoteConnectionState;
@@ -806,6 +802,9 @@ namespace MultiplayerInfrastructure.Scenario
       ResolveTTSService();
       _ttsService?.ConfigureScenarioVoiceProfiles(graph.TtsVoiceProfiles);
       StartInlineTTSPrewarm(graph);
+      InteractionVisibilityState.ClearAll();
+      using (InteractionRegistry.BeginScenarioInitCycle(graph.Identifier))
+        InteractionRegistry.ApplyScenarioDefinitions(graph.Identifier, graph.Interactions);
       if (!_uiController.IsUnityNull())
       {
         _uiController.SetInteractableHintUI(_hintUIController);
@@ -960,7 +959,10 @@ namespace MultiplayerInfrastructure.Scenario
 
       CancelInlineTTSPrewarm();
       CancelDialogueAutoAdvance();
+      StopAllPresentationNpcMoves();
       ScenarioGroupGateState.ClearGraph(graphIdentifier);
+      InteractionRegistry.ClearScenarioDefinitions(graphIdentifier);
+      InteractionVisibilityState.ClearAll();
       _currentGraph = null;
       _currentNode = null;
       _currentPresentationNodeRoleScoped = false;
@@ -1123,6 +1125,11 @@ namespace MultiplayerInfrastructure.Scenario
       // 시나리오가 요구하는 퀘스트 정의 include를 선로딩한다.
       QuestDefinitionRegistry.EnsureIncludesLoaded(graph.QuestDefinitionIncludes);
 
+      // 인터렉션 레지스트리: 이전 실행의 가시성 오버라이드를 비우고 이 시나리오의 정의를 코드 리터럴 위에 병합한다.
+      InteractionVisibilityState.ClearAll();
+      using (InteractionRegistry.BeginScenarioInitCycle(graph.Identifier))
+        InteractionRegistry.ApplyScenarioDefinitions(graph.Identifier, graph.Interactions);
+
       ResolveUIControllers();
       ResolveTTSService();
       _ttsService?.ConfigureScenarioVoiceProfiles(graph.TtsVoiceProfiles);
@@ -1225,6 +1232,8 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioEntityStateSignalBindings.ClearAll();
       ScenarioSignalCounters.ClearAll();
       ScenarioNetworkRelay.ClearClientSignalAuthorization();
+      InteractionRegistry.ClearScenarioDefinitions(endingGraphId);
+      InteractionVisibilityState.ClearAll();
 
       // 시나리오가 남긴 모든 타이머/표시를 정리한다.
       // 명시적 정리 없이 종료(또는 조기/오류 종료)하더라도 다음 시나리오로 새어 나가지 않게 한다.
@@ -2328,9 +2337,6 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioDelayNode delay:
           StartCoroutine(ExecuteDelayNode(delay));
           break;
-        case ScenarioInteractionNode interaction:
-          StartCoroutine(ExecuteInteractionNode(interaction));
-          break;
         case ScenarioCombineItemNode combineItem:
           StartCoroutine(ExecuteCombineItemNode(combineItem));
           break;
@@ -2361,11 +2367,8 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioPatientMedicalStatePresetNode patientPreset:
           StartCoroutine(ExecutePatientMedicalStatePresetNode(patientPreset));
           break;
-        case ScenarioItemSubmissionConfigNode itemSubmission:
-          ExecuteItemSubmissionConfigNode(itemSubmission);
-          break;
-        case ScenarioNpcInteractControlNode npcInteractControl:
-          ExecuteNpcInteractControlNode(npcInteractControl);
+        case ScenarioInteractionVisibilityNode interactionVisibility:
+          ExecuteInteractionVisibilityNode(interactionVisibility);
           break;
         case ScenarioChatPrintNode chatPrint:
           ExecuteChatPrintNode(chatPrint);
@@ -3147,27 +3150,6 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
-    private IEnumerator ExecuteInteractionNode(ScenarioInteractionNode node)
-    {
-      _state = State.ExecutingInteraction;
-
-#if UNITY_EDITOR
-      Debug.Log($"[ScenarioController] Interaction requested: actorScope={node.ActorScope}, target={node.TargetIdentifier}, item={node.RequiredItemIdentifier}, type={node.InteractionType}");
-#endif
-
-      if (!string.IsNullOrWhiteSpace(node.CompletionConditionIdentifier)
-          && ScenarioEventIdentifierRegistry.TryGetHandler(node.CompletionConditionIdentifier, out var handler))
-      {
-        var routine = handler?.Invoke();
-        if (routine != null)
-        {
-          yield return StartCoroutine(routine);
-        }
-      }
-
-      Advance();
-    }
-
     private IEnumerator ExecuteCombineItemNode(ScenarioCombineItemNode node)
     {
       _state = State.ExecutingCombineItem;
@@ -3525,6 +3507,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (string.IsNullOrWhiteSpace(spawnedIdentifier))
         spawnedIdentifier = node.SpawnedEntityIdentifier;
       SetTrackedState(stateKey, spawnedIdentifier);
+      ApplySpawnedEntityTags(spawnedIdentifier, node.Tags);
 
       Advance();
     }
@@ -3555,208 +3538,204 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>
-    /// 아이템 제출 Interactable 을 사전 설정한다.
-    /// 프리셋 스폰(서버 권한) 또는 기존 Interactable 참조 후, 요구 아이템/완료 신호/활성 상태를 오버라이드한다.
+    /// InteractionVisibility 노드: 인터렉션 주소의 가시성 오버라이드를 서버 권위로 기록한다.
+    /// 호환 실행 경로에서는 모든 피어가 이 노드를 실행하지만, 기록은 중계기가 서버로 위임한다.
     /// </summary>
-    private void ExecuteItemSubmissionConfigNode(ScenarioItemSubmissionConfigNode node)
+    private void ExecuteInteractionVisibilityNode(ScenarioInteractionVisibilityNode node)
     {
-      _state = State.ExecutingItemSubmissionConfig;
-
-      if (node == null)
-      {
-        Advance();
-        return;
-      }
-
-      string resolvedIdentifier = null;
-
-      if (!string.IsNullOrWhiteSpace(node.PresetIdentifier))
-      {
-        // 프리셋 스폰은 네트워크 엔티티일 수 있어 서버 권한이 필요하다.
-        // 클라이언트에서는 서버가 스폰한 인스턴스가 동기화되어 Registry 에 등록되므로, 여기서는 스폰을 건너뛴다.
-        // (오버라이드 설정은 인스턴스가 존재하는 서버 측에서 적용되며, IInteract 표시/CanInteract 는 클라이언트에서 평가된다.)
-        if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline)
-        {
-          Debug.Log($"[ScenarioController] ItemSubmissionConfig '{node.Identifier}': preset spawn skipped on client (server-authoritative).");
-          Advance();
-          return;
-        }
-
-        Vector3 spawnPosition = new Vector3(node.PositionX, node.PositionY, node.PositionZ);
-        if (!string.IsNullOrWhiteSpace(node.PositionSourceEntityIdentifier)
-            && Registry.Registry.TryGetEntity(node.PositionSourceEntityIdentifier, out var sourceDescriptor)
-            && sourceDescriptor?.GameObject != null)
-        {
-          spawnPosition = sourceDescriptor.GameObject.transform.position;
-        }
-
-        if (!Registry.Registry.TrySpawnEntityPreset(
-              node.PresetIdentifier,
-              spawnPosition,
-              Quaternion.identity,
-              node.SpawnedEntityIdentifier,
-              out var spawnedGameObject,
-              out var spawnedDescriptor,
-              out var error))
-        {
-          Debug.LogWarning($"[ScenarioController] ItemSubmissionConfig '{node.Identifier}' preset spawn failed: {error}");
-          Advance();
-          return;
-        }
-        TrackCleanup(() => DestroyScenarioActingNpc(spawnedGameObject));
-
-        resolvedIdentifier = spawnedDescriptor?.Identifier;
-        if (string.IsNullOrWhiteSpace(resolvedIdentifier))
-          resolvedIdentifier = node.SpawnedEntityIdentifier;
-      }
-      else
-      {
-        resolvedIdentifier = ResolveItemSubmissionTargetIdentifier(node);
-      }
-
-      if (string.IsNullOrWhiteSpace(resolvedIdentifier))
-      {
-        Debug.LogWarning($"[ScenarioController] ItemSubmissionConfig '{node.Identifier}': target identifier is missing.");
-        Advance();
-        return;
-      }
-
-      var interactable = Registry.Registry.Get<ItemSubmissionInteractable>(RegistryType.InteractableEntity, resolvedIdentifier);
-      if (interactable == null)
-      {
-        // 네트워크 스폰 직후에는 자가 등록이 비동기로 완료될 수 있어 즉시 조회되지 않을 수 있다.
-        // 그 경우에도 노드 진행은 계속하고, 오버라이드는 인스턴스가 존재하는 컨텍스트에서만 적용된다.
-        Debug.LogWarning($"[ScenarioController] ItemSubmissionConfig '{node.Identifier}': ItemSubmissionInteractable '{resolvedIdentifier}' not found (may spawn asynchronously).");
-      }
-      else
-      {
-        if (node.RequiredItems != null && node.RequiredItems.Count > 0)
-        {
-          var requirements = new List<ItemRequirement>();
-          foreach (var req in node.RequiredItems)
-          {
-            if (req == null || string.IsNullOrWhiteSpace(req.ItemIdentifier))
-              continue;
-            requirements.Add(new ItemRequirement(req.ItemIdentifier, req.Count));
-          }
-          interactable.SetRequiredItems(requirements);
-        }
-
-        if (!string.IsNullOrWhiteSpace(node.CompletionSignalIdentifier))
-        {
-          // 이전 실행/단계에서 남아있는 완료 신호를 정리해, 이번 제출 단계가 실제 제출 1회를 요구하도록 보장한다.
-          ScenarioInteractionSignals.Clear(node.CompletionSignalIdentifier);
-          interactable.SetCompletionSignal(node.CompletionSignalIdentifier);
-          interactable.ResetCompletion();
-        }
-
-        interactable.SetEnabled(node.Enabled);
-      }
-
-      string stateKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
-        ? $"{node.Identifier}.submissionEntityIdentifier"
-        : node.ResultStateKey;
-      SetTrackedState(stateKey, resolvedIdentifier);
-
+      _state = State.ExecutingInteractionVisibility;
+      ApplyInteractionVisibilityNode(node);
       Advance();
     }
 
-    private string ResolveItemSubmissionTargetIdentifier(ScenarioItemSubmissionConfigNode node)
+    internal void ApplyInteractionVisibilityNode(ScenarioInteractionVisibilityNode node)
     {
-      if (node == null)
-        return string.Empty;
-
-      if (!string.IsNullOrWhiteSpace(node.TargetIdentifier))
-        return node.TargetIdentifier;
-
-      if (!string.IsNullOrWhiteSpace(node.TargetStateKey)
-          && _stateStore.TryGetValue(node.TargetStateKey, out var value))
+      if (node == null || node.Targets == null || node.Targets.Count == 0)
       {
-        return value;
-      }
-
-      return string.Empty;
-    }
-
-    /// <summary>
-    /// NPC 에 Interactable 을 추가/제거하거나 활성/비활성 전환한다.
-    /// </summary>
-    private void ExecuteNpcInteractControlNode(ScenarioNpcInteractControlNode node)
-    {
-      _state = State.ExecutingNpcInteractControl;
-
-      if (node == null || string.IsNullOrWhiteSpace(node.NpcIdentifier))
-      {
-        Debug.LogWarning($"[ScenarioController] NpcInteractControl '{node?.Identifier}': npcIdentifier is missing.");
-        Advance();
+        Debug.LogWarning($"[ScenarioController] InteractionVisibility '{node?.Identifier}': targets are missing.");
         return;
       }
 
-      var npcGo = Registry.Registry.Get<GameObject>(RegistryType.Npc, node.NpcIdentifier);
-      var npc = npcGo != null ? npcGo.GetComponent<Entity.Npc>() : null;
-      if (npc == null)
+      var value = node.Operation switch
       {
-        Debug.LogWarning($"[ScenarioController] NpcInteractControl '{node.Identifier}': NPC '{node.NpcIdentifier}' not found.");
-        Advance();
-        return;
-      }
+        ScenarioInteractionVisibilityOperation.Show => InteractionVisibilityOverride.Show,
+        ScenarioInteractionVisibilityOperation.Hide => InteractionVisibilityOverride.Hide,
+        _ => InteractionVisibilityOverride.Reset
+      };
 
-      if (node.Operation == ScenarioNpcInteractControlOperation.UpdateDisplay)
+      List<string> playerIdentifiers = null;
+      var scope = InteractionVisibilityScope.Global;
+      if (node.PlayerScope != ScenarioInteractionVisibilityPlayerScope.All)
       {
-        npc.SetScenarioDisplay(node.DisplayName, node.ShowOverheadName);
-        Advance();
-        return;
-      }
-
-      // 대상 Interactable 컴포넌트를 식별자로 해석한다.
-      // 1) InteractableEntity 저장소(ItemSubmissionInteractable 등 컴포넌트가 직접 등록됨)
-      // 2) Entity 저장소(EntityDescriptor.GameObject 에서 IInteract 컴포넌트 탐색)
-      MonoBehaviour interactableComponent = null;
-      if (!string.IsNullOrWhiteSpace(node.InteractableIdentifier))
-      {
-        interactableComponent = Registry.Registry.Get<MonoBehaviour>(
-          RegistryType.InteractableEntity, node.InteractableIdentifier);
-
-        if (interactableComponent == null
-            && Registry.Registry.TryGetEntity(node.InteractableIdentifier, out var interactableDescriptor)
-            && interactableDescriptor?.GameObject != null)
+        scope = InteractionVisibilityScope.Player;
+        playerIdentifiers = ResolveInteractionVisibilityPlayers(node);
+        if (playerIdentifiers.Count == 0)
         {
-          var interact = interactableDescriptor.GameObject.GetComponentInChildren<IInteract>(true);
-          interactableComponent = interact as MonoBehaviour;
+          Debug.LogWarning($"[ScenarioController] InteractionVisibility '{node.Identifier}': no player matched scope {node.PlayerScope}.");
+          return;
         }
       }
 
-      switch (node.Operation)
+      var entities = new List<GameObject>();
+      for (int i = 0; i < node.Targets.Count; i++)
       {
-        case ScenarioNpcInteractControlOperation.Add:
-          if (interactableComponent == null)
+        var target = node.Targets[i];
+        if (target?.Entity == null || target.Entity.IsEmpty || string.IsNullOrWhiteSpace(target.InteractionIdentifier))
+          continue;
+
+        if (!target.Entity.IsTagReference)
+        {
+          InteractionRegistry.SetVisibilityOverride(
+            new InteractionAddress(target.Entity.Identifier, target.InteractionIdentifier), value, scope, playerIdentifiers);
+          continue;
+        }
+
+        ScenarioConditionEvaluator.ResolveEntities(target.Entity, entities);
+        foreach (var pair in Registry.Registry.GetAllEntities())
+        {
+          if (!target.Entity.Matches(pair.Key))
+            continue;
+          InteractionRegistry.SetVisibilityOverride(
+            new InteractionAddress(pair.Key, target.InteractionIdentifier), value, scope, playerIdentifiers);
+        }
+      }
+    }
+
+    private List<string> ResolveInteractionVisibilityPlayers(ScenarioInteractionVisibilityNode node)
+    {
+      var result = new List<string>();
+      if (node.PlayerScope == ScenarioInteractionVisibilityPlayerScope.Current)
+      {
+        if (_scenarioOwnerClientId.HasValue
+            && UserDescriptorService.TryGetByClientId(_scenarioOwnerClientId.Value, out var owner)
+            && owner != null && !string.IsNullOrWhiteSpace(owner.Identifier))
+          result.Add(owner.Identifier);
+        return result;
+      }
+
+      var users = UserDescriptorService.GetAll();
+      if (users == null)
+        return result;
+      var tags = node.PlayerTags ?? new List<string>();
+      foreach (var pair in users)
+      {
+        var descriptor = pair.Value;
+        if (descriptor == null || string.IsNullOrWhiteSpace(descriptor.Identifier))
+          continue;
+        bool matched = node.TagMatchMode == ScenarioConditionMatchMode.All;
+        for (int i = 0; i < tags.Count; i++)
+        {
+          bool has = PlayerTagService.HasTag(descriptor.Identifier, tags[i]);
+          if (node.TagMatchMode == ScenarioConditionMatchMode.All)
           {
-            Debug.LogWarning($"[ScenarioController] NpcInteractControl '{node.Identifier}': interactable '{node.InteractableIdentifier}' not found for Add.");
+            if (!has) { matched = false; break; }
+          }
+          else if (has)
+          {
+            matched = true;
             break;
           }
-          npc.AddCustomInteractSource(interactableComponent);
-          break;
+        }
+        if (matched && tags.Count > 0)
+          result.Add(descriptor.Identifier);
+      }
+      return result;
+    }
 
-        case ScenarioNpcInteractControlOperation.Remove:
-          if (interactableComponent != null)
-            npc.RemoveCustomInteractSource(interactableComponent);
-          break;
-
-        case ScenarioNpcInteractControlOperation.Enable:
-        case ScenarioNpcInteractControlOperation.Disable:
-          if (interactableComponent is IInteractToggleable toggleable)
-            toggleable.SetEnabled(node.Operation == ScenarioNpcInteractControlOperation.Enable);
-          else
-            Debug.LogWarning($"[ScenarioController] NpcInteractControl '{node.Identifier}': interactable '{node.InteractableIdentifier}' does not implement IInteractToggleable.");
-          break;
+    /// <summary>Validator 루트 조건이 일반 조건 절 목록(<see cref="ScenarioValidatorCondition.Conditions"/>)일 때의 판정.</summary>
+    private bool EvaluateValidatorConditionList(ScenarioValidatorNode node, ScenarioValidatorRootCondition rootCondition, out string failureReason)
+    {
+      var conditions = rootCondition.Conditions;
+      if (conditions == null || conditions.Count == 0)
+      {
+        failureReason = "conditions is empty for Conditions condition.";
+        return false;
       }
 
-      // 상호작용 힌트를 갱신하여 변경이 즉시 반영되게 한다.
-      var player = Registry.Registry.GetFirstEntityComponent<PlayerController>(
-        EntityType.Player, each => each != null && each.IsOwner);
-      player?.RefreshInteractableHintsNow();
+      var matchMode = rootCondition.MatchMode == ScenarioValidatorMatchMode.Any
+        ? ScenarioConditionMatchMode.Any
+        : ScenarioConditionMatchMode.All;
 
-      Advance();
+      if (!ScenarioCondition.AnyRequiresPlayer(conditions))
+        return ScenarioConditionEvaluator.Evaluate(conditions, matchMode, ScenarioConditionContext.Global, out failureReason);
+
+      var users = UserDescriptorService.GetAll();
+      if (users == null || users.Count == 0)
+      {
+        failureReason = "no registered users found for player-scoped conditions.";
+        return false;
+      }
+
+      switch (rootCondition.PlayerScope)
+      {
+        case ScenarioValidatorPlayerScope.Owner:
+        {
+          if (!_scenarioOwnerClientId.HasValue
+              || !UserDescriptorService.TryGetByClientId(_scenarioOwnerClientId.Value, out var owner)
+              || owner == null || string.IsNullOrWhiteSpace(owner.Identifier))
+          {
+            failureReason = "owner player is not available for owner-scoped conditions.";
+            return false;
+          }
+          return ScenarioConditionEvaluator.Evaluate(conditions, matchMode,
+            ScenarioConditionContext.ForPlayerIdentifier(owner.Identifier), out failureReason);
+        }
+        case ScenarioValidatorPlayerScope.All:
+        {
+          foreach (var pair in users)
+          {
+            var descriptor = pair.Value;
+            if (descriptor == null || string.IsNullOrWhiteSpace(descriptor.Identifier))
+              continue;
+            if (!ScenarioConditionEvaluator.Evaluate(conditions, matchMode,
+                  ScenarioConditionContext.ForPlayerIdentifier(descriptor.Identifier), out var reason))
+            {
+              failureReason = $"player '{descriptor.DisplayName ?? descriptor.Identifier}': {reason}";
+              return false;
+            }
+          }
+          failureReason = null;
+          return true;
+        }
+        default:
+        {
+          var failures = new List<string>();
+          foreach (var pair in users)
+          {
+            var descriptor = pair.Value;
+            if (descriptor == null || string.IsNullOrWhiteSpace(descriptor.Identifier))
+              continue;
+            if (ScenarioConditionEvaluator.Evaluate(conditions, matchMode,
+                  ScenarioConditionContext.ForPlayerIdentifier(descriptor.Identifier), out var reason))
+            {
+              failureReason = null;
+              return true;
+            }
+            failures.Add($"{descriptor.DisplayName ?? descriptor.Identifier}: {reason}");
+          }
+          failureReason = "no player satisfied the conditions. details: " + string.Join(" | ", failures);
+          return false;
+        }
+      }
+    }
+
+    /// <summary>EntityPresetSpawn 노드가 지정한 태그를 스폰된 엔티티에 부여한다(서버 권위, 복제됨).</summary>
+    private static void ApplySpawnedEntityTags(string entityIdentifier, IReadOnlyList<string> tags)
+    {
+      if (tags == null || tags.Count == 0)
+        return;
+      if (string.IsNullOrWhiteSpace(entityIdentifier))
+      {
+        Debug.LogWarning("[ScenarioController] EntityPresetSpawn tags were skipped because the spawned entity identifier is unknown yet.");
+        return;
+      }
+      if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline)
+        return;
+      for (int i = 0; i < tags.Count; i++)
+      {
+        if (!string.IsNullOrWhiteSpace(tags[i]))
+          PlayerTagService.AddTagToIdentifier(entityIdentifier, tags[i]);
+      }
     }
 
     private void ExecuteEntityTagNode(ScenarioEntityTagNode node)
@@ -4462,6 +4441,18 @@ namespace MultiplayerInfrastructure.Scenario
     private const float MoveArriveThreshold = 0.05f;
     private const string NpcWalkAnimationParameterName = "walk";
 
+    // 연출 이동 중 NPC가 딛고 올라설 수 있는 최대 턱 높이(m). 이보다 높은 장애물은 딛지 않고 통과한다.
+    private const float NpcMoveMaxStepUpMeters = 0.5f;
+    // 플레이어를 밀어낸 뒤 남겨 둘 여유 간격(m). 0이면 다음 프레임에 다시 아슬아슬하게 겹친다.
+    private const float NpcMovePushSkinMeters = 0.05f;
+    // CharacterController가 없는 NPC를 밀어내기 판정에 쓸 때 가정할 사람 크기 캡슐.
+    private const float NpcMoveFallbackCapsuleRadiusMeters = 0.4f;
+    private const float NpcMoveFallbackCapsuleHeightMeters = 1.8f;
+
+    // 표시 클라이언트에서 재생 중인 NPC 이동 코루틴. 같은 NPC에 새 이동이 오면 이전 것을 중단한다.
+    private readonly Dictionary<GameObject, Coroutine> _presentationNpcMoveRoutines = new();
+    private readonly List<GameObject> _expiredPresentationNpcMoveKeys = new();
+
     private IEnumerator ExecutePlayerMoveNode(ScenarioPlayerMoveNode node)
     {
       _state = State.ExecutingPlayerMove;
@@ -4789,14 +4780,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (node.Mode == ScenarioNPCControlMode.Update)
       {
-        bool interactableFound = ApplyNPCControlUpdate(
-          npc, node.Identifier, node.DisplayName, node.ShowOverheadName,
-          node.InteractOperation, node.InteractableIdentifier, node.InteractEnabled);
-        if (node.InteractOperation == ScenarioNPCInteractCrudOperation.Read
-            && !string.IsNullOrWhiteSpace(node.ResultStateKey))
-        {
-          _stateStore[node.ResultStateKey.Trim()] = interactableFound ? "true" : "false";
-        }
+        ApplyNPCControlUpdate(npc, node.DisplayName, node.ShowOverheadName);
         ApplyNpcFacing(npcObject, node.FacingYawDegrees);
         ScenarioNetworkRelay.PublishNPCControlUpdate(
           npc.GetComponentInParent<NetworkObject>(), node);
@@ -4813,23 +4797,160 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
+      // NPC 프리팹에는 위치 동기화 컴포넌트가 없으므로, 서버 권위 실행에서는 서버가 움직인 결과가
+      // 원격 클라이언트에 저절로 전달되지 않는다. 그래서 같은 이동 명세를 표시 클라이언트에 중계해
+      // 각 피어가 동일한 연출을 로컬에서 재생하게 한다. 호환 실행 경로에서는 모든 피어가 이 노드를
+      // 직접 실행하므로 중계하면 이동이 두 번 적용되며, 그래서 서버 권위 실행일 때만 중계한다.
+      var actorNetworkObject = npc.GetComponentInParent<NetworkObject>();
+      bool relayToPresentationPeers = IsAuthoritativeExecutor;
+      if (relayToPresentationPeers)
+      {
+        ScenarioNetworkRelay.PublishNPCControlMove(actorNetworkObject, destinations,
+          node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck, node.FacingYawDegrees);
+      }
+
+      yield return RunNpcControlMove(npcObject, destinations,
+        node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck, node.FacingYawDegrees);
+
+      // 표시 클라이언트는 자기 프레임 간격으로 같은 보간을 돌리므로 접지 보정 결과가 서버와 미세하게
+      // 어긋날 수 있고, 이동 도중에 접속한 클라이언트는 남은 구간만 재생하지 못한다. 이동이 끝난 뒤
+      // 서버가 확정한 자세를 한 번 더 보내서 모든 피어의 최종 위치를 일치시킨다.
+      if (relayToPresentationPeers)
+        ScenarioNetworkRelay.PublishNPCPose(actorNetworkObject);
+
+      Advance();
+    }
+
+    /// <summary>
+    /// NPC를 목적지 경로대로 이동시키고, 이동이 끝난 뒤 지정된 방향을 적용한다.
+    /// 서버의 실행 경로와 표시 클라이언트의 재생 경로가 같은 연출을 내도록 두 경로가 공유한다.
+    /// </summary>
+    private IEnumerator RunNpcControlMove(
+      GameObject npcObject,
+      IReadOnlyList<Vector3> destinations,
+      ScenarioMoveMode moveMode,
+      float moveSpeed,
+      float moveDuration,
+      bool ignoreGroundCheck,
+      float? facingYawDegrees)
+    {
+      if (npcObject == null || destinations == null || destinations.Count == 0)
+        yield break;
+
       var animation = npcObject.GetComponentInChildren<HumanoidAnimationController>(true);
       try
       {
         yield return MoveNpcDestinationsRoutine(npcObject.transform, animation, destinations,
-          node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck);
+          moveMode, moveSpeed, moveDuration, ignoreGroundCheck);
       }
       finally
       {
+        // 이동 중 NPC가 파괴되었을 수 있으므로 null 가드를 둔다(Unity의 == null 오버로드).
         if (animation != null)
           animation.SetBool(NpcWalkAnimationParameterName, false);
       }
 
       // 이동 경로는 도착 지점만 정하고 방향은 정하지 않는다. 방향까지 지정한 노드는
       // 이동이 끝난 뒤에 적용해야 마지막 이동 방향에 덮이지 않는다.
-      ApplyNpcFacing(npcObject, node.FacingYawDegrees);
+      ApplyNpcFacing(npcObject, facingYawDegrees);
+    }
 
-      Advance();
+    /// <summary>
+    /// 서버가 실행한 NPCControl 이동을 표시 클라이언트에서 같은 방식으로 재생한다.
+    /// 같은 NPC에 새 이동이 도착하면 재생 중이던 이동을 중단하고 새 경로로 대체한다.
+    /// </summary>
+    public void PlayPresentationNpcControlMove(
+      GameObject npcObject,
+      IReadOnlyList<Vector3> destinations,
+      ScenarioMoveMode moveMode,
+      float moveSpeed,
+      float moveDuration,
+      bool ignoreGroundCheck,
+      float? facingYawDegrees)
+    {
+      if (npcObject == null || destinations == null || destinations.Count == 0)
+        return;
+
+      StopPresentationNpcMove(npcObject);
+      _presentationNpcMoveRoutines[npcObject] = StartCoroutine(RunPresentationNpcControlMove(
+        npcObject, destinations, moveMode, moveSpeed, moveDuration, ignoreGroundCheck, facingYawDegrees));
+    }
+
+    /// <summary>
+    /// 표시 클라이언트의 NPC를 서버가 확정한 자세로 맞춘다.
+    /// 재생 중이던 이동이 있으면 중단하므로, 뒤늦게 끝나는 보간이 이 자세를 다시 덮지 않는다.
+    /// </summary>
+    public void ApplyPresentationNpcPose(GameObject npcObject, Vector3 position, Quaternion rotation)
+    {
+      if (npcObject == null)
+        return;
+
+      StopPresentationNpcMove(npcObject);
+
+      var animation = npcObject.GetComponentInChildren<HumanoidAnimationController>(true);
+      if (animation != null)
+        animation.SetBool(NpcWalkAnimationParameterName, false);
+
+      npcObject.transform.SetPositionAndRotation(position, rotation);
+    }
+
+    private IEnumerator RunPresentationNpcControlMove(
+      GameObject npcObject,
+      IReadOnlyList<Vector3> destinations,
+      ScenarioMoveMode moveMode,
+      float moveSpeed,
+      float moveDuration,
+      bool ignoreGroundCheck,
+      float? facingYawDegrees)
+    {
+      yield return RunNpcControlMove(
+        npcObject, destinations, moveMode, moveSpeed, moveDuration, ignoreGroundCheck, facingYawDegrees);
+      _presentationNpcMoveRoutines.Remove(npcObject);
+    }
+
+    /// <summary>
+    /// 재생 중인 표시용 NPC 이동을 모두 중단한다. 시나리오가 끝난 뒤에도 NPC가 계속 걸어가지
+    /// 않도록, 표시 전용 세션을 정리할 때 함께 호출한다.
+    /// </summary>
+    private void StopAllPresentationNpcMoves()
+    {
+      foreach (var pair in _presentationNpcMoveRoutines)
+      {
+        if (pair.Value != null)
+          StopCoroutine(pair.Value);
+
+        var animation = pair.Key != null
+          ? pair.Key.GetComponentInChildren<HumanoidAnimationController>(true)
+          : null;
+        if (animation != null)
+          animation.SetBool(NpcWalkAnimationParameterName, false);
+      }
+
+      _presentationNpcMoveRoutines.Clear();
+    }
+
+    /// <summary>
+    /// 이 NPC에 대해 재생 중이던 표시용 이동을 중단한다. 파괴된 NPC의 항목도 함께 정리한다.
+    /// </summary>
+    private void StopPresentationNpcMove(GameObject npcObject)
+    {
+      _expiredPresentationNpcMoveKeys.Clear();
+      foreach (var pair in _presentationNpcMoveRoutines)
+      {
+        if (pair.Key == null)
+          _expiredPresentationNpcMoveKeys.Add(pair.Key);
+      }
+
+      for (int i = 0; i < _expiredPresentationNpcMoveKeys.Count; i++)
+        _presentationNpcMoveRoutines.Remove(_expiredPresentationNpcMoveKeys[i]);
+      _expiredPresentationNpcMoveKeys.Clear();
+
+      if (!_presentationNpcMoveRoutines.TryGetValue(npcObject, out var running))
+        return;
+
+      if (running != null)
+        StopCoroutine(running);
+      _presentationNpcMoveRoutines.Remove(npcObject);
     }
 
     /// <summary>
@@ -4845,71 +4966,27 @@ namespace MultiplayerInfrastructure.Scenario
       npcObject.transform.rotation = Quaternion.Euler(euler.x, facingYawDegrees.Value, euler.z);
     }
 
-    internal static bool ApplyNPCControlUpdate(
-      Entity.Npc npc,
-      string nodeIdentifier,
-      string displayName,
-      bool? showOverheadName,
-      ScenarioNPCInteractCrudOperation interactOperation,
-      string interactableIdentifier,
-      bool? interactEnabled)
+    /// <summary>
+    /// NPCControl(Update) 의 표시 갱신을 적용한다. 인터렉션 부여·토글은 인터렉션 레지스트리(시나리오 데이터의
+    /// interactions 구역과 InteractionVisibility 노드)가 담당하므로 이 노드는 다루지 않는다.
+    /// </summary>
+    internal static void ApplyNPCControlUpdate(Entity.Npc npc, string displayName, bool? showOverheadName)
     {
       if (npc == null)
-        return false;
+        return;
 
       npc.SetScenarioDisplay(displayName, showOverheadName);
-      if (interactOperation == ScenarioNPCInteractCrudOperation.None)
-        return false;
-
-      MonoBehaviour interactableComponent = null;
-      if (!string.IsNullOrWhiteSpace(interactableIdentifier))
-      {
-        interactableComponent = Registry.Registry.Get<MonoBehaviour>(
-          RegistryType.InteractableEntity, interactableIdentifier);
-
-        if (interactableComponent == null
-            && Registry.Registry.TryGetEntity(interactableIdentifier, out var descriptor)
-            && descriptor?.GameObject != null)
-        {
-          interactableComponent = descriptor.GameObject.GetComponentInChildren<IInteract>(true) as MonoBehaviour;
-        }
-      }
-
-      switch (interactOperation)
-      {
-        case ScenarioNPCInteractCrudOperation.Create:
-          if (interactableComponent == null || !npc.AddCustomInteractSource(interactableComponent))
-            Debug.LogWarning($"[ScenarioController] NPCControl '{nodeIdentifier}': interactable '{interactableIdentifier}' is missing or does not implement IInteract for Create.");
-          break;
-
-        case ScenarioNPCInteractCrudOperation.Read:
-          if (interactableComponent == null)
-            Debug.LogWarning($"[ScenarioController] NPCControl '{nodeIdentifier}': interactable '{interactableIdentifier}' was not found.");
-          break;
-
-        case ScenarioNPCInteractCrudOperation.Update:
-          if (interactableComponent is IInteractToggleable toggleable)
-            toggleable.SetEnabled(interactEnabled ?? true);
-          else
-            Debug.LogWarning($"[ScenarioController] NPCControl '{nodeIdentifier}': interactable '{interactableIdentifier}' does not implement IInteractToggleable.");
-          break;
-
-        case ScenarioNPCInteractCrudOperation.Delete:
-          if (interactableComponent != null)
-            npc.RemoveCustomInteractSource(interactableComponent);
-          break;
-      }
-
       var ownerPlayer = Registry.Registry.GetFirstEntityComponent<PlayerController>(
         EntityType.Player, each => each != null && each.IsOwner);
       ownerPlayer?.RefreshInteractableHintsNow();
-      return interactableComponent != null;
     }
 
     /// <summary>
     /// NPC(transform) 시간 보간 이동. NavMesh를 사용하지 않으므로 transform을 직접 이동한다.
-    /// IgnoreGroundCheck=false 이면 CharacterController가 있을 때 누적 중력을,
-    /// 없을 때는 지면 레이캐스트로 접지 y를 보정한다.
+    /// 연출용 이동이므로 충돌로 경로가 깎이지 않는다. 지형지물은 그대로 통과하고, 앞을 막고 선
+    /// 플레이어는 캡슐 밖으로 밀어내면서 예정된 경로를 끝까지 간다.
+    /// IgnoreGroundCheck=false 이면 지면 레이캐스트로 접지 y를 보정하되, 계단 정도의 턱까지만
+    /// 올라서고 그보다 높은 장애물은 딛지 않고 지나간다.
     /// 이동 중 HumanoidAnimationController의 walk 파라미터를 true로 설정한다.
     /// </summary>
     private IEnumerator MoveNpcRoutine(
@@ -4924,32 +5001,22 @@ namespace MultiplayerInfrastructure.Scenario
       var characterController = npcTransform.GetComponent<CharacterController>();
       // 지면 레이캐스트가 NPC 자신을 맞히지 않도록 자신의 콜라이더를 제외 목록으로 둔다.
       var ownColliders = npcTransform.GetComponentsInChildren<Collider>(true);
-      float verticalVelocity = 0f; // CharacterController 중력 누적 속도(m/s)
 
-      void MoveStep(Vector3 horizontalDelta)
+      // 이번 프레임에 있어야 할 지점으로 NPC를 그대로 옮긴다. CharacterController.Move 는 부딪힌
+      // 만큼 변위를 깎기 때문에, 사람이 앞을 막고 서면 남은 경로를 잃고 도중에 멈춰 버린다.
+      // 연출 이동에서는 그 판정을 쓰지 않고 위치를 직접 지정한 뒤, 겹친 플레이어만 밀어낸다.
+      void PlaceAt(Vector3 target, Vector3 moveDirection)
       {
-        if (characterController != null && characterController.enabled)
+        Vector3 next = new Vector3(target.x, npcTransform.position.y, target.z);
+        if (!ignoreGroundCheck
+            && TryFindGroundY(next, ownColliders, out float groundY)
+            && groundY - next.y <= NpcMoveMaxStepUpMeters)
         {
-          Vector3 motion = horizontalDelta;
-          if (!ignoreGroundCheck)
-          {
-            // 누적 속도 기반 중력 변위(m). 접지 시 하향 속도를 리셋한다.
-            if (characterController.isGrounded && verticalVelocity < 0f)
-              verticalVelocity = 0f;
-            verticalVelocity += Physics.gravity.y * Time.deltaTime;
-            motion.y += verticalVelocity * Time.deltaTime;
-          }
-          characterController.Move(motion);
+          next.y = groundY;
         }
-        else
-        {
-          Vector3 next = npcTransform.position + horizontalDelta;
-          if (!ignoreGroundCheck && TryFindGroundY(next, ownColliders, out float groundY))
-          {
-            next.y = groundY;
-          }
-          npcTransform.position = next;
-        }
+
+        npcTransform.position = next;
+        PushBlockingPlayerAside(npcTransform, characterController, moveDirection);
       }
 
       Vector3 start = npcTransform.position;
@@ -4960,31 +5027,80 @@ namespace MultiplayerInfrastructure.Scenario
 
       FaceHorizontal(npcTransform, destination);
 
+      Vector3 direction = HorizontalDelta(start, destination).normalized;
+
       float duration = ComputeMoveDurationSeconds(mode, moveSpeed, moveDuration, distance);
       if (duration <= 0f)
       {
-        MoveStep(HorizontalDelta(npcTransform.position, destination));
+        PlaceAt(destination, direction);
         yield break;
       }
 
       animation?.SetBool(NpcWalkAnimationParameterName, true);
 
       float elapsed = 0f;
-      Vector3 previousTarget = start;
 
       while (elapsed < duration)
       {
         elapsed += Time.deltaTime;
         float t = Mathf.Clamp01(elapsed / duration);
 
-        Vector3 currentTarget = Vector3.Lerp(start, destination, t);
-        Vector3 frameDelta = HorizontalDelta(previousTarget, currentTarget);
-        previousTarget = currentTarget;
-
-        MoveStep(frameDelta);
+        // 실제 위치가 아니라 시작점 기준 보간 지점을 그대로 쓴다. 프레임 변위를 누적하지 않으므로
+        // 도중에 무엇과 겹치든 예정한 시각에 예정한 지점으로 도착한다.
+        PlaceAt(Vector3.Lerp(start, destination, t), direction);
 
         yield return null;
       }
+    }
+
+    /// <summary>
+    /// 연출 이동 중인 NPC와 겹친 로컬 소유 플레이어를 NPC 캡슐 밖으로 밀어낸다.
+    /// 플레이어 이동은 소유 클라이언트 권위라서 다른 피어에서 밀어봐야 소유자가 되돌린다.
+    /// 그래서 각 피어는 자기가 소유한 플레이어만 민다. NPCMove 는 서버 권위 실행이 지원하지 않는
+    /// 노드여서 모든 피어가 같은 이동을 로컬 실행하고, 그 결과 각자 자기 플레이어를 밀어내게 된다.
+    /// </summary>
+    private static void PushBlockingPlayerAside(
+      Transform npcTransform, CharacterController npcController, Vector3 moveDirection)
+    {
+      var player = Registry.Registry.GetFirstEntityComponent<PlayerController>(
+        EntityType.Player, each => each != null && each.IsOwner);
+      if (player == null)
+        return;
+
+      ResolveNpcCapsule(npcTransform, npcController, out var axisBottom, out var axisTop, out float radius);
+      player.PushOutOfCapsule(axisBottom, axisTop, radius + NpcMovePushSkinMeters, moveDirection);
+    }
+
+    /// <summary>
+    /// NPC의 몸통을 월드 기준 수직 캡슐(축 하단 중심·축 상단 중심·반지름)로 환산한다.
+    /// CharacterController 가 없는 NPC는 사람 크기의 기본 캡슐로 대신한다.
+    /// </summary>
+    private static void ResolveNpcCapsule(
+      Transform npcTransform, CharacterController controller,
+      out Vector3 axisBottom, out Vector3 axisTop, out float radius)
+    {
+      Vector3 scale = npcTransform.lossyScale;
+      float horizontalScale = Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z));
+      float verticalScale = Mathf.Abs(scale.y);
+
+      Vector3 center;
+      float height;
+      if (controller != null)
+      {
+        center = npcTransform.TransformPoint(controller.center);
+        radius = controller.radius * horizontalScale;
+        height = controller.height * verticalScale;
+      }
+      else
+      {
+        radius = NpcMoveFallbackCapsuleRadiusMeters * horizontalScale;
+        height = NpcMoveFallbackCapsuleHeightMeters * verticalScale;
+        center = npcTransform.position + (Vector3.up * (height * 0.5f));
+      }
+
+      float halfSpan = Mathf.Max(0f, (height * 0.5f) - radius);
+      axisBottom = center + (Vector3.down * halfSpan);
+      axisTop = center + (Vector3.up * halfSpan);
     }
 
     private IEnumerator MoveNpcDestinationsRoutine(
@@ -5345,6 +5461,30 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private IEnumerator ExecuteValidatorGate(ScenarioValidatorNode node, BranchChainContext context)
     {
+      // idleWhileWaiting 게이트는 조건을 기다리는 동안 이 분기를 "다른 참여자 대기 중(idle)" 으로 표시한다.
+      // 바깥 병렬 노드의 담당자별 순차 실행기는 그 표시를 보고 같은 담당자의 다음 분기(다른 태그의 퀘스트)를
+      // 시작한다. 이 표시가 없으면 태그를 여럿 가진 담당자는 자기 다른 분기가 올릴 신호를 여기서 기다리다
+      // 교착에 빠진다. 게이트가 어떻게 끝나든(충족, 타임아웃, 건너뛰기, 취소) 표시는 내린다.
+      var idleTracker = node.IdleWhileWaiting && node.WaitForCondition ? context?.CompletionTracker : null;
+      if (idleTracker == null)
+      {
+        yield return ExecuteValidatorGateCore(node, context);
+        yield break;
+      }
+
+      idleTracker.IdleWaitingForOthers = true;
+      try
+      {
+        yield return ExecuteValidatorGateCore(node, context);
+      }
+      finally
+      {
+        idleTracker.IdleWaitingForOthers = false;
+      }
+    }
+
+    private IEnumerator ExecuteValidatorGateCore(ScenarioValidatorNode node, BranchChainContext context)
+    {
       // 담당자가 이탈해 취소된 브랜치의 게이트는 평가하지도, 대기하지도 않는다.
       if (IsBranchGateReleased(context))
       {
@@ -5583,7 +5723,12 @@ namespace MultiplayerInfrastructure.Scenario
       AppendSystemChatMessage(message);
     }
 
-    private IEnumerator ExecuteParallelNode(ScenarioParallelNode node)
+    /// <param name="enclosingContext">
+    /// 이 병렬 노드가 다른 분기 체인 안에서 실행되는 중첩 병렬이면 그 바깥 분기의 실행 컨텍스트.
+    /// 바깥 분기의 담당자가 자기 몫을 끝내고 다른 담당자만 기다리는 동안
+    /// <see cref="BranchCompletionTracker.IdleWaitingForOthers"/> 를 켜는 데 쓴다. 최상위 병렬이면 null.
+    /// </param>
+    private IEnumerator ExecuteParallelNode(ScenarioParallelNode node, BranchChainContext enclosingContext = null)
     {
       _state = State.ExecutingParallel;
 
@@ -5597,7 +5742,11 @@ namespace MultiplayerInfrastructure.Scenario
       {
         var runningCoroutines = new List<Coroutine>();
         var runningTrackers = new List<BranchCompletionTracker>();
-        var routinesByClient = new Dictionary<int, List<IEnumerator>>();
+        // 바깥 분기 담당자에게 배정된 이 노드의 분기 추적기. 이 분기들이 모두 끝나거나 idle 이 되면
+        // 바깥 분기도 idle 로 본다.
+        var enclosingClientTrackers = new List<BranchCompletionTracker>();
+        var enclosingTracker = enclosingContext?.CompletionTracker;
+        var routinesByClient = new Dictionary<int, List<SequencedBranch>>();
         int? localClientId = (int?)InstanceFinder.ClientManager?.Connection?.ClientId;
         var players = GetActivePlayerIds();
         bool sequenceRoleBranches = ShouldAllowMultipleRoleBranches(
@@ -5714,6 +5863,8 @@ namespace MultiplayerInfrastructure.Scenario
           // 전역 Advance 에서 1회 총 2회 실행되는 것을 방지한다.
           var tracker = new BranchCompletionTracker();
           runningTrackers.Add(tracker);
+          if (enclosingTracker != null && assignedClientId == enclosingContext.OwnerClientId)
+            enclosingClientTrackers.Add(tracker);
           var routine = RunTrackedBranch(
             branchNode,
             branch.CompletionConditionIdentifier,
@@ -5731,28 +5882,46 @@ namespace MultiplayerInfrastructure.Scenario
           var clientKey = assignedClientId ?? int.MinValue;
           if (!routinesByClient.TryGetValue(clientKey, out var routines))
           {
-            routines = new List<IEnumerator>();
+            routines = new List<SequencedBranch>();
             routinesByClient[clientKey] = routines;
           }
-          routines.Add(routine);
+          routines.Add(new SequencedBranch(routine, tracker));
         }
 
         // 한 플레이어에게 여러 역할 브랜치가 배정되면 UI와 입력이 겹치지 않도록
         // 그래프에 정의된 순서대로 실행한다. 플레이어별 시퀀스끼리는 계속 병렬 실행한다.
+        // 다만 앞 브랜치가 다른 담당자를 기다리느라 idle 이 되면 다음 브랜치를 미리 시작한다.
         foreach (var routines in routinesByClient.Values)
         {
-          runningCoroutines.Add(StartCoroutine(RunSequentially(routines)));
+          runningCoroutines.Add(StartCoroutine(RunSequentiallyUnlessIdle(routines, StartCoroutine)));
         }
 
         // WaitMode에 따라 대기
         switch (node.WaitMode)
         {
           case ScenarioWaitMode.All:
-            foreach (var coroutine in runningCoroutines)
+          {
+            if (enclosingTracker == null)
             {
-              yield return coroutine;
+              foreach (var coroutine in runningCoroutines)
+              {
+                yield return coroutine;
+              }
+              break;
             }
+
+            // 중첩 병렬: 바깥 분기 담당자의 몫이 모두 끝났거나 idle 인데 다른 담당자의 분기가 아직
+            // 남아 있으면, 바깥 분기를 "다른 참여자 대기 중(idle)" 으로 표시한다. 바깥 병렬 노드의
+            // 담당자별 순차 실행기는 이 표시를 보고 같은 담당자의 다음 분기(다른 태그의 퀘스트)를
+            // 시작한다. 이 노드가 끝나면 표시를 내려 바깥 분기가 다시 활동 중임을 알린다.
+            while (!AreAllBranchesCompleted(runningTrackers))
+            {
+              enclosingTracker.IdleWaitingForOthers = AreAllBranchesSettled(enclosingClientTrackers);
+              yield return null;
+            }
+            enclosingTracker.IdleWaitingForOthers = false;
             break;
+          }
           case ScenarioWaitMode.Any:
             yield return WaitForAny(runningTrackers);
             break;
@@ -5856,12 +6025,80 @@ namespace MultiplayerInfrastructure.Scenario
     private sealed class BranchCompletionTracker
     {
       public bool Completed;
+
+      /// <summary>
+      /// 이 분기의 담당자가 자기 몫을 끝냈지만, 분기 안의 중첩 병렬 노드가 다른 담당자의 분기를
+      /// 기다리느라 분기가 끝나지 못하는 상태. 담당자별 순차 실행기는 이 값이 켜진 분기를 끝난 것과
+      /// 같이 취급해, 같은 담당자에게 배정된 다음 분기를 시작한다.
+      /// </summary>
+      public bool IdleWaitingForOthers;
     }
 
-    private static IEnumerator RunSequentially(IReadOnlyList<IEnumerator> routines)
+    /// <summary>담당자별 순차 실행기가 다루는 분기 하나. 분기 코루틴과 그 완료·대기 추적기를 묶는다.</summary>
+    private sealed class SequencedBranch
     {
-      for (var index = 0; index < routines.Count; index++)
-        yield return routines[index];
+      public SequencedBranch(IEnumerator routine, BranchCompletionTracker tracker)
+      {
+        Routine = routine;
+        Tracker = tracker;
+      }
+
+      public IEnumerator Routine { get; }
+      public BranchCompletionTracker Tracker { get; }
+    }
+
+    private static bool AreAllBranchesCompleted(IReadOnlyList<BranchCompletionTracker> trackers)
+    {
+      for (var index = 0; index < trackers.Count; index++)
+      {
+        if (trackers[index] != null && !trackers[index].Completed)
+          return false;
+      }
+
+      return true;
+    }
+
+    /// <summary>모든 분기가 끝났거나 다른 참여자를 기다리는 idle 상태인지 여부.</summary>
+    private static bool AreAllBranchesSettled(IReadOnlyList<BranchCompletionTracker> trackers)
+    {
+      for (var index = 0; index < trackers.Count; index++)
+      {
+        var tracker = trackers[index];
+        if (tracker != null && !tracker.Completed && !tracker.IdleWaitingForOthers)
+          return false;
+      }
+
+      return true;
+    }
+
+    /// <summary>
+    /// 한 담당자에게 배정된 분기들을 그래프 정의 순서대로 시작한다. 앞서 시작한 분기가 모두 끝났거나
+    /// 다른 참여자를 기다리는 idle 상태(<see cref="BranchCompletionTracker.IdleWaitingForOthers"/>)이면
+    /// 다음 분기를 시작한다. 태그를 여럿 가진 담당자가 한 태그의 분기에서 공동 진행 게이트에 걸려
+    /// 있어도, 다른 태그의 분기(퀘스트)가 함께 진행될 수 있게 한다. 모든 분기가 끝나면 종료한다.
+    /// </summary>
+    private static IEnumerator RunSequentiallyUnlessIdle(
+      IReadOnlyList<SequencedBranch> branches,
+      Func<IEnumerator, Coroutine> startConcurrently)
+    {
+      var started = new List<BranchCompletionTracker>();
+      var next = 0;
+      while (true)
+      {
+        if (next < branches.Count && AreAllBranchesSettled(started))
+        {
+          var branch = branches[next++];
+          started.Add(branch.Tracker);
+          startConcurrently(branch.Routine);
+          // 방금 시작한 분기가 첫 yield 전에 끝났을 수 있으므로 같은 프레임에 다음 분기를 검토한다.
+          continue;
+        }
+
+        if (next >= branches.Count && AreAllBranchesCompleted(started))
+          yield break;
+
+        yield return null;
+      }
     }
 
     private IEnumerator RunTrackedBranch(
@@ -5877,7 +6114,7 @@ namespace MultiplayerInfrastructure.Scenario
       {
         yield return ExecuteBranch(
           branchNode, completionCondition, joinNodeIdentifier, assignedClientId, replicateEventsToPeers,
-          groupGateParticipant);
+          groupGateParticipant, tracker);
       }
       finally
       {
@@ -6254,7 +6491,8 @@ namespace MultiplayerInfrastructure.Scenario
       string joinNodeIdentifier,
       int? branchOwnerClientId,
       bool replicateEventsToPeers,
-      ScenarioGroupGateTracker.Participant groupGateParticipant = null)
+      ScenarioGroupGateTracker.Participant groupGateParticipant = null,
+      BranchCompletionTracker completionTracker = null)
     {
       // _scenarioOwnerClientId는 전역 시나리오 입력 권한을 나타내는 상태다. 병렬 코루틴이
       // 이를 임시로 교체하면 A 브랜치가 yield한 사이 B 브랜치가 owner를 덮어써, Quest/이동 등
@@ -6264,7 +6502,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 완료조건/합류 라벨 도달은 전역 Advance/EndScenario를 건드리지 않는 브랜치 완료다.
       yield return RunBranchChain(
         node, completionCondition, joinNodeIdentifier, branchOwnerClientId, replicateEventsToPeers,
-        groupGateParticipant);
+        groupGateParticipant, completionTracker);
     }
 
     /// <summary>
@@ -6280,7 +6518,8 @@ namespace MultiplayerInfrastructure.Scenario
       string joinNodeIdentifier = null,
       int? branchOwnerClientId = null,
       bool replicateEventsToPeers = false,
-      ScenarioGroupGateTracker.Participant groupGateParticipant = null)
+      ScenarioGroupGateTracker.Participant groupGateParticipant = null,
+      BranchCompletionTracker completionTracker = null)
     {
       var cursor = startNode;
       int guard = 0;
@@ -6288,7 +6527,8 @@ namespace MultiplayerInfrastructure.Scenario
       // 브랜치 체인별 실행 컨텍스트(동시 실행되는 다른 브랜치와 상태를 공유하지 않는다).
       var chainContext = new BranchChainContext(branchOwnerClientId, replicateEventsToPeers)
       {
-        GroupGateParticipant = groupGateParticipant
+        GroupGateParticipant = groupGateParticipant,
+        CompletionTracker = completionTracker
       };
 
       while (cursor != null)
@@ -6409,6 +6649,12 @@ namespace MultiplayerInfrastructure.Scenario
       /// 한 분기일 때, 분기가 발행한 퀘스트와 완료 여부를 집계하는 참여자 기록. 게이트가 아니면 null 이다.
       /// </summary>
       public ScenarioGroupGateTracker.Participant GroupGateParticipant;
+
+      /// <summary>
+      /// 이 체인이 병렬 노드의 분기로 실행될 때 그 분기의 완료·대기 추적기. 체인 안의 중첩 병렬 노드가
+      /// 담당자의 몫을 끝낸 뒤 다른 담당자를 기다리는 동안 idle 표시를 켜는 데 쓴다. 분기가 아니면 null 이다.
+      /// </summary>
+      public BranchCompletionTracker CompletionTracker;
     }
 
     /// <summary>
@@ -6552,9 +6798,6 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioValidatorNode validator:
           yield return ExecuteValidatorGate(validator, context);
           break;
-        case ScenarioInteractionNode interaction:
-          yield return ExecuteInteractionNode(interaction);
-          break;
         case ScenarioCombineItemNode combineItem:
           yield return ExecuteCombineItemNode(combineItem);
           break;
@@ -6630,11 +6873,8 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioTriageAssessControlNode triageAssess:
           ExecuteTriageAssessControlNode(triageAssess);
           break;
-        case ScenarioItemSubmissionConfigNode itemSubmission:
-          ExecuteItemSubmissionConfigNode(itemSubmission);
-          break;
-        case ScenarioNpcInteractControlNode npcInteractControl:
-          ExecuteNpcInteractControlNode(npcInteractControl);
+        case ScenarioInteractionVisibilityNode interactionVisibility:
+          ExecuteInteractionVisibilityNode(interactionVisibility);
           break;
         case ScenarioChatPrintNode chatPrint:
           ExecuteChatPrintNode(chatPrint);
@@ -6644,7 +6884,8 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioParallelNode nestedParallel:
           // 중첩 병렬: 내부 브랜치 완료까지 대기(말미의 전역 Advance 는 억제됨).
-          yield return ExecuteParallelNode(nestedParallel);
+          // 바깥 분기 컨텍스트를 넘겨, 담당자의 몫이 끝난 뒤 다른 담당자를 기다리는 동안 idle 표시를 켠다.
+          yield return ExecuteParallelNode(nestedParallel, context);
           break;
         case ScenarioPatientMedicalStatePresetNode patientPreset:
           // 수동 진입 준비 체인이 환자 의료 상태를 복원할 때 쓴다. 메인 경로와 같은 실행기를
@@ -8017,6 +8258,8 @@ namespace MultiplayerInfrastructure.Scenario
                 return false;
             }
           }
+        case ScenarioValidatorCondition.Conditions:
+          return EvaluateValidatorConditionList(node, rootCondition, out failureReason);
         default:
           failureReason = $"unsupported validator condition '{rootCondition.Condition}'.";
           return false;

@@ -42,6 +42,12 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>시나리오 시작/종료 수명주기에 종속되는 NPC 등 actingNpc 정의.</summary>
     public IReadOnlyList<ScenarioActingNpcDefinition> ActingNpcs { get; set; } = Array.Empty<ScenarioActingNpcDefinition>();
 
+    /// <summary>
+    /// 이 시나리오가 레지스트리에 적용할 인터렉션 정의. 시나리오 초기화 사이클에서 코드 리터럴 정의 위에 병합된다.
+    /// 옛 actingNpcs[].interactions 는 로더가 이 목록으로 변환한다.
+    /// </summary>
+    public IReadOnlyList<InteractableEntity.InteractionDefinition> Interactions { get; set; } = Array.Empty<InteractableEntity.InteractionDefinition>();
+
     /// <summary>시나리오 시작 전에 생성·등록할 waypoint anchor 정의.</summary>
     public IReadOnlyList<ScenarioWaypointDefinition> Waypoints { get; set; } = Array.Empty<ScenarioWaypointDefinition>();
 

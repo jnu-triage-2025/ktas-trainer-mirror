@@ -30,13 +30,7 @@ namespace TriageTrainer.Scenario
         GameLogService.WriteScenario("Patient A medical state changed: ROSC.", "patient_a_critical");
       }
 
-      // 첫 심정지 맥박 확인 메뉴를 제거하고 ROSC 확인용 메뉴만 노출한다.
-      // 두 메뉴가 동시에 나타나는 것과 r1 신호가 V031을 통과하지 못하는 것을 함께 방지한다.
-      // 메인 흐름 이벤트이므로 전원의 플래그를 갱신한다.
-      PlayerQuestStateFlagService.SetForAll(
-        PatientACriticalQuestStateFlags.ArrestPulseAssess, value: false);
-      PlayerQuestStateFlagService.SetForAll(PatientACriticalQuestStateFlags.RoscPulseAssess);
-      PlayerQuestStateFlagService.SetForAll(PatientACriticalQuestStateFlags.RoscGcsAssess);
+      // 맥박·의식 재사정 상호작용의 노출은 시나리오 데이터의 퀘스트 조건(Quest_Check_Pulse_ROSC, Quest_Check_GCS_ROSC)이 정한다.
 
       yield return ApplyPatientAMonitorProfile(_patientARoscMonitorParameters, "환자 A ROSC 모니터 프로필을 적용했습니다.");
     }

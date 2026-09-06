@@ -18,7 +18,6 @@
     QuestWaypointHighlight,
     QuestMark,
     Delay,
-    Interaction,
     CombineItem,
     Quiz,
     StateUpdate,
@@ -29,8 +28,6 @@
     EntityInit,
     TriageAssessControl,
     PatientMedicalStatePreset,
-    ItemSubmissionConfig,
-    NpcInteractControl,
     ChatPrint,
     ExecuteCommand,
     TimeControl,
@@ -41,5 +38,6 @@
     BedSnap,
     ReturnToOrigin,
     Lifecycle,
+    InteractionVisibility,
   }
 }

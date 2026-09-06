@@ -13,7 +13,9 @@ namespace MultiplayerInfrastructure.Scenario
     PlayerCountGreaterThan,
     PlayerCountGreaterThanOrEqual,
     RegistryContains,
-    PlayerAssignedTag
+    PlayerAssignedTag,
+    /// <summary><see cref="ScenarioValidatorRootCondition.Conditions"/> 목록을 <see cref="ScenarioConditionEvaluator"/> 로 판정한다.</summary>
+    Conditions
   }
 
   public enum ScenarioValidatorPlayerScope
@@ -78,6 +80,12 @@ namespace MultiplayerInfrastructure.Scenario
     public ScenarioValidatorPlayerScope PlayerScope { get; set; } = ScenarioValidatorPlayerScope.Any;
     public IReadOnlyList<ScenarioValidatorRule> ValidationRules { get; set; } = new List<ScenarioValidatorRule>();
     public ScenarioValidatorMatchMode MatchMode { get; set; } = ScenarioValidatorMatchMode.All;
+
+    /// <summary>
+    /// <see cref="ScenarioValidatorCondition.Conditions"/> 일 때 판정할 일반 조건 절 목록. 결합 방식은 <see cref="MatchMode"/>,
+    /// 관찰자 집합은 <see cref="PlayerScope"/> 가 정한다.
+    /// </summary>
+    public List<ScenarioCondition> Conditions { get; set; } = new List<ScenarioCondition>();
   }
 
   public enum ScenarioValidatorOnFailure
@@ -136,5 +144,14 @@ namespace MultiplayerInfrastructure.Scenario
     /// <see cref="ScenarioValidatorWaitTimeoutBehavior.KeepWaiting"/>(계속 대기)이다.
     /// </summary>
     public ScenarioValidatorWaitTimeoutBehavior OnWaitTimeout { get; set; } = ScenarioValidatorWaitTimeoutBehavior.KeepWaiting;
+
+    /// <summary>
+    /// true 이면 <see cref="WaitForCondition"/> 게이트가 조건을 기다리는 동안 이 노드를 담은 병렬 분기를
+    /// "다른 참여자를 기다리는 idle 상태" 로 표시한다. 병렬 노드가 한 담당자에게 분기를 여럿(태그별 퀘스트)
+    /// 배정해 순차 실행할 때, idle 인 분기는 끝난 것과 같이 취급되어 같은 담당자의 다음 분기가 바로 시작된다.
+    /// 다른 역할이 올릴 신호를 기다리는 게이트에 지정한다. 지정하지 않으면(기본 false) 분기가 끝날 때까지
+    /// 같은 담당자의 다음 분기를 시작하지 않는다(기존 동작).
+    /// </summary>
+    public bool IdleWhileWaiting { get; set; } = false;
   }
 }

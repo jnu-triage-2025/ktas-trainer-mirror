@@ -49,8 +49,8 @@ TUT_START
   -> D_TUT_PACKAGE_PROMPT
   -> V_TUT_DELIVERY_PACKAGE_ACQUIRED
   -> V_TUT_DELIVERY_PACKAGE_SUBMITTED
-  -> CONFIG_PACKAGE_SUBMISSION_HIDE (ItemSubmissionConfig, enabled: false — 택배 제출 인터랙션 비활성)
-  -> CONFIG_CLOCK_SUBMISSION (ItemSubmissionConfig, enabled: true, handy_clock 요구 — 시계 제출 인터랙션 즉시 활성화)
+  -> CONFIG_PACKAGE_SUBMISSION_HIDE (InteractionVisibility Hide — 택배 제출 인터랙션 숨김)
+  -> CONFIG_CLOCK_SUBMISSION (InteractionVisibility Show — `interactions`에 정의된 시계 제출 인터랙션(handy_clock 요구) 표시)
   -> Q_TUT_DELIVERY_REMOVE
   -> D_TUT_DELIVERY_COMPLETE
   -> D_TUT_CRAFTING_REQUEST
@@ -146,17 +146,17 @@ TUT_START
 | 구분 | 표시 이름 | scene object identifier | 배치 컴포넌트 | 지급 item definition identifier | 배치 위치 | 상호작용 결과 |
 |---|---|---|---|---|---|---|
 | 정답 | `택배: 모자님 앞` | `tutorial-delivery-storage-package-hat-attn` | **StaticPlacedItem** | `tutorial_delivery_package` | 중앙 선반, waypoint에서 1.0 m 앞·허리 높이 | 인벤토리에 `tutorial_delivery_package` 1개를 넣는다. 이후 모자 NPC에게 제출 가능하다. |
-| 오답 | `배달: 밤샜음 청년` | `tutorial-delivery-storage-decoy-overnight-youth` | **ScenarioInteractable** | `tutorial_delivery_decoy_overnight_youth` | 좌측 상단 선반, waypoint에서 1.0 m 앞·0.7 m 좌측 | 상호작용 시 공통 오답 signal 발생 + DisinteractableDialogue 표시 |
-| 오답 | `택배: 8909` | `tutorial-delivery-storage-decoy-8909` | **ScenarioInteractable** | `tutorial_delivery_decoy_8909` | 우측 상단 선반, waypoint에서 1.0 m 앞·0.7 m 우측 | 상호작용 시 공통 오답 signal 발생 + DisinteractableDialogue 표시 |
-| 오답 | `우편: 김강산님` | `tutorial-delivery-storage-decoy-kim-gangsan-mail` | **ScenarioInteractable** | `tutorial_delivery_decoy_kim_gangsan_mail` | 좌측 하단 선반, waypoint에서 1.0 m 앞·0.7 m 좌측·0.45 m 아래 | 상호작용 시 공통 오답 signal 발생 + DisinteractableDialogue 표시 |
+| 오답 | `배달: 밤샜음 청년` | `tutorial-delivery-storage-decoy-overnight-youth` | **TutorialDecoyInteractable**(전역 카탈로그 `Resources/Interactions/global.json`, 식별자 `DummyInteractTrainer/...`) | `tutorial_delivery_decoy_overnight_youth` | 좌측 상단 선반, waypoint에서 1.0 m 앞·0.7 m 좌측 | 상호작용 시 공통 오답 signal 발생 + DisinteractableDialogue 표시 |
+| 오답 | `택배: 8909` | `tutorial-delivery-storage-decoy-8909` | **TutorialDecoyInteractable**(전역 카탈로그 `Resources/Interactions/global.json`, 식별자 `DummyInteractTrainer/...`) | `tutorial_delivery_decoy_8909` | 우측 상단 선반, waypoint에서 1.0 m 앞·0.7 m 우측 | 상호작용 시 공통 오답 signal 발생 + DisinteractableDialogue 표시 |
+| 오답 | `우편: 김강산님` | `tutorial-delivery-storage-decoy-kim-gangsan-mail` | **TutorialDecoyInteractable**(전역 카탈로그 `Resources/Interactions/global.json`, 식별자 `DummyInteractTrainer/...`) | `tutorial_delivery_decoy_kim_gangsan_mail` | 좌측 하단 선반, waypoint에서 1.0 m 앞·0.7 m 좌측·0.45 m 아래 | 상호작용 시 공통 오답 signal 발생 + DisinteractableDialogue 표시 |
 
 > **배치 컴포넌트 구분:** 정답 아이템은 `StaticPlacedItem`으로 배치하여 서버 권위 획득 프로토콜(예약→확인→vanish)을
-> 통해 인벤토리에 아이템을 지급한다. 오답 아이템은 `ScenarioInteractable`로 배치하여 아이템 지급 없이
+> 통해 인벤토리에 아이템을 지급한다. 오답 아이템은 `TutorialDecoyInteractable`로 배치하고 전역 인터렉션 카탈로그가 표시 문구·대사를 정의하여 아이템 지급 없이
 > 상호작용 signal만 발생시킨다. 오답은 인벤토리에 들어가지 않으므로 퀘스트 완료 조건에 영향을 주지 않는다.
 
 ### [DECOY_WATCHER_FORK] 오답 공통 독백
 
-세 오답 아이템은 `ScenarioInteractable`로 배치되므로 아이템 지급 없이 상호작용 시
+세 오답 아이템은 `TutorialDecoyInteractable`로 배치되므로 아이템 지급 없이 상호작용 시
 **동일한 signal** `tutorial-decoy-package-on-pickuped`를 발생시킨다.
 정답(`StaticPlacedItem`)과 달리 인벤토리에 들어가지 않는다.
 
@@ -179,7 +179,7 @@ TUT_START
 }
 ```
 
-오답 `ScenarioInteractable`은 소멸 개념이 없으므로 플레이어가 반복해 상호작용할 수 있다.
+오답 `TutorialDecoyInteractable`은 소멸 개념이 없으므로 플레이어가 반복해 상호작용할 수 있다.
 이 signal은 퀘스트 완료 조건이나 제출 signal에 사용하지 않는다.
 
 ## 원본 시나리오 서술
@@ -332,7 +332,7 @@ Title 발생
      - 발화자: "시스템"
      - 텍스트: "시계를 조합했습니다! 모자에게 시계를 전달하세요."
 
-  7. 제출 (ItemSubmissionConfig)
+  7. 제출 (`interactions` 정의 + InteractionVisibility Show)
      - 대상: `tutorial-guide-hat-package-submission` (기존 택배 제출 대상 재사용)
      - 요구 아이템: `handy_clock` ×1
      - 완료 신호: `tutorial.crafting.clock.submitted`

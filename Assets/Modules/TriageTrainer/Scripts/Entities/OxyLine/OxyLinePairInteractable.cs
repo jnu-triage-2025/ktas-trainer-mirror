@@ -14,7 +14,7 @@ namespace TriageTrainer.Entity.OxyLine
   /// </summary>
   [DisallowMultipleComponent]
   [RequireComponent(typeof(Collider))]
-  public sealed class OxyLinePairInteractable : MonoBehaviour, IInteractable, IInteract,
+  public sealed class OxyLinePairInteractable : MonoBehaviour, IInteractable, IInteract, IInteractionRegistryExempt,
     IInteractorConditional, IQuestPresentationTarget
   {
     [Header("Oxygen line pair")]
@@ -22,10 +22,9 @@ namespace TriageTrainer.Entity.OxyLine
     [SerializeField] private OxyLinePairInteractable _counterpart;
     [SerializeField] private WallAttachedOxyflowmeter _oxyflowmeter;
     [SerializeField] private GameObject _requiredActiveDisplay;
-    [SerializeField] private string _displayText = "T피스에 산소 연결";
 
     public IInteract[] Interacts => new IInteract[] { this };
-    public string DisplayText => _displayText;
+    public string DisplayText => "T피스에 산소 연결";
     public string PresentationEntityIdentifier =>
       GetComponentInParent<PatientController>()?.Identifier
       ?? _oxyflowmeter?.EntityIdentifier

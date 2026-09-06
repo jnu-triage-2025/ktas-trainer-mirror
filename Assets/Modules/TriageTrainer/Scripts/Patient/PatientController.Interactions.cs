@@ -14,30 +14,16 @@ namespace TriageTrainer.Entity
 {
   public partial class PatientController
   {
-    [Serializable]
-    public class InteractConfig
-    {
-      [SerializeField] private string _identifier;
-      [SerializeField] private bool _enabled = true;
+    private const string LiftDisplayText = "환자를 들어올리기";
+    private const string CarryDisplayText = "환자 들어올리기";
+    private const string MonitorSelectDisplayText = "이 환자를 모니터링";
 
-      public InteractConfig(string identifier, bool enabled = true)
-      {
-        _identifier = identifier;
-        _enabled = enabled;
-      }
-
-      public string Identifier => _identifier;
-      public bool Enabled
-      {
-        get => _enabled;
-        set => _enabled = value;
-      }
-    }
-
-    private sealed class PatientLiftInteract : IInteract, IInteractorConditional
+    private sealed class PatientLiftInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
     {
       private readonly PatientController _owner;
       public PatientLiftInteract(PatientController owner) { _owner = owner; }
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => InteractIdLiftFromBed;
       public string DisplayText
       {
         get
@@ -45,16 +31,17 @@ namespace TriageTrainer.Entity
           var name = _owner.GetPatientDisplayName(null);
           return !string.IsNullOrWhiteSpace(name)
             ? $"{name}{Josa.ObjectParticle(name)} 들어올리기"
-            : _owner._liftDisplayText;
+            : LiftDisplayText;
         }
       }
       // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;
       public Color DisplayColor => Color.clear;
+      // 노출(시나리오 조건)은 레지스트리가 판정한다. 여기서는 침대에 누워 있는지만 본다.
       public bool CanInteract(Transform interactor)
       {
-        return _owner.IsInteractEnabled(InteractIdLiftFromBed) && _owner.CurrentBed != null;
+        return _owner.CurrentBed != null;
       }
       public void Interact(Transform interactor)
       {
@@ -62,10 +49,12 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private sealed class PatientCarryInteract : IInteract, IInteractorConditional
+    private sealed class PatientCarryInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
     {
       private readonly PatientController _owner;
       public PatientCarryInteract(PatientController owner) { _owner = owner; }
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => InteractIdCarry;
       public string DisplayText
       {
         get
@@ -73,7 +62,7 @@ namespace TriageTrainer.Entity
           var name = _owner.GetPatientDisplayName(null);
           return !string.IsNullOrWhiteSpace(name)
             ? $"{name}{Josa.ObjectParticle(name)} 들어올리기"
-            : _owner._carryDisplayText;
+            : CarryDisplayText;
         }
       }
       // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
@@ -82,9 +71,6 @@ namespace TriageTrainer.Entity
       public Color DisplayColor => Color.clear;
       public bool CanInteract(Transform interactor)
       {
-        if (!_owner.IsInteractEnabled(InteractIdCarry))
-          return false;
-
         if (_owner.CurrentBed != null)
           return false;
 
@@ -106,7 +92,7 @@ namespace TriageTrainer.Entity
       public PatientMonitorSelectInteract(PatientController owner) { _owner = owner; }
       public string PresentationEntityIdentifier => _owner.Identifier;
       public string InteractionIdentifier => InteractIdMonitorSelect;
-      public string DisplayText => _owner._monitorSelectDisplayText;
+      public string DisplayText => MonitorSelectDisplayText;
       // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;
@@ -117,8 +103,7 @@ namespace TriageTrainer.Entity
         if (player == null)
           return false;
 
-        return _owner.IsInteractEnabled(InteractIdMonitorSelect)
-               && player.IsPatientSelectionMode;
+        return player.IsPatientSelectionMode;
       }
       public void Interact(Transform interactor)
       {
@@ -141,22 +126,8 @@ namespace TriageTrainer.Entity
 
       public bool CanInteract(Transform interactor)
       {
-        // patient_a_critical 의 환자 A는 서브목표가 요구하는 물품마다 "환자에게 {아이템명} 사용"
-        // 상호작용을 따로 두므로(<see cref="PatientAItemUseInteract"/>), 무엇이 적용될지 문구로
-        // 알 수 없는 이 통합 상호작용은 그 범위에서 노출하지 않는다. 다른 시나리오와 환자 B/C는
-        // 계속 이 경로를 쓴다.
-        if (_owner.IsPatientAItemUseArmed)
-          return false;
-
-        // 처치 물품 적용은 퀘스트가 안내 대상으로 올린 동안에만 노출한다. 판정 근거인 퀘스트 목록이
-        // 피어마다 따로 있으므로 이 게이트도 플레이어별로 동작한다. 다른 시나리오의 흐름까지
-        // 좁히지 않도록, 적용 범위는 patient_a_critical 로 한정한다.
-        var presentation = QuestPresentationService.ActiveInstance;
-        if (PatientACriticalQuestStateFlags.IsArmed
-            && presentation != null
-            && !presentation.HasActiveInteractionBinding(_owner.Identifier, InteractIdItemApply))
-          return false;
-
+        // 시나리오별 노출(환자 A 에서는 물품별 상호작용이 대신하므로 숨김)은 레지스트리의 데이터 정의가 정한다.
+        // 여기서는 적용할 수 있는 물품을 들고 있는지만 본다.
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         string itemIdentifier = _owner.FindApplicableTreatmentInventoryItem(player);
         if (_owner.IsPatientBCNasalCannulaItem(itemIdentifier))
@@ -166,9 +137,6 @@ namespace TriageTrainer.Entity
 
       public void Interact(Transform interactor)
       {
-        if (_owner.IsPatientAItemUseArmed)
-          return;
-
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         string itemIdentifier = _owner.FindApplicableTreatmentInventoryItem(player);
         if (player?.PlayerEntity != null && _owner.CanApplyHeldTreatmentItem(itemIdentifier))
@@ -243,11 +211,7 @@ namespace TriageTrainer.Entity
     /// <summary>침대 걸이의 생리식염수를 환자 정맥로에 잇는 상호작용. 퀘스트 마크 바인딩에서 참조한다.</summary>
     public const string InteractIdNormalSalineConnect = "normal_saline_connect";
 
-    [Header("Interact")]
-    [SerializeField] private List<InteractConfig> _interactConfigs = new();
-
     private readonly List<IInteract> _interacts = new();
-    private readonly Dictionary<string, InteractConfig> _interactConfigMap = new(StringComparer.Ordinal);
     private IMonitorSelectionRequester _activeMonitorSelectionRequester;
 
     public IInteract[] Interacts
@@ -265,15 +229,19 @@ namespace TriageTrainer.Entity
         // 환자가 조용히 쓸 수 없는 상태로 남는다.
         if (_interacts.Count == 0)
           BuildInteractEntries();
-        return _interacts.ToArray();
+        var resolved = new List<IInteract>();
+        InteractionRegistry.CollectInteractsForEntity(Identifier, resolved);
+        foreach (var interact in _interacts)
+        {
+          if (!resolved.Contains(interact))
+            resolved.Add(interact);
+        }
+        return resolved.ToArray();
       }
     }
 
     private void BuildInteractEntries()
     {
-      EnsureDefaultInteractConfigs();
-      RebuildInteractConfigMap();
-
       _interacts.Clear();
       _interacts.Add(new PatientLiftInteract(this));
       _interacts.Add(new PatientCarryInteract(this));
@@ -288,6 +256,10 @@ namespace TriageTrainer.Entity
       _interacts.Add(new PatientNormalSalineConnectInteract(this));
       AddPatientAFluidConnectInteracts();
       AddPatientAItemUseInteracts();
+
+      // 레지스트리에 이미 선언되어 있으면(식별자 재등록 등) 새 핸들러 인스턴스로 다시 선언한다.
+      if (!string.IsNullOrWhiteSpace(_registeredEntityIdentifier))
+        DeclarePatientInteractions();
     }
 
     private bool IsPatientBCNasalCannulaItem(string itemIdentifier) =>
@@ -304,125 +276,12 @@ namespace TriageTrainer.Entity
       return null;
     }
 
+    // 역할(nurse_d) 제한은 시나리오 데이터의 조건 절이 맡고, 서버 판정은 TryValidatePatientBCTreatmentActor 가 한다.
     private bool CanDisplayPatientBCNurseDNasalCannula(PlayerController player) =>
       IsPatientBC
       && _patientBCNurseDStage.Value == PatientBCTreatmentStage.AwaitingNasalCannula
       && player != null
-      && !string.IsNullOrWhiteSpace(player.UserIdentifier)
-      && PlayerTagService.HasTag(player.UserIdentifier, "nurse_d")
       && IsWithinPatientBCTreatmentDistance(player);
-
-    private void RebuildInteractConfigMap()
-    {
-      _interactConfigMap.Clear();
-      for (int i = 0; i < _interactConfigs.Count; i++)
-      {
-        var each = _interactConfigs[i];
-        if (each == null || string.IsNullOrWhiteSpace(each.Identifier))
-          continue;
-
-        _interactConfigMap[each.Identifier] = each;
-      }
-    }
-
-    private void EnsureDefaultInteractConfigs()
-    {
-      EnsureInteractConfig(InteractIdLiftFromBed, true);
-      EnsureInteractConfig(InteractIdCarry, true);
-      // monitor_select는 항상 true로 유지합니다.
-      // 표시/비표시는 PlayerController.IsPatientSelectionMode에서만 제어합니다.
-      EnsureInteractConfig(InteractIdMonitorSelect, true);
-    }
-
-    private void EnsureInteractConfig(string identifier, bool enabled)
-    {
-      for (int i = 0; i < _interactConfigs.Count; i++)
-      {
-        var each = _interactConfigs[i];
-        if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
-          continue;
-
-        return;
-      }
-
-      _interactConfigs.Add(new InteractConfig(identifier, enabled));
-    }
-
-    public void SetInteractEnabled(string identifier, bool enabled)
-    {
-      if (string.IsNullOrWhiteSpace(identifier))
-        return;
-
-      if (string.Equals(identifier, InteractIdMonitorSelect, StringComparison.Ordinal))
-      {
-        // monitor_select는 항상 true를 유지하고, 노출 제어는 플레이어 선택 모드 플래그로만 처리합니다.
-        enabled = true;
-      }
-
-      for (int i = 0; i < _interactConfigs.Count; i++)
-      {
-        var each = _interactConfigs[i];
-        if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
-          continue;
-
-        each.Enabled = enabled;
-        RebuildInteractConfigMap();
-        return;
-      }
-
-      EnsureInteractConfig(identifier, enabled);
-      RebuildInteractConfigMap();
-    }
-
-    public void AddInteract(string identifier, bool enabled = true)
-    {
-      if (string.IsNullOrWhiteSpace(identifier))
-        return;
-
-      if (string.Equals(identifier, InteractIdMonitorSelect, StringComparison.Ordinal))
-      {
-        // monitor_select는 항상 true를 유지하고, 노출 제어는 플레이어 선택 모드 플래그로만 처리합니다.
-        enabled = true;
-      }
-
-      EnsureInteractConfig(identifier, enabled);
-      RebuildInteractConfigMap();
-    }
-
-    public void RemoveInteract(string identifier)
-    {
-      if (string.IsNullOrWhiteSpace(identifier))
-        return;
-
-      for (int i = _interactConfigs.Count - 1; i >= 0; i--)
-      {
-        var each = _interactConfigs[i];
-        if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
-          continue;
-
-        _interactConfigs.RemoveAt(i);
-      }
-
-      RebuildInteractConfigMap();
-    }
-
-    public bool IsInteractEnabled(string identifier)
-    {
-      if (string.IsNullOrWhiteSpace(identifier))
-        return false;
-
-      if (string.Equals(identifier, InteractIdMonitorSelect, StringComparison.Ordinal))
-      {
-        // monitor_select는 항상 true로 간주됩니다.
-        // 실질적인 활성/비활성은 PlayerController.IsPatientSelectionMode가 담당합니다.
-        return true;
-      }
-
-      if (_interactConfigMap.TryGetValue(identifier, out var cfg))
-        return cfg.Enabled;
-
-      return false;
-    }
 
     public void SetMonitorSelectionRequester(IMonitorSelectionRequester requester)
     {

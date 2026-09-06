@@ -11,7 +11,7 @@ namespace MultiplayerInfrastructure.InteractableEntity.Definitions
   /// NearbyInteractablesDetector 가 같은 GameObject의 Collider를 통해 감지하며,
   /// 플레이어가 상호작용(E 키)하면 Interact()가 호출됩니다.
   /// </summary>
-  public class LootableItemInteractHandler : MonoBehaviour, IInteractable, IInteract
+  public class LootableItemInteractHandler : MonoBehaviour, IInteractable, IInteract, IInteractionRegistryExempt
   {
     // ── IInteractable ────────────────────────────────────────────────────
     public IInteract[] Interacts => new IInteract[] { this };

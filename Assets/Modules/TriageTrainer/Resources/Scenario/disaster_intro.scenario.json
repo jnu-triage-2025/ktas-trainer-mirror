@@ -34,19 +34,66 @@
   ],
   "checklistItemSetsByPlayerTag": {
     "nurse_a": [
-      { "identifier": "vital_set", "count": 1 }
+      {
+        "identifier": "vital_set",
+        "count": 1
+      }
     ],
     "nurse_b": [],
     "nurse_c": [],
     "nurse_d": [
-      { "identifier": "normal_saline_1000ml", "count": 1 },
-      { "identifier": "plasma_solution_1000ml", "count": 1 },
-      { "identifier": "intravenous_set", "count": 2 },
-      { "identifier": "blood_bag", "count": 1 }
+      {
+        "identifier": "normal_saline_1000ml",
+        "count": 1
+      },
+      {
+        "identifier": "plasma_solution_1000ml",
+        "count": 1
+      },
+      {
+        "identifier": "intravenous_set",
+        "count": 2
+      },
+      {
+        "identifier": "blood_bag",
+        "count": 1
+      }
     ]
   },
   "questDefinitionIncludes": [
     "disaster_intro.quests.quest"
+  ],
+  "interactions": [
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "triage_prompt",
+      "kind": "Action",
+      "display": {
+        "text": "환자 활력징후 및 외양 평가 시행하기"
+      },
+      "completionSignal": "assess_patient_a_triage",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "initial": true
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_dummy_d_a"
+      },
+      "interaction": "triage_prompt",
+      "kind": "Action",
+      "display": {
+        "text": "환자 활력징후 및 외양 평가 시행하기"
+      },
+      "completionSignal": "assess_patient_dummy_d_a_triage",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "initial": true
+      }
+    }
   ],
   "nodes": {
     "D001": {
@@ -116,16 +163,6 @@
       "quest": {
         "Id": "Quest_MoveToTriage"
       },
-      "nextIdentifier": "I001"
-    },
-    "I001": {
-      "identifier": "I001",
-      "nodeType": "Interaction",
-      "actorScope": "Player",
-      "targetIdentifier": "Triage_zone_Trigger",
-      "requiredItemIdentifier": null,
-      "interactionType": "Use",
-      "completionConditionIdentifier": null,
       "nextIdentifier": "Q001_1"
     },
     "Q001_1": {
@@ -554,16 +591,6 @@
       "quest": {
         "Id": "Quest_MoveToPrepRoom"
       },
-      "nextIdentifier": "I002"
-    },
-    "I002": {
-      "identifier": "I002",
-      "nodeType": "Interaction",
-      "actorScope": "Player",
-      "targetIdentifier": "Preproom_Trigger",
-      "requiredItemIdentifier": null,
-      "interactionType": "Use",
-      "completionConditionIdentifier": null,
       "nextIdentifier": "Q004_1"
     },
     "Q004_1": {

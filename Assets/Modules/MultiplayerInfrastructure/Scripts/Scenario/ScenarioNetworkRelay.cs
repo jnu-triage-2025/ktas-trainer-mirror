@@ -85,14 +85,9 @@ namespace MultiplayerInfrastructure.Scenario
       public string DisplayName;
       public bool HasDisplayName;
       public bool? ShowOverheadName;
-      public readonly Dictionary<string, NpcInteractState> Interacts =
-        new Dictionary<string, NpcInteractState>(StringComparer.Ordinal);
-    }
-
-    private sealed class NpcInteractState
-    {
-      public bool? IsAttached;
-      public bool? IsEnabled;
+      // 시나리오가 이 NPC를 한 번이라도 움직였는지. true 면 늦게 접속한 클라이언트에도
+      // 현재 자세를 보내서, 프리팹 배치 위치에 서 있는 것으로 보이지 않게 한다.
+      public bool HasScenarioPose;
     }
 
     /// <summary>씬에 배치된 중계기 인스턴스(없으면 null).</summary>
@@ -523,9 +518,53 @@ namespace MultiplayerInfrastructure.Scenario
       _instance.RememberNPCControlUpdate(actorObject, node);
       _instance.ObserversUpdateNPCControl(
         actorObject, node.Identifier, node.DisplayName,
-        node.ShowOverheadName.HasValue, node.ShowOverheadName.GetValueOrDefault(),
-        (int)node.InteractOperation, node.InteractableIdentifier,
-        node.InteractEnabled.HasValue, node.InteractEnabled.GetValueOrDefault());
+        node.ShowOverheadName.HasValue, node.ShowOverheadName.GetValueOrDefault());
+    }
+
+    /// <summary>
+    /// 서버가 실행한 NPCControl 이동을 표시 클라이언트가 그대로 재생하도록 전달한다.
+    ///
+    /// <para>
+    /// NPC 프리팹에는 위치 동기화 컴포넌트가 없어서 서버가 옮긴 transform 이 클라이언트로
+    /// 전파되지 않는다. 그래서 결과 좌표를 흘려보내는 대신 이동 명세(경로·속도·시간)를 보내고,
+    /// 각 피어가 서버와 같은 보간을 로컬에서 돌려 걷는 연출까지 동일하게 재생하게 한다.
+    /// </para>
+    /// </summary>
+    public static void PublishNPCControlMove(
+      NetworkObject actorObject,
+      IReadOnlyList<Vector3> destinations,
+      ScenarioMoveMode moveMode,
+      float moveSpeed,
+      float moveDuration,
+      bool ignoreGroundCheck,
+      float? facingYawDegrees)
+    {
+      if (!InstanceFinder.IsServerStarted || _instance == null || actorObject == null
+          || destinations == null || destinations.Count == 0)
+        return;
+
+      _instance.RememberNPCScenarioPose(actorObject);
+      _instance.ObserversRunNPCControlMove(
+        actorObject, destinations.ToArray(), moveMode, moveSpeed, moveDuration, ignoreGroundCheck,
+        facingYawDegrees.HasValue, facingYawDegrees.GetValueOrDefault());
+    }
+
+    /// <summary>
+    /// 서버가 확정한 NPC 자세를 표시 클라이언트에 맞춘다.
+    /// 이동 재생의 미세한 오차를 보정하고, 이동 도중에 접속한 클라이언트도 최종 위치를 얻게 한다.
+    /// </summary>
+    public static void PublishNPCPose(NetworkObject actorObject)
+    {
+      if (!InstanceFinder.IsServerStarted || _instance == null || actorObject == null)
+        return;
+
+      var npcObject = ResolveNpcGameObject(actorObject);
+      if (npcObject == null)
+        return;
+
+      _instance.RememberNPCScenarioPose(actorObject);
+      _instance.ObserversSnapNPCPose(
+        actorObject, npcObject.transform.position, npcObject.transform.rotation);
     }
 
     public override void OnStartServer()
@@ -587,31 +626,37 @@ namespace MultiplayerInfrastructure.Scenario
       }
       if (node.ShowOverheadName.HasValue)
         state.ShowOverheadName = node.ShowOverheadName;
+    }
 
-      if (node.InteractOperation == ScenarioNPCInteractCrudOperation.None
-          || node.InteractOperation == ScenarioNPCInteractCrudOperation.Read
-          || string.IsNullOrWhiteSpace(node.InteractableIdentifier))
-        return;
-
-      string identifier = node.InteractableIdentifier.Trim();
-      if (!state.Interacts.TryGetValue(identifier, out var interactState))
+    /// <summary>
+    /// 이 NPC가 시나리오에 의해 움직였다고 기록한다. 늦게 접속한 클라이언트에 현재 자세를
+    /// 보낼 대상을 고르는 데 쓴다. 표시 상태 목록(<see cref="_npcControlStates"/>)을 함께 쓴다.
+    /// </summary>
+    private void RememberNPCScenarioPose(NetworkObject actorObject)
+    {
+      _npcControlStates.RemoveAll(value => value == null || value.NetworkObject == null);
+      var state = _npcControlStates.FirstOrDefault(value => value.NetworkObject == actorObject);
+      if (state == null)
       {
-        interactState = new NpcInteractState();
-        state.Interacts.Add(identifier, interactState);
+        state = new NpcControlState { NetworkObject = actorObject };
+        _npcControlStates.Add(state);
       }
 
-      switch (node.InteractOperation)
-      {
-        case ScenarioNPCInteractCrudOperation.Create:
-          interactState.IsAttached = true;
-          break;
-        case ScenarioNPCInteractCrudOperation.Delete:
-          interactState.IsAttached = false;
-          break;
-        case ScenarioNPCInteractCrudOperation.Update:
-          interactState.IsEnabled = node.InteractEnabled;
-          break;
-      }
+      state.HasScenarioPose = true;
+    }
+
+    /// <summary>
+    /// NetworkObject 로부터 시나리오가 실제로 움직이는 NPC GameObject 를 찾는다.
+    /// 시나리오는 레지스트리에 등록된 <see cref="Entity.Npc"/> 의 GameObject 를 움직이므로,
+    /// NetworkObject 가 상위 계층에 있어도 같은 대상을 가리키도록 이 경로로 통일한다.
+    /// </summary>
+    private static GameObject ResolveNpcGameObject(NetworkObject actorObject)
+    {
+      if (actorObject == null)
+        return null;
+
+      var npc = actorObject.GetComponentInChildren<Entity.Npc>(true);
+      return npc != null ? npc.gameObject : null;
     }
 
     private void RememberActingNpcConfiguration(
@@ -686,30 +731,18 @@ namespace MultiplayerInfrastructure.Scenario
         TargetUpdateNPCControl(
           connection, state.NetworkObject, "late-join-display",
           state.HasDisplayName ? state.DisplayName : null,
-          state.ShowOverheadName.HasValue, state.ShowOverheadName.GetValueOrDefault(),
-          (int)ScenarioNPCInteractCrudOperation.None, null, false, false);
+          state.ShowOverheadName.HasValue, state.ShowOverheadName.GetValueOrDefault());
 
-        foreach (var pair in state.Interacts)
-        {
-          if (pair.Value.IsAttached.HasValue)
-          {
-            TargetUpdateNPCControl(
-              connection, state.NetworkObject, "late-join-interact-membership",
-              null, false, false,
-              (int)(pair.Value.IsAttached.Value
-                ? ScenarioNPCInteractCrudOperation.Create
-                : ScenarioNPCInteractCrudOperation.Delete),
-              pair.Key, false, false);
-          }
-          if (pair.Value.IsEnabled.HasValue)
-          {
-            TargetUpdateNPCControl(
-              connection, state.NetworkObject, "late-join-interact-enabled",
-              null, false, false, (int)ScenarioNPCInteractCrudOperation.Update,
-              pair.Key, true, pair.Value.IsEnabled.Value);
-          }
-        }
+        if (!state.HasScenarioPose)
+          continue;
+
+        var npcObject = ResolveNpcGameObject(state.NetworkObject);
+        if (npcObject != null)
+          TargetSnapNPCPose(connection, state.NetworkObject,
+            npcObject.transform.position, npcObject.transform.rotation);
       }
+
+      SendInteractionStateSnapshot(connection);
     }
 
     /// <summary>
@@ -897,16 +930,9 @@ namespace MultiplayerInfrastructure.Scenario
       string nodeIdentifier,
       string displayName,
       bool hasShowOverheadName,
-      bool showOverheadName,
-      int interactOperation,
-      string interactableIdentifier,
-      bool hasInteractEnabled,
-      bool interactEnabled)
+      bool showOverheadName)
     {
-      ApplyNPCControlUpdateOnPeer(
-        actorObject, nodeIdentifier, displayName,
-        hasShowOverheadName, showOverheadName, interactOperation,
-        interactableIdentifier, hasInteractEnabled, interactEnabled);
+      ApplyNPCControlUpdateOnPeer(actorObject, displayName, hasShowOverheadName, showOverheadName);
     }
 
     /// <summary>
@@ -916,25 +942,105 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private void ApplyNPCControlUpdateOnPeer(
       NetworkObject actorObject,
-      string nodeIdentifier,
       string displayName,
       bool hasShowOverheadName,
-      bool showOverheadName,
-      int interactOperation,
-      string interactableIdentifier,
-      bool hasInteractEnabled,
-      bool interactEnabled)
+      bool showOverheadName)
     {
       if (InstanceFinder.IsServerStarted || actorObject == null)
         return;
 
       var npc = actorObject.GetComponentInChildren<Entity.Npc>(true);
       ScenarioController.ApplyNPCControlUpdate(
-        npc, nodeIdentifier, displayName,
-        hasShowOverheadName ? showOverheadName : (bool?)null,
-        (ScenarioNPCInteractCrudOperation)interactOperation,
-        interactableIdentifier,
-        hasInteractEnabled ? interactEnabled : (bool?)null);
+        npc, displayName, hasShowOverheadName ? showOverheadName : (bool?)null);
+    }
+
+    [ObserversRpc(BufferLast = false)]
+    private void ObserversRunNPCControlMove(
+      NetworkObject actorObject,
+      Vector3[] destinations,
+      ScenarioMoveMode moveMode,
+      float moveSpeed,
+      float moveDuration,
+      bool ignoreGroundCheck,
+      bool hasFacingYawDegrees,
+      float facingYawDegrees)
+    {
+      ApplyNPCControlMoveOnPeer(actorObject, destinations, moveMode, moveSpeed, moveDuration,
+        ignoreGroundCheck, hasFacingYawDegrees, facingYawDegrees);
+    }
+
+    /// <summary>
+    /// NPCControl 이동을 이 피어에서 재생한다.
+    /// client RPC 본문에서 다른 client RPC 를 호출하면 안 되는 이유는
+    /// <see cref="ApplyScenarioActingNpcConfiguration"/> 의 설명을 참고한다.
+    /// </summary>
+    private static void ApplyNPCControlMoveOnPeer(
+      NetworkObject actorObject,
+      Vector3[] destinations,
+      ScenarioMoveMode moveMode,
+      float moveSpeed,
+      float moveDuration,
+      bool ignoreGroundCheck,
+      bool hasFacingYawDegrees,
+      float facingYawDegrees)
+    {
+      // 호스트는 서버 경로에서 이미 같은 인스턴스를 움직였다.
+      if (InstanceFinder.IsServerStarted || destinations == null || destinations.Length == 0)
+        return;
+
+      var npcObject = ResolveNpcGameObject(actorObject);
+      if (npcObject == null)
+      {
+        Debug.LogWarning(
+          "[ScenarioNetworkRelay] NPCControl move target is unavailable on presentation client.");
+        return;
+      }
+
+      var controller = ScenarioController.Instance;
+      if (controller == null)
+      {
+        // 상태기가 없는 피어에서는 연출을 재생할 수 없으므로 최종 위치만이라도 맞춘다.
+        npcObject.transform.position = destinations[destinations.Length - 1];
+        return;
+      }
+
+      controller.PlayPresentationNpcControlMove(npcObject, destinations, moveMode, moveSpeed,
+        moveDuration, ignoreGroundCheck, hasFacingYawDegrees ? facingYawDegrees : (float?)null);
+    }
+
+    [ObserversRpc(BufferLast = false)]
+    private void ObserversSnapNPCPose(NetworkObject actorObject, Vector3 position, Quaternion rotation)
+    {
+      ApplyNPCPoseOnPeer(actorObject, position, rotation);
+    }
+
+    [TargetRpc]
+    private void TargetSnapNPCPose(
+      NetworkConnection connection, NetworkObject actorObject, Vector3 position, Quaternion rotation)
+    {
+      ApplyNPCPoseOnPeer(actorObject, position, rotation);
+    }
+
+    /// <summary>
+    /// 서버가 확정한 NPC 자세를 이 피어에 적용한다. Observers/Target 두 수신 경로가 공유한다.
+    /// </summary>
+    private static void ApplyNPCPoseOnPeer(NetworkObject actorObject, Vector3 position, Quaternion rotation)
+    {
+      if (InstanceFinder.IsServerStarted)
+        return;
+
+      var npcObject = ResolveNpcGameObject(actorObject);
+      if (npcObject == null)
+        return;
+
+      var controller = ScenarioController.Instance;
+      if (controller != null)
+      {
+        controller.ApplyPresentationNpcPose(npcObject, position, rotation);
+        return;
+      }
+
+      npcObject.transform.SetPositionAndRotation(position, rotation);
     }
 
     [TargetRpc]
@@ -944,16 +1050,9 @@ namespace MultiplayerInfrastructure.Scenario
       string nodeIdentifier,
       string displayName,
       bool hasShowOverheadName,
-      bool showOverheadName,
-      int interactOperation,
-      string interactableIdentifier,
-      bool hasInteractEnabled,
-      bool interactEnabled)
+      bool showOverheadName)
     {
-      ApplyNPCControlUpdateOnPeer(
-        actorObject, nodeIdentifier, displayName,
-        hasShowOverheadName, showOverheadName, interactOperation,
-        interactableIdentifier, hasInteractEnabled, interactEnabled);
+      ApplyNPCControlUpdateOnPeer(actorObject, displayName, hasShowOverheadName, showOverheadName);
     }
 
     [TargetRpc]
@@ -1347,6 +1446,153 @@ namespace MultiplayerInfrastructure.Scenario
         (Quest.PlayerQuestStateFlagService.QuestStateFlagScope)scope, targets, flag, value);
     }
 
+    // ── 인터렉션 가시성 오버라이드 / 엔티티 태그 복제 ────────────────────────
+
+    /// <summary>
+    /// 인터렉션 가시성 오버라이드를 서버 권위로 기록한다. 서버면 직접 기록하고 전 피어에 미러링하며,
+    /// 클라이언트면 서버에 위임한다. 네트워크가 없으면 로컬에만 기록한다(오프라인·테스트).
+    /// </summary>
+    public static void ApplyInteractionVisibilityAuthoritative(string addressKey,
+      InteractableEntity.InteractionVisibilityScope scope, string playerIdentifier,
+      InteractableEntity.InteractionVisibilityOverride value)
+    {
+      if (string.IsNullOrWhiteSpace(addressKey))
+        return;
+
+      if (InstanceFinder.IsServerStarted)
+      {
+        ApplyInteractionVisibilityOnServer(addressKey, scope, playerIdentifier, value);
+        return;
+      }
+
+      if (_instance != null && InstanceFinder.IsClientStarted)
+      {
+        _instance.CmdApplyInteractionVisibility(addressKey, (byte)scope, playerIdentifier ?? string.Empty, (byte)value);
+        return;
+      }
+
+      InteractableEntity.InteractionVisibilityState.ApplyLocal(addressKey, scope, playerIdentifier, value);
+    }
+
+    private static void ApplyInteractionVisibilityOnServer(string addressKey,
+      InteractableEntity.InteractionVisibilityScope scope, string playerIdentifier,
+      InteractableEntity.InteractionVisibilityOverride value)
+    {
+      InteractableEntity.InteractionVisibilityState.ApplyLocal(addressKey, scope, playerIdentifier, value);
+      if (_instance != null)
+        _instance.ObserversMirrorInteractionVisibility(addressKey, (byte)scope, playerIdentifier ?? string.Empty, (byte)value);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdApplyInteractionVisibility(string addressKey, byte scope, string playerIdentifier, byte value,
+      NetworkConnection sender = null)
+    {
+      if (sender == null || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
+          || descriptor == null || string.IsNullOrWhiteSpace(descriptor.Identifier))
+      {
+        Debug.LogWarning("[ScenarioNetworkRelay] Rejected interaction visibility change from an unknown sender.");
+        return;
+      }
+      if (!Enum.IsDefined(typeof(InteractableEntity.InteractionVisibilityScope), scope)
+          || !Enum.IsDefined(typeof(InteractableEntity.InteractionVisibilityOverride), value)
+          || string.IsNullOrWhiteSpace(addressKey) || addressKey.Length > 256)
+      {
+        Debug.LogWarning($"[ScenarioNetworkRelay] Rejected malformed interaction visibility change from client {sender.ClientId}.");
+        return;
+      }
+      if (!InteractableEntity.InteractionRegistry.TryGet(addressKey, out _))
+      {
+        Debug.LogWarning(
+          $"[ScenarioNetworkRelay] Rejected interaction visibility change for unregistered '{addressKey}' from client {sender.ClientId}.");
+        return;
+      }
+
+      ApplyInteractionVisibilityOnServer(addressKey, (InteractableEntity.InteractionVisibilityScope)scope,
+        string.IsNullOrWhiteSpace(playerIdentifier) ? null : playerIdentifier,
+        (InteractableEntity.InteractionVisibilityOverride)value);
+    }
+
+    [ObserversRpc(BufferLast = false)]
+    private void ObserversMirrorInteractionVisibility(string addressKey, byte scope, string playerIdentifier, byte value)
+    {
+      if (InstanceFinder.IsServerStarted)
+        return;
+      InteractableEntity.InteractionVisibilityState.ApplyLocal(addressKey,
+        (InteractableEntity.InteractionVisibilityScope)scope,
+        string.IsNullOrWhiteSpace(playerIdentifier) ? null : playerIdentifier,
+        (InteractableEntity.InteractionVisibilityOverride)value);
+    }
+
+    [TargetRpc]
+    private void TargetMirrorInteractionVisibilitySnapshot(NetworkConnection connection, string[] entries)
+    {
+      if (InstanceFinder.IsServerStarted)
+        return;
+      InteractableEntity.InteractionVisibilityState.ApplySnapshot(entries);
+    }
+
+    /// <summary>
+    /// 플레이어 소유자가 없는 식별자(엔티티)의 태그 목록을 전 피어에 복제한다. 플레이어 태그는
+    /// <see cref="Player.PlayerController"/> 가 자기 옵저버 동기화로 복제하므로 이 경로를 쓰지 않는다.
+    /// </summary>
+    public static void PublishEntityTags(string identifier, IReadOnlyList<string> tags)
+    {
+      if (!InstanceFinder.IsServerStarted || _instance == null || string.IsNullOrWhiteSpace(identifier))
+        return;
+      _instance.ObserversMirrorEntityTags(identifier, tags != null ? tags.ToArray() : Array.Empty<string>());
+    }
+
+    [ObserversRpc(BufferLast = false)]
+    private void ObserversMirrorEntityTags(string identifier, string[] tags)
+    {
+      if (InstanceFinder.IsServerStarted)
+        return;
+      Tag.PlayerTagService.ReplaceTags(identifier, tags);
+    }
+
+    [TargetRpc]
+    private void TargetMirrorEntityTagsSnapshot(NetworkConnection connection, string[] identifiers, string[] joinedTags)
+    {
+      if (InstanceFinder.IsServerStarted || identifiers == null || joinedTags == null)
+        return;
+      int count = Math.Min(identifiers.Length, joinedTags.Length);
+      for (int i = 0; i < count; i++)
+      {
+        if (string.IsNullOrWhiteSpace(identifiers[i]))
+          continue;
+        var tags = string.IsNullOrEmpty(joinedTags[i])
+          ? Array.Empty<string>()
+          : joinedTags[i].Split(new[] { EntityTagJoinSeparator }, StringSplitOptions.RemoveEmptyEntries);
+        Tag.PlayerTagService.ReplaceTags(identifiers[i], tags);
+      }
+    }
+
+    private const char EntityTagJoinSeparator = '\u001f';
+
+    /// <summary>늦은 접속·재접속 피어에게 가시성 오버라이드와 엔티티 태그 전체를 보낸다(서버 전용).</summary>
+    private void SendInteractionStateSnapshot(NetworkConnection connection)
+    {
+      if (!InstanceFinder.IsServerStarted || connection == null || !connection.IsActive)
+        return;
+
+      TargetMirrorInteractionVisibilitySnapshot(connection, InteractableEntity.InteractionVisibilityState.Snapshot());
+
+      var identifiers = new List<string>();
+      var joined = new List<string>();
+      foreach (var pair in Registry.Registry.GetAll<List<string>>(RegistryType.PlayerTag))
+      {
+        if (string.IsNullOrWhiteSpace(pair.Key) || pair.Value == null)
+          continue;
+        // 플레이어 소유자가 있는 식별자는 PlayerController 가 옵저버 동기화로 복제한다.
+        if (Registry.Registry.TryGetEntityByOwnerUserIdentifier(pair.Key, out _))
+          continue;
+        identifiers.Add(pair.Key);
+        joined.Add(string.Join(EntityTagJoinSeparator.ToString(), pair.Value));
+      }
+      if (identifiers.Count > 0)
+        TargetMirrorEntityTagsSnapshot(connection, identifiers.ToArray(), joined.ToArray());
+    }
+
     /// <summary>신호를 권위적으로 내린다(사이클 반복 등에서 재설정).</summary>
     public static void ClearAuthoritative(string normalizedSignalId)
     {
@@ -1547,6 +1793,8 @@ namespace MultiplayerInfrastructure.Scenario
         .Take(MaxRaisedSignalSnapshotEntries)
         .ToArray();
       TargetMirrorRaisedSignalSnapshot(sender, signals);
+      // 시나리오 시작·수동 진입이 로컬 오버라이드를 비운 뒤이므로, 신호와 함께 가시성 상태도 다시 보낸다.
+      SendInteractionStateSnapshot(sender);
     }
 
     [TargetRpc]

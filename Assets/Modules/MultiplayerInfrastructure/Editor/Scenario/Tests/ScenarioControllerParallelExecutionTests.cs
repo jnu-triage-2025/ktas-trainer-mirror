@@ -158,25 +158,140 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
-    public void AssignedBranchesAreYieldedInDefinitionOrder()
+    public void AssignedBranchesAreStartedInDefinitionOrderAfterPredecessorCompletes()
     {
-      var runSequentially = typeof(ScenarioController).GetMethod(
-        "RunSequentially",
-        BindingFlags.Static | BindingFlags.NonPublic);
-      var first = Probe(null);
-      var second = Probe(null);
-
-      Assert.That(runSequentially, Is.Not.Null);
-      var sequence = (IEnumerator)runSequentially.Invoke(null, new object[]
-      {
-        new[] { first, second }
-      });
+      var sequencer = new BranchSequencerHarness();
+      var first = sequencer.AddBranch();
+      var second = sequencer.AddBranch();
+      var sequence = sequencer.Run();
 
       Assert.That(sequence.MoveNext(), Is.True);
-      Assert.That(sequence.Current, Is.SameAs(first));
+      Assert.That(sequencer.StartedRoutines, Is.EqualTo(new[] { first.Routine }),
+        "첫 분기만 시작되어야 합니다.");
       Assert.That(sequence.MoveNext(), Is.True);
-      Assert.That(sequence.Current, Is.SameAs(second));
+      Assert.That(sequencer.StartedRoutines, Is.EqualTo(new[] { first.Routine }),
+        "첫 분기가 활동 중인 동안에는 다음 분기를 시작하지 않아야 합니다.");
+
+      first.Complete();
+      Assert.That(sequence.MoveNext(), Is.True);
+      Assert.That(sequencer.StartedRoutines, Is.EqualTo(new[] { first.Routine, second.Routine }),
+        "첫 분기가 끝나면 정의 순서대로 다음 분기를 시작해야 합니다.");
+
+      second.Complete();
+      Assert.That(sequence.MoveNext(), Is.False, "모든 분기가 끝나면 순차 실행기가 종료되어야 합니다.");
+    }
+
+    [Test]
+    public void IdleBranchWaitingForOthersLetsNextBranchOfSamePlayerStart()
+    {
+      var sequencer = new BranchSequencerHarness();
+      var first = sequencer.AddBranch();
+      var second = sequencer.AddBranch();
+      var third = sequencer.AddBranch();
+      var sequence = sequencer.Run();
+
+      Assert.That(sequence.MoveNext(), Is.True);
+      Assert.That(sequencer.StartedRoutines, Is.EqualTo(new[] { first.Routine }));
+
+      // 첫 분기가 자기 몫을 끝내고 다른 담당자를 기다리는 idle 상태가 되면 다음 태그의 분기를 시작한다.
+      first.SetIdle(true);
+      Assert.That(sequence.MoveNext(), Is.True);
+      Assert.That(sequencer.StartedRoutines, Is.EqualTo(new[] { first.Routine, second.Routine }),
+        "다른 참여자를 기다리는 idle 분기는 끝난 것과 같이 취급해 다음 분기를 시작해야 합니다.");
+
+      // 두 번째 분기가 활동 중이면 첫 분기가 idle 이어도 세 번째 분기는 시작하지 않는다.
+      Assert.That(sequence.MoveNext(), Is.True);
+      Assert.That(sequencer.StartedRoutines, Is.EqualTo(new[] { first.Routine, second.Routine }),
+        "활동 중인 분기가 남아 있으면 세 번째 분기를 시작하지 않아야 합니다.");
+
+      second.Complete();
+      Assert.That(sequence.MoveNext(), Is.True);
+      Assert.That(sequencer.StartedRoutines, Is.EqualTo(new[] { first.Routine, second.Routine, third.Routine }));
+
+      // 게이트가 열려 첫 분기가 다시 활동하더라도 이미 시작한 분기는 그대로 진행한다.
+      first.SetIdle(false);
+      third.Complete();
+      Assert.That(sequence.MoveNext(), Is.True,
+        "idle 이었던 분기가 아직 끝나지 않았으면 순차 실행기도 끝나지 않아야 합니다.");
+
+      first.Complete();
       Assert.That(sequence.MoveNext(), Is.False);
+    }
+
+    /// <summary>
+    /// <c>ScenarioController.RunSequentiallyUnlessIdle</c> 을 리플렉션으로 구동하는 시험 도우미.
+    /// 분기 코루틴은 실제로 실행하지 않고, 시작 요청 순서와 추적기 플래그만 다룬다.
+    /// </summary>
+    private sealed class BranchSequencerHarness
+    {
+      private static readonly Type TrackerType = typeof(ScenarioController).GetNestedType(
+        "BranchCompletionTracker", BindingFlags.NonPublic);
+      private static readonly Type SequencedBranchType = typeof(ScenarioController).GetNestedType(
+        "SequencedBranch", BindingFlags.NonPublic);
+      private static readonly MethodInfo RunMethod = typeof(ScenarioController).GetMethod(
+        "RunSequentiallyUnlessIdle", BindingFlags.Static | BindingFlags.NonPublic);
+
+      private readonly List<Branch> _branches = new();
+
+      public List<IEnumerator> StartedRoutines { get; } = new();
+
+      public Branch AddBranch()
+      {
+        Assert.That(TrackerType, Is.Not.Null, "BranchCompletionTracker 중첩 형식이 있어야 합니다.");
+        var branch = new Branch(Probe(null), Activator.CreateInstance(TrackerType, nonPublic: true));
+        _branches.Add(branch);
+        return branch;
+      }
+
+      public IEnumerator Run()
+      {
+        Assert.That(SequencedBranchType, Is.Not.Null, "SequencedBranch 중첩 형식이 있어야 합니다.");
+        Assert.That(RunMethod, Is.Not.Null, "RunSequentiallyUnlessIdle 정적 실행기가 있어야 합니다.");
+
+        var constructor = SequencedBranchType.GetConstructors(
+          BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)[0];
+        var entries = Array.CreateInstance(SequencedBranchType, _branches.Count);
+        for (var index = 0; index < _branches.Count; index++)
+        {
+          entries.SetValue(
+            constructor.Invoke(new[] { _branches[index].Routine, _branches[index].Tracker }),
+            index);
+        }
+
+        Func<IEnumerator, Coroutine> start = routine =>
+        {
+          StartedRoutines.Add(routine);
+          return null;
+        };
+        return (IEnumerator)RunMethod.Invoke(null, new object[] { entries, start });
+      }
+
+      public sealed class Branch
+      {
+        private static readonly FieldInfo CompletedField = TrackerType?.GetField("Completed");
+        private static readonly FieldInfo IdleField = TrackerType?.GetField("IdleWaitingForOthers");
+
+        public Branch(IEnumerator routine, object tracker)
+        {
+          Routine = routine;
+          Tracker = tracker;
+        }
+
+        public IEnumerator Routine { get; }
+        public object Tracker { get; }
+
+        public void Complete()
+        {
+          Assert.That(CompletedField, Is.Not.Null);
+          CompletedField.SetValue(Tracker, true);
+        }
+
+        public void SetIdle(bool idle)
+        {
+          Assert.That(IdleField, Is.Not.Null, "추적기에 IdleWaitingForOthers 필드가 있어야 합니다.");
+          IdleField.SetValue(Tracker, idle);
+        }
+      }
     }
 
     [TestCase(true, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.All, true)]

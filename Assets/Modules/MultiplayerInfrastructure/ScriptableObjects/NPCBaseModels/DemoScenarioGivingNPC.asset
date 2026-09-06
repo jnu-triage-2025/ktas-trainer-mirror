@@ -15,13 +15,3 @@ MonoBehaviour:
   identifier: demo_scenario_giving_npc
   displayName: "\uB370\uBAA8 NPC"
   description: 
-  scenarioInteracts:
-  - _displayText: "[NPC] \uB370\uBAA8 \uC2DC\uB098\uB9AC\uC624 \uC2DC\uC791"
-    _displayIcon:
-      _sprite: {fileID: 0}
-      _iconRegistryIdentifier: 
-      _iconDefinition: 0
-    _displayColor: {r: 0, g: 0, b: 0, a: 0}
-    _scenarioIdentifier: disaster_intro
-    _scenarioStartNodeIdentifier: D001
-  submissionInteracts: []

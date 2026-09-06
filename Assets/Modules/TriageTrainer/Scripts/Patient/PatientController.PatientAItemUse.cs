@@ -110,19 +110,10 @@ namespace TriageTrainer.Entity
       public bool AllowDisplayIconFallback => false;
       public Color DisplayColor => Color.clear;
 
+      // 노출(퀘스트 단계)은 레지스트리의 데이터 조건이 정한다. 물품을 아직 구하지 못했어도 노출하고,
+      // 실행 조건은 Interact 에서 확인해 안내 대사로 돌려준다.
       public bool CanInteract(Transform interactor)
-      {
-        if (!_owner.IsPatientAItemUseArmed)
-          return false;
-
-        // 퀘스트가 이 서브목표를 안내 대상으로 올려 둔 동안에는, 아직 물품을 구하지 못했거나
-        // 앞선 처치가 끝나지 않았더라도 상호작용을 노출한다. 무엇을 해야 하는지 알려 주는 것이
-        // 이 상호작용의 목적이므로, 실행 조건은 Interact 에서 확인하고 안내 대사로 돌려준다.
-        var presentation = QuestPresentationService.ActiveInstance;
-        return presentation != null
-               && presentation.HasActiveInteractionBinding(
-                 _owner.Identifier, _spec.InteractionIdentifier);
-      }
+        => interactor != null && interactor.GetComponentInParent<PlayerController>() != null;
 
       public void Interact(Transform interactor)
       {
@@ -190,13 +181,6 @@ namespace TriageTrainer.Entity
           dialogue.TryPresentTransientDialogue("{PLAYER_NAME}", secondLine);
       }
     }
-
-    /// <summary>
-    /// 물품별 사용 상호작용이 동작하는 범위. `patient_a_critical` 이 도는 동안의 환자 A 에만 둔다.
-    /// 이 범위 밖에서는 기존 통합 상호작용(<see cref="InteractIdItemApply"/>)이 그대로 노출된다.
-    /// </summary>
-    private bool IsPatientAItemUseArmed =>
-      IsPatientA && PatientACriticalQuestStateFlags.IsArmed;
 
     /// <summary>환자 A 물품 사용 상호작용 항목을 등록한다(<c>BuildInteractEntries</c> 에서 호출).</summary>
     private void AddPatientAItemUseInteracts()

@@ -138,9 +138,6 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.Delay:
           DrawDelayFields((ScenarioDelayNode)data);
           break;
-        case ScenarioNodeType.Interaction:
-          DrawInteractionFields((ScenarioInteractionNode)data);
-          break;
         case ScenarioNodeType.CombineItem:
           DrawCombineItemFields((ScenarioCombineItemNode)data);
           break;
@@ -189,12 +186,6 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.ExecuteCommand:
           DrawExecuteCommandFields((ScenarioExecuteCommandNode)data);
           break;
-        case ScenarioNodeType.ItemSubmissionConfig:
-          DrawItemSubmissionConfigFields((ScenarioItemSubmissionConfigNode)data);
-          break;
-        case ScenarioNodeType.NpcInteractControl:
-          DrawNpcInteractControlFields((ScenarioNpcInteractControlNode)data);
-          break;
         case ScenarioNodeType.ManualEntrypoint:
           DrawManualEntrypointFields((ScenarioManualEntrypointNode)data);
           break;
@@ -207,8 +198,60 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.Lifecycle:
           DrawLifecycleFields((ScenarioLifecycleNode)data);
           break;
+        case ScenarioNodeType.InteractionVisibility:
+          DrawInteractionVisibilityFields((ScenarioInteractionVisibilityNode)data);
+          break;
       }
     }
+
+    private void DrawInteractionVisibilityFields(ScenarioInteractionVisibilityNode data)
+    {
+      data.Operation = (ScenarioInteractionVisibilityOperation)EditorGUILayout.EnumPopup("Operation", data.Operation);
+      data.PlayerScope = (ScenarioInteractionVisibilityPlayerScope)EditorGUILayout.EnumPopup("Player Scope", data.PlayerScope);
+      if (data.PlayerScope == ScenarioInteractionVisibilityPlayerScope.ByTag)
+      {
+        data.PlayerTags ??= new System.Collections.Generic.List<string>();
+        string joined = EditorGUILayout.TextField("Player Tags (comma)", string.Join(", ", data.PlayerTags));
+        data.PlayerTags.Clear();
+        foreach (var part in (joined ?? string.Empty).Split(','))
+        {
+          if (!string.IsNullOrWhiteSpace(part))
+            data.PlayerTags.Add(part.Trim());
+        }
+        data.TagMatchMode = (ScenarioConditionMatchMode)EditorGUILayout.EnumPopup("Tag Match Mode", data.TagMatchMode);
+      }
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Targets", EditorStyles.boldLabel);
+      data.Targets ??= new System.Collections.Generic.List<ScenarioInteractionTarget>();
+      for (int i = 0; i < data.Targets.Count; i++)
+      {
+        var target = data.Targets[i] ?? new ScenarioInteractionTarget();
+        data.Targets[i] = target;
+        target.Entity ??= new ScenarioEntityReference();
+        EditorGUILayout.BeginVertical("box");
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField($"Target {i + 1}", EditorStyles.miniBoldLabel);
+        if (GUILayout.Button("-", GUILayout.Width(22)))
+        {
+          data.Targets.RemoveAt(i);
+          EditorGUILayout.EndHorizontal();
+          EditorGUILayout.EndVertical();
+          break;
+        }
+        EditorGUILayout.EndHorizontal();
+        target.Entity.Identifier = NullIfEmpty(EditorGUILayout.TextField("Entity Id", target.Entity.Identifier));
+        target.Entity.Tag = NullIfEmpty(EditorGUILayout.TextField("Entity Tag", target.Entity.Tag));
+        target.InteractionIdentifier = EditorGUILayout.TextField("Interaction", target.InteractionIdentifier);
+        EditorGUILayout.EndVertical();
+      }
+      if (GUILayout.Button("Add Target"))
+        data.Targets.Add(new ScenarioInteractionTarget());
+
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private static string NullIfEmpty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
 
     private void DrawDialogueFields(ScenarioDialogueNode data)
     {
@@ -436,14 +479,6 @@ namespace MultiplayerInfrastructure.Editor
 
       if (data.Mode == ScenarioNPCControlMode.Update)
       {
-        data.InteractOperation = (ScenarioNPCInteractCrudOperation)EditorGUILayout.EnumPopup(
-          "Interact CRUD", data.InteractOperation);
-        if (data.InteractOperation != ScenarioNPCInteractCrudOperation.None)
-          data.InteractableIdentifier = EditorGUILayout.TextField("Interactable Identifier", data.InteractableIdentifier);
-        if (data.InteractOperation == ScenarioNPCInteractCrudOperation.Update)
-          data.InteractEnabled = EditorGUILayout.Toggle("Interact Enabled", data.InteractEnabled ?? true);
-        if (data.InteractOperation == ScenarioNPCInteractCrudOperation.Read)
-          data.ResultStateKey = EditorGUILayout.TextField("Result State Key", data.ResultStateKey);
         data.DisplayName = NullableTextField("Display Name", data.DisplayName);
         data.ShowOverheadName = NullableBoolField("Show Overhead Name", data.ShowOverheadName);
       }
@@ -596,6 +631,45 @@ namespace MultiplayerInfrastructure.Editor
           rootCondition.PlayerTag = EditorGUILayout.TextField("Player Tag", rootCondition.PlayerTag);
           rootCondition.PlayerScope = (ScenarioValidatorPlayerScope)EditorGUILayout.EnumPopup("Player Scope", rootCondition.PlayerScope);
           break;
+        case ScenarioValidatorCondition.Conditions:
+          rootCondition.PlayerScope = (ScenarioValidatorPlayerScope)EditorGUILayout.EnumPopup("Player Scope", rootCondition.PlayerScope);
+          rootCondition.MatchMode = (ScenarioValidatorMatchMode)EditorGUILayout.EnumPopup("Match Mode", rootCondition.MatchMode);
+          rootCondition.Conditions ??= new System.Collections.Generic.List<ScenarioCondition>();
+          EditorGUILayout.HelpBox(
+            $"조건 절 {rootCondition.Conditions.Count}개. 조건 절의 상세 편집은 JSON 에서 합니다(type, tag, flag, questIdentifier, signal, entity, key, value 등).",
+            MessageType.None);
+          for (int i = 0; i < rootCondition.Conditions.Count; i++)
+          {
+            var condition = rootCondition.Conditions[i];
+            if (condition == null)
+              continue;
+            EditorGUILayout.LabelField($"  [{i}] {DescribeCondition(condition)}");
+          }
+          break;
+      }
+    }
+
+    internal static string DescribeCondition(ScenarioCondition condition)
+    {
+      if (condition == null)
+        return "(null)";
+      string prefix = condition.Negate ? "not " : string.Empty;
+      switch (condition.Type)
+      {
+        case ScenarioConditionType.PlayerHasTag: return $"{prefix}PlayerHasTag '{condition.Tag}'";
+        case ScenarioConditionType.PlayerHasQuestFlag: return $"{prefix}PlayerHasQuestFlag '{condition.Flag}'";
+        case ScenarioConditionType.PlayerHasQuest: return $"{prefix}PlayerHasQuest '{condition.QuestIdentifier}' {condition.QuestState}" + (string.IsNullOrWhiteSpace(condition.CompletionCriteriaIdentifier) ? string.Empty : $" @ {condition.CompletionCriteriaIdentifier}");
+        case ScenarioConditionType.PlayerHasItem: return $"{prefix}PlayerHasItem '{condition.ItemIdentifier}' x{condition.Count}";
+        case ScenarioConditionType.PlayerState: return $"{prefix}PlayerState {condition.Key} {condition.Compare} '{condition.Value ?? "true"}'";
+        case ScenarioConditionType.PlayerWithinDistance: return $"{prefix}PlayerWithinDistance {condition.Entity} <= {condition.Meters}m";
+        case ScenarioConditionType.SignalRaised: return $"{prefix}SignalRaised '{condition.Signal}'";
+        case ScenarioConditionType.RegistryContains: return $"{prefix}RegistryContains {condition.RegistryType}/'{condition.Identifier}'";
+        case ScenarioConditionType.EntityHasTag: return $"{prefix}EntityHasTag {condition.Entity} '{condition.Tag}'";
+        case ScenarioConditionType.EntityState: return $"{prefix}EntityState {condition.Entity} {condition.Key} {condition.Compare} '{condition.Value ?? "true"}'";
+        case ScenarioConditionType.PlayerCount: return $"{prefix}PlayerCount {condition.Compare} {condition.Count}" + (string.IsNullOrWhiteSpace(condition.Tag) ? string.Empty : $" (tag {condition.Tag})");
+        case ScenarioConditionType.ScenarioActive: return $"{prefix}ScenarioActive '{condition.ScenarioIdentifier}'";
+        case ScenarioConditionType.Group: return $"{prefix}Group {condition.MatchMode} ({condition.Conditions?.Count ?? 0})";
+        default: return condition.Type.ToString();
       }
     }
 
@@ -1140,75 +1214,6 @@ namespace MultiplayerInfrastructure.Editor
       EditorGUILayout.HelpBox(
         "시나리오 전용 지급: give-if-missing <item> [count] [target]. 대상별 인벤토리에 아이템이 없을 때만 지급합니다. 예: give-if-missing checklist_paper @a",
         MessageType.Info);
-      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
-    }
-
-    private void DrawItemSubmissionConfigFields(ScenarioItemSubmissionConfigNode data)
-    {
-      EditorGUILayout.LabelField("Target (Preset Spawn)", EditorStyles.boldLabel);
-      data.PresetIdentifier = EditorGUILayout.TextField("Preset Identifier", data.PresetIdentifier);
-      data.SpawnedEntityIdentifier = EditorGUILayout.TextField("Spawned Entity Id", data.SpawnedEntityIdentifier);
-      data.PositionSourceEntityIdentifier = EditorGUILayout.TextField("Position Source Entity", data.PositionSourceEntityIdentifier);
-      data.PositionX = EditorGUILayout.FloatField("Position X", data.PositionX);
-      data.PositionY = EditorGUILayout.FloatField("Position Y", data.PositionY);
-      data.PositionZ = EditorGUILayout.FloatField("Position Z", data.PositionZ);
-
-      EditorGUILayout.Space();
-      EditorGUILayout.LabelField("Target (Existing Entity)", EditorStyles.boldLabel);
-      data.TargetIdentifier = EditorGUILayout.TextField("Target Identifier", data.TargetIdentifier);
-      data.TargetStateKey = EditorGUILayout.TextField("Target State Key", data.TargetStateKey);
-
-      EditorGUILayout.Space();
-      EditorGUILayout.LabelField("Required Items", EditorStyles.boldLabel);
-
-      if (data.RequiredItems == null)
-      {
-        data.RequiredItems = new System.Collections.Generic.List<ScenarioItemRequirement>();
-      }
-
-      for (int i = 0; i < data.RequiredItems.Count; i++)
-      {
-        var req = data.RequiredItems[i] ?? new ScenarioItemRequirement();
-        data.RequiredItems[i] = req;
-
-        EditorGUILayout.BeginHorizontal();
-        req.ItemIdentifier = EditorGUILayout.TextField($"Item {i + 1}", req.ItemIdentifier);
-        req.Count = Mathf.Max(1, EditorGUILayout.IntField(req.Count, GUILayout.Width(48)));
-        if (GUILayout.Button("-", GUILayout.Width(22)))
-        {
-          data.RequiredItems.RemoveAt(i);
-          EditorGUILayout.EndHorizontal();
-          break;
-        }
-        EditorGUILayout.EndHorizontal();
-      }
-
-      if (GUILayout.Button("Add Required Item"))
-      {
-        data.RequiredItems.Add(new ScenarioItemRequirement { Count = 1 });
-      }
-
-      data.CompletionSignalIdentifier = EditorGUILayout.TextField("Completion Signal", data.CompletionSignalIdentifier);
-      data.Enabled = EditorGUILayout.Toggle("Enabled", data.Enabled);
-      data.ResultStateKey = EditorGUILayout.TextField("Result State Key", data.ResultStateKey);
-      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
-    }
-
-    private void DrawNpcInteractControlFields(ScenarioNpcInteractControlNode data)
-    {
-      data.NpcIdentifier = EditorGUILayout.TextField("NPC Identifier", data.NpcIdentifier);
-      data.InteractableIdentifier = EditorGUILayout.TextField("Interactable Identifier", data.InteractableIdentifier);
-      data.Operation = (ScenarioNpcInteractControlOperation)EditorGUILayout.EnumPopup("Operation", data.Operation);
-      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
-    }
-
-    private void DrawInteractionFields(ScenarioInteractionNode data)
-    {
-      data.ActorScope = (ScenarioInteractionActorScope)EditorGUILayout.EnumPopup("Actor Scope", data.ActorScope);
-      data.TargetIdentifier = EditorGUILayout.TextField("Target Identifier", data.TargetIdentifier);
-      data.RequiredItemIdentifier = EditorGUILayout.TextField("Required Item", data.RequiredItemIdentifier);
-      data.InteractionType = (ScenarioInteractionType)EditorGUILayout.EnumPopup("Interaction Type", data.InteractionType);
-      data.CompletionConditionIdentifier = EditorGUILayout.TextField("Completion Condition", data.CompletionConditionIdentifier);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 

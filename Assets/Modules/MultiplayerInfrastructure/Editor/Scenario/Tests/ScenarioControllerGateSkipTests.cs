@@ -146,6 +146,72 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       }
     }
 
+    [Test]
+    public void IdleWhileWaitingGateFlagsBranchIdleUntilGateIsReleased()
+    {
+      var gameObject = new GameObject("scenario-gate-idle-test");
+      try
+      {
+        var controller = gameObject.AddComponent<ScenarioController>();
+        var gate = BuildNeverSatisfiedGate("gate-idle", waitTimeoutSeconds: null);
+        gate.IdleWhileWaiting = true;
+        var graph = new ScenarioGraph { Identifier = "gate_idle_test" };
+        graph.Add(gate);
+        SetPrivateField(controller, "_currentGraph", graph);
+
+        var tracker = CreateBranchCompletionTracker(out var idleField);
+        var routine = InvokeBranchGate(controller, gate, tracker);
+        Assert.That(PumpUntilDone(routine, 4), Is.False, "발신처가 없는 신호를 기다리는 게이트는 대기 중이어야 한다.");
+        Assert.That((bool)idleField.GetValue(tracker), Is.True,
+          "idleWhileWaiting 게이트가 조건을 기다리는 동안 분기는 다른 참여자를 기다리는 idle 로 표시되어야 한다.");
+
+        Assert.That(controller.RequestGateSkip(out string error), Is.True, error);
+        Assert.That(PumpUntilDone(routine, 8), Is.True, "건너뛰기 요청은 게이트를 풀어야 한다.");
+        Assert.That((bool)idleField.GetValue(tracker), Is.False,
+          "게이트가 풀리면 idle 표시를 내려 분기가 다시 활동 중임을 알려야 한다.");
+      }
+      finally
+      {
+        Object.DestroyImmediate(gameObject);
+      }
+    }
+
+    [Test]
+    public void GateWithoutIdleWhileWaitingLeavesBranchActive()
+    {
+      var gameObject = new GameObject("scenario-gate-not-idle-test");
+      try
+      {
+        var controller = gameObject.AddComponent<ScenarioController>();
+        var gate = BuildNeverSatisfiedGate("gate-not-idle", waitTimeoutSeconds: null);
+        var graph = new ScenarioGraph { Identifier = "gate_not_idle_test" };
+        graph.Add(gate);
+        SetPrivateField(controller, "_currentGraph", graph);
+
+        var tracker = CreateBranchCompletionTracker(out var idleField);
+        var routine = InvokeBranchGate(controller, gate, tracker);
+        Assert.That(PumpUntilDone(routine, 4), Is.False);
+        Assert.That((bool)idleField.GetValue(tracker), Is.False,
+          "idleWhileWaiting 을 지정하지 않은 게이트는 분기를 idle 로 표시하지 않아야 한다(기존 동작).");
+
+        Assert.That(controller.RequestGateSkip(out string error), Is.True, error);
+        Assert.That(PumpUntilDone(routine, 8), Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(gameObject);
+      }
+    }
+
+    private static object CreateBranchCompletionTracker(out FieldInfo idleField)
+    {
+      var trackerType = typeof(ScenarioController).GetNestedType("BranchCompletionTracker", BindingFlags.NonPublic);
+      Assert.That(trackerType, Is.Not.Null, "BranchCompletionTracker 가 존재해야 한다.");
+      idleField = trackerType.GetField("IdleWaitingForOthers");
+      Assert.That(idleField, Is.Not.Null, "BranchCompletionTracker.IdleWaitingForOthers 필드가 존재해야 한다.");
+      return System.Activator.CreateInstance(trackerType, nonPublic: true);
+    }
+
     private static ScenarioValidatorNode BuildNeverSatisfiedGate(string identifier, float? waitTimeoutSeconds)
     {
       return new ScenarioValidatorNode
@@ -175,7 +241,10 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       };
     }
 
-    private static IEnumerator InvokeBranchGate(ScenarioController controller, ScenarioValidatorNode gate)
+    private static IEnumerator InvokeBranchGate(
+      ScenarioController controller,
+      ScenarioValidatorNode gate,
+      object completionTracker = null)
     {
       var method = typeof(ScenarioController).GetMethod(
         "ExecuteValidatorGate", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -184,6 +253,12 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(contextType, Is.Not.Null, "BranchChainContext 가 존재해야 한다.");
       // 담당자가 지정되지 않은 브랜치 컨텍스트는 취소 판정 대상이 아니므로 게이트가 순수하게 조건만 기다린다.
       object context = System.Activator.CreateInstance(contextType, new object[] { null, false });
+      if (completionTracker != null)
+      {
+        var trackerField = contextType.GetField("CompletionTracker");
+        Assert.That(trackerField, Is.Not.Null, "BranchChainContext.CompletionTracker 필드가 존재해야 한다.");
+        trackerField.SetValue(context, completionTracker);
+      }
       return (IEnumerator)method.Invoke(controller, new[] { gate, context });
     }
 

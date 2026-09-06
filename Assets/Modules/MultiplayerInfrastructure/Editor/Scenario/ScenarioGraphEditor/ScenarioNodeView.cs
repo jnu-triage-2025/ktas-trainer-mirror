@@ -269,7 +269,6 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.QuestWaypointHighlight:
         case ScenarioNodeType.QuestMark:
         case ScenarioNodeType.Delay:
-        case ScenarioNodeType.Interaction:
         case ScenarioNodeType.CombineItem:
         case ScenarioNodeType.StateUpdate:
         case ScenarioNodeType.PlayTTS:
@@ -279,14 +278,13 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.EntityInit:
         case ScenarioNodeType.TriageAssessControl:
         case ScenarioNodeType.PatientMedicalStatePreset:
-        case ScenarioNodeType.ItemSubmissionConfig:
-        case ScenarioNodeType.NpcInteractControl:
         case ScenarioNodeType.ChatPrint:
         case ScenarioNodeType.ExecuteCommand:
         case ScenarioNodeType.TimeControl:
         case ScenarioNodeType.ManualEntrypoint:
         case ScenarioNodeType.BedSnap:
         case ScenarioNodeType.Lifecycle:
+        case ScenarioNodeType.InteractionVisibility:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
 
@@ -472,12 +470,6 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.PatientMedicalStatePreset:
           BuildPatientMedicalStatePresetInlineEditor((ScenarioPatientMedicalStatePresetNode)Data);
           break;
-        case ScenarioNodeType.ItemSubmissionConfig:
-          BuildItemSubmissionConfigInlineEditor((ScenarioItemSubmissionConfigNode)Data);
-          break;
-        case ScenarioNodeType.NpcInteractControl:
-          BuildNpcInteractControlInlineEditor((ScenarioNpcInteractControlNode)Data);
-          break;
         case ScenarioNodeType.NPCControl:
           BuildNPCControlInlineEditor((ScenarioNPCControlNode)Data);
           break;
@@ -489,6 +481,9 @@ namespace MultiplayerInfrastructure.Editor
           break;
         case ScenarioNodeType.BedSnap:
           BuildBedSnapInlineEditor((ScenarioBedSnapNode)Data);
+          break;
+        case ScenarioNodeType.InteractionVisibility:
+          BuildInteractionVisibilityInlineEditor((ScenarioInteractionVisibilityNode)Data);
           break;
         case ScenarioNodeType.ReturnToOrigin:
           // Next 를 쓰지 않으므로 Next 필드를 노출하지 않는다.
@@ -698,6 +693,7 @@ namespace MultiplayerInfrastructure.Editor
     {
       AddToggleField("Wait For Condition", value => data.WaitForCondition = value, data.WaitForCondition);
       AddOptionalFloatField("Wait Timeout (sec)", value => data.WaitTimeoutSeconds = value, data.WaitTimeoutSeconds);
+      AddToggleField("Idle While Waiting", value => data.IdleWhileWaiting = value, data.IdleWhileWaiting);
       AddTextField("Failure Next", value => data.FailureNextIdentifier = value, data.FailureNextIdentifier);
       AddNextIdentifierField(data);
     }
@@ -762,6 +758,53 @@ namespace MultiplayerInfrastructure.Editor
       AddTextField("Manual Enter Setup", value => data.ManualEnterSetupIdentifier = value, data.ManualEnterSetupIdentifier);
       AddTextAreaField("Description", value => data.Description = value, data.Description);
       AddNextIdentifierField(data);
+    }
+
+    private void BuildInteractionVisibilityInlineEditor(ScenarioInteractionVisibilityNode data)
+    {
+      var opField = new EnumField("Operation", data.Operation);
+      opField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioInteractionVisibilityOperation value)
+          data.Operation = value;
+      });
+      _inlineEditorContainer.Add(opField);
+
+      data.Targets ??= new System.Collections.Generic.List<ScenarioInteractionTarget>();
+      if (data.Targets.Count == 0)
+        data.Targets.Add(new ScenarioInteractionTarget());
+      var first = data.Targets[0];
+      first.Entity ??= new ScenarioEntityReference();
+      AddTextField("Entity Id", value => first.Entity.Identifier = NullIfWhiteSpace(value), first.Entity.Identifier);
+      AddTextField("Entity Tag", value => first.Entity.Tag = NullIfWhiteSpace(value), first.Entity.Tag);
+      AddTextField("Interaction", value => first.InteractionIdentifier = value, first.InteractionIdentifier);
+      if (data.Targets.Count > 1)
+        _inlineEditorContainer.Add(new Label($"(+{data.Targets.Count - 1} more targets; edit in Inspector)"));
+
+      var scopeField = new EnumField("Player Scope", data.PlayerScope);
+      scopeField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioInteractionVisibilityPlayerScope value)
+          data.PlayerScope = value;
+      });
+      _inlineEditorContainer.Add(scopeField);
+      AddTextField("Player Tags (comma)",
+        value => data.PlayerTags = SplitCommaList(value),
+        data.PlayerTags != null ? string.Join(", ", data.PlayerTags) : string.Empty);
+      AddNextIdentifierField(data);
+    }
+
+    private static System.Collections.Generic.List<string> SplitCommaList(string value)
+    {
+      var list = new System.Collections.Generic.List<string>();
+      if (string.IsNullOrWhiteSpace(value))
+        return list;
+      foreach (var part in value.Split(','))
+      {
+        if (!string.IsNullOrWhiteSpace(part))
+          list.Add(part.Trim());
+      }
+      return list;
     }
 
     private void BuildEntityTagInlineEditor(ScenarioEntityTagNode data)
@@ -829,81 +872,6 @@ namespace MultiplayerInfrastructure.Editor
       AddNextIdentifierField(data);
     }
 
-    private void BuildItemSubmissionConfigInlineEditor(ScenarioItemSubmissionConfigNode data)
-    {
-      AddTextField("Preset Id (spawn)", value => data.PresetIdentifier = value, data.PresetIdentifier);
-      AddTextField("Target Id (existing)", value => data.TargetIdentifier = value, data.TargetIdentifier);
-      AddTextField("Completion Signal", value => data.CompletionSignalIdentifier = value, data.CompletionSignalIdentifier);
-      AddToggleField("Enabled", value => data.Enabled = value, data.Enabled);
-
-      data.RequiredItems ??= new List<ScenarioItemRequirement>();
-
-      _inlineEditorContainer.Add(new Label("Required Items (id x count)")
-      {
-        style = { fontSize = 10, color = new Color(0.85f, 0.85f, 0.85f), marginTop = 4 }
-      });
-
-      var itemsContainer = new VisualElement();
-      _inlineEditorContainer.Add(itemsContainer);
-
-      void RebuildItemsList()
-      {
-        itemsContainer.Clear();
-        for (int i = 0; i < data.RequiredItems.Count; i++)
-        {
-          int index = i;
-          var req = data.RequiredItems[index] ??= new ScenarioItemRequirement();
-
-          var row = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-
-          var idField = new TextField { value = req.ItemIdentifier ?? string.Empty, style = { flexGrow = 1 } };
-          idField.RegisterValueChangedCallback(evt => data.RequiredItems[index].ItemIdentifier = evt.newValue);
-          row.Add(idField);
-
-          var countField = new IntegerField { value = req.Count <= 0 ? 1 : req.Count, style = { width = 48 } };
-          countField.RegisterValueChangedCallback(evt => data.RequiredItems[index].Count = evt.newValue <= 0 ? 1 : evt.newValue);
-          row.Add(countField);
-
-          var removeButton = new Button(() =>
-          {
-            data.RequiredItems.RemoveAt(index);
-            RebuildItemsList();
-          })
-          { text = "-", style = { width = 22 } };
-          row.Add(removeButton);
-
-          itemsContainer.Add(row);
-        }
-      }
-
-      RebuildItemsList();
-
-      _inlineEditorContainer.Add(new Button(() =>
-      {
-        data.RequiredItems.Add(new ScenarioItemRequirement { Count = 1 });
-        RebuildItemsList();
-      })
-      { text = "Add Required Item" });
-
-      AddNextIdentifierField(data);
-    }
-
-    private void BuildNpcInteractControlInlineEditor(ScenarioNpcInteractControlNode data)
-    {
-      AddTextField("NPC Id", value => data.NpcIdentifier = value, data.NpcIdentifier);
-      AddTextField("Interactable Id", value => data.InteractableIdentifier = value, data.InteractableIdentifier);
-
-      var opField = new EnumField("Operation", data.Operation);
-      opField.RegisterValueChangedCallback(evt =>
-      {
-        if (evt.newValue is ScenarioNpcInteractControlOperation value)
-          data.Operation = value;
-      });
-      _inlineEditorContainer.Add(opField);
-
-      AddNextIdentifierField(data);
-    }
-
     private void BuildNPCControlInlineEditor(ScenarioNPCControlNode data)
     {
       var modeField = new EnumField("Mode", data.Mode);
@@ -920,22 +888,6 @@ namespace MultiplayerInfrastructure.Editor
 
       if (data.Mode == ScenarioNPCControlMode.Update)
       {
-        var crudField = new EnumField("Interact CRUD", data.InteractOperation);
-        crudField.RegisterValueChangedCallback(evt =>
-        {
-          if (evt.newValue is ScenarioNPCInteractCrudOperation value && value != data.InteractOperation)
-          {
-            data.InteractOperation = value;
-            BuildInlineEditor();
-          }
-        });
-        _inlineEditorContainer.Add(crudField);
-        if (data.InteractOperation != ScenarioNPCInteractCrudOperation.None)
-          AddTextField("Interactable Id", value => data.InteractableIdentifier = value, data.InteractableIdentifier);
-        if (data.InteractOperation == ScenarioNPCInteractCrudOperation.Update)
-          AddToggleField("Interact Enabled", value => data.InteractEnabled = value, data.InteractEnabled ?? true);
-        if (data.InteractOperation == ScenarioNPCInteractCrudOperation.Read)
-          AddTextField("Result State Key", value => data.ResultStateKey = value, data.ResultStateKey);
         AddTextField("Display Name", value => data.DisplayName = value, data.DisplayName);
         AddToggleField("Show Overhead Name", value => data.ShowOverheadName = value, data.ShowOverheadName ?? false);
       }
