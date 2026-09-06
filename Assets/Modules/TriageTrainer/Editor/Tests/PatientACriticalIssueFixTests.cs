@@ -42,8 +42,6 @@ namespace TriageTrainer.Tests
     private const string DoctorNpcPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/NPC/DoctorNPCHat.prefab";
     private const string PatientATreatmentBedMarkerIdentifier = "scen_a:patient_a_treatment_bed_marker";
-    private const string WallSuctionItemPath =
-      "Assets/Modules/TriageTrainer/ScriptableObjects/ItemBaseModels/wall_suction.asset";
     private const string OverworldScenePath = "Assets/Scenes/OverworldScene.unity";
     private const string StaticEntityLayoutPath =
       "Assets/Modules/TriageTrainer/ScriptableObjects/StaticEntityLayouts/OverworldPatientSupports.asset";
@@ -1438,9 +1436,11 @@ namespace TriageTrainer.Tests
     public void PatientAWallSuctionUsesSuctionNameAndEmitsQuestCompletionSignal()
     {
       string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-      string item = File.ReadAllText(Path.Combine(projectRoot, WallSuctionItemPath));
-      StringAssert.Contains("identifier: wall_suction", item);
-      StringAssert.Contains("displayName: \"\\uD761\\uC778\\uAE30\"", item);
+
+      // 아이템 정의의 원본은 코드 상수이다. 레거시 ItemBaseModelSO 에셋은 폐기되었으므로
+      // 식별자와 표시명은 정의 클래스에서 직접 검증한다.
+      Assert.That(TriageTrainer.ItemDefinitions.WallSuction.Identifier, Is.EqualTo("wall_suction"));
+      Assert.That(TriageTrainer.ItemDefinitions.WallSuction.DisplayName, Is.EqualTo("\uD761\uC778\uAE30"));
 
       string scene = File.ReadAllText(Path.Combine(projectRoot, OverworldScenePath));
       StringAssert.IsMatch(
