@@ -30,6 +30,9 @@ namespace TriageTrainer.Entity
     }
 
     private readonly Dictionary<string, PendingItemUse> _pendingItemUses = new(StringComparer.Ordinal);
+    // Keep terminal outcomes for this patient's lifetime so late/duplicate confirmations cannot
+    // undo a successful use or apply an expired approval a second time.
+    private readonly Dictionary<string, (int ClientId, bool Accepted)> _completedItemUses = new(StringComparer.Ordinal);
     private readonly Dictionary<string, LocalPendingItemUse>
       _localPendingItemUseReceipts = new(StringComparer.Ordinal);
 
@@ -103,27 +106,44 @@ namespace TriageTrainer.Entity
       bool consumed,
       NetworkConnection sender = null)
     {
-      if (string.IsNullOrWhiteSpace(token)
-          || sender == null
-          || !sender.IsValid
-          || !_pendingItemUses.TryGetValue(token, out var pending)
-          || pending == null
-          || pending.ClientId != sender.ClientId)
+      if (string.IsNullOrWhiteSpace(token) || sender == null || !sender.IsValid)
         return;
+
+      bool accepted = ResolveApprovedPatientItemConsumption(token, sender.ClientId, consumed);
+      TargetCompleteApprovedPatientItemConsumption(sender, token, accepted);
+    }
+
+    private bool ResolveApprovedPatientItemConsumption(string token, int clientId, bool consumed)
+    {
+      PruneExpiredPendingItemUses();
+      if (_completedItemUses.TryGetValue(token, out var completed))
+        return completed.ClientId == clientId && completed.Accepted;
+
+      if (!_pendingItemUses.TryGetValue(token, out var pending)
+          || pending == null || pending.ClientId != clientId)
+        return false;
 
       _pendingItemUses.Remove(token);
       bool accepted = false;
-
-      // 거리와 역할은 승인 토큰을 발급할 때 서버에서 검증한다. 확인 응답 사이의 짧은 시간에
-      // 플레이어가 움직였다는 이유로 이미 소비한 아이템을 유실하지 않도록 여기서는 처치 상태만 재검증한다.
-      if (consumed && CanApplyItemUse(pending.ItemIdentifier))
+      try
       {
-        using (MI.Scenario.ScenarioSignalPlayerContext.Push(
-                 pending.ActorIdentifier, pending.ActorDisplayName))
-          accepted = ApplyItemUse(pending.ItemIdentifier);
+        // Movement between approval and confirmation does not invalidate consumed inventory.
+        if (consumed && CanApplyItemUse(pending.ItemIdentifier))
+        {
+          using (MI.Scenario.ScenarioSignalPlayerContext.Push(
+                   pending.ActorIdentifier, pending.ActorDisplayName))
+            accepted = ApplyItemUse(pending.ItemIdentifier);
+        }
       }
-
-      TargetCompleteApprovedPatientItemConsumption(sender, token, accepted);
+      catch (Exception ex)
+      {
+        Debug.LogException(ex, this);
+      }
+      finally
+      {
+        _completedItemUses[token] = (clientId, accepted);
+      }
+      return accepted;
     }
 
     [TargetRpc]
@@ -184,7 +204,20 @@ namespace TriageTrainer.Entity
           expired.Add(pair.Key);
       }
       for (int i = 0; i < expired.Count; i++)
-        _pendingItemUses.Remove(expired[i]);
+      {
+        string token = expired[i];
+        var pending = _pendingItemUses[token];
+        _pendingItemUses.Remove(token);
+        if (pending == null)
+          continue;
+
+        _completedItemUses[token] = (pending.ClientId, false);
+        // Notify even when no confirmation arrives. A later confirmation replays this rejection.
+        var clients = FishNet.InstanceFinder.ServerManager?.Clients;
+        if (clients != null && clients.TryGetValue(pending.ClientId, out var connection)
+            && connection != null && connection.IsValid)
+          TargetCompleteApprovedPatientItemConsumption(connection, token, accepted: false);
+      }
     }
 
     private bool HasPendingApprovedItemUse(string itemIdentifier)

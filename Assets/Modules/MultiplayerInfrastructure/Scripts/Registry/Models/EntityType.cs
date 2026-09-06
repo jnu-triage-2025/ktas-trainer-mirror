@@ -14,6 +14,10 @@
     MovingPatientBed,
     Level1RapidInfuser,
     Waypoint,
+    /// <summary>
+    /// 제출 인터렉션을 위임받는 오브젝트. 같은 이름의 ScenarioInteractable 컴포넌트는 인터렉션 레지스트리
+    /// 도입과 함께 폐기했지만, 레지스트리가 만드는 <c>ItemSubmissionInteractable</c> 이 이 종류로 등록되므로 남긴다.
+    /// </summary>
     ScenarioInteractable,
     ScenarioTriggerZone,
     ItemObject,

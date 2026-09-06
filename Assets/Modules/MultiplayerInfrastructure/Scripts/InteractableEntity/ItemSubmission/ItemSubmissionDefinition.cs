@@ -7,9 +7,9 @@ namespace MultiplayerInfrastructure.InteractableEntity
   /// <summary>
   /// 아이템 제출 상호작용의 요구 사항/표시/완료 신호를 담는 직렬화 가능한 설정.
   ///
-  /// 이 정의는 두 경로에서 값을 얻을 수 있다:
-  ///  1) 프리셋 기본값: <see cref="ItemSubmissionInteractable"/> 컴포넌트(또는 스폰되는 프리팹)에 인스펙터로 사전 설정된다.
-  ///  2) 그래프 노드 오버라이드: 시나리오 그래프 노드가 런타임에 요구 아이템/완료 신호를 덮어쓴다.
+  /// 값은 인터렉션 레지스트리의 <c>kind: "ItemSubmission"</c> 정의(시나리오 데이터의 interactions 구역 또는
+  /// 상시 카탈로그)에서 오며, 레지스트리 핸들러가 <see cref="ItemSubmissionInteractable.Configure"/> 로 이 구조에
+  /// 옮겨 담는다. 컴포넌트의 직렬화 기본값은 구성 이전에만 쓰이고, 그래프 노드가 덮어쓰던 경로는 폐기했다.
   ///
   /// 완료 처리는 서버 세션 전역 신호(<see cref="Scenario.ScenarioInteractionSignals"/>)로 이루어진다.
   /// </summary>

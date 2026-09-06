@@ -245,6 +245,8 @@ namespace TriageTrainer.Entity
 
     private void Update()
     {
+      if (FishNet.InstanceFinder.IsServerStarted)
+        PruneExpiredPendingItemUses();
       Update_Animation();
     }
 

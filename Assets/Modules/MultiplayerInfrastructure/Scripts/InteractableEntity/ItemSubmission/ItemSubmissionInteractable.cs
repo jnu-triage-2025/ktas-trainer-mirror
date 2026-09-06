@@ -12,14 +12,20 @@ namespace MultiplayerInfrastructure.InteractableEntity
   /// 사용 시나리오(예): 의사 NPC 또는 접수대에 부착 → 플레이어가 상호작용 → 제출 UI 가 열리고
   /// 요구 아이템을 넣고 제출 → 인벤토리에서 소모 → 서버 세션 전역 신호(sig.*)를 올린다.
   ///
-  /// 설정 우선순위: 인스펙터의 프리셋 기본값(<see cref="_definition"/>)을 기본으로 하되,
-  /// 시나리오 그래프 노드가 런타임에 요구 아이템/완료 신호/활성 상태를 덮어쓸 수 있다
-  /// (<see cref="ApplyDefinitionOverride"/>, <see cref="SetEnabled"/>).
+  /// <para>
+  /// 인터렉션 레지스트리 도입 뒤 이 컴포넌트는 인터렉션 정의의 출처가 아니다. 제출 인터렉션의 문구·요구 아이템·
+  /// 완료 신호는 시나리오 데이터나 상시 카탈로그의 <c>kind: "ItemSubmission"</c> 정의가 정하고, 레지스트리 핸들러
+  /// (<c>RegistryItemSubmissionInteract</c>)가 대상 엔티티 하위에 이 컴포넌트를 만들어 <see cref="Configure"/> 로
+  /// 그 값을 넣는다. 제출 UI 를 여는 데 컴포넌트가 필요해서 남긴 위임처이므로 프리팹·씬에 직접 배치하지 않는다.
+  /// </para>
+  ///
+  /// <para>
+  /// 노출(누구에게 언제 보이는가)은 레지스트리가 판정한다. 직렬화 필드는 <see cref="Configure"/> 이전의 기본값일
+  /// 뿐이고, 수행 뒤 잠금은 정의의 <c>afterInteract</c> 가 맡는다(그래서 <c>consumeOnce</c> 는 꺼진 채로 구성된다).
+  /// </para>
   ///
   /// 이 컴포넌트는 <see cref="RegistryType.InteractableEntity"/> 와 <see cref="RegistryType.Entity"/> 에
-  /// 식별자로 등록되어, 그래프 노드가 식별자로 이 인스턴스를 찾아 사전 설정할 수 있게 한다.
-  /// 프리팹으로 만들어 <see cref="EntityPresetDefinition"/> 으로 등록하면, EntityPresetSpawn 노드나
-  /// 전용 ItemSubmissionConfig 노드로 스폰/사전설정할 수 있다.
+  /// 식별자로 등록되어, 제출 UI 와 완료 통지가 식별자로 이 인스턴스를 찾을 수 있게 한다.
   /// </summary>
   [DisallowMultipleComponent]
   public class ItemSubmissionInteractable : Interactable, IInteractorConditional, IInteractToggleable
@@ -27,10 +33,10 @@ namespace MultiplayerInfrastructure.InteractableEntity
     [Header("Item Submission")]
     [SerializeField] private string _identifier;
 
-    [Tooltip("요구 아이템/완료 신호/표시의 프리셋 기본값. 그래프 노드가 런타임에 덮어쓸 수 있다.")]
+    [Tooltip("요구 아이템/완료 신호/표시의 기본값. 런타임에는 레지스트리 정의가 Configure 로 덮어쓴다.")]
     [SerializeField] private ItemSubmissionDefinition _definition = new ItemSubmissionDefinition();
 
-    [Tooltip("시작 시 상호작용 가능 여부. 그래프 노드로 활성/비활성 전환할 수 있다.")]
+    [Tooltip("시작 시 상호작용 가능 여부. 시나리오 노출은 이 값이 아니라 인터렉션 레지스트리가 판정한다.")]
     [SerializeField] private bool _enabled = true;
 
     [Header("Display Override (optional)")]
@@ -92,8 +98,8 @@ namespace MultiplayerInfrastructure.InteractableEntity
     }
 
     /// <summary>
-    /// 코드(예: <see cref="Entity.Npc"/>)에서 이 컴포넌트를 프로그래밍 방식으로 구성한다.
-    /// 인스펙터 없이 AddComponent 로 생성한 뒤 이 메서드로 식별자/정의/표시/활성 상태를 설정한다.
+    /// 레지스트리 핸들러(<c>RegistryItemSubmissionInteract</c>)가 이 컴포넌트를 구성하는 진입점이다.
+    /// AddComponent 로 생성한 뒤 이 메서드로 인터렉션 정의의 식별자/요구 아이템/완료 신호/표시를 옮겨 담는다.
     /// 식별자 변경 시 레지스트리에 재등록한다.
     /// </summary>
     public void Configure(
@@ -192,9 +198,11 @@ namespace MultiplayerInfrastructure.InteractableEntity
       controller.Open(this, player);
     }
 
-    // ── 런타임 사전 설정 API (그래프 노드에서 호출) ─────────────────────────────
+    // ── 런타임 사전 설정 API ────────────────────────────────────────────────
+    // 아래 네 API 를 호출하던 그래프 노드(ItemSubmissionConfig, NpcInteractControl)는 인터렉션 레지스트리
+    // 도입과 함께 폐기했다. 지금 값은 모두 Configure 로 한 번에 들어오며, 남은 호출자는 없다.
 
-    /// <summary>요구 아이템/완료 신호/표시를 런타임에 덮어쓴다(그래프 노드 오버라이드).</summary>
+    /// <summary>요구 아이템/완료 신호/표시를 런타임에 덮어쓴다.</summary>
     public void ApplyDefinitionOverride(ItemSubmissionDefinition definition)
     {
       if (definition == null)
@@ -226,7 +234,7 @@ namespace MultiplayerInfrastructure.InteractableEntity
       _runtimeDefinition.completionSignalIdentifier = signalIdentifier;
     }
 
-    /// <summary>상호작용 활성/비활성 전환(그래프 노드에서 사용).</summary>
+    /// <summary>상호작용 활성/비활성 전환. 시나리오 노출 판정은 레지스트리가 하므로 코드 잠금 용도로만 쓴다.</summary>
     public void SetEnabled(bool enabled)
     {
       _enabled = enabled;

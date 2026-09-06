@@ -30,7 +30,7 @@
     /// (3) 이 노드의 <see cref="NextIdentifier"/>.
     ///
     /// <para><c>clear-state=true</c>(기본값)로 진입하면 시나리오 상태 저장소가 통째로 비워진다.
-    /// 이 저장소는 StateUpdate 값뿐 아니라 EntityPresetSpawn·EntityInit·ItemSubmissionConfig 가
+    /// 이 저장소는 StateUpdate 값뿐 아니라 EntityPresetSpawn·EntityInit 이
     /// 남긴 <c>resultStateKey → 엔티티 식별자</c> 해석 표도 겸한다. 월드에 엔티티가 살아 있어도
     /// 표가 비면 <c>targetEntityStateKey</c> 로 대상을 찾는 노드들이 전부 대상을 놓치므로,
     /// 준비 체인에서 필요한 키를 다시 채워 넣어야 한다.</para>

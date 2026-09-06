@@ -94,6 +94,17 @@
   Unity 에디터가 열려 있어 배치 실행은 하지 못했으므로 Test Runner에서 EditMode 전체를 한 번 돌려야 한다.
 - 실플레이 검증(결정 16): 환자 A 전체, B/C 전체, 튜토리얼을 4인 접속(늦은 접속 포함)으로 사용자가 수동 검토.
 
+## 7) 2026-09-07 후속 정리
+
+코드 주석이 현재 구조를 설명하는지 점검하고 다음을 정리했습니다.
+
+- 폐기한 그래프 노드(`ItemSubmissionConfig`, `NpcInteractControl`, `NPCControl` 의 인터렉트 조작)를 여전히
+  설명하던 주석을 레지스트리 기준으로 고쳤습니다.
+- 참조가 사라진 직렬화 형식 `NPCScenarioInteractDefinition` 과 `NPCSubmissionInteractDefinition` 을 삭제하고,
+  `Npc` 의 빈 인스펙터 머리글도 제거했습니다.
+- 환자 모니터의 닫기 신호 무장은 명세와 달리 `ArmScenarioClose` 경로를 유지했습니다. 시나리오 결합은 정의의
+  `extras`(`closeSignal`, `closeSignalPatient`)로 풀었고, 이 편차를 제안서 구현 기록에 적었습니다.
+
 ## 관련 문서
 
 - [MultiplayerInfrastructure.InteractableEntity.md](../api-references/MultiplayerInfrastructure.InteractableEntity.md)

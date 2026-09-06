@@ -312,7 +312,7 @@ namespace MultiplayerInfrastructure.InteractableEntity
     public RegistryItemSubmissionInteract(InteractionRegistryEntry entry) : base(entry)
     {
       ItemSubmissionInteractable.SubmissionCompleted += HandleSubmissionCompleted;
-      // 엔티티가 이미 있으면 컴포넌트를 바로 만들어, 식별자로 컴포넌트를 찾는 옛 ItemSubmissionConfig 노드도 동작하게 한다.
+      // 엔티티가 이미 있으면 컴포넌트를 미리 만들어 둔다. 제출 UI 와 완료 통지가 식별자로 이 컴포넌트를 찾기 때문이다.
       EnsureComponent();
     }
 

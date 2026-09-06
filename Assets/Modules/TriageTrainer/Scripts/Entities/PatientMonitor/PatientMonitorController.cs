@@ -287,6 +287,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private string _serverScenarioCloseSignal;
     private bool _serverScenarioCloseArmed;
 
+    /// <summary>
+    /// 상세 보기를 닫을 때 올릴 완료 신호를 무장한다. 무장 경로는 두 가지다. 하나는 시나리오 이벤트
+    /// (활력징후 UI 활성화)이고, 다른 하나는 인터렉션 레지스트리 정의의 extras(<c>closeSignal</c>,
+    /// <c>closeSignalPatient</c>)를 읽는 상세 보기 인터렉션이다. 후자가 모니터 코드에서 시나리오 식별자와
+    /// 환자 식별자를 직접 비교하던 결합을 대체한다.
+    /// </summary>
     public void ArmScenarioClose(PatientController patient, string completionSignal)
     {
       if (patient == null || string.IsNullOrWhiteSpace(completionSignal))

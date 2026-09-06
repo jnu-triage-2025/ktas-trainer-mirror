@@ -8,7 +8,14 @@
 
 
   /// <summary>
-  /// NPC의 런타임 데이터/Interact를 갱신하거나 이동을 지시하는 통합 노드.
+  /// NPC의 표시 데이터를 갱신하거나 이동을 지시하는 통합 노드.
+  ///
+  /// <para>
+  /// 인터렉션 레지스트리 도입 전에는 이 노드가 NPC 인터렉트의 활성 상태도 조작했다
+  /// (<c>interactOperation</c>, <c>interactableIdentifier</c>, <c>interactEnabled</c>, <c>resultStateKey</c>).
+  /// 그 기능은 폐기했고 인터렉션 노출은 <see cref="ScenarioInteractionVisibilityNode"/> 와 정의의 가시성 조건이
+  /// 정한다. 그래서 Update 모드는 표시 이름과 이름표 표시 여부, 방향만 갱신하며 기록할 결과 값도 없다.
+  /// </para>
   /// </summary>
   public sealed class ScenarioNPCControlNode : IScenarioNode
   {

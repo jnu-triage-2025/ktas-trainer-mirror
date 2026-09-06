@@ -20,8 +20,7 @@ namespace MultiplayerInfrastructure.Entity
 
     // 시나리오 시작·아이템 제출·신호 인터렉션은 시나리오 데이터(interactions)와 상시 카탈로그가 정의하고
     // 인터렉션 레지스트리가 이 NPC 식별자로 핸들러를 만든다. 프리팹에는 인터렉션 정의를 두지 않는다.
-
-    [Header("Custom Interacts")]
+    // 그래서 인스펙터 목록(_scenarioInteracts, _submissionInteracts, _customInteractSources)과 그 머리글도 없다.
 
     public string Identifier => _identifier;
     public override string PresentationEntityIdentifier => _identifier;
