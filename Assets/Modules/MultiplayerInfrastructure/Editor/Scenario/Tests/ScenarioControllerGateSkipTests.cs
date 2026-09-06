@@ -17,6 +17,42 @@ namespace MultiplayerInfrastructure.Tests.Scenario
   {
     private const string NeverRaisedSignal = "sig.gate_skip_test_never_raised";
 
+    [TestCase(180f)]
+    [TestCase(0f)]
+    public void DisconnectReleasesOnlyDepartedPlayersGateInFourPlayerWait(float timeout)
+    {
+      var go = new GameObject("four-player-gate-disconnect-test");
+      try
+      {
+        Registry.Registry.Unregister(RegistryType.RuntimeState, NeverRaisedSignal);
+        var controller = go.AddComponent<ScenarioController>();
+        var graph = new ScenarioGraph { Identifier = "four-player-wait" };
+        SetPrivateField(controller, "_currentGraph", graph);
+        var contextType = typeof(ScenarioController).GetNestedType("BranchChainContext", BindingFlags.NonPublic);
+        var wait = typeof(ScenarioController).GetMethod("WaitForValidatorGate", BindingFlags.Instance | BindingFlags.NonPublic);
+        var waits = new CustomYieldInstruction[4];
+        for (int i = 0; i < waits.Length; i++)
+        {
+          var context = System.Activator.CreateInstance(contextType, new object[] { (int?)i, true });
+          var gate = BuildNeverSatisfiedGate("gate-" + i, timeout);
+          var routine = (IEnumerator)wait.Invoke(controller, new[] { gate, context });
+          Assert.That(routine.MoveNext(), Is.True);
+          waits[i] = (CustomYieldInstruction)routine.Current;
+          Assert.That(waits[i].keepWaiting, Is.True);
+        }
+
+        ((HashSet<int>)GetPrivateField("_cancelledBranchClientIds").GetValue(controller)).Add(2);
+        for (int i = 0; i < waits.Length; i++)
+          Assert.That(waits[i].keepWaiting, Is.EqualTo(i != 2));
+        Assert.That(controller.HasActiveScenario, Is.True);
+      }
+      finally
+      {
+        Registry.Registry.Unregister(RegistryType.RuntimeState, NeverRaisedSignal);
+        Object.DestroyImmediate(go);
+      }
+    }
+
     [Test]
     public void RequestGateSkipIsRejectedWithoutActiveGraph()
     {

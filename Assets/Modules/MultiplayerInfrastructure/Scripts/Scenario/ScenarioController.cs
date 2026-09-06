@@ -651,6 +651,7 @@ namespace MultiplayerInfrastructure.Scenario
     private void CancelActiveRoleBranchesForClient(int clientId)
     {
       _cancelledBranchClientIds.Add(clientId);
+      RecordRecovery(_currentNode?.Identifier, $"client {clientId} disconnected; assigned work remains incomplete");
 
       var branchIdentifiers =
         _activeRoleBranchIdentifiersByClientId.TryGetValue(clientId, out var identifiers)
@@ -802,6 +803,7 @@ namespace MultiplayerInfrastructure.Scenario
       ResolveTTSService();
       _ttsService?.ConfigureScenarioVoiceProfiles(graph.TtsVoiceProfiles);
       StartInlineTTSPrewarm(graph);
+      // 인터렉션 레지스트리: 이전 실행의 가시성 오버라이드를 비우고 이 시나리오의 정의를 코드 리터럴 위에 병합한다.
       InteractionVisibilityState.ClearAll();
       using (InteractionRegistry.BeginScenarioInitCycle(graph.Identifier))
         InteractionRegistry.ApplyScenarioDefinitions(graph.Identifier, graph.Interactions);
@@ -815,7 +817,7 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>서버가 보낸 노드를 클라이언트 UI에 표시한다.</summary>
-    public void PresentAuthoritativeNode(string graphIdentifier, string nodeIdentifier, bool roleScoped = false)
+    public void PresentAuthoritativeNode(string graphIdentifier, string nodeIdentifier, bool roleScoped = false, string presentationToken = null)
     {
       if (_executionMode != ExecutionMode.ClientPresentation
           || _currentGraph == null
@@ -826,8 +828,30 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      if (PresentsDialogueSurface(node) && !string.IsNullOrEmpty(presentationToken))
+      {
+        if (presentationToken == _receivedPresentationToken && !_uiController.IsUnityNull()
+            && (_uiController.IsWaitingForInput || _uiController.IsTyping || _uiController.HasActiveSelections))
+        {
+          ScenarioNetworkRelay.AcknowledgePresentation(graphIdentifier, nodeIdentifier, presentationToken);
+          return;
+        }
+        _receivedPresentationToken = presentationToken;
+      }
       switch (node)
       {
+        case ScenarioDisinteractableDialogueNode nonInteractive:
+          StartCoroutine(RunWithGlobalAdvanceSuppressed(ExecuteDisinteractableDialogueNode(nonInteractive)));
+          break;
+        case ScenarioSoundNode sound:
+          StartCoroutine(RunWithGlobalAdvanceSuppressed(ExecuteSoundNode(sound)));
+          break;
+        case ScenarioPlayTTSNode tts:
+          StartCoroutine(RunWithGlobalAdvanceSuppressed(ExecutePlayTTSNode(tts)));
+          break;
+        case ScenarioChatPrintNode chat when !chat.Broadcast:
+          ExecutePresentationAction(() => ExecuteChatPrintNode(chat));
+          break;
         case ScenarioDialogueNode dialogue:
           _currentNode = node;
           _currentPresentationNodeRoleScoped = roleScoped;
@@ -838,6 +862,12 @@ namespace MultiplayerInfrastructure.Scenario
           _currentPresentationNodeRoleScoped = roleScoped;
           _state = State.ExecutingChoice;
           PresentChoice(choice);
+          break;
+        case ScenarioQuizNode quiz:
+          _currentNode = node;
+          _currentPresentationNodeRoleScoped = roleScoped;
+          _state = State.ExecutingQuiz;
+          PresentQuiz(quiz);
           break;
         case ScenarioInvokeEventNode invokeEvent when roleScoped && invokeEvent.InvokeOnRoleClient:
           StartCoroutine(ExecutePresentationEvent(invokeEvent.EventIdentifier));
@@ -852,7 +882,17 @@ namespace MultiplayerInfrastructure.Scenario
           ApplyQuestMarkNode(questMark);
           break;
       }
+      if (PresentsDialogueSurface(node) && !_uiController.IsUnityNull() && !string.IsNullOrEmpty(presentationToken))
+        ScenarioNetworkRelay.AcknowledgePresentation(graphIdentifier, nodeIdentifier, presentationToken);
     }
+
+    private void ExecutePresentationAction(Action action)
+    {
+      _globalAdvanceSuppressionDepth++;
+      try { action(); }
+      finally { _globalAdvanceSuppressionDepth--; }
+    }
+
 
     /// <summary>
     /// 현재 실행 중인 연출 이벤트 식별자. 같은 이벤트가 역할 범위 노드 표시와 연출 RPC 로
@@ -926,7 +966,10 @@ namespace MultiplayerInfrastructure.Scenario
         if (!hasNext)
           yield break;
 
-        yield return yielded;
+        if (yielded is IEnumerator nested)
+          yield return RunPresentationEventRoutine(eventIdentifier, nested);
+        else
+          yield return yielded;
       }
     }
 
@@ -974,24 +1017,28 @@ namespace MultiplayerInfrastructure.Scenario
       OnScenarioEnded?.Invoke();
     }
 
-    internal bool TryAdvanceFromPresentation(int senderClientId, string graphIdentifier, string nodeIdentifier)
+    internal bool TryAdvanceFromPresentation(int senderClientId, string graphIdentifier, string nodeIdentifier, string presentationToken = null)
     {
-      if (TryAdvanceBranchDialogue(senderClientId))
+      if (MatchesBranchPresentation(senderClientId, graphIdentifier, nodeIdentifier, presentationToken)
+          && TryAdvanceBranchDialogue(senderClientId))
         return true;
 
-      if (!CanAcceptPresentationInput(senderClientId, graphIdentifier, nodeIdentifier, State.ExecutingDialogue))
+      if (string.IsNullOrEmpty(presentationToken) || presentationToken != _mainPresentationToken
+          || !CanAcceptPresentationInput(senderClientId, graphIdentifier, nodeIdentifier, State.ExecutingDialogue))
         return false;
 
       Advance();
       return true;
     }
 
-    internal bool TrySelectOptionFromPresentation(int senderClientId, string graphIdentifier, string nodeIdentifier, int optionIndex)
+    internal bool TrySelectOptionFromPresentation(int senderClientId, string graphIdentifier, string nodeIdentifier, int optionIndex, string presentationToken = null)
     {
-      if (TryResolveRemoteBranchChoice(senderClientId, graphIdentifier, nodeIdentifier, optionIndex))
+      if (MatchesBranchPresentation(senderClientId, graphIdentifier, nodeIdentifier, presentationToken)
+          && TryResolveRemoteBranchChoice(senderClientId, graphIdentifier, nodeIdentifier, optionIndex))
         return true;
 
-      if (!CanAcceptPresentationInput(senderClientId, graphIdentifier, nodeIdentifier, State.ExecutingChoice))
+      if (string.IsNullOrEmpty(presentationToken) || presentationToken != _mainPresentationToken
+          || !CanAcceptPresentationInput(senderClientId, graphIdentifier, nodeIdentifier, State.ExecutingChoice))
         return false;
 
       SelectOption(optionIndex);
@@ -1020,6 +1067,12 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>로컬 대화 UI의 선택 요청을 owner 정책에 따라 처리한다.</summary>
     public void SubmitLocalOptionSelection(int index)
     {
+      if (_branchOptionInterceptor != null)
+      {
+        SelectOption(index);
+        return;
+      }
+
       if (_executionMode == ExecutionMode.ServerAuthoritative && !IsLocalScenarioOwner())
       {
         Debug.LogWarning("[ScenarioController] Ignored authoritative choice selection from a non-owner host UI.");
@@ -1101,6 +1154,11 @@ namespace MultiplayerInfrastructure.Scenario
       _cancelledBranchClientIds.Clear();
       _reportedIncompleteInitialRoleRoster = false;
       _questStateFlagsByRole.Clear();
+      _recoveryNotes.Clear();
+      _branchPresentationTokens.Clear();
+      _branchPresentationNodes.Clear();
+      _acknowledgedPresentations.Clear();
+      _mainPresentationToken = null;
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioInteractionSignals.ClearAllRaisedSignals();
@@ -1524,12 +1582,14 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void Advance()
     {
+      if (_globalAdvanceSuppressionDepth > 0)
+        return;
       if (_executionMode == ExecutionMode.ClientPresentation)
       {
         // 서버는 시나리오 owner(또는 역할 브랜치를 배정받은 당사자)의 입력만 수용한다.
         // 그 밖의 피어가 보내는 요청은 반드시 기각되므로 아예 보내지 않는다.
         if (_currentGraph != null && _currentNode != null && CanSubmitPresentationInput())
-          ScenarioNetworkRelay.RequestAdvance(_currentGraph.Identifier, _currentNode.Identifier);
+          ScenarioNetworkRelay.RequestAdvance(_currentGraph.Identifier, _currentNode.Identifier, _receivedPresentationToken);
         return;
       }
       // 브랜치 체인이 노드를 실행하는 동안에는 전역 진행을 무시한다.
@@ -1575,7 +1635,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (_executionMode == ExecutionMode.ClientPresentation)
       {
         if (_currentGraph != null && _currentNode != null && CanSubmitPresentationInput())
-          ScenarioNetworkRelay.RequestChoiceSelection(_currentGraph.Identifier, _currentNode.Identifier, index);
+          ScenarioNetworkRelay.RequestChoiceSelection(_currentGraph.Identifier, _currentNode.Identifier, index, _receivedPresentationToken);
         if (_currentPresentationNodeRoleScoped && !_uiController.IsUnityNull())
           _uiController.DismissPresentationNode();
         return;
@@ -2275,8 +2335,11 @@ namespace MultiplayerInfrastructure.Scenario
       else
         _mainDialogueSurfaceActive = true;
 
+      _mainPresentationToken = Guid.NewGuid().ToString("N");
       if (_executionMode == ExecutionMode.ServerAuthoritative)
-        ScenarioNetworkRelay.PresentAuthoritativeNode(_currentGraph?.Identifier, node.Identifier);
+        ScenarioNetworkRelay.PresentAuthoritativeNode(_currentGraph?.Identifier, node.Identifier, _mainPresentationToken);
+      if (node is ScenarioDialogueNode || node is ScenarioChoiceNode || node is ScenarioQuizNode)
+        StartCoroutine(RecoverMainPresentation(node, _mainPresentationToken));
 
       switch (node)
       {
@@ -2641,10 +2704,10 @@ namespace MultiplayerInfrastructure.Scenario
           return false;
 
         case ScenarioConcurrencyConflictPolicy.Panic:
-          // 진행 중인 모든 시나리오를 안전 종료.
-          Debug.LogError(msg + " (PANIC: 전체 시나리오 중단)");
-          AppendSystemChatMessage(msg + " (PANIC)");
-          EndScenario();
+          // 대화창 점유가 겹쳤다는 이유로 네 명이 쌓아 온 진행을 통째로 버리지 않는다.
+          // 뒤에 요청한 흐름만 취소하고, 미수행을 기록해 운영자가 원인을 추적할 수 있게 한다.
+          RecordRecovery(_currentNode?.Identifier, msg + " (PANIC policy recovered without ending the session)");
+          AppendSystemChatMessage(msg + " (RECOVERY)");
           return false;
       }
 
@@ -2924,9 +2987,7 @@ namespace MultiplayerInfrastructure.Scenario
       bool success = ApplyQuestOperation(manager, node);
       if (!success && node.FailureStrategy == ScenarioQuestFailureStrategy.Panic)
       {
-        Debug.LogError($"[ScenarioController] Quest control node failed with panic strategy (questId: {node.Quest?.Id}). Ending scenario.");
-        EndScenario();
-        return;
+        RecordRecovery(node.Identifier, $"quest operation failed for '{node.Quest?.Id}'");
       }
 
       Advance();
@@ -5292,7 +5353,10 @@ namespace MultiplayerInfrastructure.Scenario
         if (!hasNext)
           yield break;
 
-        yield return yielded;
+        if (yielded is IEnumerator nested)
+          yield return RunInvokeEventRoutine(node, nested);
+        else
+          yield return yielded;
       }
     }
 
@@ -5378,7 +5442,9 @@ namespace MultiplayerInfrastructure.Scenario
         }
 
         // 여기 도달 = 타임아웃 발생(조건 미충족). 정책을 적용한다.
-        OnValidatorWaitTimeout?.Invoke(node, node.OnWaitTimeout);
+        RecordRecovery(node.Identifier, $"validator condition unavailable after {ResolveRecoveryWait(node.WaitTimeoutSeconds)} seconds");
+        try { OnValidatorWaitTimeout?.Invoke(node, node.OnWaitTimeout); }
+        catch (Exception ex) { Debug.LogException(ex, this); }
 
         switch (node.OnWaitTimeout)
         {
@@ -5397,8 +5463,8 @@ namespace MultiplayerInfrastructure.Scenario
               yield break;
             }
             // 분기 대상이 없으면 KeepWaiting 으로 폴백.
-            Debug.LogWarning($"[ScenarioController] Validator gate '{node.Identifier}' timed out but FailureNextIdentifier '{node.FailureNextIdentifier}' is unavailable; falling back to KeepWaiting.");
-            yield return new WaitUntil(() => EvaluateValidator(node) || IsGateSkipRequested(skipGeneration));
+            Debug.LogWarning($"[ScenarioController] Validator gate '{node.Identifier}' timed out but FailureNextIdentifier '{node.FailureNextIdentifier}' is unavailable; recovering through nextIdentifier.");
+            RecordRecovery(node.Identifier, "wait policy could not resolve the condition; advancing without synthesizing its signal");
             Advance();
             yield break;
 
@@ -5406,14 +5472,14 @@ namespace MultiplayerInfrastructure.Scenario
             ReportValidatorWaitTimeoutWarning(node);
             // 타임아웃 뒤의 무한 대기도 운영자 건너뛰기로 풀 수 있어야 한다. 이 조건이 없으면
             // 발신처가 없는 신호를 기다리는 게이트에서 세션이 영구히 멈춘다.
-            yield return new WaitUntil(() => EvaluateValidator(node) || IsGateSkipRequested(skipGeneration));
+            RecordRecovery(node.Identifier, "wait policy could not resolve the condition; advancing without synthesizing its signal");
             Advance();
             yield break;
 
           case ScenarioValidatorWaitTimeoutBehavior.KeepWaiting:
           default:
             // 타임아웃을 무시하고 조건이 올라올 때까지 계속 대기(기존 동작).
-            yield return new WaitUntil(() => EvaluateValidator(node) || IsGateSkipRequested(skipGeneration));
+            RecordRecovery(node.Identifier, "wait policy could not resolve the condition; advancing without synthesizing its signal");
             Advance();
             yield break;
         }
@@ -5432,7 +5498,8 @@ namespace MultiplayerInfrastructure.Scenario
       switch (node.OnFailure)
       {
         case ScenarioValidatorOnFailure.Panic:
-          EndScenario();
+          RecordRecovery(node.Identifier, "validator rejected the current state; continuing without marking success");
+          Advance();
           break;
         case ScenarioValidatorOnFailure.Branching:
           if (!string.IsNullOrEmpty(node.FailureNextIdentifier) && _currentGraph.TryGetNode(node.FailureNextIdentifier, out var failureNode))
@@ -5442,8 +5509,8 @@ namespace MultiplayerInfrastructure.Scenario
           }
           else
           {
-            Debug.LogWarning($"[ScenarioController] Validator branching failed: next '{node.FailureNextIdentifier}' not found.");
-            EndScenario();
+            RecordRecovery(node.Identifier, $"validator failure edge '{node.FailureNextIdentifier}' is unavailable");
+            Advance();
           }
           break;
         case ScenarioValidatorOnFailure.Ignore:
@@ -5518,7 +5585,9 @@ namespace MultiplayerInfrastructure.Scenario
 
         // 타임아웃 발생. 브랜치 내부에서는 전역 Advance/EndScenario/Branching 을 일으키지 않고,
         // 정책에 따라 "대기 지속" 또는 "대기 종료(체인 진행 허용)" 만 결정한다.
-        OnValidatorWaitTimeout?.Invoke(node, node.OnWaitTimeout);
+        RecordRecovery(node.Identifier, $"validator condition unavailable after {ResolveRecoveryWait(node.WaitTimeoutSeconds)} seconds");
+        try { OnValidatorWaitTimeout?.Invoke(node, node.OnWaitTimeout); }
+        catch (Exception ex) { Debug.LogException(ex, this); }
 
         switch (node.OnWaitTimeout)
         {
@@ -5528,8 +5597,11 @@ namespace MultiplayerInfrastructure.Scenario
             yield break;
 
           case ScenarioValidatorWaitTimeoutBehavior.FailBranch:
-            if (!string.IsNullOrWhiteSpace(node.FailureNextIdentifier))
+            if (!string.IsNullOrWhiteSpace(node.FailureNextIdentifier)
+                && _currentGraph.TryGetNode(node.FailureNextIdentifier, out _))
               context.NextOverride = node.FailureNextIdentifier;
+            else
+              RecordRecovery(node.Identifier, "failure edge is unavailable; using nextIdentifier");
             yield break;
 
           case ScenarioValidatorWaitTimeoutBehavior.WarnAndKeepWaiting:
@@ -5537,12 +5609,12 @@ namespace MultiplayerInfrastructure.Scenario
             // 경고 뒤에도 담당자가 연결을 끊거나 시나리오가 끝나면 이 브랜치를
             // 완료 처리해야 한다. 이 조건을 빼면 타임아웃 이후의 이탈은 WaitMode.All
             // 합류를 영구적으로 막는다. 운영자 건너뛰기도 같은 이유로 대기를 푼다.
-            yield return new WaitUntil(() => EvaluateValidator(node) || IsBranchGateReleased(context) || IsGateSkipRequested(skipGeneration));
+            RecordRecovery(node.Identifier, "wait policy could not resolve the condition; advancing without synthesizing its signal");
             yield break;
 
           case ScenarioValidatorWaitTimeoutBehavior.KeepWaiting:
           default:
-            yield return new WaitUntil(() => EvaluateValidator(node) || IsBranchGateReleased(context) || IsGateSkipRequested(skipGeneration));
+            RecordRecovery(node.Identifier, "wait policy could not resolve the condition; advancing without synthesizing its signal");
             yield break;
         }
       }
@@ -5560,7 +5632,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
       else if (node.OnFailure == ScenarioValidatorOnFailure.Panic)
       {
-        EndScenario();
+        RecordRecovery(node.Identifier, "branch validator rejected the current state; continuing without marking success");
       }
       yield break;
     }
@@ -5572,33 +5644,21 @@ namespace MultiplayerInfrastructure.Scenario
     /// 빠져나온 뒤 조건 충족 여부는 호출부가 <see cref="EvaluateValidator(ScenarioValidatorNode)"/> 로 재확인한다.
     /// </summary>
     private IEnumerator WaitForValidatorGate(ScenarioValidatorNode node, BranchChainContext context = null)
+      => WaitForValidatorGateGeneration(node, context, _gateSkipGeneration);
+
+    private IEnumerator WaitForValidatorGateGeneration(ScenarioValidatorNode node, BranchChainContext context, int skipGeneration)
     {
       if (!EvaluateValidator(node, out var failureReason))
       {
         ReportValidatorBlocked(node, failureReason);
       }
 
-      int skipGeneration = _gateSkipGeneration;
-      var timeout = node.WaitTimeoutSeconds;
-      if (timeout is > 0f)
-      {
-        // 게이트 타임아웃은 시간 배율과 무관하게 만료되어야 한다. 일시정지 중
-        // Time.time은 멈추므로, 이를 기준으로 하면 예외 복구가 영구히 지연된다.
-        float deadline = Time.unscaledTime + timeout.Value;
-        yield return new WaitUntil(() => EvaluateValidator(node)
-                                         || Time.unscaledTime >= deadline
-                                         || IsBranchGateReleased(context)
-                                         || IsGateSkipRequested(skipGeneration));
-      }
-      else
-      {
-        // 타임아웃이 없는 게이트는 조건이 올라오지 않으면 영원히 대기한다. 담당자가 이탈해
-        // 조건을 만들 사람이 사라진 브랜치에서는 이 대기를 함께 풀어 주어야, 중단을 막은 결과가
-        // 무한 대기로 바뀌지 않는다. 운영자 건너뛰기 요청도 같은 탈출구다.
-        yield return new WaitUntil(() => EvaluateValidator(node)
-                                         || IsBranchGateReleased(context)
-                                         || IsGateSkipRequested(skipGeneration));
-      }
+      float timeout = ResolveRecoveryWait(node.WaitTimeoutSeconds);
+      float deadline = Time.unscaledTime + timeout;
+      yield return new WaitUntil(() => EvaluateValidator(node)
+        || Time.unscaledTime >= deadline
+        || IsBranchGateReleased(context)
+        || IsGateSkipRequested(skipGeneration));
     }
 
     /// <summary>
@@ -5770,6 +5830,7 @@ namespace MultiplayerInfrastructure.Scenario
           yield break;
         }
 
+        players = GetActivePlayerIds();
         if (!TryAllocateParallel(node, players, allocation))
         {
           // 배정에 실패했다고 시나리오를 끝내면, 역할 태그가 하나 어긋났을 뿐인데 네 명이 쌓아 온
@@ -5929,6 +5990,11 @@ namespace MultiplayerInfrastructure.Scenario
             // 바로 진행
             break;
         }
+
+        // Local work finishing does not mean that remote role branches have finished.
+        if (_executionMode != ExecutionMode.ServerAuthoritative && node.WaitMode == ScenarioWaitMode.All)
+          yield return ScenarioNetworkRelay.WaitForCompatibilityJoin(_currentGraph?.Identifier, node.Identifier,
+            () => RecordRecovery(node.Identifier, "remote parallel work did not finish before the recovery deadline"));
 
         // 모든 분기가 끝났으므로 참여자 화면의 대기 표시를 내린다.
         groupGate?.Close();
@@ -6560,7 +6626,9 @@ namespace MultiplayerInfrastructure.Scenario
         // 브랜치 대화는 화면별 큐 슬롯을 확보한 뒤에만 보낸다.
         if (_executionMode == ExecutionMode.ServerAuthoritative
             && branchOwnerClientId.HasValue
-            && cursor is not ScenarioDialogueNode)
+            && cursor is not ScenarioDialogueNode
+            && cursor is not ScenarioChoiceNode
+            && cursor is not ScenarioQuizNode)
           ScenarioNetworkRelay.PresentAuthoritativeNodeToClient(branchOwnerClientId.Value, _currentGraph.Identifier, cursor.Identifier);
 
         // 단일 노드를 실행하고 완료를 대기한다(전역 Advance 미사용).
@@ -6936,6 +7004,11 @@ namespace MultiplayerInfrastructure.Scenario
             if (hasNext)
               yielded = routine.Current;
           }
+          catch (Exception ex)
+          {
+            RecordRecovery(_currentNode?.Identifier, $"branch operation failed: {ex.Message}");
+            hasNext = false;
+          }
           finally
           {
             _globalAdvanceSuppressionDepth--;
@@ -6970,6 +7043,111 @@ namespace MultiplayerInfrastructure.Scenario
     /// 선택지 선택을 브랜치 체인으로 위임하기 위한 인터셉터.
     /// 값이 설정되어 있으면 <see cref="SelectOption"/> 이 전역 진행 대신 이 콜백을 호출한다.
     /// </summary>
+    private static string ResolveUnansweredChoice(IScenarioNode node)
+    {
+      if (!string.IsNullOrWhiteSpace(node.NextIdentifier))
+        return node.NextIdentifier;
+      if (node is ScenarioChoiceNode choice)
+        return choice.Options?.FirstOrDefault(option => !string.IsNullOrWhiteSpace(option.NextNodeIdentifier))?.NextNodeIdentifier;
+      if (node is ScenarioQuizNode quiz)
+        return ResolveQuizTarget(quiz, false);
+      return null;
+    }
+
+    private IEnumerator RecoverMainPresentation(IScenarioNode node, string token)
+    {
+      double deadline = Time.realtimeSinceStartupAsDouble + RecoveryWaitSeconds;
+      double retryAt = Time.realtimeSinceStartupAsDouble + PresentationRetrySeconds;
+      yield return null;
+      while (_currentGraph != null && _mainPresentationToken == token && _currentNode == node)
+      {
+        if (Time.realtimeSinceStartupAsDouble >= deadline)
+        {
+          RecordRecovery(node.Identifier, "presentation input timed out; continuing without recording a successful answer");
+          // 이 복구 경로는 Advance() 를 거치지 않고 다음 노드를 직접 실행하므로, 남아 있는 자동 진행
+          // 타이머를 여기서 취소해야 한다. 취소하지 않으면 다음 노드에서 그 타이머가 만료되어
+          // 한 단계를 더 건너뛴다.
+          CancelDialogueAutoAdvance();
+          DismissDialogueSurfaces();
+          if (_executionMode == ExecutionMode.ServerAuthoritative)
+            ScenarioNetworkRelay.DismissAuthoritativePresentation(_currentGraph.Identifier);
+          ClearOptions();
+          string next = ResolveUnansweredChoice(node);
+          if (!string.IsNullOrEmpty(next) && _currentGraph.TryGetNode(next, out var nextNode))
+          {
+            _currentNode = nextNode;
+            ExecuteNode(nextNode);
+          }
+          else
+            Advance();
+          break;
+        }
+        if (_executionMode == ExecutionMode.ServerAuthoritative
+            && Time.realtimeSinceStartupAsDouble >= retryAt && !_acknowledgedPresentations.Contains(token))
+        {
+          ScenarioNetworkRelay.PresentAuthoritativeNode(_currentGraph.Identifier, node.Identifier, token);
+          retryAt = Time.realtimeSinceStartupAsDouble + PresentationRetrySeconds;
+        }
+        yield return null;
+      }
+      _acknowledgedPresentations.Remove(token);
+    }
+
+    private const float RecoveryWaitSeconds = 180f;
+    private const float PresentationRetrySeconds = 15f;
+    private string _mainPresentationToken;
+    private string _receivedPresentationToken;
+    private readonly Dictionary<int, string> _branchPresentationTokens = new();
+    private readonly Dictionary<int, string> _branchPresentationNodes = new();
+    private readonly HashSet<string> _acknowledgedPresentations = new(StringComparer.Ordinal);
+    private readonly List<string> _recoveryNotes = new();
+    public IReadOnlyList<string> RecoveryNotes => _recoveryNotes;
+
+    private void RecordRecovery(string nodeIdentifier, string reason)
+    {
+      string message = $"[ScenarioController] Recovery at '{nodeIdentifier}': {reason} (미수행 기록).";
+      _recoveryNotes.Add(message);
+      Debug.LogWarning(message, this);
+      AddCurrentVisitNote(message);
+    }
+
+    private static float ResolveRecoveryWait(float? configured)
+      => configured.HasValue && !float.IsNaN(configured.Value) && !float.IsInfinity(configured.Value)
+         && configured.Value > 0f ? configured.Value : RecoveryWaitSeconds;
+
+    private string BeginBranchPresentation(int clientId, string nodeIdentifier)
+    {
+      string token = Guid.NewGuid().ToString("N");
+      _branchPresentationTokens[clientId] = token;
+      _branchPresentationNodes[clientId] = nodeIdentifier;
+      return token;
+    }
+
+    private bool MatchesBranchPresentation(int clientId, string graphIdentifier, string nodeIdentifier, string token)
+      => _executionMode == ExecutionMode.ServerAuthoritative
+         && _currentGraph?.Identifier == graphIdentifier && !string.IsNullOrEmpty(token)
+         && _branchPresentationTokens.TryGetValue(clientId, out var expected) && expected == token
+         && _branchPresentationNodes.TryGetValue(clientId, out var expectedNode) && expectedNode == nodeIdentifier;
+
+    internal void AcknowledgePresentation(int clientId, string graphIdentifier, string nodeIdentifier, string token)
+    {
+      if (MatchesBranchPresentation(clientId, graphIdentifier, nodeIdentifier, token)
+          || (_executionMode == ExecutionMode.ServerAuthoritative && _currentGraph?.Identifier == graphIdentifier
+              && _currentNode?.Identifier == nodeIdentifier && token == _mainPresentationToken
+              && (! _scenarioOwnerClientId.HasValue || _scenarioOwnerClientId == clientId)))
+        _acknowledgedPresentations.Add(token);
+    }
+
+    private void EndBranchPresentation(int clientId, string token)
+    {
+      _acknowledgedPresentations.Remove(token);
+      if (_branchPresentationTokens.TryGetValue(clientId, out var current) && current == token)
+      {
+        _branchPresentationTokens.Remove(clientId);
+        _branchPresentationNodes.Remove(clientId);
+      }
+    }
+
     private Action<int> _branchOptionInterceptor;
     // 브랜치 대화 입력은 자기 브랜치만 완료해야 하며, 감싸고 있는 메인 노드를 Advance
     // 해서는 안 된다.
@@ -7033,21 +7211,23 @@ namespace MultiplayerInfrastructure.Scenario
       int? localClientId = InstanceFinder.IsClientStarted
         ? InstanceFinder.ClientManager?.Connection?.ClientId
         : null;
-      bool remotePrompt = branchOwnerClientId.HasValue
+      bool remotePrompt = _executionMode == ExecutionMode.ServerAuthoritative
+        && branchOwnerClientId.HasValue
         && (!localClientId.HasValue || localClientId.Value != branchOwnerClientId.Value);
 
       // 로컬 프롬프트는 단일 UI를 공유하고, 원격 프롬프트는 같은 대상 클라이언트의
       // 단일 UI만 공유한다. 서로 다른 원격 클라이언트의 프롬프트는 병렬 진행한다.
       while (remotePrompt
-               ? _activeRemoteBranchPromptClients.Contains(branchOwnerClientId.Value)
-               : _branchPromptActive)
+               ? (_activeRemoteBranchPromptClients.Contains(branchOwnerClientId.Value)
+                  || _activeRemoteBranchDialogueClients.Contains(branchOwnerClientId.Value))
+               : (_branchPromptActive || _branchDialogueActive))
       {
-        if (_currentGraph == null)
+        if (_currentGraph == null || IsBranchCancelled(branchOwnerClientId))
           yield break;
         yield return null;
       }
 
-      if (_currentGraph == null)
+      if (_currentGraph == null || IsBranchCancelled(branchOwnerClientId))
         yield break;
 
       // 다른 그래프/흐름이 이미 대화창을 점유 중이면 정책을 적용한다.
@@ -7065,6 +7245,9 @@ namespace MultiplayerInfrastructure.Scenario
       else
         _branchPromptActive = true;
       string remoteKey = null;
+      string presentationToken = BeginBranchPresentation(branchOwnerClientId ?? int.MinValue, nodeIdentifier);
+      double deadline = Time.realtimeSinceStartupAsDouble + RecoveryWaitSeconds;
+      double retryAt = Time.realtimeSinceStartupAsDouble + PresentationRetrySeconds;
       try
       {
         if (remotePrompt)
@@ -7074,24 +7257,46 @@ namespace MultiplayerInfrastructure.Scenario
             _currentGraph?.Identifier,
             nodeIdentifier);
           _remoteBranchChoiceSelections[remoteKey] = selection;
+          ScenarioNetworkRelay.PresentAuthoritativeNodeToClient(
+            branchOwnerClientId.Value, _currentGraph.Identifier, nodeIdentifier, presentationToken);
         }
         else
         {
-          present();
           _branchOptionInterceptor = index =>
           {
             selection.Resolved = true;
             selection.Index = index;
           };
+          bool presented = true;
+          try { present(); }
+          catch (Exception ex)
+          {
+            presented = false;
+            RecordRecovery(nodeIdentifier, $"presentation failed: {ex.Message}");
+          }
+          if (!presented)
+            yield break;
         }
 
         while (!selection.Resolved)
         {
+          if (Time.realtimeSinceStartupAsDouble >= deadline || selection.OptionCount <= 0)
+          {
+            RecordRecovery(nodeIdentifier, "choice input unavailable; following recovery edge without scoring");
+            DismissBranchDialoguePresentation(remotePrompt, branchOwnerClientId);
+            yield break;
+          }
+          if (remotePrompt && _currentGraph != null && Time.realtimeSinceStartupAsDouble >= retryAt
+              && !_acknowledgedPresentations.Contains(presentationToken))
+          {
+            ScenarioNetworkRelay.PresentAuthoritativeNodeToClient(
+              branchOwnerClientId.Value, _currentGraph.Identifier, nodeIdentifier, presentationToken);
+            retryAt = Time.realtimeSinceStartupAsDouble + PresentationRetrySeconds;
+          }
           // 담당자가 이탈하면 선택을 보내 줄 사람이 없다. 이 대기를 함께 풀지 않으면
           // 이탈을 시나리오 중단에서 브랜치 취소로 낮춘 결과가 무한 대기로 되돌아간다.
           if (_currentGraph == null || IsBranchCancelled(branchOwnerClientId))
           {
-            _branchOptionInterceptor = null;
             yield break;
           }
           yield return null;
@@ -7099,12 +7304,16 @@ namespace MultiplayerInfrastructure.Scenario
       }
       finally
       {
+        EndBranchPresentation(branchOwnerClientId ?? int.MinValue, presentationToken);
         if (!string.IsNullOrEmpty(remoteKey))
           _remoteBranchChoiceSelections.Remove(remoteKey);
         if (remotePrompt)
           _activeRemoteBranchPromptClients.Remove(branchOwnerClientId.Value);
         else
+        {
+          _branchOptionInterceptor = null;
           _branchPromptActive = false;
+        }
       }
     }
 
@@ -7119,15 +7328,16 @@ namespace MultiplayerInfrastructure.Scenario
         && !ShouldPresentBranchLocally(context);
 
       while (remoteDialogue
-               ? _activeRemoteBranchDialogueClients.Contains(context.OwnerClientId.Value)
-               : _branchDialogueActive)
+               ? (_activeRemoteBranchDialogueClients.Contains(context.OwnerClientId.Value)
+                  || _activeRemoteBranchPromptClients.Contains(context.OwnerClientId.Value))
+               : (_branchDialogueActive || _branchPromptActive))
       {
-        if (_currentGraph == null)
+        if (_currentGraph == null || IsBranchCancelled(context.OwnerClientId))
           yield break;
         yield return null;
       }
 
-      if (_currentGraph == null)
+      if (_currentGraph == null || IsBranchCancelled(context.OwnerClientId))
         yield break;
 
       if (!remoteDialogue && !_uiController.IsUnityNull()
@@ -7142,16 +7352,18 @@ namespace MultiplayerInfrastructure.Scenario
         _branchDialogueActive = true;
 
       int dialogueOwnerClientId = context.OwnerClientId ?? int.MinValue;
+      string presentationToken = BeginBranchPresentation(dialogueOwnerClientId, node.Identifier);
       bool advanceRequested = false;
       Action advanceBranchDialogue = () => advanceRequested = true;
       try
       {
+        _branchDialogueAdvanceInterceptors[dialogueOwnerClientId] = advanceBranchDialogue;
         if (remoteDialogue)
         {
           ScenarioNetworkRelay.PresentAuthoritativeNodeToClient(
             context.OwnerClientId.Value,
             _currentGraph.Identifier,
-            node.Identifier);
+            node.Identifier, presentationToken);
         }
         else if (!_uiController.IsUnityNull())
         {
@@ -7165,8 +7377,6 @@ namespace MultiplayerInfrastructure.Scenario
           if (node.PlayTTS)
             PlayInlineTTS(node.Identifier, ResolveTTSText(node.DialogueContent, node.DialogueContentTTSPassing, context.OwnerClientId), node.TtsVoiceIdentifier);
         }
-
-        _branchDialogueAdvanceInterceptors[dialogueOwnerClientId] = advanceBranchDialogue;
 
         // 브랜치 대화도 메인 체인의 Dialogue 노드와 동일하게 autoAdvanceSeconds 를 지킨다.
         // 이 처리를 빠뜨리면 자동으로 닫히도록 작성한 대사가 플레이어 입력을 받을 때까지
@@ -7194,12 +7404,30 @@ namespace MultiplayerInfrastructure.Scenario
         else
         {
           // 담당자 이탈로 브랜치가 취소되면 대화를 닫아 줄 입력이 오지 않으므로 함께 대기를 끝낸다.
-          yield return new WaitUntil(() =>
-            advanceRequested || _currentGraph == null || IsBranchCancelled(context.OwnerClientId));
+          double deadline = Time.realtimeSinceStartupAsDouble + RecoveryWaitSeconds;
+          double retryAt = Time.realtimeSinceStartupAsDouble + PresentationRetrySeconds;
+          while (!advanceRequested && _currentGraph != null && !IsBranchCancelled(context.OwnerClientId))
+          {
+            if (Time.realtimeSinceStartupAsDouble >= deadline)
+            {
+              RecordRecovery(node.Identifier, "dialogue input timed out");
+              DismissBranchDialoguePresentation(remoteDialogue, context.OwnerClientId);
+              break;
+            }
+            if (remoteDialogue && Time.realtimeSinceStartupAsDouble >= retryAt
+                && !_acknowledgedPresentations.Contains(presentationToken))
+            {
+              ScenarioNetworkRelay.PresentAuthoritativeNodeToClient(
+                context.OwnerClientId.Value, _currentGraph.Identifier, node.Identifier, presentationToken);
+              retryAt = Time.realtimeSinceStartupAsDouble + PresentationRetrySeconds;
+            }
+            yield return null;
+          }
         }
       }
       finally
       {
+        EndBranchPresentation(dialogueOwnerClientId, presentationToken);
         if (_branchDialogueAdvanceInterceptors.TryGetValue(dialogueOwnerClientId, out var current)
             && current == advanceBranchDialogue)
           _branchDialogueAdvanceInterceptors.Remove(dialogueOwnerClientId);
@@ -7248,7 +7476,8 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (!selection.Resolved)
       {
-        yield break; // 시나리오 종료 등으로 미해결 종료.
+        context.NextOverride = ResolveUnansweredChoice(node);
+        yield break;
       }
 
       if (node.Options != null && selection.Index >= 0 && selection.Index < node.Options.Count)
@@ -7285,7 +7514,8 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (!selection.Resolved)
       {
-        yield break; // 시나리오 종료 등으로 미해결 종료.
+        context.NextOverride = ResolveUnansweredChoice(node);
+        yield break;
       }
 
       bool isCorrect = selection.Index == node.CorrectIndex;

@@ -227,7 +227,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "nextIdentifier": "Q002_2"
     },
     "Q002_2": {
@@ -306,7 +306,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "nextIdentifier": "INFO_A_1"
     },
     "INFO_A_1": {
@@ -398,7 +398,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "nextIdentifier": "INFO_D_1"
     },
     "INFO_D_1": {
@@ -652,7 +652,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "nextIdentifier": "q006_1"
     },
     "q006_1": {
@@ -729,7 +729,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "nextIdentifier": "q007_1"
     },
     "q007_1": {
@@ -793,7 +793,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "nextIdentifier": "q008_1"
     },
     "q008_1": {

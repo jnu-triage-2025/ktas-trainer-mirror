@@ -7,7 +7,7 @@ namespace MultiplayerInfrastructure.Scenario
   /// <summary>게임플레이가 올린 신호를 관찰해, 선언된 전제 신호가 모두 있을 때만 후속 신호를 발생시킨다.</summary>
   public static class ScenarioConditionalSignalListeners
   {
-    private sealed class Listener { public string Source; public string Output; public string[] Required; public bool ConsumeOnce; }
+    private sealed class Listener { public string Source; public string Output; public string[] Required; public bool ConsumeOnce; public bool PendingSource; }
     private static readonly Dictionary<string, Listener> Listeners = new(StringComparer.Ordinal);
 
     // 재진입 방지: HandleSignal 내부의 Raise 가 동기적으로 OnSignalRegistered 를 다시 발생시켜
@@ -28,8 +28,12 @@ namespace MultiplayerInfrastructure.Scenario
         Source = ScenarioInteractionSignals.Normalize(source),
         Output = ScenarioInteractionSignals.Normalize(output),
         Required = (required ?? Array.Empty<string>()).Where(value => !string.IsNullOrWhiteSpace(value)).Select(ScenarioInteractionSignals.Normalize).Distinct(StringComparer.Ordinal).ToArray(),
-        ConsumeOnce = consumeOnce
+        ConsumeOnce = consumeOnce,
+        PendingSource = ScenarioInteractionSignals.IsRaised(source)
       };
+      // Completion signals are latched within a scenario phase; registration may arrive after the action.
+      if (ScenarioInteractionSignals.IsRaised(source))
+        HandleSignal(ScenarioInteractionSignals.Normalize(source));
     }
     public static bool Unregister(string identifier) => !string.IsNullOrWhiteSpace(identifier) && Listeners.Remove(identifier.Trim());
 
@@ -73,8 +77,14 @@ namespace MultiplayerInfrastructure.Scenario
     private static void Dispatch(string signal)
     {
       // 매칭 스냅샷을 먼저 확보한다(순회 중 Listeners 가 Remove 로 변경될 수 있음).
+      foreach (var listener in Listeners.Values)
+        if (listener.Source == signal)
+          listener.PendingSource = true;
       var matched = Listeners
-        .Where(pair => pair.Value.Source == signal && pair.Value.Required.All(ScenarioInteractionSignals.IsRaised))
+        .Where(pair => pair.Value.PendingSource
+          && (pair.Value.Source == signal || pair.Value.Required.Contains(signal))
+          && ScenarioInteractionSignals.IsRaised(pair.Value.Source)
+          && pair.Value.Required.All(ScenarioInteractionSignals.IsRaised))
         .Select(pair => pair.Key)
         .ToArray();
 
@@ -89,6 +99,7 @@ namespace MultiplayerInfrastructure.Scenario
         if (!ScenarioNetworkRelay.CanEmitServerOwnedSignalOutput())
           continue;
 
+        listener.PendingSource = false;
         if (listener.ConsumeOnce)
           Listeners.Remove(key);
         // Raise 는 OnSignalRegistered 를 동기 발생시키지만, _isDispatching 가드로 재진입이

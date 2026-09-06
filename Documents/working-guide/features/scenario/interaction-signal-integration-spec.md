@@ -334,10 +334,12 @@ syringe_5cc, vital_set, wall_suction, yankauer`
 ### 7.1 동작 규칙
 
 - `operation: "Register"` 는 `listenerIdentifier` 로 리스너를 등록한다. 동일 식별자 재등록은 교체한다.
-- `sourceSignalIdentifier` 가 올라오는 순간, `requiredSignalIdentifiers` 가 **모두** 올라가 있으면
-  `outputSignalIdentifier` 를 한 번 Raise 한다.
+- 원본 신호와 선행 신호는 현재 단계의 완료 상태로 취급한다. 원본 또는 선행 신호가 올라올 때 재평가하며,
+  원본과 `requiredSignalIdentifiers`가 모두 기록되면 `outputSignalIdentifier`를 발생시킨다.
+- 등록 전에 원본 행동이 완료되었더라도 현재 신호가 유지되어 있으면 등록 즉시 재평가한다.
+  순서를 강제해야 하는 행동은 상호작용의 선행 조건으로 제한한다. 단계 시작 시 신호를 Clear하면 이전 단계의 완료를 재사용하지 않는다.
 - `consumeOnce: true`(기본값)면 첫 발생 후 리스너를 자동 제거한다. `false` 면 원본 신호가 올라올
-  때마다 조건을 재평가한다.
+  때마다 새 완료를 기다린다. 선행 신호만 다시 올라와도 같은 원본 행동을 중복 집계하지 않는다.
 - `operation: "Unregister"` 는 해당 `listenerIdentifier` 리스너를 제거한다.
 - 시나리오 시작/종료 시 모든 리스너가 정리된다(세션 누수 방지).
 - 신호 식별자는 `sig.` 접두사로 정규화된다(접두사 생략 입력 허용).

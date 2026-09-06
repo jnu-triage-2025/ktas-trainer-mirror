@@ -68,6 +68,49 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void SourceBeforePrerequisiteIsReevaluatedWhenPrerequisiteArrives()
+    {
+      ScenarioConditionalSignalListeners.Register("L", Source, Output, new[] { Required }, true);
+      ScenarioInteractionSignals.Raise(Source);
+      Assert.That(ScenarioInteractionSignals.IsRaised(Output), Is.False);
+      ScenarioInteractionSignals.Raise(Required);
+      Assert.That(ScenarioInteractionSignals.IsRaised(Output), Is.True);
+    }
+
+    [Test]
+    public void LateRegistrationReplaysCompletedState()
+    {
+      ScenarioInteractionSignals.Raise(Source);
+      ScenarioInteractionSignals.Raise(Required);
+      ScenarioConditionalSignalListeners.Register("L", Source, Output, new[] { Required }, true);
+      Assert.That(ScenarioInteractionSignals.IsRaised(Output), Is.True);
+    }
+
+    [Test]
+    public void ClearedSourceCannotCompleteAfterLaterPrerequisite()
+    {
+      ScenarioConditionalSignalListeners.Register("L", Source, Output, new[] { Required }, true);
+      ScenarioInteractionSignals.Raise(Source);
+      ScenarioInteractionSignals.Clear(Source);
+      ScenarioInteractionSignals.Raise(Required);
+      Assert.That(ScenarioInteractionSignals.IsRaised(Output), Is.False);
+      ScenarioInteractionSignals.Raise(Source);
+      Assert.That(ScenarioInteractionSignals.IsRaised(Output), Is.True);
+    }
+
+    [Test]
+    public void RepeatedPrerequisiteDoesNotCountSameSourceTwice()
+    {
+      ScenarioConditionalSignalListeners.Register("L", Source, Output, new[] { Required }, false);
+      ScenarioInteractionSignals.Raise(Source);
+      ScenarioInteractionSignals.Raise(Required);
+      ScenarioInteractionSignals.Clear(Output);
+      ScenarioInteractionSignals.Clear(Required);
+      ScenarioInteractionSignals.Raise(Required);
+      Assert.That(ScenarioInteractionSignals.IsRaised(Output), Is.False);
+    }
+
+    [Test]
     public void Unregister_StopsReacting()
     {
       ScenarioConditionalSignalListeners.Register("L", Source, Output, System.Array.Empty<string>(), consumeOnce: true);

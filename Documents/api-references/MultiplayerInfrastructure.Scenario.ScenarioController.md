@@ -87,7 +87,7 @@ public ScenarioConcurrencyConflictPolicy ConcurrencyConflictPolicy { get; set; }
 판정됩니다. 예: `ScenarioTriggerZone`은 이 프로퍼티로 "재생 중이 아니면 신호 존을 감지하지 않음" 게이팅을
 수행합니다.
 
-`ScenarioConcurrencyConflictPolicy` 값: `Warn`(경고 후 그대로 진행, 기본), `Cancel`(뒤에 점유하려 한 흐름 취소), `Panic`(전체 시나리오 `EndScenario` 중단). 충돌 감지는 대화창 점유 노드가 실제 표시되는 시점에 이루어집니다.
+`ScenarioConcurrencyConflictPolicy` 값: `Warn`(경고 후 그대로 진행, 기본), `Cancel`(뒤에 점유하려 한 흐름 취소), `Panic`(2026-09-07부터 시나리오를 끝내지 않고, 뒤에 요청한 흐름만 취소한 뒤 미수행을 기록). 충돌 감지는 대화창 점유 노드가 실제 표시되는 시점에 이루어집니다.
 
 ---
 
@@ -170,24 +170,24 @@ public void SelectOption(int index)
 ## 7-1. Validator 게이트 타임아웃·실패 분기
 
 `Validator` 노드에 `waitForCondition: true`를 두면, 조건(인터랙션 신호 등)이 충족될 때까지
-진행을 막는 **게이트**로 동작합니다. 기본적으로는 조건이 올라올 때까지 **무한 대기**합니다.
+진행을 막는 **게이트**로 동작합니다. 별도 타임아웃이 없으면 **180초까지 대기**한 뒤 미수행을 기록하고 진행합니다.
 
-신호 미배선·오설정으로 인한 영구 정지(hang)를 막기 위해, 게이트별로 **선택적 타임아웃**을
-지정할 수 있습니다(2026-06-25 도입, 하위호환).
+신호 미배선·오설정으로 인한 영구 정지(hang)를 막기 위해, 게이트별로 **타임아웃**을
+지정할 수 있습니다. 2026-09-07부터 무한 대기를 허용하던 기본 동작에도 복구 상한을 적용합니다.
 
 | 필드 | 타입 | 기본값 | 설명 |
 |---|---|---|---|
-| `WaitTimeoutSeconds` | `float?` | `null` | 게이트 타임아웃(초). `null`/0 이하이면 무한 대기(기존 동작). |
+| `WaitTimeoutSeconds` | `float?` | `null` | 게이트 타임아웃(초). `null`/0 이하 또는 유한하지 않은 값이면 180초를 적용. |
 | `OnWaitTimeout` | `ScenarioValidatorWaitTimeoutBehavior` | `KeepWaiting` | 타임아웃 시 행동. |
 
 `ScenarioValidatorWaitTimeoutBehavior`:
 
 | 값 | 메인 흐름 동작 | 브랜치(Parallel) 내부 동작 |
 |---|---|---|
-| `KeepWaiting`(기본) | 타임아웃 무시, 계속 대기 | 동일 |
-| `FailBranch` | `FailureNextIdentifier`로 분기(없으면 KeepWaiting 폴백) | 게이트 해제 후 체인 진행(전역 분기 없음) |
+| `KeepWaiting`(기본) | 상한에서 미수행을 기록하고 `NextIdentifier`로 진행 | 동일 |
+| `FailBranch` | 유효한 `FailureNextIdentifier`로 분기하며, 없으면 `NextIdentifier`로 복구 | 브랜치 내부에서도 같은 분기 규칙을 적용 |
 | `ForceAdvance` | `NextIdentifier`로 강제 진행 | 게이트 해제 후 체인 진행 |
-| `WarnAndKeepWaiting` | 콘솔+인게임챗 경고 후 계속 대기 | 동일 |
+| `WarnAndKeepWaiting` | 상한에서 경고와 미수행을 기록하고 진행 | 동일 |
 
 실행 경로:
 - 메인 흐름: `ExecuteValidatorNode` → `WaitForValidatorGate`(조건 OR 타임아웃 경합) → 조건 충족 시 `Advance()`,

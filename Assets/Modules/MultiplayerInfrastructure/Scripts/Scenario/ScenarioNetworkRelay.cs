@@ -34,7 +34,7 @@ namespace MultiplayerInfrastructure.Scenario
   /// 그래프에만 사용하며, 병렬 역할 브랜치와 미구현 표현 노드는 기존 호환 경로로 폴백한다.
   /// 단일 플레이어(호스트 단독)에서는 서버=클라 이므로 동작이 기존과 동일하다.
   /// </summary>
-  public sealed class ScenarioNetworkRelay : NetworkBehaviour
+  public sealed partial class ScenarioNetworkRelay : NetworkBehaviour
   {
     private static ScenarioNetworkRelay _instance;
     public static event Func<string, string, bool, NetworkConnection, bool> LineTopologyRequestReceived;
@@ -225,17 +225,17 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>서버가 현재 노드를 모든 표시 참여자에게 전달한다.</summary>
-    public static void PresentAuthoritativeNode(string graphIdentifier, string nodeIdentifier)
+    public static void PresentAuthoritativeNode(string graphIdentifier, string nodeIdentifier, string presentationToken = null)
     {
       if (_instance == null || !InstanceFinder.IsServerStarted
           || string.IsNullOrWhiteSpace(graphIdentifier) || string.IsNullOrWhiteSpace(nodeIdentifier))
         return;
 
-      _instance.ObserversPresentScenarioNode(graphIdentifier, nodeIdentifier);
+      _instance.ObserversPresentScenarioNode(graphIdentifier, nodeIdentifier, presentationToken);
     }
 
     /// <summary>병렬 역할 브랜치의 표현 노드를 배정된 클라이언트 한 명에게만 전달한다.</summary>
-    public static void PresentAuthoritativeNodeToClient(int clientId, string graphIdentifier, string nodeIdentifier)
+    public static void PresentAuthoritativeNodeToClient(int clientId, string graphIdentifier, string nodeIdentifier, string presentationToken = null)
     {
       if (_instance == null || !InstanceFinder.IsServerStarted
           || string.IsNullOrWhiteSpace(graphIdentifier) || string.IsNullOrWhiteSpace(nodeIdentifier))
@@ -249,7 +249,7 @@ namespace MultiplayerInfrastructure.Scenario
       {
         if (pair.Value != null && pair.Value.ClientId == clientId)
         {
-          _instance.TargetPresentRoleNode(pair.Value, graphIdentifier, nodeIdentifier);
+          _instance.TargetPresentRoleNode(pair.Value, graphIdentifier, nodeIdentifier, presentationToken);
           return;
         }
       }
@@ -786,17 +786,30 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>표시 클라이언트가 대화 계속 입력을 서버에 보고한다.</summary>
-    public static void RequestAdvance(string graphIdentifier, string nodeIdentifier)
+    public static void RequestAdvance(string graphIdentifier, string nodeIdentifier, string presentationToken = null)
     {
       if (_instance != null && InstanceFinder.IsClientStarted)
-        _instance.CmdRequestAdvance(graphIdentifier, nodeIdentifier);
+        _instance.CmdRequestAdvance(graphIdentifier, nodeIdentifier, presentationToken);
     }
 
     /// <summary>표시 클라이언트가 Choice 선택을 서버에 보고한다.</summary>
-    public static void RequestChoiceSelection(string graphIdentifier, string nodeIdentifier, int optionIndex)
+    public static void RequestChoiceSelection(string graphIdentifier, string nodeIdentifier, int optionIndex, string presentationToken = null)
     {
       if (_instance != null && InstanceFinder.IsClientStarted)
-        _instance.CmdRequestChoiceSelection(graphIdentifier, nodeIdentifier, optionIndex);
+        _instance.CmdRequestChoiceSelection(graphIdentifier, nodeIdentifier, optionIndex, presentationToken);
+    }
+
+    public static void AcknowledgePresentation(string graphIdentifier, string nodeIdentifier, string token)
+    {
+      if (_instance != null && InstanceFinder.IsClientStarted)
+        _instance.CmdAcknowledgePresentation(graphIdentifier, nodeIdentifier, token);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdAcknowledgePresentation(string graphIdentifier, string nodeIdentifier, string token, NetworkConnection sender = null)
+    {
+      if (sender != null)
+        ScenarioController.Instance?.AcknowledgePresentation(sender.ClientId, graphIdentifier, nodeIdentifier, token);
     }
 
     private void Awake()
@@ -852,17 +865,17 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     [TargetRpc]
-    private void TargetPresentRoleNode(NetworkConnection conn, string graphIdentifier, string nodeIdentifier)
+    private void TargetPresentRoleNode(NetworkConnection conn, string graphIdentifier, string nodeIdentifier, string presentationToken)
     {
-      ScenarioController.Instance?.PresentAuthoritativeNode(graphIdentifier, nodeIdentifier, roleScoped: true);
+      ScenarioController.Instance?.PresentAuthoritativeNode(graphIdentifier, nodeIdentifier, roleScoped: true, presentationToken: presentationToken);
     }
 
     [ObserversRpc]
-    private void ObserversPresentScenarioNode(string graphIdentifier, string nodeIdentifier)
+    private void ObserversPresentScenarioNode(string graphIdentifier, string nodeIdentifier, string presentationToken)
     {
       // 호스트에서도 서버 권위 실행기와 표시 UI가 같은 Controller 인스턴스일 수 있다.
       // 그 경우 서버가 UI를 직접 실행하지 않으므로, 별도 표시 인스턴스가 없으면 무시한다.
-      ScenarioController.Instance?.PresentAuthoritativeNode(graphIdentifier, nodeIdentifier);
+      ScenarioController.Instance?.PresentAuthoritativeNode(graphIdentifier, nodeIdentifier, presentationToken: presentationToken);
     }
 
     [ObserversRpc]
@@ -1063,20 +1076,20 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdRequestAdvance(string graphIdentifier, string nodeIdentifier, NetworkConnection sender = null)
+    private void CmdRequestAdvance(string graphIdentifier, string nodeIdentifier, string presentationToken, NetworkConnection sender = null)
     {
       if (sender == null || ScenarioController.Instance == null
-          || !ScenarioController.Instance.TryAdvanceFromPresentation(sender.ClientId, graphIdentifier, nodeIdentifier))
+          || !ScenarioController.Instance.TryAdvanceFromPresentation(sender.ClientId, graphIdentifier, nodeIdentifier, presentationToken))
       {
         Debug.LogWarning($"[ScenarioNetworkRelay] Rejected dialogue advance from client {sender?.ClientId.ToString() ?? "unknown"}.");
       }
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdRequestChoiceSelection(string graphIdentifier, string nodeIdentifier, int optionIndex, NetworkConnection sender = null)
+    private void CmdRequestChoiceSelection(string graphIdentifier, string nodeIdentifier, int optionIndex, string presentationToken, NetworkConnection sender = null)
     {
       if (sender == null || ScenarioController.Instance == null
-          || !ScenarioController.Instance.TrySelectOptionFromPresentation(sender.ClientId, graphIdentifier, nodeIdentifier, optionIndex))
+          || !ScenarioController.Instance.TrySelectOptionFromPresentation(sender.ClientId, graphIdentifier, nodeIdentifier, optionIndex, presentationToken))
       {
         Debug.LogWarning($"[ScenarioNetworkRelay] Rejected choice selection from client {sender?.ClientId.ToString() ?? "unknown"}.");
       }

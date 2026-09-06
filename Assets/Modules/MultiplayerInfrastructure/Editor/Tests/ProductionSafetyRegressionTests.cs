@@ -10,6 +10,46 @@ namespace MultiplayerInfrastructure.Tests
 {
   public sealed class ProductionSafetyRegressionTests
   {
+    [Test]
+    public void ConnectionTimeoutsOverrideDisabledDetectionForBothPeers()
+    {
+      var go = new GameObject("connection-timeout-test");
+      go.SetActive(false);
+      try
+      {
+        var manager = go.AddComponent<FishNet.Managing.NetworkManager>();
+        var client = go.AddComponent<FishNet.Managing.Client.ClientManager>();
+        var server = go.AddComponent<FishNet.Managing.Server.ServerManager>();
+        var transportManager = go.AddComponent<FishNet.Managing.Transporting.TransportManager>();
+        var transport = go.AddComponent<FishNet.Transporting.Tugboat.Tugboat>();
+        transportManager.Transport = transport;
+        typeof(FishNet.Managing.NetworkManager).GetProperty("ClientManager").SetValue(manager, client);
+        typeof(FishNet.Managing.NetworkManager).GetProperty("ServerManager").SetValue(manager, server);
+        typeof(FishNet.Managing.NetworkManager).GetProperty("TransportManager").SetValue(manager, transportManager);
+        client.SetRemoteServerTimeout(FishNet.Managing.RemoteTimeoutType.Disabled, 180);
+        server.SetRemoteClientTimeout(FishNet.Managing.RemoteTimeoutType.Disabled, 180);
+        var support = go.AddComponent<MultiplayerInfrastructure.FishNetSupports.FishNetSupport>();
+        var supportType = support.GetType();
+        supportType.GetField("networkManager", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(support, manager);
+        supportType.GetMethod("ConfigureConnectionTimeouts", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(support, null);
+
+        Assert.That(ReadPrivate(client, "_remoteServerTimeoutDuration"), Is.EqualTo(15));
+        Assert.That(ReadPrivate(server, "_remoteClientTimeoutDuration"), Is.EqualTo(15));
+        Assert.That(ReadPrivate(client, "_remoteServerTimeout"), Is.EqualTo(FishNet.Managing.RemoteTimeoutType.Development));
+        Assert.That(ReadPrivate(server, "_remoteClientTimeout"), Is.EqualTo(FishNet.Managing.RemoteTimeoutType.Development));
+        // Tugboat.GetTimeout reports the maximum supported value, not the configured value.
+        Assert.That(ReadPrivate(transport, "_clientTimeout"), Is.EqualTo(15));
+        Assert.That(ReadPrivate(transport, "_serverTimeout"), Is.EqualTo(15));
+      }
+      finally
+      {
+        Object.DestroyImmediate(go);
+      }
+    }
+
+    private static object ReadPrivate(object target, string name)
+      => target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(target);
+
     [TestCase("  Alice  ", "Alice")]
     [TestCase("한글 이름", "한글 이름")]
     public void DisplayNameNormalizationTrimsValidNames(string input, string expected)

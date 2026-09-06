@@ -205,7 +205,8 @@ namespace MultiplayerInfrastructure.Chat
       string scenarioIdentifier,
       int ownerClientId,
       bool allowMultipleRoleBranchesForSinglePlayer,
-      string entrypointIdentifier)
+      string entrypointIdentifier,
+      string compatibilitySession)
     {
       if (!Registry.Registry.TryGetScenarioGraph(scenarioIdentifier, out ScenarioGraph graph, out string error))
       {
@@ -222,6 +223,7 @@ namespace MultiplayerInfrastructure.Chat
       // 호환 실행 경로에서는 클라이언트가 자체 상태기를 실행하므로 서버의 확정 규칙을 먼저 적용한다.
       ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer = allowMultipleRoleBranchesForSinglePlayer;
       int? owner = ownerClientId >= 0 ? ownerClientId : (int?)null;
+      ScenarioNetworkRelay.ConfigureCompatibilitySession(scenarioIdentifier, compatibilitySession);
       ScenarioController.Instance.StartScenario(graph, null, owner);
 
       // 진입 지점이 지정되면 처음부터 다시 밟지 않고 그 지점으로 바로 옮긴다. 접속이 끊겼다가 다시
@@ -562,6 +564,8 @@ namespace MultiplayerInfrastructure.Chat
           && ScenarioNetworkRelay.TryStartAuthoritativeScenario(scenarioIdentifier, ownerId, resolvedTargets))
         return true;
 
+      string compatibilitySession = hasEntrypoint ? null
+        : ScenarioNetworkRelay.BeginCompatibilitySession(scenarioIdentifier, resolvedTargets);
       foreach (var target in resolvedTargets)
       {
         int targetOwnerId = target.ClientId >= 0 ? (int)target.ClientId : -1;
@@ -570,7 +574,8 @@ namespace MultiplayerInfrastructure.Chat
           scenarioIdentifier,
           targetOwnerId,
           ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer,
-          hasEntrypoint ? entrypointIdentifier.Trim() : string.Empty);
+          hasEntrypoint ? entrypointIdentifier.Trim() : string.Empty,
+          compatibilitySession);
       }
 
       return true;

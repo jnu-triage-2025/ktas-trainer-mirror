@@ -146,7 +146,7 @@
 | `branches[].identifier` | string | 브랜치 고유 ID                                        |
 | `branches[].completionConditionIdentifier` | string | 완료 조건 식별자   |
 
-> Parallel 노드는 브랜치 완료를 기다린 뒤 종료되며, `nextIdentifier`를 사용하지 않습니다.
+> Parallel 노드는 지정된 완료 조건을 기다린 뒤 `nextIdentifier`로 진행합니다.
 
 #### 3.7 InvokeEvent (`ScenarioInvokeEventNodeDTO`)
 
@@ -167,7 +167,7 @@
 | `onFailure`              | string  | `Panic` \| `Branching` \| `Ignore`                                 |
 | `failureNextIdentifier`  | string  | `Branching`(또는 `onWaitTimeout=FailBranch`)일 때 이동할 노드 ID    |
 | `waitForCondition`       | bool    | `true`이면 조건 충족까지 진행을 막는 게이트로 동작(기본 `false`)     |
-| `waitTimeoutSeconds`     | number  | (옵션) 게이트 타임아웃(초). 미지정/0 이하면 무한 대기(기존 동작)     |
+| `waitTimeoutSeconds`     | number  | (옵션) 게이트 타임아웃(초). 미지정/0 이하 또는 유한하지 않은 값이면 180초를 적용     |
 | `onWaitTimeout`          | string  | 타임아웃 시 행동: `KeepWaiting`(기본) \| `FailBranch` \| `ForceAdvance` \| `WarnAndKeepWaiting` |
 | `idleWhileWaiting`       | bool    | `true`이면 게이트가 조건을 기다리는 동안 이 노드를 담은 병렬 분기를 "다른 참여자를 기다리는 idle 상태"로 표시(기본 `false`). 한 담당자에게 태그별 분기가 여럿 배정되어 순차 실행될 때, idle 분기는 끝난 것과 같이 취급되어 같은 담당자의 다음 분기가 바로 시작됨. 다른 역할이 올릴 신호를 기다리는 게이트에 지정 |
 | `nextIdentifier`         | string  | 검증 성공 시(또는 `onWaitTimeout=ForceAdvance`) 이동할 노드 ID       |
@@ -177,7 +177,7 @@
 | 필드              | 타입    | 설명                                                                                           |
 |-------------------|---------|------------------------------------------------------------------------------------------------|
 | `operation`       | string  | `Add` \| `Update` \| `Remove`                                                                  |
-| `failureStrategy` | string  | `Overwrite`(기존 덮어쓰기) \| `Ignore`(무시) \| `Panic`(예외 발생)                              |
+| `failureStrategy` | string  | `Overwrite`(기존 덮어쓰기) \| `Ignore`(무시) \| `Panic`(미수행 기록 후 진행)                    |
 | `quest`           | object  | 퀘스트 페이로드. `ScenarioQuestDataDTO` 구조를 사용하며 `Id` 필수                             |
 | `nextIdentifier`  | string  | 다음 노드 ID                                                                                    |
 
@@ -191,7 +191,7 @@
 | `QuestContent` | string \| null    | 상세 내용 또는 본문      |
 | `IsTracked`    | boolean           | 추적 여부 (기본 `false`) |
 
-동작 요약: `Add`는 새 퀘스트를 추가하고, `Update`는 ID가 존재할 때 필드를 갱신합니다. `Remove`는 ID 일치 퀘스트를 제거합니다. `failureStrategy`가 `Panic`일 때 실패 시 예외로 중단되고, `Ignore`는 실패를 무시하며, `Overwrite`는 추가/업데이트 시 동일 ID가 있을 경우 덮어씁니다.
+동작 요약: `Add`는 새 퀘스트를 추가하고, `Update`는 ID가 존재할 때 필드를 갱신합니다. `Remove`는 ID 일치 퀘스트를 제거합니다. `failureStrategy`가 `Panic`일 때 실패를 미수행으로 기록한 뒤 다음 노드로 진행하고, `Ignore`는 실패를 무시하며, `Overwrite`는 추가/업데이트 시 동일 ID가 있을 경우 덮어씁니다.
 
 #### 3.10 ManualEntrypoint (`ScenarioManualEntrypointNodeDTO`)
 
@@ -421,4 +421,4 @@
 }
 ```
 
-`Add`는 동일 ID가 존재해도 `Overwrite`로 덮어쓰며, `Remove`는 없을 경우 `Ignore` 덕분에 실패를 무시합니다. 실패를 에러로 처리하려면 `failureStrategy`를 `Panic`으로 두면 됩니다.
+`Add`는 동일 ID가 존재해도 `Overwrite`로 덮어쓰며, `Remove`는 없을 경우 `Ignore` 덕분에 실패를 무시합니다. 실패를 미수행으로 기록하려면 `failureStrategy`를 `Panic`으로 두면 됩니다. `Panic`은 2026-09-07부터 시나리오를 중단하지 않습니다.

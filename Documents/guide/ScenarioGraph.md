@@ -210,12 +210,12 @@ NPC의 런타임 설정과 이동을 한 노드에서 제어합니다. `mode: Up
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
 | `rootConditions` | `ScenarioValidatorRootCondition[]` | 평가할 조건 목록(하단 참고). `condition: Conditions`이면 루트 조건의 `conditions`(인터렉션 정의와 같은 `ScenarioCondition` 목록)를 판정합니다 | - |
-| `onFailure` | `string` (`Panic`\|`Branching`\|`Ignore`) | 조건 실패 시 동작. `Panic`=오류 처리, `Branching`=`failureNextIdentifier`로 분기, `Ignore`=무시하고 계속 진행 | `Branching` |
+| `onFailure` | `string` (`Panic`\|`Branching`\|`Ignore`) | 조건 실패 시 동작. `Panic`=미수행을 기록한 뒤 `nextIdentifier`로 진행, `Branching`=`failureNextIdentifier`로 분기(대상 노드가 없으면 미수행을 기록하고 `nextIdentifier`로 복구), `Ignore`=무시하고 계속 진행 | `Branching` |
 | `failureReportTargets` | `string` (flags: `UnityConsole`\|`InGameChat`) | 실패 보고 대상(플래그 조합 가능) | `UnityConsole` |
 | `failureNextIdentifier` | `string` | (`onFailure`가 `Branching`일 때) 실패 시 이동할 노드 식별자 | `validator-fail-branch` |
 | `waitForCondition` | `bool` | 참이면 조건이 충족될 때까지 진행을 막고 폴링 대기하는 게이트로 동작합니다. 미지정/false이면 1회만 평가하고 `onFailure` 정책을 따릅니다(하위호환, 기본값 false) | `true` |
-| `waitTimeoutSeconds` | `float` (nullable) | `waitForCondition` 게이트의 타임아웃(초)입니다. `null`/0 이하면 타임아웃 없이 무한 대기합니다(기본값) | `30.0` |
-| `onWaitTimeout` | `string` (`KeepWaiting`\|`FailBranch`\|`ForceAdvance`\|`WarnAndKeepWaiting`) | `waitTimeoutSeconds` 초과 시 동작. `KeepWaiting`=계속 대기(기본값), `FailBranch`=`failureNextIdentifier`로 분기, `ForceAdvance`=`nextIdentifier`로 강제 진행, `WarnAndKeepWaiting`=경고 후 계속 대기 | `KeepWaiting` |
+| `waitTimeoutSeconds` | `float` (nullable) | `waitForCondition` 게이트의 타임아웃(초)입니다. `null`/0 이하 또는 유한하지 않은 값이면 180초 복구 상한을 적용합니다 | `30.0` |
+| `onWaitTimeout` | `string` (`KeepWaiting`\|`FailBranch`\|`ForceAdvance`\|`WarnAndKeepWaiting`) | `waitTimeoutSeconds` 초과 시 동작. `KeepWaiting`=상한까지 대기 후 미수행을 기록하고 진행(기본값), `FailBranch`=`failureNextIdentifier`로 분기, `ForceAdvance`=`nextIdentifier`로 강제 진행, `WarnAndKeepWaiting`=상한에서 경고와 미수행을 기록하고 진행 | `KeepWaiting` |
 | `nextIdentifier` | `string` | 조건 충족(또는 `Ignore`/`ForceAdvance`) 시 이동할 다음 노드 식별자 | `next-node-identifier` |
 
 #### ScenarioValidatorRootCondition
@@ -247,7 +247,7 @@ NPC의 런타임 설정과 이동을 한 노드에서 제어합니다. `mode: Up
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
 | `operation` | `string` (`Add`\|`Update`\|`Remove`) | 퀘스트 조작 종류 | `Add` |
-| `failureStrategy` | `string` (`Overwrite`\|`Ignore`\|`Panic`) | 충돌(이미 존재하는 퀘스트 등) 처리 방식(기본값 `Overwrite`) | `Overwrite` |
+| `failureStrategy` | `string` (`Overwrite`\|`Ignore`\|`Panic`) | 충돌(이미 존재하는 퀘스트 등) 처리 방식(기본값 `Overwrite`). `Panic`은 2026-09-07부터 시나리오를 중단하지 않고 미수행을 기록한 뒤 다음 노드로 진행합니다 | `Overwrite` |
 | `questDefinitionIdentifier` | `string` | 참조할 퀘스트 정의 식별자(`.quest.json`) | `main-quest` |
 | `quest` | `QuestData` | 인라인 퀘스트 데이터(제목/설명/내용/추적 여부 등). `questDefinitionIdentifier`와 함께 또는 대신 사용 가능 | - |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
@@ -574,3 +574,25 @@ Dialogue 노드처럼 화면에 텍스트 창을 띄우지 않고, 순수하게 
 > 이 예시 그래프는 두 개의 흐름(자기완결적 시퀀스)으로 구성되어 있습니다. **흐름1**(`flow1_*`)은 감시 등록 안내를 출력하고 `ServerInternalSignal`(operation=`Resolve`, `waitForResolution: false`)로 등록 신호만 올린 뒤 마칩니다 — 진입점 `flow1_intro_print`, 마침점 `flow1_registered_print`. **흐름2**(`flow2_*`)는 진입점 `flow2_wait_connect_start`의 `Validator` 게이트에서 연결 시작 신호를 기다렸다가, 연결/끊김 신호를 순차적으로 감지해 메시지를 출력하고 마침점 `flow2_print_disconnected`에서 종료합니다. 두 흐름은 논리적으로 분리된 시퀀스이며, 예시에서는 흐름1의 마침점이 흐름2의 진입점으로 이어지도록 연결되어 있습니다.
 >
 > **주의 — UI 없는(신호 대기) 시나리오와 Interactable**: 이 예시처럼 `Dialogue`/`Choice`/`Quiz` 같은 대화창 UI 노드가 하나도 없는 "배경 신호 감시" 시나리오는, 시나리오가 진행 중이어도 월드 Interactable 힌트를 가리지 않습니다. (시나리오 시작 시점에 힌트 UI를 대화 모드로 강제 전환하지 않으며, 실제 대화창 노드가 표시될 때만 지연 전환합니다.) 또한 시나리오가 종료되면 로컬 플레이어의 근처 Interactable을 다시 인식시켜 힌트가 현재 상태로 복구됩니다.
+
+
+## 다인 플레이의 진행 복구 (2026-09-07)
+
+서버 단일 실행을 지원하는 그래프는 기존과 같이 서버가 진행한다. 플레이어별 역할 선택 등의 이유로
+호환 실행 경로를 사용하는 그래프는 각 피어가 자신의 흐름을 실행하되, `Parallel.waitMode=All`의 합류는
+서버가 시작 대상 전체의 완료를 확인한 뒤 허용한다. 접속이 끊긴 대상은 남은 참여자의 합류를 막지 않는다.
+합류는 실행 세션·병렬 노드·방문 횟수로 구분하며, 중복 완료나 이전 방문의 완료가 다음 방문을 열지 않는다.
+서버는 최초 완료 보고부터 180초 뒤에도 합류하지 못하면 복구로 해제한다. 해제 통지가 오지 않으면
+클라이언트는 195초 뒤 미수행 기록을 남기고 진행한다. 수동 진입으로 합류한 피어는 기존 참여자의 합류를 다시 잠그지 않는다.
+
+대화와 선택지의 입력 대기는 180초로 제한한다. 서버 표시 경로는 요청마다 고유 번호를 부여하고,
+표시 확인을 받지 못하면 15초 간격으로 같은 요청을 다시 보낸다. 이전 방문의 응답은 받지 않는다.
+표시 클라이언트는 같은 요청이 이미 표시 중이면 내용을 다시 초기화하지 않고 확인만 보낸다.
+
+선택지를 표시할 수 없거나 응답이 없으면 정답이나 정상 선택으로 평가하지 않는다. `nextIdentifier`가
+있으면 그 경로로 복구하며, 없으면 Choice는 다음 노드가 지정된 첫 선택지의 경로를 이용한다.
+Quiz는 오답 경로를 이용한다. 별도 복구 의미가 필요한 콘텐츠는 `nextIdentifier`를 명시해야 한다.
+
+담당자 이탈, 게이트 시간 초과, 표시 실패는 `ScenarioController.RecoveryNotes`와 노드 방문 기록에 남는다.
+복구는 완료 신호·아이템·환자의 의료 상태를 임의로 생성하지 않는다. 후속 게이트도 동일한 상한으로 복구하므로,
+필수 행동이 불가능해진 경우에도 해당 행동을 성공으로 위장하지 않은 채 진행할 수 있다.

@@ -8,11 +8,14 @@ namespace TriageTrainer.Tests
 {
   public sealed class PatientBCGateRecoveryTests
   {
-    [Test]
-    public void CollaborativeWaitGatesForceAdvanceAfterTheirTimeout()
+    [TestCase("patient_b_c_ct")]
+    [TestCase("patient_a_critical")]
+    [TestCase("disaster_intro")]
+    [TestCase("tutorial")]
+    public void CollaborativeWaitGatesForceAdvanceAfterTheirTimeout(string scenario)
     {
       var path = Path.Combine(Application.dataPath,
-        "Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json");
+        $"Modules/TriageTrainer/Resources/Scenario/{scenario}.scenario.json");
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
       var gates = graph.Nodes.Values
         .OfType<ScenarioValidatorNode>()

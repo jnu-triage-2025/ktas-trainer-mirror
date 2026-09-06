@@ -18,6 +18,8 @@ namespace MultiplayerInfrastructure.FishNetSupports
 {
   public partial class FishNetSupport
   {
+    private const ushort ConnectionTimeoutSeconds = 15;
+
     private const string FallbackSpawnIdentifier = "spawnpoint-commons";
 
     private static readonly FieldInfo PlayerSpawnerPrefabField =
@@ -412,6 +414,21 @@ namespace MultiplayerInfrastructure.FishNetSupports
       Debug.Log($"[FishNetSupport] PlayerSpawner.Spawns configured to '{spawnIdentifier}' at {spawnTransform.position}.");
     }
 
+    private void ConfigureConnectionTimeouts()
+    {
+      // Packet silence is independent of scenario input waits. Enable in editor and all builds.
+      networkManager.ClientManager.SetRemoteServerTimeout(RemoteTimeoutType.Development, ConnectionTimeoutSeconds);
+      networkManager.ServerManager.SetRemoteClientTimeout(RemoteTimeoutType.Development, ConnectionTimeoutSeconds);
+
+      // Transport detection must also work while FishNet suspends its checks during scene loading.
+      var transport = networkManager.TransportManager?.Transport;
+      if (transport != null)
+      {
+        transport.SetTimeout(ConnectionTimeoutSeconds, asServer: false);
+        transport.SetTimeout(ConnectionTimeoutSeconds, asServer: true);
+      }
+    }
+
     public void StartServer()
     {
       if (!ResolveNetworkManagerInHierarchy())
@@ -423,6 +440,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
         return;
       }
 
+      ConfigureConnectionTimeouts();
       networkManager.ServerManager.StartConnection();
       _serverStateAssumed = LocalConnectionState.Started;
     }
@@ -453,6 +471,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
         return;
       }
 
+      ConfigureConnectionTimeouts();
       networkManager.ClientManager.StartConnection();
       _clientStateAssumed = LocalConnectionState.Started;
     }

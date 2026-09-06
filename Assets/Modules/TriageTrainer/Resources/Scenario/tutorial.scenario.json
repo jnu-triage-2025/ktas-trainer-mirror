@@ -646,7 +646,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "identifier": "V_TUT_CLOCK_SUBMITTED",
       "nodeType": "Validator",
       "nextIdentifier": "Q_TUT_CRAFTING_REMOVE"
@@ -673,7 +673,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "identifier": "V_TUT_DELIVERY_PACKAGE_ACQUIRED",
       "nodeType": "Validator",
       "nextIdentifier": "V_TUT_DELIVERY_PACKAGE_SUBMITTED"
@@ -700,7 +700,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "identifier": "V_TUT_DELIVERY_PACKAGE_SUBMITTED",
       "nodeType": "Validator",
       "nextIdentifier": "CONFIG_PACKAGE_SUBMISSION_HIDE"
@@ -727,7 +727,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "identifier": "V_TUT_DELIVERY_WAYPOINT_REACHED",
       "nodeType": "Validator",
       "nextIdentifier": "D_TUT_PACKAGE_PROMPT"
@@ -754,7 +754,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "identifier": "V_TUT_HAT_TALK_START",
       "nodeType": "Validator",
       "nextIdentifier": "Q_TUT_FIND_HAT_REMOVE"
@@ -781,7 +781,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "identifier": "V_TUT_PLAYER_MOVED",
       "nodeType": "Validator",
       "nextIdentifier": "Q_TUT_MOVE_REMOVE"
@@ -808,7 +808,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "WarnAndKeepWaiting",
+      "onWaitTimeout": "ForceAdvance",
       "identifier": "branch_decoy_watch",
       "nodeType": "Validator",
       "nextIdentifier": "D_TUT_DECOY_HINT"
