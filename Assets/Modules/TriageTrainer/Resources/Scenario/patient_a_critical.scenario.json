@@ -994,11 +994,11 @@
     },
     "C004": {
       "speakerName": "@s",
-      "dialogueContent": "환자의 AVPU는...",
+      "dialogueContent": "의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "AVPU A",
+          "displayText": "A(Alert, 완전히 깨어 있음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1009,7 +1009,7 @@
           "nextNodeIdentifier": "N006_retry_a"
         },
         {
-          "displayText": "AVPU V",
+          "displayText": "V(Verbal response, 음성에 반응 있음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1020,7 +1020,7 @@
           "nextNodeIdentifier": "N006_retry_a"
         },
         {
-          "displayText": "AVPU P",
+          "displayText": "P(Pain response, 통증에 반응 있음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1031,7 +1031,7 @@
           "nextNodeIdentifier": "N006_3"
         },
         {
-          "displayText": "AVPU U",
+          "displayText": "U(Unconsciousness, 반응 없음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1052,11 +1052,11 @@
     },
     "C005": {
       "speakerName": "@s",
-      "dialogueContent": "환자의 GCS E는...",
+      "dialogueContent": "관찰된 E(Eye Opening) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "GCS E 4",
+          "displayText": "4점(자발적 반응)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1067,7 +1067,7 @@
           "nextNodeIdentifier": "N006_retry_b"
         },
         {
-          "displayText": "GCS E 3",
+          "displayText": "3점(구두 명령에 반응)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1078,7 +1078,7 @@
           "nextNodeIdentifier": "N006_retry_b"
         },
         {
-          "displayText": "GCS E 2",
+          "displayText": "2점(통증에 반응)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1089,7 +1089,7 @@
           "nextNodeIdentifier": "N006_4"
         },
         {
-          "displayText": "GCS E 1",
+          "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1110,11 +1110,11 @@
     },
     "C006": {
       "speakerName": "@s",
-      "dialogueContent": "환자의 GCS V는...",
+      "dialogueContent": "관찰된 V(Verbal Response) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "GCS V 5",
+          "displayText": "5점(적절한 답변)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1125,7 +1125,7 @@
           "nextNodeIdentifier": "N006_retry_c"
         },
         {
-          "displayText": "GCS V 4",
+          "displayText": "4점(혼란)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1136,7 +1136,7 @@
           "nextNodeIdentifier": "N006_retry_c"
         },
         {
-          "displayText": "GCS V 3",
+          "displayText": "3점(부적절한 답변)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1147,7 +1147,7 @@
           "nextNodeIdentifier": "N006_retry_c"
         },
         {
-          "displayText": "GCS V 2",
+          "displayText": "2점(신음소리)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1158,7 +1158,7 @@
           "nextNodeIdentifier": "N006_5"
         },
         {
-          "displayText": "GCS V 1",
+          "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1179,11 +1179,11 @@
     },
     "C007": {
       "speakerName": "@s",
-      "dialogueContent": "환자의 GCS M은...",
+      "dialogueContent": "관찰된 M(Motor Response) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "GCS M 6",
+          "displayText": "6점(명령 수행)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1194,7 +1194,7 @@
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
-          "displayText": "GCS M 5",
+          "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1205,7 +1205,7 @@
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
-          "displayText": "GCS M 4",
+          "displayText": "4점(통증에 회피)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1216,7 +1216,7 @@
           "nextNodeIdentifier": "N006_6"
         },
         {
-          "displayText": "GCS M 3",
+          "displayText": "3점(이상 굴곡)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1227,7 +1227,7 @@
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
-          "displayText": "GCS M 2",
+          "displayText": "2점(이상 신전)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1238,7 +1238,7 @@
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
-          "displayText": "GCS M 1",
+          "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1259,7 +1259,7 @@
     },
     "C008": {
       "speakerName": "@s",
-      "dialogueContent": "(투여할 산소량은..)",
+      "dialogueContent": "투여될 산소의 양을 조절합니다.",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1317,11 +1317,11 @@
     },
     "C009": {
       "speakerName": "@s",
-      "dialogueContent": "(산소량은..)",
+      "dialogueContent": "투여될 산소의 양을 조절합니다.",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "(유량계를 Full로 올린다.)",
+          "displayText": "Full",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1340,7 +1340,7 @@
     },
     "C010": {
       "speakerName": "@s",
-      "dialogueContent": "(성인에게 제공할 산소량은..)",
+      "dialogueContent": "1. 성인의 정확한 산소 제공량은?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1376,7 +1376,7 @@
     },
     "C011": {
       "speakerName": "@s",
-      "dialogueContent": "(짜는 속도는..)",
+      "dialogueContent": "2. 심폐소생술 시 앰부 배깅(ambu-bagging)의 적절한 속도는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1423,7 +1423,7 @@
     },
     "C012": {
       "speakerName": "@s",
-      "dialogueContent": "(성인의 가슴 압박 깊이는..)",
+      "dialogueContent": "1. 성인의 정확한 가슴 압박 깊이는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1470,7 +1470,7 @@
     },
     "C013": {
       "speakerName": "@s",
-      "dialogueContent": "(압박 위치는..)",
+      "dialogueContent": "2. 성인의 정확한 가슴 압박 위치는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1506,7 +1506,7 @@
     },
     "C014": {
       "speakerName": "@s",
-      "dialogueContent": "(압박 횟수는..)",
+      "dialogueContent": "3. 정확한 가슴 압박 횟수는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1553,7 +1553,7 @@
     },
     "C015": {
       "speakerName": "@s",
-      "dialogueContent": "(가슴압박에서 놓치기 쉬운 것은..)",
+      "dialogueContent": "4. 가슴압박 시 주의사항은?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1600,7 +1600,7 @@
     },
     "C016": {
       "speakerName": "@s",
-      "dialogueContent": "(제세동을 실시해야 하는 심전도는..)",
+      "dialogueContent": "1. 제세동기는 Sync 버튼을 눌러 Cardioversion을 제공할 수 있습니다. 다음 중 제세동을 실시해야 하는 심전도는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1658,7 +1658,7 @@
     },
     "C017": {
       "speakerName": "@s",
-      "dialogueContent": "(이상파형 제세동기의 에너지 양은..)",
+      "dialogueContent": "2. 이상파형(Biphasic) 제세동기에서 필요한 에너지 양은?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1694,7 +1694,7 @@
     },
     "C018": {
       "speakerName": "@s",
-      "dialogueContent": "(전기충격 전에 반드시 해야 할 것은..)",
+      "dialogueContent": "3. 제세동 등 전기충격 시 주의해야 할 사항은?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1752,7 +1752,7 @@
     },
     "C019": {
       "speakerName": "@s",
-      "dialogueContent": "(다음 에피네프린은 언제 투여하지..)",
+      "dialogueContent": "1. 심정지 상황에서 에피네프린의 투여 간격은 어떻게 되는가?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1810,7 +1810,7 @@
     },
     "C020": {
       "speakerName": "@s",
-      "dialogueContent": "(팔로 약물을 투여할 때의 절차는..)",
+      "dialogueContent": "2. 말초(팔)로 약물을 투여하는 경우, 적절한 투여 절차는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1857,7 +1857,7 @@
     },
     "C021": {
       "speakerName": "@s",
-      "dialogueContent": "(성인의 가슴 압박 깊이는..)",
+      "dialogueContent": "1. 성인의 정확한 가슴 압박 깊이는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1904,7 +1904,7 @@
     },
     "C022": {
       "speakerName": "@s",
-      "dialogueContent": "(압박 위치는..)",
+      "dialogueContent": "2. 성인의 정확한 가슴 압박 위치는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1940,7 +1940,7 @@
     },
     "C023": {
       "speakerName": "@s",
-      "dialogueContent": "(압박 횟수는..)",
+      "dialogueContent": "3. 정확한 가슴 압박 횟수는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1987,7 +1987,7 @@
     },
     "C024": {
       "speakerName": "@s",
-      "dialogueContent": "(가슴압박에서 놓치기 쉬운 것은..)",
+      "dialogueContent": "4. 가슴압박 시 주의사항은?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -2034,7 +2034,7 @@
     },
     "C025": {
       "speakerName": "@s",
-      "dialogueContent": "(성인에게 제공할 산소량은..)",
+      "dialogueContent": "1. 성인의 정확한 산소 제공량은?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -2070,7 +2070,7 @@
     },
     "C026": {
       "speakerName": "@s",
-      "dialogueContent": "(짜는 속도는..)",
+      "dialogueContent": "2. 심폐소생술 중 적절한 속도는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -2117,7 +2117,7 @@
     },
     "C027": {
       "speakerName": "@s",
-      "dialogueContent": "(다음 에피네프린은 언제 투여하지..)",
+      "dialogueContent": "1. 심정지 상황에서 에피네프린의 투여 간격은 어떻게 되는가?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -2175,7 +2175,7 @@
     },
     "C028": {
       "speakerName": "@s",
-      "dialogueContent": "(팔로 약물을 투여할 때의 절차는..)",
+      "dialogueContent": "2. 말초(팔)로 약물을 투여하는 경우, 적절한 투여 절차는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -2222,7 +2222,7 @@
     },
     "C029": {
       "speakerName": "@s",
-      "dialogueContent": "(제세동을 실시해야 하는 심전도는..)",
+      "dialogueContent": "1. 제세동기는 Sync 버튼을 눌러 Cardioversion을 제공할 수 있습니다. 다음 중 제세동을 실시해야 하는 심전도는?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -2280,7 +2280,7 @@
     },
     "C030": {
       "speakerName": "@s",
-      "dialogueContent": "(이상파형 제세동기의 에너지 양은..)",
+      "dialogueContent": "2. 이상파형(Biphasic) 제세동기에서 필요한 에너지 양은?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -2316,7 +2316,7 @@
     },
     "C031": {
       "speakerName": "@s",
-      "dialogueContent": "(전기충격 전에 반드시 해야 할 것은..)",
+      "dialogueContent": "3. 제세동 등 전기충격 시 주의해야 할 사항은?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -2374,11 +2374,11 @@
     },
     "C032": {
       "speakerName": "@s",
-      "dialogueContent": "환자의 AVPU는...",
+      "dialogueContent": "의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "AVPU A",
+          "displayText": "A(Alert, 완전히 깨어 있음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2389,7 +2389,7 @@
           "nextNodeIdentifier": "N028_retry_a"
         },
         {
-          "displayText": "AVPU V",
+          "displayText": "V(Verbal response, 음성에 반응 있음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2400,7 +2400,7 @@
           "nextNodeIdentifier": "N028_retry_a"
         },
         {
-          "displayText": "AVPU P",
+          "displayText": "P(Pain response, 통증에 반응 있음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2411,7 +2411,7 @@
           "nextNodeIdentifier": "N028_3"
         },
         {
-          "displayText": "AVPU U",
+          "displayText": "U(Unconsciousness, 반응 없음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2432,11 +2432,11 @@
     },
     "C033": {
       "speakerName": "@s",
-      "dialogueContent": "환자의 GCS E는...",
+      "dialogueContent": "관찰된 E(Eye Opening) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "GCS E 4",
+          "displayText": "4점(자발적)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2447,7 +2447,7 @@
           "nextNodeIdentifier": "N028_retry_b"
         },
         {
-          "displayText": "GCS E 3",
+          "displayText": "3점(명령)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2458,7 +2458,7 @@
           "nextNodeIdentifier": "N028_retry_b"
         },
         {
-          "displayText": "GCS E 2",
+          "displayText": "2점(통증)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2469,7 +2469,7 @@
           "nextNodeIdentifier": "N028_4"
         },
         {
-          "displayText": "GCS E 1",
+          "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2490,11 +2490,11 @@
     },
     "C034": {
       "speakerName": "@s",
-      "dialogueContent": "환자의 GCS V는...",
+      "dialogueContent": "관찰된 V(Verbal Response) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "GCS V 5",
+          "displayText": "5점(적절한 답변)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2505,7 +2505,7 @@
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
-          "displayText": "GCS V 4",
+          "displayText": "4점(혼란)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2516,7 +2516,7 @@
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
-          "displayText": "GCS V 3",
+          "displayText": "3점(부적절한 답변)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2527,7 +2527,7 @@
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
-          "displayText": "GCS V 2",
+          "displayText": "2점(신음소리)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2538,7 +2538,7 @@
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
-          "displayText": "GCS V 1",
+          "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2549,7 +2549,7 @@
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
-          "displayText": "GCS V NT",
+          "displayText": "E(기관삽관)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2570,11 +2570,11 @@
     },
     "C035": {
       "speakerName": "@s",
-      "dialogueContent": "환자의 GCS M은...",
+      "dialogueContent": "관찰된 M(Motor Response) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "GCS M 6",
+          "displayText": "6점(명령 수행)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2585,7 +2585,7 @@
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
-          "displayText": "GCS M 5",
+          "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2596,7 +2596,7 @@
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
-          "displayText": "GCS M 4",
+          "displayText": "4점(통증에 회피)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2607,7 +2607,7 @@
           "nextNodeIdentifier": "N028_6"
         },
         {
-          "displayText": "GCS M 3",
+          "displayText": "3점(이상 굴곡)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2618,7 +2618,7 @@
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
-          "displayText": "GCS M 2",
+          "displayText": "2점(이상 신전)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2629,7 +2629,7 @@
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
-          "displayText": "GCS M 1",
+          "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -2649,12 +2649,13 @@
       "correctOptionIndex": 2
     },
     "D005": {
-      "speakerName": "@s",
-      "dialogueContent": "(출혈이 심하다. 빨리 처치실로 옮기자.)",
+      "speakerName": "시스템",
+      "dialogueContent": "환자 A를 처치실로 이동해야 합니다. @t=[nurse_a, ???], @t=[nurse_b, ???], @t=[nurse_c, ???], @t=[nurse_d, ???]는 각각 환자 침대를 잡으십시오.",
+      "dialogueContentTTSPassing": "환자 A를 처치실로 이동해야 합니다. @t=[nurse_a, ???], @t=[nurse_b, ???], @t=[nurse_c, ???], @t=[nurse_d, ???]는 각각 환자 침대를 잡으십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "interactionRequired": false,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
         "preset": "F3"
@@ -2890,9 +2891,9 @@
       "nextIdentifier": "Q009_1"
     },
     "D010": {
-      "speakerName": "의사",
-      "dialogueContent": "정리하면 GCS 8점, 혈압 70/40mmHg, 맥박 분당 140회로 빠르고 약하며, 호흡수 분당 8회, 체온 35.9도, 산소포화도 82%이고, 경추 고정, 구강 흡인 끝났고, 삽관 준비 된거네요.",
-      "dialogueContentTTSPassing": "정리하면 지 씨 에스 8점, 혈압 70에 40 밀리미터 머큐리, 맥박 분당 140회로 빠르고 약하며, 호흡수 분당 8회, 체온 35.9도, 산소포화도 82퍼센트이고, 경추 고정, 구강 흡인 끝났고, 삽관 준비 된 거네요.",
+      "speakerName": "@t=[nurse_a, ???]",
+      "dialogueContent": "환자의 의식상태는 GCS 8점, 활력징후는 혈압 70/40mmHg, 맥박 강도 약하며 맥박수 140회/분, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다.",
+      "dialogueContentTTSPassing": "환자의 의식상태는 지 씨 에스 8점, 활력징후는 혈압 70에 40, 맥박 강도 약하며 맥박수 140회, 호흡수 8회, 체온 35.9도, 에스피 오 투 82퍼센트입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3016,7 +3017,7 @@
     },
     "D018": {
       "speakerName": "@s",
-      "dialogueContent": "양측 정맥로 모두 확보했습니다.",
+      "dialogueContent": "양측 정맥로가 모두 확보되었습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3578,8 +3579,8 @@
     },
     "N006_3": {
       "speakerName": "@s",
-      "dialogueContent": "(다른 자극에는 반응이 없다가 통증에만 반응했으니 P로 분류하자.)",
-      "dialogueContentTTSPassing": "(다른 자극에는 반응이 없다가 통증에만 반응했으니 피로 분류하자.)",
+      "dialogueContent": "[관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다.",
+      "dialogueContentTTSPassing": "추가 사정으로 지씨에스를 확인합니다. 먼저 아이 오프닝 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3594,8 +3595,8 @@
     },
     "N006_4": {
       "speakerName": "@s",
-      "dialogueContent": "(통증 자극에만 눈을 떴으니 E 2로 분류하자.)",
-      "dialogueContentTTSPassing": "(통증 자극에만 눈을 떴으니 이투로 분류하자.)",
+      "dialogueContent": "[관찰] 다음은 Verbal Response(V)입니다. \"여기가 어디예요?\"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다.",
+      "dialogueContentTTSPassing": "다음은 버벌 리스폰스입니다. 여기가 어디예요?라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3610,8 +3611,8 @@
     },
     "N006_5": {
       "speakerName": "@s",
-      "dialogueContent": "(이해할 수 없는 신음소리만 내고 있으니 GCS V 2로 분류하자.)",
-      "dialogueContentTTSPassing": "(이해할 수 없는 신음소리만 내고 있으니 지 씨 에스 브이 투로 분류하자.)",
+      "dialogueContent": "[관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 팔을 재빨리 굽혀 자극을 피합니다.",
+      "dialogueContentTTSPassing": "마지막으로 모터 리스폰스입니다. 손톱 뿌리쪽 피부에 압력을 가하자 팔을 재빨리 굽혀 자극을 피합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3626,12 +3627,12 @@
     },
     "N006_6": {
       "speakerName": "@s",
-      "dialogueContent": "(통증 자극에서 팔을 굽혀 피했으니 GCS M 4로 분류하자.)",
-      "dialogueContentTTSPassing": "(통증 자극에서 팔을 굽혀 피했으니 지 씨 에스 엠 포로 분류하자.)",
+      "dialogueContent": "GCS 측정 완료",
+      "dialogueContentTTSPassing": "지씨에스 측정 완료",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
         "preset": "F3"
@@ -3642,12 +3643,12 @@
     },
     "D_GCS_SUM_A": {
       "speakerName": "@s",
-      "dialogueContent": "GCS는 E 2, V 2, M 4니까..",
-      "dialogueContentTTSPassing": "지 씨 에스는 이 투, 브이 투, 엠 포니까..",
+      "dialogueContent": "E2 / V2 / M4 = 총 8점 (Stupor) 입니다.",
+      "dialogueContentTTSPassing": "이 투, 브이 투, 엠 포로 총 팔 점, 스투퍼 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
       "identifier": "D_GCS_SUM_A",
       "nodeType": "Dialogue",
@@ -3655,7 +3656,7 @@
     },
     "N006_retry_a": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3670,7 +3671,7 @@
     },
     "N006_retry_b": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 통증 자극에만 반응하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3685,7 +3686,7 @@
     },
     "N006_retry_c": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3700,7 +3701,7 @@
     },
     "N006_retry_d": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 현재 통증으로부터 회피하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3714,12 +3715,13 @@
       "nextIdentifier": "C007"
     },
     "N007_3": {
-      "speakerName": "@s",
-      "dialogueContent": "(조립한 양커 팁을 흡인기에 연결하자)",
+      "speakerName": "시스템",
+      "dialogueContent": "준비된 앙커 팁을 흡인기에 연결하십시오.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
         "preset": "F3"
@@ -3729,12 +3731,13 @@
       "nextIdentifier": "V013_3"
     },
     "N007_4": {
-      "speakerName": "@s",
-      "dialogueContent": "(환자의 구강에 고인 분비물을 흡인한다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "구강 흡인을 진행하십시오.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
         "preset": "F3"
@@ -3744,36 +3747,42 @@
       "nextIdentifier": "D009"
     },
     "D_STABILIZER_APPLIED_A": {
-      "speakerName": "@s",
-      "dialogueContent": "(환자의 목을 지지하며 경추 고정기를 적용했다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "흡인기를 벽에 설치하십시오.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "D_STABILIZER_APPLIED_A",
       "nodeType": "Dialogue",
       "nextIdentifier": "V013_2"
     },
     "D_SUCTION_INSTALLED_A": {
-      "speakerName": "@s",
-      "dialogueContent": "(흡인기를 벽에 설치했다. 양커 팁을 연결하자.)",
+      "speakerName": "시스템",
+      "dialogueContent": "흡인기를 연결하였습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "dialogueContentTTSPassing": null,
       "identifier": "D_SUCTION_INSTALLED_A",
       "nodeType": "Dialogue",
       "nextIdentifier": "N007_3"
     },
     "N008": {
-      "speakerName": "@s",
-      "dialogueContent": "(후두경 블레이드와 핸들을 조립해서 전달하자.)",
+      "speakerName": "시스템",
+      "dialogueContent": "완성된 후두경을 의사에게 전달하세요.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
         "preset": "F3"
@@ -3799,7 +3808,7 @@
     },
     "N009": {
       "speakerName": "@s",
-      "dialogueContent": "(습윤병과 멸균증류수, 유량계를 조립해서 산소 유량계를 만들자.)",
+      "dialogueContent": "완성된 유량계를 클릭한 뒤, 흡인기 옆 벽면을 클릭해 설치하십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3814,7 +3823,7 @@
     },
     "N009_retry": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 처방은 10L 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3829,24 +3838,25 @@
     },
     "N009_CORRECT": {
       "speakerName": "@s",
-      "dialogueContent": "(처방대로 10L로 맞추자.)",
-      "dialogueContentTTSPassing": "(처방대로 10리터로 맞추자.)",
+      "dialogueContent": "산소 10L 투여하겠습니다.",
+      "dialogueContentTTSPassing": "산소 십리터 투여하겠습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
       "identifier": "N009_CORRECT",
       "nodeType": "Dialogue",
       "nextIdentifier": "D016"
     },
     "N010": {
-      "speakerName": "@s",
-      "dialogueContent": "(멸균장갑부터 착용하자.)",
+      "speakerName": "시스템",
+      "dialogueContent": "멸균장갑을 착용하십시오. E키를 눌러 인벤토리 창을 열고, 좌측 상단의 칸으로 멸균장갑 아이템을 옮기십시오.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
         "preset": "F3"
@@ -3865,7 +3875,7 @@
     },
     "N017_retry_a": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3880,7 +3890,7 @@
     },
     "N017_retry_b": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 6초에 1번씩 눌러야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3895,7 +3905,7 @@
     },
     "N018_retry_a": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3910,7 +3920,7 @@
     },
     "N018_retry_b": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3925,7 +3935,7 @@
     },
     "N018_retry_c": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3940,7 +3950,7 @@
     },
     "N018_retry_d": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 혈액 순환이 가능합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3955,7 +3965,7 @@
     },
     "N019_retry_a": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3970,7 +3980,7 @@
     },
     "N019_retry_b": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 이상파형 제세동기는 150~200J(줄)이면 충분합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3985,7 +3995,7 @@
     },
     "N019_retry_c": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4000,7 +4010,7 @@
     },
     "N020_retry_a": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 에피네프린은 3~5분에 한 번 투여합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4015,7 +4025,7 @@
     },
     "N020_retry_b": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4030,7 +4040,7 @@
     },
     "N021_retry_a": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4045,7 +4055,7 @@
     },
     "N021_retry_b": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4060,7 +4070,7 @@
     },
     "N021_retry_c": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4075,7 +4085,7 @@
     },
     "N021_retry_d": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4090,7 +4100,7 @@
     },
     "N022_retry_a": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4105,7 +4115,7 @@
     },
     "N022_retry_b": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 6초에 1번씩 눌러야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4120,7 +4130,7 @@
     },
     "N023_retry_a": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 에피네프린은 3~5분에 한 번 투여합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4135,7 +4145,7 @@
     },
     "N023_retry_b": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4150,7 +4160,7 @@
     },
     "N024_retry_a": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4165,7 +4175,7 @@
     },
     "N024_retry_b": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 150~200J(줄)이 정답입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4180,7 +4190,7 @@
     },
     "N024_retry_c": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4270,7 +4280,7 @@
     },
     "N028_retry_a": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4285,7 +4295,7 @@
     },
     "N028_retry_b": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 통증 자극에만 반응했음을 유의하십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4300,7 +4310,7 @@
     },
     "N028_retry_c": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 기관삽관을 하는 경우 E로 처리(표기)합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4315,7 +4325,7 @@
     },
     "N028_retry_d": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 다시 생각해보자.)",
+      "dialogueContent": "오답입니다. 통증으로부터 회피하려 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4696,7 +4706,7 @@
     },
     "D_START_BROADCAST": {
       "speakerName": "구내방송",
-      "dialogueContent": "흉부 관통상 환자 한 명 이송. 처치실 담당자는 지금 바로 와주세요.",
+      "dialogueContent": "흉부 관통상 환자 한 명 KTAS1 입니다. 모든 간호사는 지금 바로 분류 구역으로 이동하십시오. 환자를 처치실로 이동시키겠습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "interactionRequired": false,
@@ -5701,7 +5711,7 @@
     },
     "N_VITAL_RR_HR_RETRY_A": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 호흡수 분당 8회, 맥박 분당 140회로 빠르고 약했어.)",
+      "dialogueContent": "오답입니다. 호흡수 분당 8회, 맥박 분당 140회로 빠르고 약합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -5797,8 +5807,8 @@
     },
     "N_VITAL_BP_RETRY_A": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 혈압은 70/40mmHg였어.)",
-      "dialogueContentTTSPassing": "(아니야. 혈압은 70에 40 밀리미터 머큐리였어.)",
+      "dialogueContent": "오답입니다. 혈압은 70/40mmHg입니다.",
+      "dialogueContentTTSPassing": "오답입니다. 혈압은 70에 40입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -5895,7 +5905,7 @@
     },
     "N_VITAL_BT_SPO2_RETRY_A": {
       "speakerName": "@s",
-      "dialogueContent": "(아니야. 체온은 35.9도, 산소포화도는 82%였어.)",
+      "dialogueContent": "오답입니다. 체온은 35.9도, 산소포화도는 82%입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7341,7 +7351,7 @@
     },
     "D_IV_NS_PREP_A": {
       "speakerName": "@s",
-      "dialogueContent": "(환자에게 생리식염수를 연결해두자.)",
+      "dialogueContent": "생리식염수 수액백을 먼저 수액 걸대에 건 뒤, 환자에게 연결하세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7353,7 +7363,7 @@
     },
     "D_AMBU_CONNECTED_A": {
       "speakerName": "@s",
-      "dialogueContent": "(앰부백과 산소 저장낭을 기관내관에 연결했다.)",
+      "dialogueContent": "앰부백과 산소 저장낭을 기관내관에 연결했습니다. 투여 용량을 설정합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7365,7 +7375,7 @@
     },
     "D_AMBU_VOL_R1_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(Tidal Volume을 고려해 약 600ml로 짜자.)",
+      "dialogueContent": "정답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다.",
       "dialogueContentTTSPassing": "(타이달 볼륨을 고려해 약 600밀리리터로 짜자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -7378,7 +7388,7 @@
     },
     "D_AMBU_RATE_R1_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(6초에 1번씩 맞춰서 짜자.)",
+      "dialogueContent": "정답입니다. 6초에 1번씩 눌러야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7390,7 +7400,7 @@
     },
     "D_COMP_DEPTH_R1_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(약 5cm 깊이로 누르자.)",
+      "dialogueContent": "정답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다.",
       "dialogueContentTTSPassing": "(약 5센티미터 깊이로 누르자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -7403,7 +7413,7 @@
     },
     "D_COMP_LOC_R1_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(흉골 하부 1/2 지점에 손을 올리자.)",
+      "dialogueContent": "정답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7415,7 +7425,7 @@
     },
     "D_COMP_RATE_R1_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(분당 100~120회에 맞춰 누르자.)",
+      "dialogueContent": "정답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7427,7 +7437,7 @@
     },
     "D_COMP_RECOIL_R1_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(누르는 만큼 충분히 이완시켜야 혈액이 돌아온다.)",
+      "dialogueContent": "정답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 적절한 혈액 순환이 가능합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7451,7 +7461,7 @@
     },
     "D_DEFIB_RHYTHM_R1_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(제세동이 필요한 심전도는 VF야.)",
+      "dialogueContent": "정답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다.",
       "dialogueContentTTSPassing": "(제세동이 필요한 심전도는 브이 에프야.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -7464,7 +7474,7 @@
     },
     "D_DEFIB_ENERGY_R1_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(이상파형이면 150~200J야.)",
+      "dialogueContent": "정답입니다. 150~200J(줄)이 정답입니다.",
       "dialogueContentTTSPassing": "(이상파형이면 150에서 200줄이야.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -7477,7 +7487,7 @@
     },
     "D_DEFIB_SAFETY_R1_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(감전되지 않도록 모두 떨어지라고 크게 알리자.)",
+      "dialogueContent": "정답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7489,12 +7499,12 @@
     },
     "D_EPI_PREP_R1": {
       "speakerName": "@s",
-      "dialogueContent": "(에피네프린 앰퓰과 5cc 주사기를 조합해서 약물을 준비하자.)",
-      "dialogueContentTTSPassing": "(에피네프린 앰퓰과 5씨씨 주사기를 조합해서 약물을 준비하자.)",
+      "dialogueContent": "에피네프린 앰퓰과 5cc 주사기를 획득하고 조합하여 약물이 든 주사기를 완성하세요.",
+      "dialogueContentTTSPassing": "에피네프린 앰퓰과 5cc 주사기를 획득하고 조합하여 약물이 든 주사기를 완성하세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
       "identifier": "D_EPI_PREP_R1",
       "nodeType": "Dialogue",
@@ -7502,7 +7512,7 @@
     },
     "D_EPI_INTERVAL_R1_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(3~5분 간격을 지켜서 투여하자.)",
+      "dialogueContent": "정답입니다. 에피네프린은 3~5분에 한 번 투여합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7514,7 +7524,7 @@
     },
     "D_EPI_PERIPH_R1_PARTIAL": {
       "speakerName": "@s",
-      "dialogueContent": "(거기에 더해 팔을 들어올려야 심장에 빨리 도달해.)",
+      "dialogueContent": "생리식염수 주입 후 팔을 들어올려 약물이 심장에 빠르게 도달하도록 해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7526,7 +7536,7 @@
     },
     "D_EPI_PERIPH_R1_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(약물, 생리식염수, 그리고 팔 들어올리기까지 해야 해.)",
+      "dialogueContent": "정답입니다. 약물 주입 후 생리식염수를 주입하고 팔을 들어올려야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7538,8 +7548,8 @@
     },
     "D_COMP_DEPTH_R2_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(약 5cm 깊이로 누르자.)",
-      "dialogueContentTTSPassing": "(약 5센티미터 깊이로 누르자.)",
+      "dialogueContent": "정답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다.",
+      "dialogueContentTTSPassing": "정답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7551,7 +7561,7 @@
     },
     "D_COMP_LOC_R2_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(흉골 하부 1/2 지점에 손을 올리자.)",
+      "dialogueContent": "정답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7563,7 +7573,7 @@
     },
     "D_COMP_RATE_R2_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(분당 100~120회에 맞춰 누르자.)",
+      "dialogueContent": "정답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7575,7 +7585,7 @@
     },
     "D_COMP_RECOIL_R2_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(누르는 만큼 충분히 이완시켜야 혈액이 돌아온다.)",
+      "dialogueContent": "정답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7587,7 +7597,7 @@
     },
     "D_AMBU_VOL_R2_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(Tidal Volume을 고려해 약 600ml로 짜자.)",
+      "dialogueContent": "정답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다.",
       "dialogueContentTTSPassing": "(타이달 볼륨을 고려해 약 600밀리리터로 짜자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -7600,7 +7610,7 @@
     },
     "D_AMBU_RATE_R2_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(6초에 1번씩 맞춰서 짜자.)",
+      "dialogueContent": "정답입니다. 6초에 1번씩 눌러야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7612,8 +7622,8 @@
     },
     "D_EPI_PREP_R2": {
       "speakerName": "@s",
-      "dialogueContent": "(에피네프린 앰퓰과 5cc 주사기를 조합해서 약물을 준비하자.)",
-      "dialogueContentTTSPassing": "(에피네프린 앰퓰과 5씨씨 주사기를 조합해서 약물을 준비하자.)",
+      "dialogueContent": "에피네프린 앰퓰과 5cc 주사기를 획득하고 조합하여 약물이 든 주사기를 완성하세요.",
+      "dialogueContentTTSPassing": "에피네프린 앰퓰과 오씨씨 주사기를 획득하고 조합하여 약물이 든 주사기를 완성하세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7625,7 +7635,7 @@
     },
     "D_EPI_INTERVAL_R2_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(3~5분 간격을 지켜서 투여하자.)",
+      "dialogueContent": "정답입니다. 에피네프린은 3~5분에 한 번 투여합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7637,7 +7647,7 @@
     },
     "D_EPI_PERIPH_R2_PARTIAL": {
       "speakerName": "@s",
-      "dialogueContent": "(거기에 더해 팔을 들어올려야 심장에 빨리 도달해.)",
+      "dialogueContent": "생리식염수 주입 후 팔을 들어올려 약물이 심장에 빠르게 도달하도록 해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7649,7 +7659,7 @@
     },
     "D_EPI_PERIPH_R2_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(약물, 생리식염수, 그리고 팔 들어올리기까지 해야 해.)",
+      "dialogueContent": "정답입니다. 약물 주입 후 생리식염수를 주입하고 팔을 들어올려야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7661,8 +7671,8 @@
     },
     "D_DEFIB_RHYTHM_R2_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(제세동이 필요한 심전도는 VF야.)",
-      "dialogueContentTTSPassing": "(제세동이 필요한 심전도는 브이 에프야.)",
+      "dialogueContent": "정답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다.",
+      "dialogueContentTTSPassing": "정답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 심실세동 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7674,7 +7684,7 @@
     },
     "D_DEFIB_ENERGY_R2_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(이상파형이면 150~200J야.)",
+      "dialogueContent": "정답입니다. 150~200J(줄)이 정답입니다.",
       "dialogueContentTTSPassing": "(이상파형이면 150에서 200줄이야.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -7687,7 +7697,7 @@
     },
     "D_DEFIB_SAFETY_R2_OK": {
       "speakerName": "@s",
-      "dialogueContent": "(감전되지 않도록 모두 떨어지라고 크게 알리자.)",
+      "dialogueContent": "정답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
