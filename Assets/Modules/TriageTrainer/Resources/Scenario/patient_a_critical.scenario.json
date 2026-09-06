@@ -1980,7 +1980,8 @@
     },
     "D005": {
       "speakerName": "시스템",
-      "dialogueContent": "환자 A를 처치실로 이동해야 합니다. 플레이어 A, B, C, D는 각각 환자 침대를 잡으십시오.",
+      "dialogueContent": "환자 A를 처치실로 이동해야 합니다. @t=[nurse_a, ???], @t=[nurse_b, ???], @t=[nurse_c, ???], @t=[nurse_d, ???]는 각각 환자 침대를 잡으십시오.",
+      "dialogueContentTTSPassing": "환자 A를 처치실로 이동해야 합니다. @t=[nurse_a, ???], @t=[nurse_b, ???], @t=[nurse_c, ???], @t=[nurse_d, ???]는 각각 환자 침대를 잡으십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "interactionRequired": false,
@@ -3099,6 +3100,7 @@
     "N007_3": {
       "speakerName": "시스템",
       "dialogueContent": "준비된 앙커 팁을 흡인기에 연결하십시오.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3114,6 +3116,7 @@
     "N007_4": {
       "speakerName": "시스템",
       "dialogueContent": "구강 흡인을 진행하십시오.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3129,6 +3132,7 @@
     "D_STABILIZER_APPLIED_A": {
       "speakerName": "시스템",
       "dialogueContent": "흡인기를 벽에 설치하십시오.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3147,8 +3151,9 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": false,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "dialogueContentTTSPassing": null,
       "identifier": "D_SUCTION_INSTALLED_A",
       "nodeType": "Dialogue",
       "nextIdentifier": "N007_3"
@@ -3156,6 +3161,7 @@
     "N008": {
       "speakerName": "시스템",
       "dialogueContent": "완성된 후두경을 의사에게 전달하세요.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3229,6 +3235,7 @@
     "N010": {
       "speakerName": "시스템",
       "dialogueContent": "멸균장갑을 착용하십시오. E키를 눌러 인벤토리 창을 열고, 좌측 상단의 칸으로 멸균장갑 아이템을 옮기십시오.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
