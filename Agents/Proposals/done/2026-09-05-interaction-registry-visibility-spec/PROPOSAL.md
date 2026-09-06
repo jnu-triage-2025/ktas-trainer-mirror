@@ -4,9 +4,9 @@
 - 모듈: `Assets/Modules/MultiplayerInfrastructure/Scripts/InteractableEntity/`, `Scenario/`, `Quest/`, `Tag/`,
   `Assets/Modules/TriageTrainer/Scripts/Patient/`, `Scenario/`, `Entities/`
 - 관련 콘텐츠: `patient_a_critical`, `patient_b_c_ct`, `disaster_intro`, `tutorial`과 그 퀘스트 정의
-- 상태: 구현 완료(2026-09-06, 미커밋). 인간 작업자가 16개 결정 항목에 답했으며, 그 내용을 본문에 반영하고
-  결정 기록과 구현 기록을 마지막 절에 남겼습니다. 남은 것은 EditMode 테스트 실행(에디터 Test Runner)과
-  4인 실플레이 수동 검토입니다.
+- 상태: 구현 완료(2026-09-06, 커밋 `f4baf582`). 인간 작업자가 16개 결정 항목에 답했으며, 그 내용을 본문에 반영하고
+  결정 기록과 구현 기록을 마지막 절에 남겼습니다. 2026-09-07에 코드 주석을 점검하고 잔존 정리를 수행했습니다
+  (아래 "구현 기록 추가"). 남은 것은 EditMode 테스트 실행(에디터 Test Runner)과 4인 실플레이 수동 검토입니다.
 - 근거 자료: 같은 폴더의 [`interaction-inventory.md`](./interaction-inventory.md)(전수조사 결과)
 
 ### 개요
@@ -522,6 +522,30 @@ visible(player) =
   `IInteractionRegistryExempt`로 두고 잠금만 코드 리터럴로 남겼습니다. 이를 반사로 끄던
   `DisableLegacyPatientAYankauerIvPort`도 지웠습니다.
 - 변경 노트: `Documents/changes/2026-09-06-interaction-registry-visibility.md`.
+
+### 구현 기록 추가 (2026-09-07)
+
+구현물이 코드 주석으로 설명되어 있는지 점검하면서 확인한 사항과 그에 따른 후속 정리입니다.
+
+- 11절의 환자 모니터 항목은 명세와 다르게 구현되어 있습니다. 명세는 `ArmScenarioClose` 경로와
+  `VitalMonitorClose` 이벤트 파일을 제거하고 `EntityStateSignalBinding` 노드로 대체한다고 정했지만, 실제
+  구현은 모니터 코드가 시나리오 식별자와 환자 식별자를 직접 비교하던 부분만 정의의 `extras`
+  (`closeSignal`, `closeSignalPatient`)로 옮겼습니다. 닫기 신호를 무장하는 경로는 시나리오 이벤트와 상세 보기
+  인터렉션 두 가지로 남아 있으며, 이 사실을 `PatientMonitorController.ArmScenarioClose` 주석에 적었습니다.
+- 폐기한 인스펙터 목록만 사용하던 직렬화 형식 `NPCScenarioInteractDefinition` 과
+  `NPCSubmissionInteractDefinition` 을 삭제했습니다. 두 형식을 참조하는 코드는 없었고, 프리팹·씬·에셋에도
+  해당 직렬화 데이터가 남아 있지 않음을 확인했습니다.
+- `Npc` 에 남아 있던 인스펙터 머리글 `[Header("Custom Interacts")]` 을 제거했습니다. 뒤따르던 직렬화 필드가
+  모두 사라져서 이 특성이 속성 선언에 붙어 있었습니다.
+- 폐기한 그래프 노드를 여전히 설명하던 주석을 현재 구조에 맞게 고쳤습니다. 대상은 `IInteractToggleable`,
+  `ItemSubmissionInteractable`, `ItemSubmissionDefinition`, `ScenarioNPCControlNode`,
+  `ScenarioManualEntrypointNode`, `InteractionGenericHandlers`, `EntityType.ScenarioInteractable` 입니다.
+  `ScenarioController.BeginPresentationScenario` 의 레지스트리 초기화 자리에도 `StartScenario` 와 같은 설명을
+  붙였습니다.
+- 허용 모듈 밖이라 손대지 못했던 `IngameSceneBootstrapper` 의 주석도 사용자의 지시에 따라 갱신했습니다.
+  중복 인스턴스가 위험한 이유를 `InteractionRegistry.Interacted` 기준으로 다시 서술했습니다.
+- 생성 문서(`Documents/Documentation/`)는 docfx 산출물이고 이 브랜치의 구현 커밋도 갱신하지 않았으므로 이번에도
+  다시 만들지 않았습니다. 갱신하려면 `Tools/run-docfx.sh` 를 실행해야 합니다.
 
 ### 링크, 참고사항
 
