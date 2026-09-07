@@ -571,7 +571,6 @@ hook은 correctness의 원천이 아니라 latency 최적화다. commit 실패, 
 - symlink와 path traversal을 검사한다.
 - mutable cache, provisional state, report 파일은 checkout 밖의 private directory에서 no-follow 방식으로 열고 open 후 소유자와 file type을 재검증한다.
 - 취소, signal, crash 시 부분 결과를 대상 파일에 남기지 않는다.
-- BOM, UTF-8, CRLF/LF, final newline을 가능한 한 원본 기준으로 보존한다.
 - 절대 경로 및 YAML scalar 내용은 기본 telemetry에 기록하지 않는다.
 - parser는 임의 YAML tag를 실행 가능한 객체로 deserialize하지 않는다.
 - Unity assembly나 editor callback을 실행하지 않는다.
@@ -622,7 +621,7 @@ $GIT_DIR/unity-merge/
 
 - 지원 Unity 버전별 scene, prefab, asset golden corpus
 - 음수 및 큰 `fileID`, null, stripped, unknown class ID
-- flow/block style, quoted string, multiline scalar, CRLF/LF
+- flow/block style, quoted string, multiline scalar
 - managed reference와 unknown `serializedVersion`
 - parse 후 무수정 출력 byte equality 또는 허용된 최소 차이
 
