@@ -2900,7 +2900,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "M2"
+        "preset": "M3"
       },
       "identifier": "D010",
       "nodeType": "Dialogue",
@@ -3650,6 +3650,9 @@
       "interactionRequired": null,
       "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "D_GCS_SUM_A",
       "nodeType": "Dialogue",
       "nextIdentifier": "D008"
@@ -3771,6 +3774,9 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "dialogueContentTTSPassing": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "D_SUCTION_INSTALLED_A",
       "nodeType": "Dialogue",
       "nextIdentifier": "N007_3"
@@ -3845,6 +3851,9 @@
       "interactionRequired": null,
       "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N009_CORRECT",
       "nodeType": "Dialogue",
       "nextIdentifier": "D016"
@@ -7506,6 +7515,9 @@
       "interactionRequired": null,
       "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "D_EPI_PREP_R1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V026_2"

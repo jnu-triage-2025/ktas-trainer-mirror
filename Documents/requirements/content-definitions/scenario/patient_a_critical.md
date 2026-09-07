@@ -1758,6 +1758,29 @@ M1으로 고치고, `playTTS`가 켜져 있는데 프리셋이 비어 있던 `D0
    `(...을 갖고 있지 않다.)`, `(...을 찾자.)` 두 줄을 재생하는지 상호작용 단위로 확인해야 한다.
 4. 위 TTS-5 항목의 재bake가 필요하다.
 
+## 2026-09-07 scen-a 병합 후 TTS 프리셋과 화자 정리
+
+`origin/content/scen-a`(커밋 `041d8ff9`)를 병합한 뒤 검토에서 확인한 사항과 그에 따라 데이터에 반영한 내용이다.
+scen-a 쪽 변경은 대사·선택지 문구 164건, `playTTS` 켜기 11개 노드, 화자명 8건이며 노드 연결과 Validator, Parallel,
+`interactions` 구역은 바뀌지 않았다. 4인 진행을 막는 변경은 없다.
+
+- `playTTS`가 켜졌지만 프리셋이 비어 있던 `D_GCS_SUM_A`, `D_SUCTION_INSTALLED_A`, `N009_CORRECT`, `D_EPI_PREP_R1`에
+  `F3`을 지정했다. 같은 체인의 인접 노드(`N006_*`, `N009_retry`, `D_STABILIZER_APPLIED_A`)가 이미 `F3`을 쓰고 있어 그에 맞췄다.
+- `D010`의 화자가 scen-a에서 `의사`에서 `@t=[nurse_a, ???]`(간호사 A의 표시 이름)로 바뀌었으므로, 프리셋을 의사용 `M2`에서
+  위 정책 표의 간호사 A 프리셋 `M3`으로 고쳤다. 화자 변경 자체는 콘텐츠 작업자의 결정으로 유지한다.
+- `N007_4`는 앞선 절에서 "줄글이 `TTS: false`로 규정"해 `playTTS`를 꺼 두었으나, scen-a에서 문구가 독백
+  "(환자의 구강에 고인 분비물을 흡인한다.)"에서 시스템 지시문 "구강 흡인을 진행하십시오."로 바뀌면서 `playTTS`가 다시 켜졌다.
+  지시문이므로 켠 상태를 유지하며, 이 노드에 대한 `TTS: false` 규정은 폐기한다.
+- 침대(`MovingPatientBedController`)의 수액 걸기 인터렉션 `hang_normal_saline`·`hang_plasma_solution`은 퀘스트 바인딩만 있고
+  레지스트리 선언이 없어 레거시 노출 경로를 타고 있었다. 다른 침대 인터렉션과 같이 기본 노출 코드 리터럴로 선언했다.
+  노출 판정 결과는 이전과 같다(보유 수액과 설치 상태는 핸들러의 `CanInteract`가 계속 판정한다).
+
+- [ ] TTS-6 (인간 작업 필요): 현재 문구 기준으로 베이크 WAV가 없는 노드가 14개다. 위 프리셋 추가·변경분을 포함해
+  `D005`, `D010`, `D018`, `N006_6`, `D_GCS_SUM_A`, `N007_3`, `N007_4`, `D_STABILIZER_APPLIED_A`, `D_SUCTION_INSTALLED_A`,
+  `N008`, `N009_CORRECT`, `N010`, `D_START_BROADCAST`, `D_EPI_PREP_R1`를 다시 bake해야 한다. 에디터에서 Play 모드에 들어갈 때
+  나오는 인라인 bake 안내를 수락하거나, `Tools/Text to Speech Service` 메뉴의 bake 창을 사용한다(속도 배율 1.15).
+  bake 전까지는 해당 대사가 런타임 합성으로 재생되며 진행은 막히지 않는다.
+
 ## 2026-09-06 상호작용 개방을 인터렉션 레지스트리 조건 절로 이전
 
 2026-08-27에 도입한 퀘스트 상태 플래그 풀 게이트(`PatientACriticalQuestStateFlags`)와 단계 개방 이벤트

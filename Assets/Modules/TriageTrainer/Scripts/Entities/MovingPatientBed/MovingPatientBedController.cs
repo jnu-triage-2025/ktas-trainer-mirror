@@ -26,12 +26,22 @@ namespace TriageTrainer.Entity
     private const string MoveDisplayText = "침대로 움직이기";
     private const string ReposeDisplayText = "환자 침대에 내려놓기";
 
-    /// <summary>코드 리터럴 정의. 침대 조종과 눕히기는 시나리오가 제한하지 않는 한 항상 보인다.</summary>
+    /// <summary>
+    /// 코드 리터럴 정의. 침대 조종과 눕히기는 시나리오가 제한하지 않는 한 항상 보인다.
+    /// 수액 걸기(<see cref="InteractIdHangNormalSaline"/>, <see cref="InteractIdHangPlasmaSolution"/>)도 기본 노출로 선언하며,
+    /// 보유 수액과 설치 상태는 핸들러의 <c>CanInteract</c>가 내재 능력 조건으로 판정한다.
+    /// </summary>
     public IEnumerable<InteractionDeclaration> DeclareInteractions()
     {
       yield return new InteractionDeclaration(InteractionDefinition.Code(Identifier, InteractionIdentifierMoveBed, MoveDisplayText, initialVisible: true), this);
       if (_reposeInteract != null)
         yield return new InteractionDeclaration(InteractionDefinition.Code(Identifier, InteractionIdentifierRepose, ReposeDisplayText, initialVisible: true), _reposeInteract);
+      foreach (var interact in IntravenousFluidInteracts)
+      {
+        if (interact is not IQuestPresentationTarget target || string.IsNullOrWhiteSpace(target.InteractionIdentifier))
+          continue;
+        yield return new InteractionDeclaration(InteractionDefinition.Code(Identifier, target.InteractionIdentifier, interact.DisplayText, initialVisible: true), interact);
+      }
     }
 
     public IScenarioIdentifiedEntity ResolveArrivalSignalEntity() => ReposedTarget as IScenarioIdentifiedEntity;
