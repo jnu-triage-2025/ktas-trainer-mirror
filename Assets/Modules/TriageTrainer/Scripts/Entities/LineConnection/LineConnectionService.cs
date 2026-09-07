@@ -26,6 +26,17 @@ namespace TriageTrainer.Entity.LineConnection
       public LineConnectionPoint StartPoint;
       public LineConnectionPoint EndPoint;
       public int RequestId;
+      /// <summary>서버 응답을 기다리는 동안 미리 소비해 둔 요구 아이템. 거부되면 되돌린다.</summary>
+      public PlayerController.ItemUseConsumptionReceipt ReservedRequirement;
+    }
+
+    private static void SettleReservedRequirement(PendingConnectionContext context, bool accepted)
+    {
+      if (context?.ReservedRequirement == null)
+        return;
+      var receipt = context.ReservedRequirement;
+      context.ReservedRequirement = null;
+      context.Player?.CompleteConsumedItemUse(receipt, accepted);
     }
 
     private readonly struct ActiveConnectionPair
@@ -237,6 +248,8 @@ namespace TriageTrainer.Entity.LineConnection
             || !connected || context.RequestId != requestId)
           continue;
         completedKeys.Add(pair.Key);
+        // 요청 전에 미리 소비한 요구 아이템은 서버 판정에 따라 확정하거나 되돌린다.
+        SettleReservedRequirement(context, accepted);
         context.Player.SetLineConnectionMode(false, false);
         context.Player.RefreshInteractableHintsNow();
       }
@@ -445,15 +458,31 @@ namespace TriageTrainer.Entity.LineConnection
           TryCompleteConnectionOnServer(startPoint, endPoint, player.Owner);
         else
         {
+          // 서버는 원격 발신자의 인벤토리를 볼 수 없으므로, 요구 아이템은 여기서 먼저 소비하고
+          // 영수증을 보류 요청에 붙여 둔다. 서버가 거부하면 응답 처리에서 되돌린다.
+          if (!startPoint.TryReserveConnectionRequirement(player, out var reserved))
+          {
+            player.SetLineConnectionMode(false, false);
+            ClearPendingFor(player);
+            player.RefreshInteractableHintsNow();
+            return false;
+          }
           if (_pendingConnections.TryGetValue(player.GetInstanceID(), out var pending))
           {
             pending.EndPoint = endPoint;
             pending.RequestId = NextTopologyRequestId();
+            pending.ReservedRequirement = reserved;
           }
           if (!ScenarioNetworkRelay.RequestLineTopologyChange(
                 startPoint.ConnectionIdentifier, endPoint.ConnectionIdentifier, connected: true,
                 pending != null ? pending.RequestId : 0))
+          {
+            if (pending != null)
+              SettleReservedRequirement(pending, accepted: false);
+            else
+              player.CompleteConsumedItemUse(reserved, accepted: false);
             return false;
+          }
           return true;
         }
         ClearPendingFor(player);
@@ -504,9 +533,15 @@ namespace TriageTrainer.Entity.LineConnection
       bool broadcast = true)
     {
       if (!TryResolveSenderPlayer(sender, out var player)
-          || !ValidateAuthoritativeConnection(player, startPoint, endPoint, sender, out _)
-          || !startPoint.TryConsumeConnectionRequirement(player)
-          || !CreateAndRegisterConnection(startPoint, endPoint))
+          || !ValidateAuthoritativeConnection(player, startPoint, endPoint, sender, out _))
+        return false;
+
+      // 인벤토리는 소유 클라이언트에만 있다. 호스트 자신의 플레이어는 여기서 소비하고, 원격 발신자는
+      // 요청 전에 자기 인벤토리에서 소비한 뒤 왔으므로(TryReserveConnectionRequirement) 서버 복제본의
+      // 빈 인벤토리로 다시 검사하지 않는다. 그렇게 하면 호스트가 아닌 참여자는 라인을 연결할 수 없다.
+      if (player.IsOwner && !startPoint.TryConsumeConnectionRequirement(player))
+        return false;
+      if (!CreateAndRegisterConnection(startPoint, endPoint))
         return false;
 
       AddAuthoritativePair(startPoint, endPoint);
@@ -565,7 +600,7 @@ namespace TriageTrainer.Entity.LineConnection
           || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
           || descriptor == null
           || string.IsNullOrWhiteSpace(descriptor.Identifier)
-          || !PlayerTagService.HasTag(descriptor.Identifier, "nurse_c"))
+          || !TriageTrainer.Utils.TriageRoleGate.IsAllowed(descriptor.Identifier, "nurse_c"))
       {
         reason = "sender is not nurse_c";
         return false;
@@ -1003,6 +1038,8 @@ namespace TriageTrainer.Entity.LineConnection
       if (player == null)
         return;
 
+      if (_pendingConnections.TryGetValue(player.GetInstanceID(), out var context))
+        SettleReservedRequirement(context, accepted: false);
       _pendingConnections.Remove(player.GetInstanceID());
     }
 
@@ -1034,6 +1071,8 @@ namespace TriageTrainer.Entity.LineConnection
           continue;
 
         _pendingConnections.Remove(keys[i]);
+        // 서버 응답 없이 보류 요청이 사라지면(연결 모드 취소 등) 미리 소비한 요구 아이템을 되돌린다.
+        SettleReservedRequirement(context, accepted: false);
         context?.Player?.RefreshInteractableHintsNow();
       }
     }

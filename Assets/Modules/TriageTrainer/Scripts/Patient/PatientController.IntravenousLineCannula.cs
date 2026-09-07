@@ -254,7 +254,13 @@ namespace TriageTrainer.Entity
       string side = isLeft ? "left" : "right";
       if (IsPatientBC && IsFishNetClientInitialized && !IsFishNetServerStarted)
       {
-        CmdCompletePatientBCIv(side, heldIdentifier);
+        // 서버는 원격 클라이언트의 인벤토리를 볼 수 없다. 캐뉼라는 여기서 먼저 소비하고 영수증을
+        // 토큰에 묶어 두었다가, 서버가 거부하면 되돌린다.
+        if (!player.TryConsumeItemUse(heldIdentifier, out var receipt))
+          return;
+        string token = Guid.NewGuid().ToString("N");
+        _localPendingItemUseReceipts[token] = new LocalPendingItemUse { Player = player, Receipt = receipt };
+        CmdCompletePatientBCIv(side, heldIdentifier, token);
         return;
       }
 
@@ -316,7 +322,7 @@ namespace TriageTrainer.Entity
       }
       else if (IsFishNetClientInitialized)
       {
-        CmdCompletePatientBCIv(side, itemIdentifier);
+        CmdCompletePatientBCIv(side, itemIdentifier, string.Empty);
       }
     }
 
@@ -331,7 +337,17 @@ namespace TriageTrainer.Entity
     }
 
     [FishNet.Object.ServerRpc(RequireOwnership = false)]
-    private void CmdCompletePatientBCIv(string side, string itemIdentifier, FishNet.Connection.NetworkConnection sender = null)
+    private void CmdCompletePatientBCIv(string side, string itemIdentifier, string token,
+      FishNet.Connection.NetworkConnection sender = null)
+    {
+      bool accepted = TryCompletePatientBCIvFromRemote(side, itemIdentifier, sender);
+      // 클라이언트가 미리 소비한 캐뉼라를 판정에 따라 확정하거나 되돌린다.
+      if (!string.IsNullOrEmpty(token) && sender != null && sender.IsValid)
+        TargetCompleteApprovedPatientItemConsumption(sender, token, accepted);
+    }
+
+    private bool TryCompletePatientBCIvFromRemote(string side, string itemIdentifier,
+      FishNet.Connection.NetworkConnection sender)
     {
       if (!IsPatientBC
           || (side != "left" && side != "right")
@@ -339,15 +355,21 @@ namespace TriageTrainer.Entity
             StringComparison.Ordinal)
            || !TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out var actorIdentifier,
              out var actorDisplayName)
-           || !CanPerformPatientBCIv()
-           || player.CountItemInInventory(itemIdentifier) < 1
-           || !TryAdvancePatientBCIvStageAuthoritative())
-        return;
+           || !CanPerformPatientBCIv())
+        return false;
 
-      if (player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+      // 인벤토리는 소유 클라이언트에만 있다. 원격 발신자는 요청 전에 자기 인벤토리에서 캐뉼라를 소비했으므로
+      // 서버 복제본의 빈 인벤토리로 다시 검사하지 않는다. 호스트 자신의 플레이어만 여기서 소비한다.
+      bool consumeHere = player.IsOwner;
+      if (consumeHere && player.CountItemInInventory(itemIdentifier) < 1)
+        return false;
+      if (!TryAdvancePatientBCIvStageAuthoritative())
+        return false;
+
+      if (consumeHere && player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
       {
         RevertPatientBCIvStageAuthoritative();
-        return;
+        return false;
       }
 
       using (ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
@@ -357,6 +379,7 @@ namespace TriageTrainer.Entity
           : TreatmentDisplay.Syringe20GInsertedIntoRightArm, true);
         RaiseCannulaSignal($"insert_iv_{{id}}_{side}");
       }
+      return true;
     }
   }
 }

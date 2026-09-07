@@ -613,6 +613,14 @@ namespace TriageTrainer.Entity.IntravenousLine
     public override bool TryConsumeConnectionRequirement(PlayerController player) =>
       TryConsumeRequiredItem(player);
 
+    public override bool TryReserveConnectionRequirement(
+      PlayerController player,
+      out PlayerController.ItemUseConsumptionReceipt receipt)
+    {
+      receipt = null;
+      return player != null && player.TryConsumeItemUse(IntravenousSet.Identifier, out receipt);
+    }
+
     public LineConnectionService ResolveController()
     {
       if (LineConnectionService.TopologyService != null)

@@ -80,6 +80,20 @@ namespace TriageTrainer.Entity.LineConnection
     /// </summary>
     public virtual bool TryConsumeConnectionRequirement(PlayerController player) => true;
 
+    /// <summary>
+    /// 원격 클라이언트가 서버에 연결을 요청하기 전에, 요구 아이템을 자기 인벤토리에서 먼저 소비한다.
+    /// 인벤토리는 소유 클라이언트에만 있고 서버 복제본은 비어 있으므로, 서버는 원격 발신자의 요구
+    /// 아이템을 직접 확인할 수 없다. 서버가 요청을 거부하면 영수증으로 되돌린다.
+    /// 요구사항이 없는 포인트는 영수증 없이 허용한다.
+    /// </summary>
+    public virtual bool TryReserveConnectionRequirement(
+      PlayerController player,
+      out PlayerController.ItemUseConsumptionReceipt receipt)
+    {
+      receipt = null;
+      return true;
+    }
+
     public void SetAllowsMultipleConnections(bool allow) => _allowMultipleConnections = allow;
 
     public void RegisterConnectedLineObject(GameObject lineObject)

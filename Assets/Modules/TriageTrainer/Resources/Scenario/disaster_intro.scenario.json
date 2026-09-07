@@ -9,7 +9,8 @@
     "sig.click_patient_a",
     "sig.click_patient_dummy_d_a",
     "sig.assess_patient_a_triage",
-    "sig.assess_patient_dummy_d_a_triage"
+    "sig.assess_patient_dummy_d_a_triage",
+    "sig.move_patient_a"
   ],
   "defaultEntrypoint": "D001",
   "tags": [
@@ -92,6 +93,21 @@
       "afterInteract": "HideForAll",
       "visibility": {
         "initial": true
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "transfer_prompt",
+      "kind": "Action",
+      "display": {
+        "text": "긴급 환자 이송 선택"
+      },
+      "completionSignal": "move_patient_a",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "initial": false
       }
     }
   ],
@@ -355,7 +371,7 @@
           "nextNodeIdentifier": "N001_3"
         }
       ],
-      "nextIdentifier": null,
+      "nextIdentifier": "N001_3",
       "playTTS": true
     },
     "N001_retry_a": {
@@ -438,7 +454,7 @@
           "nextNodeIdentifier": "N001_4"
         }
       ],
-      "nextIdentifier": null,
+      "nextIdentifier": "N001_4",
       "playTTS": true
     },
     "N001_retry_b": {
@@ -467,8 +483,22 @@
       "speakerName": "System",
       "dialogueContent": "이제 치료를 위해 이송할 긴급 환자를 클릭하세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V004",
+      "nextIdentifier": "ISC_SHOW_MOVE_PATIENT_A",
       "playTTS": true
+    },
+    "ISC_SHOW_MOVE_PATIENT_A": {
+      "identifier": "ISC_SHOW_MOVE_PATIENT_A",
+      "nodeType": "InteractionVisibility",
+      "operation": "Show",
+      "targets": [
+        {
+          "entity": {
+            "id": "patient_a"
+          },
+          "interaction": "transfer_prompt"
+        }
+      ],
+      "nextIdentifier": "V004"
     },
     "V004": {
       "identifier": "V004",
@@ -541,7 +571,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 20,
       "onWaitTimeout": "ForceAdvance",
       "nextIdentifier": "Q003_1"
     },

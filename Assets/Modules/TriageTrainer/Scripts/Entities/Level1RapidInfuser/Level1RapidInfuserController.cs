@@ -1014,7 +1014,7 @@ namespace TriageTrainer.Entity
           || player.Owner.ClientId != sender.ClientId
           || !IsWithinInteractionDistance(player)
           || string.IsNullOrWhiteSpace(player.UserIdentifier)
-          || !PlayerTagService.HasTag(player.UserIdentifier, CLineOperatorRoleTag))
+          || !TriageTrainer.Utils.TriageRoleGate.IsAllowed(player.UserIdentifier, CLineOperatorRoleTag))
         return;
       if (!HasPlasmaSolution || !HasBloodBag)
         return;

@@ -989,7 +989,13 @@ namespace TriageTrainer.Entity
 
       if (IsFishNetClientInitialized && !IsFishNetServerStarted)
       {
-        CmdConnectPatientBCNormalSaline();
+        // 서버는 원격 클라이언트의 인벤토리를 볼 수 없다. 수액세트는 여기서 먼저 소비하고 영수증을
+        // 토큰에 묶어 두었다가, 서버가 거부하면 되돌린다.
+        if (!player.TryConsumeItemUse(IntravenousSet.Identifier, out var receipt))
+          return false;
+        string token = System.Guid.NewGuid().ToString("N");
+        _localPendingItemUseReceipts[token] = new LocalPendingItemUse { Player = player, Receipt = receipt };
+        CmdConnectPatientBCNormalSaline(token);
         return true;
       }
 
@@ -998,10 +1004,14 @@ namespace TriageTrainer.Entity
       return TryConnectPatientBCNormalSalineAuthoritative(player);
     }
 
-    private bool TryConnectPatientBCNormalSalineAuthoritative(PlayerController player = null)
+    /// <param name="consumeInventory">
+    /// 참이면 <paramref name="player"/> 의 인벤토리에서 수액세트를 확인하고 소비한다. 원격 발신자는
+    /// 요청 전에 자기 인벤토리에서 소비했고 서버 복제본은 비어 있으므로 거짓으로 호출한다.
+    /// </param>
+    private bool TryConnectPatientBCNormalSalineAuthoritative(PlayerController player = null, bool consumeInventory = true)
     {
       if (!CanConnectPatientBCNormalSaline()
-          || (player != null && player.CountItemInInventory(IntravenousSet.Identifier) < 1)
+          || (consumeInventory && player != null && player.CountItemInInventory(IntravenousSet.Identifier) < 1)
           || !CurrentBed.TryGetNormalSalineConnectionPoint(out var salinePoint))
         return false;
 
@@ -1017,7 +1027,7 @@ namespace TriageTrainer.Entity
                       ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
         if (service == null || !service.TryCreateAutomaticConnection(salinePoint, patientPoint))
           return false;
-        if (player != null && player.RemoveItemFromInventory(IntravenousSet.Identifier, 1) != 1)
+        if (consumeInventory && player != null && player.RemoveItemFromInventory(IntravenousSet.Identifier, 1) != 1)
         {
           service.DisconnectAutomaticConnection(salinePoint, patientPoint);
           return false;
@@ -1027,15 +1037,21 @@ namespace TriageTrainer.Entity
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdConnectPatientBCNormalSaline(NetworkConnection sender = null)
+    private void CmdConnectPatientBCNormalSaline(string token, NetworkConnection sender = null)
     {
-      if (!TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player,
+      bool accepted = false;
+      if (TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player,
             out var actorIdentifier, out var actorDisplayName)
-          || !CanConnectPatientBCNormalSaline())
-        return;
+          && CanConnectPatientBCNormalSaline())
+      {
+        // 호스트 자신의 플레이어만 서버에서 소비한다. 원격 발신자는 요청 전에 이미 소비했다.
+        using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
+          accepted = TryConnectPatientBCNormalSalineAuthoritative(player, consumeInventory: player.IsOwner);
+      }
 
-      using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
-        TryConnectPatientBCNormalSalineAuthoritative(player);
+      // 클라이언트가 미리 소비한 수액세트를 판정에 따라 확정하거나 되돌린다.
+      if (!string.IsNullOrEmpty(token) && sender != null && sender.IsValid)
+        TargetCompleteApprovedPatientItemConsumption(sender, token, accepted);
     }
 
     public bool TryCompletePatientBCNormalSalineConnection(
@@ -1516,7 +1532,7 @@ namespace TriageTrainer.Entity
              && player.Owner != null
              && player.Owner.IsValid
              && !string.IsNullOrWhiteSpace(player.UserIdentifier)
-             && PlayerTagService.HasTag(player.UserIdentifier, requiredRoleTag)
+             && TriageTrainer.Utils.TriageRoleGate.IsAllowed(player.UserIdentifier, requiredRoleTag)
              && IsWithinPatientBCTreatmentDistance(player);
     }
 
@@ -1548,7 +1564,7 @@ namespace TriageTrainer.Entity
           || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
           || descriptor == null
           || string.IsNullOrWhiteSpace(descriptor.Identifier)
-          || (requiresRole && !PlayerTagService.HasTag(descriptor.Identifier, requiredRoleTag)))
+          || (requiresRole && !TriageTrainer.Utils.TriageRoleGate.IsAllowed(descriptor.Identifier, requiredRoleTag)))
         return false;
 
       var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);

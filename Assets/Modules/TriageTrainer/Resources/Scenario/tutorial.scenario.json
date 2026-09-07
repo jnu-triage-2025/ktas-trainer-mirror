@@ -494,19 +494,19 @@
       "nextIdentifier": "V_TUT_DELIVERY_PACKAGE_ACQUIRED"
     },
     "GIVE_CHAIN": {
-      "commandLine": "give small_chain 1 @s",
+      "commandLine": "give-if-missing small_chain 1 @a",
       "identifier": "GIVE_CHAIN",
       "nodeType": "ExecuteCommand",
       "nextIdentifier": "Q_TUT_CRAFTING_ADD"
     },
     "GIVE_GEAR": {
-      "commandLine": "give small_gear 5 @s",
+      "commandLine": "give-if-missing small_gear 5 @a",
       "identifier": "GIVE_GEAR",
       "nodeType": "ExecuteCommand",
       "nextIdentifier": "GIVE_CHAIN"
     },
     "GIVE_TIN": {
-      "commandLine": "give tin_ingot 3 @s",
+      "commandLine": "give-if-missing tin_ingot 3 @a",
       "identifier": "GIVE_TIN",
       "nodeType": "ExecuteCommand",
       "nextIdentifier": "GIVE_GEAR"
