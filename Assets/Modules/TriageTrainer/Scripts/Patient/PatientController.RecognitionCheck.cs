@@ -403,7 +403,7 @@ namespace TriageTrainer.Entity
       if (string.IsNullOrWhiteSpace(requiredRoleTag))
         return true;
       return !string.IsNullOrWhiteSpace(userIdentifier)
-             && PlayerTagService.HasTag(userIdentifier, requiredRoleTag);
+             && TriageTrainer.Utils.TriageRoleGate.IsAllowed(userIdentifier, requiredRoleTag);
     }
 
     /// <summary>
