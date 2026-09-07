@@ -28,9 +28,34 @@ namespace TriageTrainer.Scenario
       string nurseAUserIdentifier = ResolveNurseAUserIdentifier();
       if (string.IsNullOrWhiteSpace(nurseAUserIdentifier))
       {
+        // 담당자(nurse_a)가 이탈했거나 재접속으로 태그를 잃은 경우다. 게이트를 무장하지 않으면
+        // sig.arrive_triagearea_patient_a 는 아무도 올릴 수 없어 대기 게이트가 상한까지 헛되이 기다린다.
+        // 역할 부재 규칙과 같은 취지로, 접속 중인 어느 플레이어의 도착이든 인정한다.
+        var fallbackIdentifiers = ResolveConnectedUserIdentifiers();
+        if (fallbackIdentifiers.Count == 0)
+        {
+          Debug.LogWarning(
+            "[TriageScenarioEventBootstrap] Patient A triage return gate was not armed: no connected player.",
+            this);
+          yield break;
+        }
         Debug.LogWarning(
-          "[TriageScenarioEventBootstrap] Patient A triage return gate was not armed: no connected nurse_a holder.",
-          this);
+          "[TriageScenarioEventBootstrap] Patient A triage return gate: no connected nurse_a holder; "
+          + "accepting any connected player's arrival instead.", this);
+        foreach (var identifier in fallbackIdentifiers)
+        {
+          string fallbackSource = TriageArrivalPerPlayerSignalTemplate.Replace("{id}", identifier);
+          ScenarioInteractionSignals.Clear(fallbackSource);
+          ScenarioConditionalSignalListeners.Register(
+            PatientATriageReturnGateListenerId + ":" + identifier,
+            fallbackSource,
+            PatientATriageReturnSignal,
+            System.Array.Empty<string>(),
+            consumeOnce: false);
+        }
+        GameLogService.WriteScenario(
+          "Patient A triage return gate armed for every connected player because no nurse_a holder is connected.",
+          "patient_a_critical");
         yield break;
       }
 
@@ -96,6 +121,23 @@ namespace TriageTrainer.Scenario
       }
 
       return false;
+    }
+
+    private static System.Collections.Generic.List<string> ResolveConnectedUserIdentifiers()
+    {
+      var identifiers = new System.Collections.Generic.List<string>();
+      var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      for (int i = 0; i < players.Length; i++)
+      {
+        var player = players[i];
+        var connection = player != null ? player.Owner : null;
+        if (connection == null || !connection.IsValid)
+          continue;
+        if (string.IsNullOrWhiteSpace(player.UserIdentifier) || identifiers.Contains(player.UserIdentifier))
+          continue;
+        identifiers.Add(player.UserIdentifier);
+      }
+      return identifiers;
     }
 
     private static string ResolveNurseAUserIdentifier()

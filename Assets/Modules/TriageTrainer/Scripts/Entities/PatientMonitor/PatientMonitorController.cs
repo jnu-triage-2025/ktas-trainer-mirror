@@ -411,7 +411,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
           || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
           || descriptor == null)
         return "발신 플레이어를 서버 세션에서 확인할 수 없습니다.";
-      if (!PlayerTagService.HasTag(descriptor.Identifier, "nurse_b"))
+      // 담당자(nurse_b)가 이탈해 접속 중인 누구도 그 역할을 갖지 않으면 다른 플레이어의 닫기를 허용한다.
+      if (!TriageTrainer.Utils.TriageRoleGate.IsAllowed(descriptor.Identifier, "nurse_b"))
         return "발신 플레이어에게 nurse_b 태그가 없습니다.";
       if (!IsValidPatientBCMonitorClose(patientIdentifier, normalizedSignal))
         return "환자/시그널 조합이 유효하지 않습니다.";
@@ -502,7 +503,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
           || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
           || descriptor == null)
         return "발신 플레이어를 서버 세션에서 확인할 수 없습니다.";
-      if (!PlayerTagService.HasTag(descriptor.Identifier, "nurse_b"))
+      // 담당자(nurse_b)가 이탈해 접속 중인 누구도 그 역할을 갖지 않으면 다른 플레이어의 닫기를 허용한다.
+      if (!TriageTrainer.Utils.TriageRoleGate.IsAllowed(descriptor.Identifier, "nurse_b"))
         return "발신 플레이어에게 nurse_b 태그가 없습니다.";
       if (ScenarioController.Instance == null
           || !ScenarioController.Instance.CanAcceptPatientBCMonitorClose(sender.ClientId, normalizedSignal))
