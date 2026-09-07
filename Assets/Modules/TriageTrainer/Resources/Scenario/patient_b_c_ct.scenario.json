@@ -1130,10 +1130,10 @@
         }
       ],
       "onFailure": "Ignore",
-      "failureNextIdentifier": null,
+      "failureNextIdentifier": "TRIAGE_A_FINAL_REMOVE",
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "ForceAdvance"
+      "onWaitTimeout": "FailBranch"
     },
     "TRIAGE_EVALUATE_CURRENT": {
       "identifier": "TRIAGE_EVALUATE_CURRENT",
@@ -1174,10 +1174,10 @@
         }
       ],
       "onFailure": "Ignore",
-      "failureNextIdentifier": null,
+      "failureNextIdentifier": "TRIAGE_A_FINAL_REMOVE",
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "ForceAdvance"
+      "onWaitTimeout": "FailBranch"
     },
     "TRIAGE_COMPLETE_EVENT": {
       "identifier": "TRIAGE_COMPLETE_EVENT",
@@ -1204,10 +1204,10 @@
         }
       ],
       "onFailure": "Ignore",
-      "failureNextIdentifier": null,
+      "failureNextIdentifier": "TRIAGE_A_FINAL_REMOVE",
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "ForceAdvance"
+      "onWaitTimeout": "FailBranch"
     },
     "TRIAGE_WRONG": {
       "identifier": "TRIAGE_WRONG",

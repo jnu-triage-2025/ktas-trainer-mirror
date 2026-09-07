@@ -64,6 +64,24 @@ namespace TriageTrainer.Tests
         "자동 진행 피드백은 기본 타이핑 속도로 전체 문장이 출력될 시간을 보장해야 한다.");
     }
 
+    [TestCase("TRIAGE_WAIT_ALL")]
+    [TestCase("TRIAGE_CHECK_CORRECT")]
+    [TestCase("TRIAGE_A_REMOVE")]
+    public void MissingTriageSubmissionExitsWithoutClaimingCorrectClassification(string identifier)
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(
+        Path.Combine(Application.dataPath, "Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json")));
+      var gate = (ScenarioValidatorNode)graph.Nodes[identifier];
+      Assert.That(gate.WaitForCondition, Is.True);
+      Assert.That(gate.OnWaitTimeout, Is.EqualTo(ScenarioValidatorWaitTimeoutBehavior.FailBranch));
+      Assert.That(gate.FailureNextIdentifier, Is.EqualTo("TRIAGE_A_FINAL_REMOVE"));
+      var exit = (ScenarioQuestControlNode)graph.Nodes[gate.FailureNextIdentifier];
+      Assert.That(exit.Operation, Is.EqualTo(ScenarioQuestOperationType.Remove));
+      Assert.That(exit.NextIdentifier, Is.EqualTo("CC_TRIAGE_A"));
+      Assert.That(gate.NextIdentifier, Is.Not.EqualTo(gate.FailureNextIdentifier),
+        "Successful submissions retain their clinical evaluation path.");
+    }
+
     [Test]
     public void CareZoneRegistersUnattachedEquipmentWithoutActiveColliders()
     {
