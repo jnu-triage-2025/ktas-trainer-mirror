@@ -5820,25 +5820,28 @@ namespace MultiplayerInfrastructure.Scenario
         bool replicateBranchEvents = _executionMode != ExecutionMode.ServerAuthoritative
                                      && node.AllocationType != ScenarioParallelAllocationType.SelfAll;
 
-        // activeRoleTags 기반 그래프는 플레이어/태그 등록이 완료되기 전에 첫 Parallel에
-        // 도달할 수 있다. 이때 빈 roster를 "모든 역할 부재"로 해석하면 skipAbsentRoleBranches가
-        // 모든 분기를 건너뛰고 WaitMode.All이 즉시 완료되어 분기 내부 게이트를 전부 우회한다.
-        // 최소 한 역할이 확인된 뒤에만 실제 부재 역할을 계산한다.
-        yield return WaitForInitialActiveRoleRoster(node);
-        if (_currentGraph == null)
+        bool sharedRoleAllocation = _executionMode != ExecutionMode.ServerAuthoritative
+          && node.AllocationType == ScenarioParallelAllocationType.ByRole
+          && _currentGraph?.ActiveRoleTags?.Count > 0
+          && ScenarioNetworkRelay.HasCompatibilitySession(_currentGraph?.Identifier);
+        if (sharedRoleAllocation)
         {
-          yield break;
+          int[] owners = null;
+          yield return ScenarioNetworkRelay.WaitForCompatibilityAllocation(
+            _currentGraph.Identifier, node.Identifier, result => owners = result);
+          if (_currentGraph == null || owners == null || owners.Length != node.Branches.Count)
+            yield break;
+          for (int i = 0; i < owners.Length; i++)
+            allocation[node.Branches[i]] = owners[i] < 0 ? null : (int?)owners[i];
         }
-
-        players = GetActivePlayerIds();
-        if (!TryAllocateParallel(node, players, allocation))
+        else
         {
-          // 배정에 실패했다고 시나리오를 끝내면, 역할 태그가 하나 어긋났을 뿐인데 네 명이 쌓아 온
-          // 진행이 통째로 사라진다. 게다가 이 실패는 병렬 노드에 닿는 순간에야 드러나므로,
-          // 운영자는 원인이 된 설정과 한참 떨어진 지점에서 세션이 끝나는 것을 보게 된다.
-          // 그래서 중단 대신, 배정된 분기만 실행하고 배정되지 못한 분기는 건너뛴 뒤 눈에 띄는
-          // 진단을 남긴다. 그래프가 Panic 을 선언한 의도(문제를 덮지 않는다)는 진단으로 지킨다.
-          ReportParallelAllocationDegraded(node, players, allocation);
+          yield return WaitForInitialActiveRoleRoster(node);
+          if (_currentGraph == null)
+            yield break;
+          players = GetActivePlayerIds();
+          if (!TryAllocateParallel(node, players, allocation))
+            ReportParallelAllocationDegraded(node, players, allocation);
         }
 
         if (_executionMode == ExecutionMode.ServerAuthoritative)
@@ -8066,6 +8069,34 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       return true;
+    }
+
+    // Compatibility peers consume one server snapshot rather than interpreting partially
+    // replicated role tags independently. Every connected session member must be registered.
+    internal bool TryAllocateCompatibilityRoles(ScenarioGraph graph, ScenarioParallelNode node,
+      IReadOnlyCollection<int> participants, out int[] owners)
+    {
+      owners = null;
+      var clients = participants.OrderBy(id => id).ToArray();
+      if (!TryBuildActiveRoleRoster(graph, clients, out var roster, out _)
+          || !HasRegisteredCompatibilityRoles(clients, roster.Select(entry => entry.ClientId)))
+        return false;
+      var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+      if (!TryAssignActiveRoleBranches(node.Branches, new HashSet<string>(graph.ActiveRoleTags),
+            roster.ToDictionary(entry => entry.Role, entry => entry.ClientId, StringComparer.Ordinal),
+            graph.SkipAbsentRoleBranches,
+            (branch, clientId) => IsPlayerEligibleForBranch(branch, clientId, allowTagGateBypass: false),
+            allocation, out _))
+        return false;
+      owners = node.Branches.Select(branch => allocation.TryGetValue(branch, out var owner)
+        ? owner ?? -1 : -1).ToArray();
+      return true;
+    }
+
+    private static bool HasRegisteredCompatibilityRoles(IEnumerable<int> participants, IEnumerable<int> roleHolders)
+    {
+      var holders = new HashSet<int>(roleHolders);
+      return participants.All(holders.Contains);
     }
 
     private bool TryAllocateActiveRoleParallel(

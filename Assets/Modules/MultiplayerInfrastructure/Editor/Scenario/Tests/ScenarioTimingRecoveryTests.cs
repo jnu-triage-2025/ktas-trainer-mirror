@@ -61,6 +61,33 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void ConnectedSlowPlayerKeepsCompatibilityJoinClosedPastClinicalGateDeadline()
+    {
+      var connected = new HashSet<int> { 1, 2, 3, 4 };
+      var barrier = new ScenarioCompletionBarrier(connected);
+      barrier.Complete(1);
+      barrier.Complete(2);
+      barrier.Complete(3);
+      foreach (double elapsed in new[] { 180d, 195d, 600d, 1200d })
+        Assert.That(barrier.Evaluate(connected, elapsed), Is.False);
+      barrier.Complete(4);
+      Assert.That(barrier.Evaluate(connected, 1201), Is.True);
+      Assert.That(barrier.TimedOut, Is.False);
+    }
+
+    [Test]
+    public void RoleRegistrationMustIncludeEveryConnectedSessionParticipant()
+    {
+      var method = typeof(ScenarioController).GetMethod("HasRegisteredCompatibilityRoles",
+        BindingFlags.Static | BindingFlags.NonPublic);
+      var participants = new[] { 1, 2, 3, 4 };
+      Assert.That(method.Invoke(null, new object[] { participants, new[] { 1, 2, 3 } }), Is.False);
+      Assert.That(method.Invoke(null, new object[] { participants, new[] { 1, 2, 3, 3 } }), Is.False);
+      Assert.That(method.Invoke(null, new object[] { participants, new[] { 4, 3, 2, 1 } }), Is.True);
+      Assert.That(method.Invoke(null, new object[] { new[] { 1, 2, 3 }, new[] { 1, 2, 3 } }), Is.True);
+    }
+
+    [Test]
     public void RevisitedDialogueRejectsOldReplyAndDoesNotAdvanceAnotherPlayer()
     {
       var go = new GameObject("late-presentation-reply");

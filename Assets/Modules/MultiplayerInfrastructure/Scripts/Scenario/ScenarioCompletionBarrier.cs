@@ -12,7 +12,7 @@ namespace MultiplayerInfrastructure.Scenario
     public bool Released { get; private set; }
     public bool TimedOut { get; private set; }
 
-    public ScenarioCompletionBarrier(IEnumerable<int> expected, double deadline)
+    public ScenarioCompletionBarrier(IEnumerable<int> expected, double deadline = double.PositiveInfinity)
     {
       _expected = new HashSet<int>(expected);
       Deadline = deadline;
