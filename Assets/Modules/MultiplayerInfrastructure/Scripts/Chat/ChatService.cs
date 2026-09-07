@@ -524,6 +524,26 @@ namespace MultiplayerInfrastructure.Chat
                   + "or use '/scenario execute <target> <scenario> <entrypoint>' to re-join a single player.";
           return false;
         }
+
+        // 역할 없는 대상(관전자, 역할 선택을 마치지 못한 인원)이 세션에 들어가면 서버 역할 배정이 그 대상의
+        // 등록을 기다리다 유예가 지나서야 진행되고, 그 대상은 어떤 분기도 받지 못한 채 합류점마다 남을 뿐이다.
+        // 시작 단계에서 거부하고 태그를 고치도록 안내한다.
+        var roleHolderSet = new HashSet<int>(roleHolderClientIds);
+        var untagged = resolvedTargets
+          .Where(target => !roleHolderSet.Contains((int)target.ClientId))
+          .Select(target => UserDescriptorService.TryGetByClientId((int)target.ClientId, out var descriptor)
+                            && descriptor != null
+                            && !string.IsNullOrWhiteSpace(descriptor.DisplayName)
+            ? descriptor.DisplayName
+            : $"client {target.ClientId}")
+          .ToList();
+        if (untagged.Count > 0)
+        {
+          error = $"Scenario '{scenarioIdentifier}' cannot start: targeted players hold none of the declared roles "
+                  + $"[{string.Join(", ", untagged)}]. Assign a role with '/tag add <player> <role>' "
+                  + "or exclude them from the target selector.";
+          return false;
+        }
       }
 
       if (hasEntrypoint

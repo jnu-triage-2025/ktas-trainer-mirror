@@ -752,7 +752,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 표시 전용 피어의 세션은 유지해야 새 시작 노드가 RPC로 즉시 갱신된다.
       // EndPresentationScenario를 먼저 보내면 재시작 뒤 BeginPresentationScenario를 다시
       // 보낼 대상 목록이 없어 원격 UI가 영구적으로 비활성 상태에 남는다.
-      EndScenarioInternal(endAuthoritativePresentation: false);
+      EndScenarioInternal(endAuthoritativePresentation: false, leaveCompatibilitySession: false);
       _executionMode = mode;
       if (mode == ExecutionMode.ServerAuthoritative)
         ScenarioNetworkRelay.DismissAuthoritativePresentation(graph.Identifier);
@@ -1159,6 +1159,8 @@ namespace MultiplayerInfrastructure.Scenario
       _branchPresentationNodes.Clear();
       _acknowledgedPresentations.Clear();
       _mainPresentationToken = null;
+      // 이 실행이 속한 호환 세션을 기억해 두어야, 종료 시 이탈 통지가 다음 실행의 세션을 건드리지 않는다.
+      _runCompatibilitySession = ScenarioNetworkRelay.GetLocalCompatibilitySession(graph.Identifier);
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioInteractionSignals.ClearAllRaisedSignals();
@@ -1260,7 +1262,7 @@ namespace MultiplayerInfrastructure.Scenario
       EndScenarioInternal(endAuthoritativePresentation: true);
     }
 
-    private void EndScenarioInternal(bool endAuthoritativePresentation)
+    private void EndScenarioInternal(bool endAuthoritativePresentation, bool leaveCompatibilitySession = true)
     {
       CancelInlineTTSPrewarm();
       _questStateFlagsByRole.Clear();
@@ -1270,6 +1272,12 @@ namespace MultiplayerInfrastructure.Scenario
       // 로그 기록을 위해 그래프 ID를 먼저 캡처 (_currentGraph는 이후 null로 초기화됨)
       string endingGraphId = _currentGraph?.Identifier;
       CloseGroupGatesForGraph(endingGraphId);
+      // 이 피어의 흐름이 먼저 끝나면 서버 합류 배리어에는 "접속 중이지만 완료 보고가 없는" 참여자로
+      // 남아 나머지 인원의 합류를 영원히 막는다. 이 실행이 속한 세션에서 이탈을 알려 배리어에서 뺀다.
+      // 재시작은 같은 세션을 계속 쓰므로 이탈을 알리지 않는다.
+      if (leaveCompatibilitySession && !string.IsNullOrEmpty(endingGraphId))
+        ScenarioNetworkRelay.LeaveCompatibilitySession(endingGraphId, _runCompatibilitySession);
+      _runCompatibilitySession = null;
       if (_executionMode == ExecutionMode.ServerAuthoritative && !string.IsNullOrEmpty(endingGraphId))
       {
         if (endAuthoritativePresentation)
@@ -2325,7 +2333,17 @@ namespace MultiplayerInfrastructure.Scenario
           _currentGraph?.Identifier);
       }
       catch { /* 로그 실패는 노드 실행에 영향 없음 */ }
-      OnNodeChanged?.Invoke(node);
+      try
+      {
+        OnNodeChanged?.Invoke(node);
+      }
+      catch (Exception ex)
+      {
+        // 구독자(루브릭 기록, 체크리스트 등)의 예외가 여기서 전파되면 표시 복구 코루틴이 시작되기
+        // 전에 메인 체인이 멈추고, 그 뒤로는 아무것도 Advance 를 부르지 않는다. 구독자 오류는
+        // 기록만 남기고 노드는 그대로 실행한다.
+        Debug.LogException(ex, this);
+      }
 
       // 대화창을 쓰지 않는 노드로 넘어왔다면 직전 대화 노드가 남긴 표시를 먼저 내린다.
       // Advance 자체는 UI를 건드리지 않으므로, autoAdvanceSeconds 로 자동 진행한 대화는
@@ -2341,6 +2359,48 @@ namespace MultiplayerInfrastructure.Scenario
       if (node is ScenarioDialogueNode || node is ScenarioChoiceNode || node is ScenarioQuizNode)
         StartCoroutine(RecoverMainPresentation(node, _mainPresentationToken));
 
+      try
+      {
+        DispatchNode(node);
+      }
+      catch (Exception ex)
+      {
+        // 노드 처리기가 예외를 던지면 그 노드는 어떤 타이머도 남기지 않은 채 멈추고, 다른 참여자는
+        // 다음 합류점에서 이 피어를 기다리게 된다. 미수행으로 기록하고 다음 프레임에 복구 경로로 진행한다.
+        Debug.LogException(ex, this);
+        RecordRecovery(node?.Identifier, $"node handler threw {ex.GetType().Name}; continuing without recording success");
+        if (_currentGraph != null && ReferenceEquals(_currentNode, node))
+          StartCoroutine(AdvanceAfterHandlerFailure(node));
+      }
+    }
+
+    /// <summary>
+    /// 처리기 예외로 멈춘 메인 체인 노드를 다음 프레임에 복구 경로로 진행시킨다. 처리기가 예외를
+    /// 던지기 전에 이미 다음 노드로 넘어갔다면(현재 노드가 바뀌어 있다면) 아무것도 하지 않는다.
+    /// </summary>
+    private IEnumerator AdvanceAfterHandlerFailure(IScenarioNode node)
+    {
+      yield return null;
+      if (_currentGraph == null || !ReferenceEquals(_currentNode, node))
+        yield break;
+
+      CancelDialogueAutoAdvance();
+      DismissDialogueSurfaces();
+      if (_executionMode == ExecutionMode.ServerAuthoritative)
+        ScenarioNetworkRelay.DismissAuthoritativePresentation(_currentGraph.Identifier);
+      ClearOptions();
+      string next = ResolveUnansweredChoice(node);
+      if (!string.IsNullOrEmpty(next) && _currentGraph.TryGetNode(next, out var nextNode))
+      {
+        _currentNode = nextNode;
+        ExecuteNode(nextNode);
+      }
+      else
+        Advance();
+    }
+
+    private void DispatchNode(IScenarioNode node)
+    {
       switch (node)
       {
         case ScenarioDialogueNode dialogue:
@@ -5828,11 +5888,28 @@ namespace MultiplayerInfrastructure.Scenario
         {
           int[] owners = null;
           yield return ScenarioNetworkRelay.WaitForCompatibilityAllocation(
-            _currentGraph.Identifier, node.Identifier, result => owners = result);
-          if (_currentGraph == null || owners == null || owners.Length != node.Branches.Count)
+            _currentGraph.Identifier, node.Identifier, result => owners = result, RecoveryWaitSeconds);
+          if (_currentGraph == null)
             yield break;
-          for (int i = 0; i < owners.Length; i++)
-            allocation[node.Branches[i]] = owners[i] < 0 ? null : (int?)owners[i];
+          if (owners == null || owners.Length != node.Branches.Count)
+          {
+            // 서버 배정이 상한 안에 오지 않거나 이 그래프의 분기 수와 맞지 않으면, 무한 대기 대신 이
+            // 피어의 로스터로 배정한다. 피어 간 배정이 어긋날 수 있으므로 미수행으로 기록한다.
+            RecordRecovery(node.Identifier, owners == null
+              ? "server role allocation did not arrive before the recovery deadline; allocating locally"
+              : "server role allocation did not match this graph's branches; allocating locally");
+            yield return WaitForInitialActiveRoleRoster(node);
+            if (_currentGraph == null)
+              yield break;
+            players = GetActivePlayerIds();
+            if (!TryAllocateParallel(node, players, allocation))
+              ReportParallelAllocationDegraded(node, players, allocation);
+          }
+          else
+          {
+            for (int i = 0; i < owners.Length; i++)
+              allocation[node.Branches[i]] = owners[i] < 0 ? null : (int?)owners[i];
+          }
         }
         else
         {
@@ -6229,9 +6306,10 @@ namespace MultiplayerInfrastructure.Scenario
             if (node.WaitForResolution)
             {
               // 게이트 타임아웃은 시간 배율과 무관하게 만료되어야 하므로 unscaled 시간을 쓴다.
-              float deadline = node.WaitTimeoutSeconds is > 0f
-                ? Time.unscaledTime + node.WaitTimeoutSeconds.Value
-                : float.PositiveInfinity;
+              // 타임아웃을 선언하지 않은 Register 대기도 Validator 게이트와 같은 복구 상한을 따른다.
+              // 메인 체인의 Register 대기는 담당자 이탈로 풀리지 않으므로, 상한이 없으면 무한 대기가 된다.
+              float waitSeconds = ResolveRecoveryWait(node.WaitTimeoutSeconds);
+              float deadline = Time.unscaledTime + waitSeconds;
               int skipGeneration = _gateSkipGeneration;
               while (!resolved)
               {
@@ -6270,7 +6348,7 @@ namespace MultiplayerInfrastructure.Scenario
                   ScenarioInteractionSignals.ClearInternal(targetId, signalId);
                   string message =
                     $"Server internal signal wait '{node.Identifier}' ({targetId}::{signalId}) timed out after "
-                    + $"{node.WaitTimeoutSeconds.Value}s in graph '{_currentGraph.Identifier}'; continuing (미수행 기록).";
+                    + $"{waitSeconds}s in graph '{_currentGraph.Identifier}'; continuing (미수행 기록).";
                   Debug.LogWarning($"[ScenarioController] {message}", this);
                   try
                   {
@@ -7098,6 +7176,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     private const float RecoveryWaitSeconds = 180f;
     private const float PresentationRetrySeconds = 15f;
+    /// <summary>현재 실행이 속한 호환 세션 식별자. 종료 시 서버 합류 배리어에서 이탈을 알리는 데 쓴다.</summary>
+    private string _runCompatibilitySession;
     private string _mainPresentationToken;
     private string _receivedPresentationToken;
     private readonly Dictionary<int, string> _branchPresentationTokens = new();
@@ -8074,12 +8154,16 @@ namespace MultiplayerInfrastructure.Scenario
     // Compatibility peers consume one server snapshot rather than interpreting partially
     // replicated role tags independently. Every connected session member must be registered.
     internal bool TryAllocateCompatibilityRoles(ScenarioGraph graph, ScenarioParallelNode node,
-      IReadOnlyCollection<int> participants, out int[] owners)
+      IReadOnlyCollection<int> participants, out int[] owners, bool requireEveryParticipantRegistered = true)
     {
       owners = null;
       var clients = participants.OrderBy(id => id).ToArray();
-      if (!TryBuildActiveRoleRoster(graph, clients, out var roster, out _)
-          || !HasRegisteredCompatibilityRoles(clients, roster.Select(entry => entry.ClientId)))
+      if (!TryBuildActiveRoleRoster(graph, clients, out var roster, out _))
+        return false;
+      // 등록 유예 안에서는 접속 중인 참여자 전원이 역할을 등록할 때까지 기다린다. 유예가 지나면
+      // 역할 없는 참여자(관전자, 역할 선택을 마치지 못한 인원)를 제외하고 배정해 무한 대기를 막는다.
+      if (requireEveryParticipantRegistered
+          && !HasRegisteredCompatibilityRoles(clients, roster.Select(entry => entry.ClientId)))
         return false;
       var allocation = new Dictionary<ScenarioParallelBranch, int?>();
       if (!TryAssignActiveRoleBranches(node.Branches, new HashSet<string>(graph.ActiveRoleTags),

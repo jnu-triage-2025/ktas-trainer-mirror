@@ -592,6 +592,10 @@ namespace MultiplayerInfrastructure.Scenario
         TtsVoiceIdentifier = ResolveVoiceIdentifier(dto.TtsVoiceIdentifier, dto.TtsVoiceProfile),
         AssessmentIdentifier = dto.AssessmentIdentifier,
         CorrectOptionIndex = dto.CorrectOptionIndex,
+        // 정상 선택은 각 선택지의 nextNodeIdentifier 를 따르고, nextIdentifier 는 선택지가 표시되지
+        // 못했거나 응답이 없을 때의 복구 경로로만 쓴다. 이 값을 버리면 복구가 항상 첫 선택지로
+        // 떨어져, 오답 재시도 순환을 가진 선택지에서 응답 없는 피어가 영원히 맴돈다.
+        NextIdentifier = dto.NextIdentifier,
         Options = options
       };
     }
@@ -1602,7 +1606,7 @@ namespace MultiplayerInfrastructure.Scenario
         TtsVoiceProfile = ConvertVoiceProfileToDTO(node.TtsVoiceProfile),
         AssessmentIdentifier = node.AssessmentIdentifier,
         CorrectOptionIndex = node.CorrectOptionIndex,
-        NextIdentifier = null,
+        NextIdentifier = NullIfWhiteSpace(node.NextIdentifier),
         Options = new List<ScenarioChoiceOptionDTO>()
       };
 

@@ -95,29 +95,19 @@ namespace MultiplayerInfrastructure.Scenario
       _isDispatching = false;
     }
 
-    /// <summary>플레이어가 연결을 끊으면 기대 신호 집합이 바뀔 수 있는 카운터를 다시 평가한다.</summary>
+    /// <summary>
+    /// 플레이어가 연결을 끊으면 기대 신호 집합이 바뀔 수 있는 카운터를 다시 평가한다. 고정 임계치
+    /// 카운터도 함께 평가한다. 마지막 신호가 도착한 순간 서버 출력이 불가능했다면(중계기 미준비 등)
+    /// 그 카운터는 새 신호가 더 오지 않는 한 다시 평가되지 않아 출력 신호를 영영 내지 못하기 때문이다.
+    /// (이 메서드는 접속 상태 변화 시점과 저빈도 안전망에서 호출된다.)
+    /// </summary>
     public static void RefreshDynamicThresholds()
     {
-      // 고정 임계치 카운터는 신호가 도착할 때만 상태가 바뀌므로 Dispatch 가 이미 처리한다.
-      // 로스터 기반 카운터만 재평가 대상이며, 그런 카운터가 없으면 스냅샷도 뜨지 않는다.
-      // (이 메서드는 접속 상태 변화 시점과 저빈도 안전망에서 호출된다.)
-      bool hasDynamicCounter = false;
-      foreach (var counter in Counters.Values)
-      {
-        if (counter.ExpectedSignals == null)
-          continue;
-        hasDynamicCounter = true;
-        break;
-      }
-
-      if (!hasDynamicCounter)
+      if (Counters.Count == 0)
         return;
 
       foreach (var counter in Counters.Values.ToArray())
-      {
-        if (counter.ExpectedSignals != null)
-          FireIfReady(counter);
-      }
+        FireIfReady(counter);
     }
 
     private static void EnqueueImmediateFire(Counter counter)
