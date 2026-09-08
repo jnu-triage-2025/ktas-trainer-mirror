@@ -1267,7 +1267,7 @@
     "MOVE_DOCTOR_TO_CARE_AREA": {
       "identifier": "MOVE_DOCTOR_TO_CARE_AREA",
       "nodeType": "NPCControl",
-      "nextIdentifier": "care_patient_b",
+      "nextIdentifier": "P_B_C_CARE",
       "mode": "Control",
       "npcIdentifier": "npc-doctor-patient-b-c-ct",
       "destinationType": "WaypointSet",
@@ -1527,8 +1527,8 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "DOC_D",
       "speakerName": "의사",
-      "dialogueContent": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 IV 확보해 주세요.",
-      "dialogueContentTTSPassing": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 아이 브이 확보해 주세요.",
+      "dialogueContent": "@t=[nurse_a, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 IV 확보해 주세요.",
+      "dialogueContentTTSPassing": "@t=[nurse_a, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 아이 브이 확보해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
@@ -1537,10 +1537,10 @@
     "DOC_D": {
       "identifier": "DOC_D",
       "nodeType": "Dialogue",
-      "nextIdentifier": "P_B_CARE",
+      "nextIdentifier": "P_B_TREATMENT",
       "speakerName": "의사",
-      "dialogueContent": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
-      "dialogueContentTTSPassing": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
+      "dialogueContent": "@t=[nurse_c, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
+      "dialogueContentTTSPassing": "@t=[nurse_c, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
@@ -1556,7 +1556,7 @@
       "branches": [
         {
           "identifier": "A_RECOG_Q",
-          "completionConditionIdentifier": "CC_B_A",
+          "completionConditionIdentifier": "CC_B_INITIAL_A",
           "requiredPlayerTags": [
             "nurse_a"
           ],
@@ -1565,45 +1565,73 @@
         },
         {
           "identifier": "B_VITAL_Q",
-          "completionConditionIdentifier": "CC_B_B",
-          "requiredPlayerTags": [
-            "nurse_b"
-          ],
-          "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
-        },
-        {
-          "identifier": "C_PUPIL_Q",
-          "completionConditionIdentifier": "CC_B_C",
+          "completionConditionIdentifier": "CC_B_INITIAL_C",
           "requiredPlayerTags": [
             "nurse_c"
-          ],
-          "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
-        },
-        {
-          "identifier": "D_OXY_Q",
-          "completionConditionIdentifier": "CC_B_D",
-          "requiredPlayerTags": [
-            "nurse_d"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
       ]
     },
-    "P_B_WAIT_REMOVE": {
-      "identifier": "P_B_WAIT_REMOVE",
+    "P_B_C_CARE": {
+      "identifier": "P_B_C_CARE",
       "nodeType": "Parallel",
-      "nextIdentifier": "DOC_B_COMPLETE",
+      "nextIdentifier": "CT_DOCTOR_ORDER",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Panic",
+      "branches": [
+        {
+          "identifier": "P_B_CARE",
+          "completionConditionIdentifier": "CC_B_COMPLETE",
+          "requiredPlayerTags": ["nurse_a"],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "P_C_CARE",
+          "completionConditionIdentifier": "CC_C_COMPLETE",
+          "requiredPlayerTags": ["nurse_b"],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        }
+      ]
+    },
+    "P_B_TREATMENT": {
+      "identifier": "P_B_TREATMENT",
+      "nodeType": "Parallel",
+      "nextIdentifier": "P_B_TREATMENT_REMOVE",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
-        { "identifier": "A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_B_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "B_VITAL_REMOVE", "completionConditionIdentifier": "CC_B_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_B_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "D_REMOVE", "completionConditionIdentifier": "CC_B_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
+        { "identifier": "C_PUPIL_Q", "completionConditionIdentifier": "CC_B_TREATMENT_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "D_OXY_Q", "completionConditionIdentifier": "CC_B_TREATMENT_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
+      ]
+    },
+    "P_B_TREATMENT_REMOVE": {
+      "identifier": "P_B_TREATMENT_REMOVE",
+      "nodeType": "Parallel",
+      "nextIdentifier": "CC_B_COMPLETE",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Ignore",
+      "branches": [
+        { "identifier": "C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_B_TREATMENT_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "D_REMOVE", "completionConditionIdentifier": "CC_B_TREATMENT_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
+      ]
+    },
+    "P_B_WAIT_REMOVE": {
+      "identifier": "P_B_WAIT_REMOVE",
+      "nodeType": "Parallel",
+      "nextIdentifier": "DOC_C",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Ignore",
+      "branches": [
+        { "identifier": "A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_B_INITIAL_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "B_VITAL_REMOVE", "completionConditionIdentifier": "CC_B_INITIAL_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
       ]
     },
     "A_RECOG_Q": {
@@ -2402,7 +2430,7 @@
     "A_STRENGTH_WAIT_UPDATE": {
       "identifier": "A_STRENGTH_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_B_A",
+      "nextIdentifier": "CC_B_INITIAL_A",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -2634,7 +2662,7 @@
     "B_VITAL_WAIT_UPDATE": {
       "identifier": "B_VITAL_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_B_B",
+      "nextIdentifier": "CC_B_INITIAL_C",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -2803,7 +2831,7 @@
     "C_PUPIL_WAIT_UPDATE": {
       "identifier": "C_PUPIL_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_B_C",
+      "nextIdentifier": "CC_B_TREATMENT_A",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -3087,7 +3115,7 @@
     "D_WAIT_UPDATE": {
       "identifier": "D_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_B_D",
+      "nextIdentifier": "CC_B_TREATMENT_C",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -3131,8 +3159,8 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_DOC_D",
       "speakerName": "의사",
-      "dialogueContent": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 IV 확보해 주세요.",
-      "dialogueContentTTSPassing": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 아이 브이 확보해 주세요.",
+      "dialogueContent": "@t=[nurse_b, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 IV 확보해 주세요.",
+      "dialogueContentTTSPassing": "@t=[nurse_b, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 아이 브이 확보해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
@@ -3141,7 +3169,7 @@
     "C_DOC_D": {
       "identifier": "C_DOC_D",
       "nodeType": "Dialogue",
-      "nextIdentifier": "P_C_CARE",
+      "nextIdentifier": "P_C_TREATMENT",
       "speakerName": "의사",
       "dialogueContent": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
       "dialogueContentTTSPassing": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
@@ -3160,16 +3188,7 @@
       "branches": [
         {
           "identifier": "C_A_RECOG_Q",
-          "completionConditionIdentifier": "CC_C_A",
-          "requiredPlayerTags": [
-            "nurse_a"
-          ],
-          "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
-        },
-        {
-          "identifier": "C_B_VITAL_Q",
-          "completionConditionIdentifier": "CC_C_B",
+          "completionConditionIdentifier": "CC_C_INITIAL_B",
           "requiredPlayerTags": [
             "nurse_b"
           ],
@@ -3177,17 +3196,8 @@
           "requiredPlayerTagsMatchMode": "All"
         },
         {
-          "identifier": "C_C_PUPIL_Q",
-          "completionConditionIdentifier": "CC_C_C",
-          "requiredPlayerTags": [
-            "nurse_c"
-          ],
-          "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
-        },
-        {
-          "identifier": "C_D_OXY_Q",
-          "completionConditionIdentifier": "CC_C_D",
+          "identifier": "C_B_VITAL_Q",
+          "completionConditionIdentifier": "CC_C_INITIAL_D",
           "requiredPlayerTags": [
             "nurse_d"
           ],
@@ -3199,15 +3209,37 @@
     "P_C_WAIT_REMOVE": {
       "identifier": "P_C_WAIT_REMOVE",
       "nodeType": "Parallel",
-      "nextIdentifier": "C_COMPLETE",
+      "nextIdentifier": "C_DOC_C",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
-        { "identifier": "C_A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_C_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "C_B_VITAL_REMOVE", "completionConditionIdentifier": "CC_C_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "C_C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_C_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "C_D_REMOVE", "completionConditionIdentifier": "CC_C_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
+        { "identifier": "C_A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_C_INITIAL_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_B_VITAL_REMOVE", "completionConditionIdentifier": "CC_C_INITIAL_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
+      ]
+    },
+    "P_C_TREATMENT": {
+      "identifier": "P_C_TREATMENT",
+      "nodeType": "Parallel",
+      "nextIdentifier": "P_C_TREATMENT_REMOVE",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Ignore",
+      "branches": [
+        { "identifier": "C_C_PUPIL_Q", "completionConditionIdentifier": "CC_C_TREATMENT_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_D_OXY_Q", "completionConditionIdentifier": "CC_C_TREATMENT_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
+      ]
+    },
+    "P_C_TREATMENT_REMOVE": {
+      "identifier": "P_C_TREATMENT_REMOVE",
+      "nodeType": "Parallel",
+      "nextIdentifier": "CC_C_COMPLETE",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Ignore",
+      "branches": [
+        { "identifier": "C_C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_C_TREATMENT_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_D_REMOVE", "completionConditionIdentifier": "CC_C_TREATMENT_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
       ]
     },
     "C_A_RECOG_Q": {
@@ -4006,7 +4038,7 @@
     "C_A_STRENGTH_WAIT_UPDATE": {
       "identifier": "C_A_STRENGTH_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_C_A",
+      "nextIdentifier": "CC_C_INITIAL_B",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -4238,7 +4270,7 @@
     "C_B_VITAL_WAIT_UPDATE": {
       "identifier": "C_B_VITAL_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_C_B",
+      "nextIdentifier": "CC_C_INITIAL_D",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -4407,7 +4439,7 @@
     "C_C_PUPIL_WAIT_UPDATE": {
       "identifier": "C_C_PUPIL_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_C_C",
+      "nextIdentifier": "CC_C_TREATMENT_B",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -4691,7 +4723,7 @@
     "C_D_WAIT_UPDATE": {
       "identifier": "C_D_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_C_D",
+      "nextIdentifier": "CC_C_TREATMENT_D",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -4727,7 +4759,7 @@
       "nodeType": "ManualEntrypoint",
       "entrypointIdentifier": "move_patients",
       "manualEnterSetupIdentifier": "SETUP_MOVE_PATIENTS_SNAP_BED_B",
-      "description": "CT 이송 단계 수동 진입 지점. 환자 B/C와 처치 장비를 이송 전 상태로 즉시 준비한다.",
+      "description": "CT 이송 단계 수동 진입 지점. 두 환자와 처치 장비를 이송 전 상태로 즉시 준비한다.",
       "nextIdentifier": "CT_DOCTOR_MARK_SHOW"
     },
     "CT_DOCTOR_MARK_SHOW": {
