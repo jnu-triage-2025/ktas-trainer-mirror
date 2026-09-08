@@ -3814,11 +3814,10 @@
           "identifier": "Q010",
           "completionConditionIdentifier": "CC_B_intubation_patient_a",
           "requiredPlayerTags": [
-            "nurse_b",
-            "nurse_a"
+            "nurse_b"
           ],
           "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "Any"
+          "requiredPlayerTagsMatchMode": "All"
         },
         {
           "identifier": "Q011",
