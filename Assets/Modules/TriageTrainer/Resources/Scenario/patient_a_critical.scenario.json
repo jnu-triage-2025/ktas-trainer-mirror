@@ -238,12 +238,7 @@
           "scenarioStartNodeIdentifier": null,
           "title": "후두경 전달",
           "submitButtonText": "전달",
-          "requiredItems": [
-            {
-              "itemIdentifier": "laryngoscope",
-              "count": 1
-            }
-          ],
+          "requiredItems": [{ "itemIdentifier": "laryngoscope", "count": 1 }],
           "completionSignalIdentifier": "sig.pass_laryngoscope",
           "consumeOnce": true,
           "enabled": false
@@ -257,12 +252,7 @@
           "scenarioStartNodeIdentifier": null,
           "title": "준비된 기관내관 전달",
           "submitButtonText": "전달",
-          "requiredItems": [
-            {
-              "itemIdentifier": "endotracheal_tube_ready",
-              "count": 1
-            }
-          ],
+          "requiredItems": [{ "itemIdentifier": "endotracheal_tube_ready", "count": 1 }],
           "completionSignalIdentifier": "sig.pass_et_tube_ready",
           "consumeOnce": true,
           "enabled": false
@@ -276,12 +266,7 @@
           "scenarioStartNodeIdentifier": null,
           "title": "5cc 주사기 전달",
           "submitButtonText": "전달",
-          "requiredItems": [
-            {
-              "itemIdentifier": "syringe_5cc",
-              "count": 1
-            }
-          ],
+          "requiredItems": [{ "itemIdentifier": "syringe_5cc", "count": 1 }],
           "completionSignalIdentifier": "sig.pass_syringe",
           "consumeOnce": true,
           "enabled": false
@@ -295,12 +280,7 @@
           "scenarioStartNodeIdentifier": null,
           "title": "중심정맥관 전달",
           "submitButtonText": "전달",
-          "requiredItems": [
-            {
-              "itemIdentifier": "central_line_set",
-              "count": 1
-            }
-          ],
+          "requiredItems": [{ "itemIdentifier": "central_line_set", "count": 1 }],
           "completionSignalIdentifier": "sig.pass_central_line_set",
           "consumeOnce": true,
           "enabled": false
@@ -2192,7 +2172,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F4"
       },
       "identifier": "D008",
       "nodeType": "Dialogue",
@@ -2207,7 +2187,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F5"
       },
       "identifier": "D009",
       "nodeType": "Dialogue",
@@ -2230,7 +2210,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "M2"
+        "preset": "F1"
       },
       "identifier": "D010",
       "nodeType": "Dialogue",
@@ -2293,7 +2273,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F2"
       },
       "identifier": "D014",
       "nodeType": "Dialogue",
@@ -2339,7 +2319,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F4"
       },
       "identifier": "D017",
       "nodeType": "Dialogue",
@@ -2354,7 +2334,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F5"
       },
       "identifier": "D018",
       "nodeType": "Dialogue",
@@ -2402,7 +2382,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F5"
       },
       "identifier": "D021",
       "nodeType": "Dialogue",
@@ -2447,7 +2427,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F2"
       },
       "identifier": "D024",
       "nodeType": "Dialogue",
@@ -2478,7 +2458,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F4"
       },
       "identifier": "D026",
       "nodeType": "Dialogue",
@@ -2494,7 +2474,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F5"
       },
       "identifier": "D027",
       "nodeType": "Dialogue",
@@ -2510,7 +2490,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F5"
       },
       "identifier": "D027_1",
       "nodeType": "Dialogue",
@@ -2573,7 +2553,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F4"
       },
       "identifier": "D031",
       "nodeType": "Dialogue",
@@ -2589,7 +2569,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F4"
       },
       "identifier": "D031_1",
       "nodeType": "Dialogue",
@@ -2604,7 +2584,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F5"
       },
       "identifier": "D032",
       "nodeType": "Dialogue",
@@ -2873,6 +2853,8 @@
       "nextIdentifier": "Q028_1"
     },
     "ISC_PASS_CENTRAL_LINE_SET": {
+      "identifier": "ISC_PASS_CENTRAL_LINE_SET",
+      "nodeType": "ItemSubmissionConfig",
       "presetIdentifier": null,
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
@@ -2881,20 +2863,15 @@
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-central-line-set",
       "targetStateKey": null,
-      "requiredItems": [
-        {
-          "itemIdentifier": "central_line_set",
-          "count": 1
-        }
-      ],
+      "requiredItems": [{ "itemIdentifier": "central_line_set", "count": 1 }],
       "completionSignalIdentifier": "sig.pass_central_line_set",
-      "enabled": null,
+      "enabled": true,
       "resultStateKey": null,
-      "identifier": "ISC_PASS_CENTRAL_LINE_SET",
-      "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "V018"
     },
     "ISC_PASS_ET_TUBE": {
+      "identifier": "ISC_PASS_ET_TUBE",
+      "nodeType": "ItemSubmissionConfig",
       "presetIdentifier": null,
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
@@ -2903,20 +2880,15 @@
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-et-tube",
       "targetStateKey": null,
-      "requiredItems": [
-        {
-          "itemIdentifier": "endotracheal_tube_ready",
-          "count": 1
-        }
-      ],
+      "requiredItems": [{ "itemIdentifier": "endotracheal_tube_ready", "count": 1 }],
       "completionSignalIdentifier": "sig.pass_et_tube_ready",
-      "enabled": null,
+      "enabled": true,
       "resultStateKey": null,
-      "identifier": "ISC_PASS_ET_TUBE",
-      "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "V014_2"
     },
     "ISC_PASS_LARYNGOSCOPE": {
+      "identifier": "ISC_PASS_LARYNGOSCOPE",
+      "nodeType": "ItemSubmissionConfig",
       "presetIdentifier": null,
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
@@ -2925,20 +2897,15 @@
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-laryngoscope",
       "targetStateKey": null,
-      "requiredItems": [
-        {
-          "itemIdentifier": "laryngoscope",
-          "count": 1
-        }
-      ],
+      "requiredItems": [{ "itemIdentifier": "laryngoscope", "count": 1 }],
       "completionSignalIdentifier": "sig.pass_laryngoscope",
-      "enabled": null,
+      "enabled": true,
       "resultStateKey": null,
-      "identifier": "ISC_PASS_LARYNGOSCOPE",
-      "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "V014_1"
     },
     "ISC_PASS_SYRINGE": {
+      "identifier": "ISC_PASS_SYRINGE",
+      "nodeType": "ItemSubmissionConfig",
       "presetIdentifier": null,
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
@@ -2947,17 +2914,10 @@
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-5cc-syringe",
       "targetStateKey": null,
-      "requiredItems": [
-        {
-          "itemIdentifier": "syringe_5cc",
-          "count": 1
-        }
-      ],
+      "requiredItems": [{ "itemIdentifier": "syringe_5cc", "count": 1 }],
       "completionSignalIdentifier": "sig.pass_syringe",
-      "enabled": null,
+      "enabled": true,
       "resultStateKey": null,
-      "identifier": "ISC_PASS_SYRINGE",
-      "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "V014_4"
     },
     "N006_3": {
@@ -3033,6 +2993,9 @@
       "interactionRequired": null,
       "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F4"
+      },
       "identifier": "D_GCS_SUM_A",
       "nodeType": "Dialogue",
       "nextIdentifier": "D008"
@@ -3153,6 +3116,9 @@
       "interactionRequired": null,
       "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "dialogueContentTTSPassing": null,
       "identifier": "D_SUCTION_INSTALLED_A",
       "nodeType": "Dialogue",
@@ -3228,6 +3194,9 @@
       "interactionRequired": null,
       "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F1"
+      },
       "identifier": "N009_CORRECT",
       "nodeType": "Dialogue",
       "nextIdentifier": "D016"
@@ -3595,7 +3564,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F2"
       },
       "identifier": "N027_1",
       "nodeType": "Dialogue",
@@ -5125,7 +5094,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_VITAL_BP_A",
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F2"
       }
     },
     "C_VITAL_BP_A": {
@@ -5223,7 +5192,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_VITAL_BT_SPO2_A",
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F2"
       }
     },
     "C_VITAL_BT_SPO2_A": {
@@ -5319,7 +5288,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "Q007_1",
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F2"
       }
     },
     "V012": {
@@ -6903,6 +6872,9 @@
       "interactionRequired": null,
       "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F5"
+      },
       "identifier": "D_EPI_PREP_R1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V026_2"
@@ -7226,7 +7198,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "Q030_1",
       "ttsVoiceProfile": {
-        "preset": "F1"
+        "preset": "F5"
       }
     }
   }

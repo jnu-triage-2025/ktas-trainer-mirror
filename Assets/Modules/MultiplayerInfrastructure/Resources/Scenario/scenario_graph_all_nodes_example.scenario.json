@@ -124,16 +124,6 @@
       "nodeType": "Delay",
       "duration": { "value": 1.2, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "interaction_inspect"
-    },
-    "interaction_inspect": {
-      "identifier": "interaction_inspect",
-      "nodeType": "Interaction",
-      "actorScope": "Any",
-      "targetIdentifier": "patient_a_eye",
-      "requiredItemIdentifier": null,
-      "interactionType": "Inspect",
-      "completionConditionIdentifier": "interaction.patient_a_eye.done",
       "nextIdentifier": "combine_items"
     },
     "combine_items": {

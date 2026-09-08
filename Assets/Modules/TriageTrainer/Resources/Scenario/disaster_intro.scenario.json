@@ -116,16 +116,6 @@
       "quest": {
         "Id": "Quest_MoveToTriage"
       },
-      "nextIdentifier": "I001"
-    },
-    "I001": {
-      "identifier": "I001",
-      "nodeType": "Interaction",
-      "actorScope": "Player",
-      "targetIdentifier": "Triage_zone_Trigger",
-      "requiredItemIdentifier": null,
-      "interactionType": "Use",
-      "completionConditionIdentifier": null,
       "nextIdentifier": "Q001_1"
     },
     "Q001_1": {
@@ -554,16 +544,6 @@
       "quest": {
         "Id": "Quest_MoveToPrepRoom"
       },
-      "nextIdentifier": "I002"
-    },
-    "I002": {
-      "identifier": "I002",
-      "nodeType": "Interaction",
-      "actorScope": "Player",
-      "targetIdentifier": "Preproom_Trigger",
-      "requiredItemIdentifier": null,
-      "interactionType": "Use",
-      "completionConditionIdentifier": null,
       "nextIdentifier": "Q004_1"
     },
     "Q004_1": {
