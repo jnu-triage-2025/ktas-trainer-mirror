@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Input = MultiplayerInfrastructure.Automation.PlayerInput;
+using System;
 using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
@@ -112,6 +113,23 @@ namespace MultiplayerInfrastructure.Entity
     }
     /// <summary>이 클라이언트에서 현재 조종 중인 참가자가 하나 이상 있는지 여부.</summary>
     public bool IsLocallyControlled => _localParticipants.Count > 0;
+
+#if UNITY_E2E || UNITY_EDITOR
+    public virtual Newtonsoft.Json.Linq.JObject AutomationState
+    {
+      get
+      {
+        var forward = GetForwardDirection();
+        return new Newtonsoft.Json.Linq.JObject {
+          ["position"] = new Newtonsoft.Json.Linq.JArray(transform.position.x, transform.position.y, transform.position.z),
+          ["yaw"] = Mathf.Atan2(forward.x, forward.z) * Mathf.Rad2Deg,
+          ["locallyControlled"] = IsLocallyControlled,
+          ["hasParticipants"] = HasParticipants,
+          ["moveSpeed"] = _moveSpeed, ["turnSpeed"] = _turnSpeed
+        };
+      }
+    }
+#endif
 
     protected void Awake_MinecraftBoatLikeControl()
     {

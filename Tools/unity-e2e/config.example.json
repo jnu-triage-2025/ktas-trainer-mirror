@@ -1,0 +1,18 @@
+{
+  "port": 17890,
+  "artifactRoot": "../../artifacts/unity-e2e",
+  "builds": {
+    "mac": {
+      "executable": "../../Build/E2E.app/Contents/MacOS/KTASTrainer"
+    },
+    "mac_direct": {
+      "executable": "../../Build/E2E.app/Contents/MacOS/KTASTrainer",
+      "args": [
+        "-job-worker-count",
+        "2",
+        "-force-gfx-direct"
+      ]
+    }
+  },
+  "editorConnectionFile": "../../Temp/e2e-editor-connection.json"
+}

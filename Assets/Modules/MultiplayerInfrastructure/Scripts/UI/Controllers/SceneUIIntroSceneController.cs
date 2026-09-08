@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using PlayerPrefs = MultiplayerInfrastructure.Automation.ProfilePlayerPrefs;
+using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Registry;

@@ -54,7 +54,7 @@ namespace MultiplayerInfrastructure.Session
     /// <summary>PlayerController 디스폰 시 호출됩니다.</summary>
     public static void Unregister(string identifier)
     {
-      if (!_byIdentifier.TryGetValue(identifier, out var descriptor))
+      if (string.IsNullOrEmpty(identifier) || !_byIdentifier.TryGetValue(identifier, out var descriptor))
         return;
 
       if (_clientIdByIdentifier.TryGetValue(identifier, out var clientId))

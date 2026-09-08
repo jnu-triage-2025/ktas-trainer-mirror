@@ -1,0 +1,288 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unity E2E 제어 콘솔</title>
+<style>
+:root{
+ --bg:#eef0f4;--surface:#fff;--sunken:#f6f7f9;--line:#e3e6ec;--line-strong:#d3d8e2;
+ --text:#1c2026;--muted:#71798a;--faint:#98a1b2;
+ --blue:#3563e9;--blue-soft:#e8eeff;--green:#0f9d63;--green-soft:#e2f4ec;
+ --amber:#c47a09;--amber-soft:#fbf0da;--red:#d64545;--red-soft:#fdeaea;--violet:#7a5af0;--violet-soft:#eee9fd;
+ --shadow:0 1px 2px rgba(20,26,38,.06),0 1px 8px rgba(20,26,38,.04);
+ color-scheme:light;font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Segoe UI",sans-serif;
+ font-size:13px;color:var(--text)
+}
+*{box-sizing:border-box}
+body{margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);font-size:13px;line-height:1.45}
+h1{font-size:14px;margin:0;font-weight:650}
+h2{font-size:12px;margin:0;font-weight:650;color:var(--muted);letter-spacing:.02em}
+p{margin:0}
+
+/* 상단 막대 */
+header{display:flex;align-items:center;gap:10px;padding:0 12px;height:46px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.brand{display:flex;align-items:center;gap:8px;padding-right:10px;border-right:1px solid var(--line)}
+.brand-mark{width:24px;height:24px;border-radius:8px;background:var(--blue);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;letter-spacing:-.02em}
+.brand small{color:var(--faint);font-size:11px}
+.topbar-spacer{flex:1}
+.topbar-tools{display:flex;align-items:center;gap:6px}
+
+/* 공통 컨트롤 */
+button,select,input,textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:5px 9px}
+button{cursor:pointer;white-space:nowrap;transition:background .12s,border-color .12s}
+button:hover{background:var(--sunken)}
+button:active{background:#eceef3}
+button:disabled{color:var(--faint);background:var(--sunken);cursor:default}
+select{padding-right:6px}
+input,textarea,select{min-width:0}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+textarea{width:100%;resize:vertical;line-height:1.5}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+.btn-primary:hover{background:#2b55d0;border-color:#2b55d0}
+.btn-danger{color:var(--red);border-color:#eec4c4;background:var(--red-soft)}
+.btn-danger:hover{background:#fadada}
+.btn-quiet{background:transparent;border-color:transparent;color:var(--muted);padding:5px 7px}
+.btn-quiet:hover{background:var(--sunken);color:var(--text)}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.row.tight{gap:4px}
+.grow{flex:1}
+label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin:0 0 4px}
+.muted{color:var(--muted);font-size:11.5px}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:600;background:var(--sunken);color:var(--muted);border:1px solid var(--line)}
+.pill-blue{background:var(--blue-soft);color:var(--blue);border-color:#d5e0ff}
+.pill-green{background:var(--green-soft);color:var(--green);border-color:#c9e9db}
+.pill-amber{background:var(--amber-soft);color:var(--amber);border-color:#f0dfb8}
+.pill-red{background:var(--red-soft);color:var(--red);border-color:#f3cfcf}
+#status{display:inline-block;max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+
+/* 작업 영역 3열 */
+.workspace{flex:1;min-height:0;display:grid;grid-template-columns:216px minmax(0,1fr) 384px;gap:10px;padding:10px}
+.rail,.stage,.inspector{min-height:0;display:flex;flex-direction:column;gap:8px}
+.rail{overflow-y:auto;overflow-x:hidden}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;box-shadow:var(--shadow)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+
+/* 왼쪽 레일: 플레이어 카드와 실행 */
+.thumbnails{display:flex;flex-direction:column;gap:6px}
+.thumbnails button{display:flex;align-items:center;gap:8px;width:100%;padding:5px;text-align:left;border-radius:10px;background:var(--sunken);border-color:transparent}
+.thumbnails button:hover{background:#eceef3}
+.thumbnails button.is-selected{background:var(--blue-soft);border-color:#c3d3ff;box-shadow:0 0 0 1px #c3d3ff inset}
+.thumbnails img{width:92px;flex:none;display:block;border-radius:7px;background:#10151f;aspect-ratio:16/9;object-fit:cover}
+.thumbnails span{flex:1;font-size:11px;font-weight:600;color:var(--muted);overflow-wrap:anywhere;line-height:1.35}
+.thumbnails button.is-selected span{color:var(--blue)}
+.rail-empty{color:var(--faint);font-size:11.5px;padding:10px 2px;text-align:center}
+
+/* 가운데: 화면과 조작 */
+.stage-head{display:flex;align-items:center;gap:6px}
+.screen{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;background:#0d1119;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.screen img{display:block;max-width:100%;max-height:100%;object-fit:contain;cursor:crosshair}
+.screen img:not([src]){display:none}
+#empty{color:#7c879b;font-size:12.5px;padding:24px;text-align:center}
+.screen-chips{position:absolute;left:8px;bottom:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.chip{background:rgba(13,17,25,.72);color:#dbe3f0;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:2px 9px;font-size:11px;font-variant-numeric:tabular-nums}
+.controls{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.controls .sep{width:1px;height:20px;background:var(--line);margin:0 2px}
+.status-lines{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
+.status-lines p{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.hint{margin-top:6px}
+details.hint summary{cursor:pointer;font-size:11.5px;color:var(--blue);list-style:none}
+details.hint summary::-webkit-details-marker{display:none}
+details.hint p{margin-top:6px;color:var(--muted);font-size:11.5px;line-height:1.55}
+
+/* 오른쪽 검사 패널과 하단 탭 */
+.inspector{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);gap:0;overflow:hidden}
+.panels{flex:1;min-height:0;overflow:auto;padding:10px}
+.panel{display:none;flex-direction:column;gap:8px;height:100%}
+.panel.is-active{display:flex}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.field{display:flex;flex-direction:column;flex:1;min-height:120px}
+.field textarea{flex:1}
+.tabbar{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px;border-top:1px solid var(--line);background:var(--sunken)}
+.tabbar button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:11px;font-weight:600}
+.tabbar button:hover{background:#e9ecf2}
+.tabbar button[aria-selected=true]{background:var(--surface);color:var(--blue);box-shadow:var(--shadow)}
+.tabbar svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* 관측과 로그 */
+pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;line-height:1.5}
+.readout{background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:8px}
+#state{background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:8px;color:var(--text)}
+details.fold{border:1px solid var(--line);border-radius:10px;background:var(--sunken)}
+details.fold>summary{cursor:pointer;padding:6px 9px;font-size:11.5px;font-weight:600;color:var(--muted)}
+details.fold[open]>summary{border-bottom:1px solid var(--line)}
+details.fold>:not(summary){padding:8px;max-height:220px;overflow:auto}
+#logs{flex:1;min-height:120px;overflow:auto;background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:2px}
+#logs pre{display:block;padding:4px 8px 4px 9px;border-radius:6px;border-left:3px solid transparent;color:#3c4453}
+#logs pre:nth-child(2n){background:rgba(255,255,255,.7)}
+#logs pre:hover{background:#e9ecf2}
+#logs pre.is-warn{border-left-color:var(--amber);color:#7a5a12}
+#logs pre.is-error{border-left-color:var(--red);color:#a03434;background:var(--red-soft)}
+.logtime{color:var(--faint);margin-right:6px;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;margin-right:6px;padding:0 6px;border-radius:5px;font-size:10.5px;font-weight:700;font-family:inherit;background:var(--line);color:var(--muted)}
+.tag-blue{background:var(--blue-soft);color:var(--blue)}
+.tag-green{background:var(--green-soft);color:var(--green)}
+.tag-violet{background:var(--violet-soft);color:var(--violet)}
+.tag-amber{background:var(--amber-soft);color:var(--amber)}
+.tag-red{background:var(--red-soft);color:var(--red)}
+
+/* AI 요청 목록 */
+#assistance-list{display:flex;flex-direction:column;gap:6px}
+#assistance-list pre{background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:8px;font-family:inherit;font-size:11.5px}
+#assistance-list button{align-self:flex-start;margin-top:-2px}
+#assistance-prompt{min-height:86px}
+#scenario{min-height:150px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
+#result,#artifact-content,#recording-detail{background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:8px;max-height:240px;overflow:auto}
+#result:empty,#artifact-content:empty,#recording-detail:empty{display:none}
+#artifact-list{gap:4px}
+#artifact-list button{font-size:11.5px;padding:4px 8px}
+#artifact-content img{max-width:100%;border-radius:8px;display:block}
+
+@media(max-width:1180px){.workspace{grid-template-columns:180px minmax(0,1fr) 330px}}
+@media(max-width:980px){.workspace{grid-template-columns:minmax(0,1fr) 330px}.rail{display:none}}
+</style>
+
+<header>
+ <div class="brand"><span class="brand-mark">E2E</span><h1>Unity 제어 콘솔</h1></div>
+ <span id="status" class="pill pill-blue" role="status">연결 준비 중</span>
+ <span id="control-badge" class="pill">제어: 확인 중</span>
+ <div class="topbar-spacer"></div>
+ <div class="topbar-tools">
+  <select id="instances" aria-label="인스턴스 선택"><option value="">인스턴스를 선택하세요</option></select>
+  <button id="refresh" class="btn-quiet">새로고침</button>
+  <button id="capture" class="btn-quiet">화면 캡처</button>
+ </div>
+</header>
+
+<div class="workspace">
+ <nav class="rail" aria-label="인스턴스와 실행">
+  <section class="card">
+   <div class="card-head"><h2>플레이어 화면</h2></div>
+   <div id="thumbnails" class="thumbnails" aria-label="플레이어 화면 목록"></div>
+   <p id="rail-empty" class="rail-empty">실행 중인 플레이어가 없습니다.</p>
+  </section>
+  <section class="card">
+   <div class="card-head"><h2>빌드 실행</h2></div>
+   <div class="row" style="flex-direction:column;align-items:stretch">
+    <input id="build" placeholder="config.json의 빌드 ID" aria-label="빌드 ID">
+    <select id="topology" aria-label="실행 구성">
+     <option value="single">단일 인스턴스</option>
+     <option value="host_plus_3_clients">호스트 1 + 클라이언트 3</option>
+     <option value="dedicated_plus_4_clients">서버 1 + 클라이언트 4</option>
+     <option value="editor_host_plus_3_clients">실행 중인 Editor 호스트 + 빌드 3개</option>
+    </select>
+    <button id="launch" class="btn-primary">실행</button>
+    <div class="row tight"><button id="join" class="grow">접속 준비</button><button id="stop" class="grow">선택 종료</button></div>
+   </div>
+   <p id="preparation" role="status" class="muted" style="margin-top:6px"></p>
+  </section>
+ </nav>
+
+ <main class="stage">
+  <div class="screen">
+   <span id="empty">실행한 Unity 인스턴스를 선택하면 화면이 표시됩니다.</span>
+   <img draggable="false" id="screen" alt="선택한 플레이어의 게임 화면" tabindex="0">
+   <div class="screen-chips">
+    <span id="stream-status" class="chip">화면 수신 대기 중 · 목표 12 FPS</span>
+    <span id="camera-status" class="chip" role="status">카메라 조작을 누르면 마우스 잠금을 요청합니다.</span>
+   </div>
+  </div>
+  <section class="card">
+   <div class="controls">
+    <button id="acquire" class="btn-primary">제어 받기</button>
+    <button id="return">AI에 반환</button>
+    <span class="sep"></span>
+    <button id="lock">카메라 조작</button>
+    <button id="record">기록 시작</button>
+    <span class="sep"></span>
+    <button id="release" class="btn-danger">입력 긴급 해제</button>
+    <span class="grow"></span>
+    <input id="text" class="grow" style="min-width:150px" placeholder="선택한 입력 칸에 보낼 텍스트" aria-label="텍스트 입력">
+    <button id="sendtext">텍스트 보내기</button>
+   </div>
+   <div class="status-lines" style="margin-top:8px">
+    <p id="camera-input-status">마우스 입력 수신 대기 중입니다.</p>
+    <p id="stage-hint" class="muted">WASD·방향키로 이동하고 숫자 키로 슬롯을 선택합니다.</p>
+   </div>
+   <details class="hint"><summary>조작 안내</summary>
+    <p>화면을 클릭하면 메뉴를 조작합니다. 카메라 조작 중에는 좌우 마우스 버튼도 게임에 전달됩니다. 휠은 게임의 슬롯·카메라 거리 입력에 사용합니다. 포커스나 포인터 잠금을 잃으면 입력이 해제됩니다.</p>
+   </details>
+  </section>
+ </main>
+
+ <aside class="inspector">
+  <div class="panels">
+
+   <section class="panel" id="panel-assistance" role="tabpanel" aria-labelledby="tab-assistance">
+    <div class="panel-head"><h2>AI에게 요청</h2>
+     <div class="row tight"><button id="assistance-refresh" class="btn-quiet">상태 확인</button></div>
+    </div>
+    <div>
+     <label for="assistance-prompt">선택한 플레이어에게 수행할 작업</label>
+     <textarea id="assistance-prompt" maxlength="8000" placeholder="설정창 테스트를 만들고 싶어. 타이틀에서 설정창을 열어 나에게 넘겨줘."></textarea>
+    </div>
+    <div class="row"><button id="assistance-submit" class="btn-primary">요청 보내기</button></div>
+    <p id="assistance-status" role="status" class="muted">연결된 AI 클라이언트가 요청을 받아야 처리가 시작됩니다.</p>
+    <div id="assistance-list"></div>
+   </section>
+
+   <section class="panel is-active" id="panel-observe" role="tabpanel" aria-labelledby="tab-observe">
+    <div class="panel-head"><h2>상태와 실행 로그</h2></div>
+    <pre id="state">관측 대기 중</pre>
+    <details class="fold"><summary>전체 관측 JSON</summary><pre id="raw-state"></pre></details>
+    <div class="row tight">
+     <input id="log-filter" class="grow" aria-label="로그 검색" placeholder="로그 검색">
+     <select id="severity" aria-label="로그 중요도">
+      <option value="">모든 로그</option><option value="Warning">경고</option><option value="Error">오류</option>
+     </select>
+    </div>
+    <div id="logs" role="log"></div>
+   </section>
+
+   <section class="panel" id="panel-scenario" role="tabpanel" aria-labelledby="tab-scenario">
+    <div class="panel-head"><h2>E2E 정의와 실행</h2></div>
+    <details class="fold" id="recording-review"><summary>수동 기록과 E2E 초안</summary>
+     <div>
+      <p id="recording-status" role="status" class="muted">기록을 종료하면 원시 기록과 검토용 초안을 저장합니다.</p>
+      <pre id="recording-detail" style="margin-top:6px"></pre>
+      <button id="load-draft" disabled style="margin-top:6px">초안을 편집기로 가져오기</button>
+     </div>
+    </details>
+    <div class="field">
+     <label for="scenario">E2E 정의 JSON</label>
+     <textarea id="scenario" spellcheck="false" placeholder="검토할 E2E JSON을 입력하세요."></textarea>
+    </div>
+    <div>
+     <label for="actors">참여자와 인스턴스 연결 JSON</label>
+     <input id="actors" value='{}' style="width:100%">
+    </div>
+    <div class="row">
+     <button id="validate">검증</button>
+     <button id="run" class="btn-primary">테스트 실행</button>
+     <button id="cancel" class="btn-danger">취소</button>
+    </div>
+    <pre id="result"></pre>
+   </section>
+
+   <section class="panel" id="panel-artifacts" role="tabpanel" aria-labelledby="tab-artifacts">
+    <div class="panel-head"><h2>실행 증거</h2></div>
+    <div>
+     <label for="artifact-run">저장된 실행 ID</label>
+     <input id="artifact-run" placeholder="비워 두면 현재 테스트의 증거를 표시합니다." style="width:100%">
+    </div>
+    <div class="row"><button id="artifacts" class="btn-primary">증거 목록 보기</button></div>
+    <div id="artifact-list" class="row"></div>
+    <pre id="artifact-content"></pre>
+   </section>
+
+  </div>
+  <nav class="tabbar" role="tablist" aria-label="검사 패널 선택">
+   <button id="tab-observe" role="tab" data-panel="panel-observe" aria-selected="true" aria-controls="panel-observe">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>관측·로그</button>
+   <button id="tab-assistance" role="tab" data-panel="panel-assistance" aria-selected="false" aria-controls="panel-assistance">
+    <svg viewBox="0 0 24 24"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"/><path d="M18 16l.9 2.1L21 19l-2.1.9L18 22l-.9-2.1L15 19l2.1-.9L18 16z"/></svg>AI 요청</button>
+   <button id="tab-scenario" role="tab" data-panel="panel-scenario" aria-selected="false" aria-controls="panel-scenario">
+    <svg viewBox="0 0 24 24"><path d="M8 5.5l10 6.5-10 6.5z"/></svg>테스트</button>
+   <button id="tab-artifacts" role="tab" data-panel="panel-artifacts" aria-selected="false" aria-controls="panel-artifacts">
+    <svg viewBox="0 0 24 24"><path d="M4 7.5A1.5 1.5 0 015.5 6h3.2l1.6 2h8.2A1.5 1.5 0 0120 9.5v8A1.5 1.5 0 0118.5 19h-13A1.5 1.5 0 014 17.5z"/></svg>증거</button>
+  </nav>
+ </aside>
+</div>
+<script type="module" src="/console.js"></script></html>

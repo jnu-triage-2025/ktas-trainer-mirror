@@ -1,4 +1,5 @@
-﻿using MultiplayerInfrastructure.Scenario;
+﻿using Input = MultiplayerInfrastructure.Automation.PlayerInput;
+using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
 

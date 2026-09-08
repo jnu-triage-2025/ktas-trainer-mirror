@@ -1,0 +1,133 @@
+{
+  "version": "1.0",
+  "id": "authoritative_dialogue_fixture",
+  "executionMode": "regression",
+  "topology": "host_plus_3_clients",
+  "content": {
+    "graphId": "e2e_authoritative_dialogue",
+    "dataPacks": [
+      "usability",
+      "debugging"
+    ]
+  },
+  "participants": {
+    "p1": {
+      "networkRole": "host"
+    },
+    "p2": {
+      "networkRole": "client"
+    },
+    "p3": {
+      "networkRole": "client"
+    },
+    "p4": {
+      "networkRole": "client"
+    }
+  },
+  "steps": [
+    {
+      "id": "open_chat",
+      "type": "input",
+      "actor": "p1",
+      "action": "chat"
+    },
+    {
+      "id": "enter_fixture_command",
+      "type": "uiText",
+      "actor": "p1",
+      "mode": "input_adapter",
+      "text": "/scenario execute fish:1 e2e_authoritative_dialogue"
+    },
+    {
+      "id": "start_fixture",
+      "type": "input",
+      "actor": "p1",
+      "sequence": [
+        {
+          "operation": "tap",
+          "key": "Return"
+        }
+      ]
+    },
+    {
+      "id": "p1_mode",
+      "type": "wait",
+      "predicate": "scenario.mode",
+      "args": {
+        "actor": "p1",
+        "mode": "ServerAuthoritative"
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "p2_mode",
+      "type": "wait",
+      "predicate": "scenario.mode",
+      "args": {
+        "actor": "p2",
+        "mode": "ClientPresentation"
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "intro_ready",
+      "type": "wait",
+      "predicate": "dialogue.canAdvance",
+      "args": {
+        "actor": "p2"
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "fresh_client_control",
+      "type": "controlAcquire",
+      "actor": "p2"
+    },
+    {
+      "id": "advance_intro",
+      "type": "dialogueAdvance",
+      "actor": "p2"
+    },
+    {
+      "id": "choice_ready",
+      "type": "wait",
+      "predicate": "dialogue.hasChoices",
+      "args": {
+        "actor": "p2"
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "select_accept",
+      "type": "dialogueChoose",
+      "actor": "p2",
+      "choiceId": "choice#1"
+    },
+    {
+      "id": "server_accepted",
+      "type": "assertEventually",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p1",
+        "side": "server",
+        "nodeId": "accepted"
+      },
+      "timeoutMs": 10000
+    },
+    {
+      "id": "client_accepted",
+      "type": "assertEventually",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p2",
+        "side": "client",
+        "nodeId": "accepted"
+      },
+      "timeoutMs": 10000
+    },
+    {
+      "id": "evidence",
+      "type": "checkpoint"
+    }
+  ]
+}

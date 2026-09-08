@@ -1,0 +1,10 @@
+import { readFile } from 'node:fs/promises';
+import { loadConfig } from './core.ts';
+import { regression } from './regression.ts';
+const [configPath,definitionPath,buildId,requestedTopology]=process.argv.slice(2);
+if(!configPath||!definitionPath||!buildId)throw new Error('Usage: node src/run.ts CONFIG DEFINITION BUILD_ID [TOPOLOGY]');
+const definition=JSON.parse(await readFile(definitionPath,'utf8')),stop=new AbortController();
+for(const signal of ['SIGINT','SIGTERM'] as const)process.once(signal,()=>stop.abort());
+const result=await regression(await loadConfig(configPath),definition,buildId,requestedTopology??definition.topology??'host_plus_3_clients',stop.signal);
+process.stdout.write(JSON.stringify(result,null,2)+'\n');
+process.exitCode=result.state==='passed'&&!result.cleanupErrors.length?0:1;

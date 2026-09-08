@@ -25,6 +25,15 @@ namespace MultiplayerInfrastructure.Session
       get
       {
         EnsureLoaded();
+#if UNITY_E2E || UNITY_EDITOR
+        if (MultiplayerInfrastructure.Automation.AutomationConfiguration.Valid)
+        {
+          if (ushort.TryParse(Environment.GetEnvironmentVariable("UNITY_E2E_GAME_PORT"), out ushort port) && port > 0)
+            _current.port = port;
+          _current.address = "127.0.0.1";
+          _current.sessionName = MultiplayerInfrastructure.Automation.AutomationConfiguration.RunId;
+        }
+#endif
         return _current;
       }
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Input = MultiplayerInfrastructure.Automation.PlayerInput;
+using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Quest;

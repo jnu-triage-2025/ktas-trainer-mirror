@@ -153,9 +153,14 @@ namespace MultiplayerInfrastructure.Player
       SetHeldItemAttachPoint(playerCharacterModel.HeldItemAttachPoint);
 
       if (!applyCharacterControllerCenter)
+      {
+        IgnoreCollisionsWithActivePlayers();
         return;
+      }
 
       SetCharacterControllerCenter(playerCharacterModel.CharacterControllerCenter);
+      // 새 모델이 자체 Collider를 포함할 수 있으므로, 모델 교체 뒤에도 플레이어 간 충돌 무시를 다시 적용한다.
+      IgnoreCollisionsWithActivePlayers();
     }
 
     private void ClearResolvedPlayerModelLocal()

@@ -45,7 +45,7 @@ namespace MultiplayerInfrastructure.Scenario
   /// 시나리오 흐름을 제어합니다.
   /// UI 제어는 ScenarioPanelUIController에 위임합니다.
   /// </summary>
-  public class ScenarioController : MonoBehaviour
+  public partial class ScenarioController : MonoBehaviour
   {
     #region Serialized Fields
 
@@ -254,6 +254,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     #region Events
 
+    partial void AutomationPresentation(IScenarioNode node);
+    partial void AutomationEvent(string type, string key, string value, int? clientId, long activationId);
     public event Action OnScenarioStarted;
     public event Action OnScenarioEnded;
     public event Action<IScenarioNode> OnNodeChanged;
@@ -524,6 +526,7 @@ namespace MultiplayerInfrastructure.Scenario
           continue;
 
         _questStateFlagsByRole[role] = new HashSet<string>(flags, StringComparer.Ordinal);
+      AutomationEvent("quest.roleFlagsChanged", "role", role, null, _activeMainNodeVisitSequence);
       }
     }
 
@@ -814,6 +817,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       OnScenarioStarted?.Invoke();
+      AutomationEvent("scenario.started", null, null, null, 0);
     }
 
     /// <summary>서버가 보낸 노드를 클라이언트 UI에 표시한다.</summary>
@@ -1015,6 +1019,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (!_uiController.IsUnityNull())
         _uiController.EndScenario();
       OnScenarioEnded?.Invoke();
+      AutomationEvent("scenario.ended", null, null, null, 0);
     }
 
     internal bool TryAdvanceFromPresentation(int senderClientId, string graphIdentifier, string nodeIdentifier, string presentationToken = null)
@@ -1238,6 +1243,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       OnScenarioStarted?.Invoke();
+      AutomationEvent("scenario.started", null, null, null, 0);
       Debug.Log("[ScenarioController] Scenario started");
       try
       {
@@ -1341,6 +1347,7 @@ namespace MultiplayerInfrastructure.Scenario
       localPlayer?.RefreshInteractableHintsNow();
 
       OnScenarioEnded?.Invoke();
+      AutomationEvent("scenario.ended", null, null, null, 0);
       try
       {
         GameLogService.WriteScenario(
@@ -1543,6 +1550,7 @@ namespace MultiplayerInfrastructure.Scenario
         else _stateStore.Remove(key);
       });
       _stateStore[key] = value;
+      AutomationEvent("state.changed", key, value, null, _activeMainNodeVisitSequence);
     }
 
     private void CleanupScenarioActingNpcs(bool forceDespawn = false)
@@ -2325,6 +2333,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       CompleteNodeVisit(_activeMainNodeVisitSequence);
       _activeMainNodeVisitSequence = RecordNodeVisit(node);
+      AutomationEvent("node.entered", "nodeId", node?.Identifier, null, _activeMainNodeVisitSequence);
       LogNodeExecution(node);
       try
       {
@@ -2822,6 +2831,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       string speaker = ResolveScenarioText(node.SpeakerName);
       string content = ResolveScenarioText(node.DialogueContent);
+      AutomationPresentation(node);
       _uiController.DisplayDialogue(speaker, content, node.PortraitSpriteIdentifier, node.InteractionRequired);
       if (node.PlayTTS)
         PlayInlineTTS(node.Identifier, ResolveTTSText(node.DialogueContent, node.DialogueContentTTSPassing), node.TtsVoiceIdentifier);
@@ -2867,6 +2877,7 @@ namespace MultiplayerInfrastructure.Scenario
       {
         string speaker = ResolveScenarioText(node.SpeakerName);
         string content = ResolveScenarioText(node.DialogueContent);
+        AutomationPresentation(node);
         _uiController.DisplayDisinteractableDialogue(
           speaker,
           content,
@@ -2959,6 +2970,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       if (!_uiController.IsUnityNull())
       {
+        AutomationPresentation(node);
         _uiController.DisplayChoice(
           ResolveScenarioText(node.SpeakerName),
           ResolveScenarioText(node.DialogueContent),
@@ -3331,6 +3343,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (!_uiController.IsUnityNull())
       {
+        AutomationPresentation(node);
         _uiController.DisplayChoice("Quiz", node.Question ?? string.Empty, null, options);
 
         if (node.PlayTTS)
@@ -3349,6 +3362,7 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      AutomationPresentation(node);
       _uiController.DisplayDialogue("Quiz", feedback, null);
 
       if (node.PlayTTS)
@@ -5951,6 +5965,7 @@ namespace MultiplayerInfrastructure.Scenario
               _activeRoleBranchIdentifiersByClientId[assignedClientId] = identifiers;
             }
             identifiers.Add(assignment.Key?.Identifier ?? "<unnamed>");
+      AutomationEvent("role.assigned", "branchId", assignment.Key?.Identifier, assignedClientId, _activeMainNodeVisitSequence);
           }
         }
 
@@ -6702,6 +6717,7 @@ namespace MultiplayerInfrastructure.Scenario
         }
 
         var branchVisitSequence = RecordNodeVisit(cursor);
+      AutomationEvent("node.entered", "nodeId", cursor?.Identifier, branchOwnerClientId, branchVisitSequence);
         OnNodeChanged?.Invoke(cursor);
 
         // 브랜치 대화는 화면별 큐 슬롯을 확보한 뒤에만 보낸다.
@@ -7452,6 +7468,7 @@ namespace MultiplayerInfrastructure.Scenario
         {
           string speakerName = ResolveScenarioText(node.SpeakerName, context.OwnerClientId);
           string dialogueContent = ResolveScenarioText(node.DialogueContent, context.OwnerClientId);
+          AutomationPresentation(node);
           _uiController.DisplayDialogue(
             speakerName,
             dialogueContent,

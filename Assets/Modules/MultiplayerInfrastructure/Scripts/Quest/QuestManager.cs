@@ -515,6 +515,16 @@ namespace MultiplayerInfrastructure.Quest
           || !currentQuest.Completed)
         return;
 
+#if UNITY_E2E || UNITY_EDITOR
+      Automation.AutomationEvents.Publish("quest.completed", "client", new Newtonsoft.Json.Linq.JObject {
+        ["id"] = completedSnapshot.Id,
+        ["definitionId"] = completedSnapshot.DefinitionIdentifier,
+        ["scenarioId"] = completedSnapshot.SourceScenarioIdentifier,
+        ["completed"] = completedSnapshot.Completed,
+        ["placeholder"] = completedSnapshot.IsGroupWaitPlaceholder,
+        ["scope"] = completedSnapshot.Scope.ToString()
+      });
+#endif
       OnQuestCompleted?.Invoke(completedSnapshot);
     }
 

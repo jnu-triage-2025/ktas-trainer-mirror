@@ -1,4 +1,5 @@
-﻿using FishNet.Connection;
+﻿using Input = MultiplayerInfrastructure.Automation.PlayerInput;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.InteractableEntity;

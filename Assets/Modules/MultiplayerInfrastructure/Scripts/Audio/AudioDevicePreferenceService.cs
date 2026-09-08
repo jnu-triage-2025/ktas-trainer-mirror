@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PlayerPrefs = MultiplayerInfrastructure.Automation.ProfilePlayerPrefs;
+using System;
 using System.Collections;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;

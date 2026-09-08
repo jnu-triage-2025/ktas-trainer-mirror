@@ -1,0 +1,679 @@
+{
+  "version": "1.0",
+  "id": "role_branches_fixture",
+  "executionMode": "regression",
+  "topology": "host_plus_3_clients",
+  "content": {
+    "graphId": "e2e_role_branches",
+    "dataPacks": [
+      "usability",
+      "debugging"
+    ]
+  },
+  "participants": {
+    "p1": {
+      "networkRole": "host"
+    },
+    "p2": {
+      "networkRole": "client"
+    },
+    "p3": {
+      "networkRole": "client"
+    },
+    "p4": {
+      "networkRole": "client"
+    }
+  },
+  "steps": [
+    {
+      "id": "fixture_role_0_control",
+      "type": "controlAcquire",
+      "actor": "p1"
+    },
+    {
+      "id": "fixture_role_0_chat",
+      "type": "input",
+      "actor": "p1",
+      "action": "chat"
+    },
+    {
+      "id": "fixture_role_0_command",
+      "type": "uiText",
+      "actor": "p1",
+      "mode": "input_adapter",
+      "text": "/tag add fish:0 e2e_a"
+    },
+    {
+      "id": "fixture_role_0_submit",
+      "type": "input",
+      "actor": "p1",
+      "sequence": [
+        {
+          "operation": "tap",
+          "key": "Return"
+        }
+      ]
+    },
+    {
+      "id": "fixture_role_1_control",
+      "type": "controlAcquire",
+      "actor": "p1"
+    },
+    {
+      "id": "fixture_role_1_chat",
+      "type": "input",
+      "actor": "p1",
+      "action": "chat"
+    },
+    {
+      "id": "fixture_role_1_command",
+      "type": "uiText",
+      "actor": "p1",
+      "mode": "input_adapter",
+      "text": "/tag add fish:1 e2e_b"
+    },
+    {
+      "id": "fixture_role_1_submit",
+      "type": "input",
+      "actor": "p1",
+      "sequence": [
+        {
+          "operation": "tap",
+          "key": "Return"
+        }
+      ]
+    },
+    {
+      "id": "fixture_role_2_control",
+      "type": "controlAcquire",
+      "actor": "p1"
+    },
+    {
+      "id": "fixture_role_2_chat",
+      "type": "input",
+      "actor": "p1",
+      "action": "chat"
+    },
+    {
+      "id": "fixture_role_2_command",
+      "type": "uiText",
+      "actor": "p1",
+      "mode": "input_adapter",
+      "text": "/tag add fish:2 e2e_c"
+    },
+    {
+      "id": "fixture_role_2_submit",
+      "type": "input",
+      "actor": "p1",
+      "sequence": [
+        {
+          "operation": "tap",
+          "key": "Return"
+        }
+      ]
+    },
+    {
+      "id": "fixture_role_3_control",
+      "type": "controlAcquire",
+      "actor": "p1"
+    },
+    {
+      "id": "fixture_role_3_chat",
+      "type": "input",
+      "actor": "p1",
+      "action": "chat"
+    },
+    {
+      "id": "fixture_role_3_command",
+      "type": "uiText",
+      "actor": "p1",
+      "mode": "input_adapter",
+      "text": "/tag add fish:3 e2e_d"
+    },
+    {
+      "id": "fixture_role_3_submit",
+      "type": "input",
+      "actor": "p1",
+      "sequence": [
+        {
+          "operation": "tap",
+          "key": "Return"
+        }
+      ]
+    },
+    {
+      "id": "open_chat",
+      "type": "input",
+      "actor": "p1",
+      "action": "chat"
+    },
+    {
+      "id": "enter_fixture_command",
+      "type": "uiText",
+      "actor": "p1",
+      "mode": "input_adapter",
+      "text": "/scenario execute @a e2e_role_branches"
+    },
+    {
+      "id": "start_fixture",
+      "type": "input",
+      "actor": "p1",
+      "sequence": [
+        {
+          "operation": "tap",
+          "key": "Return"
+        }
+      ]
+    },
+    {
+      "id": "role_branches_visible",
+      "type": "parallel",
+      "branches": [
+        [
+          {
+            "id": "p1_local_mode",
+            "type": "wait",
+            "predicate": "scenario.mode",
+            "args": {
+              "actor": "p1",
+              "mode": "Local"
+            },
+            "timeoutMs": 15000
+          },
+          {
+            "id": "p1_branch_visible",
+            "type": "wait",
+            "predicate": "dialogue.node",
+            "args": {
+              "actor": "p1",
+              "nodeId": "branch_e2e_a"
+            },
+            "timeoutMs": 15000
+          }
+        ],
+        [
+          {
+            "id": "p2_local_mode",
+            "type": "wait",
+            "predicate": "scenario.mode",
+            "args": {
+              "actor": "p2",
+              "mode": "Local"
+            },
+            "timeoutMs": 15000
+          },
+          {
+            "id": "p2_branch_visible",
+            "type": "wait",
+            "predicate": "dialogue.node",
+            "args": {
+              "actor": "p2",
+              "nodeId": "branch_e2e_b"
+            },
+            "timeoutMs": 15000
+          }
+        ],
+        [
+          {
+            "id": "p3_local_mode",
+            "type": "wait",
+            "predicate": "scenario.mode",
+            "args": {
+              "actor": "p3",
+              "mode": "Local"
+            },
+            "timeoutMs": 15000
+          },
+          {
+            "id": "p3_branch_visible",
+            "type": "wait",
+            "predicate": "dialogue.node",
+            "args": {
+              "actor": "p3",
+              "nodeId": "branch_e2e_c"
+            },
+            "timeoutMs": 15000
+          }
+        ],
+        [
+          {
+            "id": "p4_local_mode",
+            "type": "wait",
+            "predicate": "scenario.mode",
+            "args": {
+              "actor": "p4",
+              "mode": "Local"
+            },
+            "timeoutMs": 15000
+          },
+          {
+            "id": "p4_branch_visible",
+            "type": "wait",
+            "predicate": "dialogue.node",
+            "args": {
+              "actor": "p4",
+              "nodeId": "branch_e2e_d"
+            },
+            "timeoutMs": 15000
+          }
+        ]
+      ]
+    },
+    {
+      "id": "server_role_allocation",
+      "type": "wait",
+      "predicate": "scenario.roleAllocation",
+      "args": {
+        "actor": "p1",
+        "graphId": "e2e_role_branches",
+        "nodeId": "parallel",
+        "visit": 1,
+        "ownerIds": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "role_0_owner_0",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 0,
+        "tag": "e2e_a",
+        "present": true
+      }
+    },
+    {
+      "id": "role_0_owner_1",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 1,
+        "tag": "e2e_a",
+        "present": false
+      }
+    },
+    {
+      "id": "role_0_owner_2",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 2,
+        "tag": "e2e_a",
+        "present": false
+      }
+    },
+    {
+      "id": "role_0_owner_3",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 3,
+        "tag": "e2e_a",
+        "present": false
+      }
+    },
+    {
+      "id": "role_1_owner_0",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 0,
+        "tag": "e2e_b",
+        "present": false
+      }
+    },
+    {
+      "id": "role_1_owner_1",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 1,
+        "tag": "e2e_b",
+        "present": true
+      }
+    },
+    {
+      "id": "role_1_owner_2",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 2,
+        "tag": "e2e_b",
+        "present": false
+      }
+    },
+    {
+      "id": "role_1_owner_3",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 3,
+        "tag": "e2e_b",
+        "present": false
+      }
+    },
+    {
+      "id": "role_2_owner_0",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 0,
+        "tag": "e2e_c",
+        "present": false
+      }
+    },
+    {
+      "id": "role_2_owner_1",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 1,
+        "tag": "e2e_c",
+        "present": false
+      }
+    },
+    {
+      "id": "role_2_owner_2",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 2,
+        "tag": "e2e_c",
+        "present": true
+      }
+    },
+    {
+      "id": "role_2_owner_3",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 3,
+        "tag": "e2e_c",
+        "present": false
+      }
+    },
+    {
+      "id": "role_3_owner_0",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 0,
+        "tag": "e2e_d",
+        "present": false
+      }
+    },
+    {
+      "id": "role_3_owner_1",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 1,
+        "tag": "e2e_d",
+        "present": false
+      }
+    },
+    {
+      "id": "role_3_owner_2",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 2,
+        "tag": "e2e_d",
+        "present": false
+      }
+    },
+    {
+      "id": "role_3_owner_3",
+      "type": "assert",
+      "predicate": "player.tag",
+      "args": {
+        "actor": "p1",
+        "ownerId": 3,
+        "tag": "e2e_d",
+        "present": true
+      }
+    },
+    {
+      "id": "finish_first_three",
+      "type": "parallel",
+      "branches": [
+        [
+          {
+            "id": "p1_branch_ready",
+            "type": "wait",
+            "predicate": "dialogue.hasChoices",
+            "args": {
+              "actor": "p1"
+            },
+            "timeoutMs": 15000
+          },
+          {
+            "id": "p1_complete_control",
+            "type": "controlAcquire",
+            "actor": "p1"
+          },
+          {
+            "id": "p1_complete_branch",
+            "type": "dialogueChoose",
+            "actor": "p1",
+            "choiceId": "branch_e2e_a#0"
+          },
+          {
+            "id": "p1_branch_done",
+            "type": "wait",
+            "predicate": "scenario.stateValue",
+            "args": {
+              "actor": "p1",
+              "side": "client",
+              "key": "branch.completion.done_e2e_a",
+              "value": "true"
+            },
+            "timeoutMs": 15000
+          }
+        ],
+        [
+          {
+            "id": "p2_branch_ready",
+            "type": "wait",
+            "predicate": "dialogue.hasChoices",
+            "args": {
+              "actor": "p2"
+            },
+            "timeoutMs": 15000
+          },
+          {
+            "id": "p2_complete_control",
+            "type": "controlAcquire",
+            "actor": "p2"
+          },
+          {
+            "id": "p2_complete_branch",
+            "type": "dialogueChoose",
+            "actor": "p2",
+            "choiceId": "branch_e2e_b#0"
+          },
+          {
+            "id": "p2_branch_done",
+            "type": "wait",
+            "predicate": "scenario.stateValue",
+            "args": {
+              "actor": "p2",
+              "side": "client",
+              "key": "branch.completion.done_e2e_b",
+              "value": "true"
+            },
+            "timeoutMs": 15000
+          }
+        ],
+        [
+          {
+            "id": "p3_branch_ready",
+            "type": "wait",
+            "predicate": "dialogue.hasChoices",
+            "args": {
+              "actor": "p3"
+            },
+            "timeoutMs": 15000
+          },
+          {
+            "id": "p3_complete_control",
+            "type": "controlAcquire",
+            "actor": "p3"
+          },
+          {
+            "id": "p3_complete_branch",
+            "type": "dialogueChoose",
+            "actor": "p3",
+            "choiceId": "branch_e2e_c#0"
+          },
+          {
+            "id": "p3_branch_done",
+            "type": "wait",
+            "predicate": "scenario.stateValue",
+            "args": {
+              "actor": "p3",
+              "side": "client",
+              "key": "branch.completion.done_e2e_c",
+              "value": "true"
+            },
+            "timeoutMs": 15000
+          }
+        ]
+      ]
+    },
+    {
+      "id": "p1_waiting_for_fourth",
+      "type": "assert",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p1",
+        "side": "client",
+        "nodeId": "parallel"
+      }
+    },
+    {
+      "id": "p2_waiting_for_fourth",
+      "type": "assert",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p2",
+        "side": "client",
+        "nodeId": "parallel"
+      }
+    },
+    {
+      "id": "p3_waiting_for_fourth",
+      "type": "assert",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p3",
+        "side": "client",
+        "nodeId": "parallel"
+      }
+    },
+    {
+      "id": "no_early_join",
+      "type": "assertNever",
+      "predicate": "event.occurred",
+      "args": {
+        "actor": "p1",
+        "eventType": "node.entered",
+        "side": "client",
+        "match": {
+          "graphId": "e2e_role_branches",
+          "value": "joined"
+        }
+      },
+      "timeoutMs": 1000
+    },
+    {
+      "id": "p4_still_waiting",
+      "type": "wait",
+      "predicate": "dialogue.node",
+      "args": {
+        "actor": "p4",
+        "nodeId": "branch_e2e_d"
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "p4_finish_control",
+      "type": "controlAcquire",
+      "actor": "p4"
+    },
+    {
+      "id": "p4_complete_branch",
+      "type": "dialogueChoose",
+      "actor": "p4",
+      "choiceId": "branch_e2e_d#0"
+    },
+    {
+      "id": "p1_joined",
+      "type": "wait",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p1",
+        "side": "client",
+        "nodeId": "joined"
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "p2_joined",
+      "type": "wait",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p2",
+        "side": "client",
+        "nodeId": "joined"
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "p3_joined",
+      "type": "wait",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p3",
+        "side": "client",
+        "nodeId": "joined"
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "p4_joined",
+      "type": "wait",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p4",
+        "side": "client",
+        "nodeId": "joined"
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "role_evidence",
+      "type": "checkpoint"
+    }
+  ]
+}

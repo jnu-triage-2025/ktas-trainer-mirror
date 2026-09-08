@@ -1,3 +1,4 @@
+using Input = MultiplayerInfrastructure.Automation.PlayerInput;
 using System.Collections.Generic;
 using FishNet;
 using MultiplayerInfrastructure.InteractableEntity;

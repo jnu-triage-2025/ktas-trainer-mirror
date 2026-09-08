@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "id": "title_settings_handoff",
+  "executionMode": "exploration",
+  "participants": { "p1": { "networkRole": "client" } },
+  "steps": [
+    { "id": "title_ready", "type": "wait", "predicate": "ui.visible", "args": { "actor": "p1", "automationId": "btnSettings" }, "timeoutMs": 15000 },
+    { "id": "open_settings", "type": "uiAction", "actor": "p1", "automationId": "btnSettings", "mode": "device_input" },
+    { "id": "settings_visible", "type": "assertEventually", "predicate": "ui.visible", "args": { "actor": "p1", "automationId": "settings-root" }, "timeoutMs": 5000 },
+    { "id": "settings_evidence", "type": "checkpoint" },
+    { "id": "human_takeover", "type": "handoff", "actor": "p1" }
+  ]
+}

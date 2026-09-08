@@ -1,4 +1,5 @@
-﻿using MultiplayerInfrastructure.Registry;
+﻿using Input = MultiplayerInfrastructure.Automation.PlayerInput;
+using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
 

@@ -102,6 +102,15 @@ namespace MultiplayerInfrastructure.Chat
 
       if (raw.StartsWith("/"))
       {
+#if UNITY_E2E || UNITY_EDITOR
+        if (!MultiplayerInfrastructure.Automation.AutomationConfiguration.AllowChatCommands)
+        {
+          _uiController.AppendMessage("Automation chat commands are disabled for this run.", showToastWhenHidden: true);
+          MultiplayerInfrastructure.Automation.AutomationEvents.Publish("permission.denied", "client",
+            new Newtonsoft.Json.Linq.JObject { ["capability"] = "chat_commands" });
+          return;
+        }
+#endif
         ExecuteCommandServerRpc(raw[1..]);
         return;
       }

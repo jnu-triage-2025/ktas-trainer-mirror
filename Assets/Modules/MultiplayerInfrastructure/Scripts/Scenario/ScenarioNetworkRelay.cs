@@ -37,6 +37,28 @@ namespace MultiplayerInfrastructure.Scenario
   public sealed partial class ScenarioNetworkRelay : NetworkBehaviour
   {
     private static ScenarioNetworkRelay _instance;
+    private string _serverSignalEpoch;
+    private string _receivedSignalEpoch;
+
+    private void AdvanceSignalEpoch()
+    {
+      _serverSignalEpoch = Guid.NewGuid().ToString("N");
+      ObserversSignalEpoch(_serverSignalEpoch);
+    }
+
+    [ObserversRpc(BufferLast = true)]
+    private void ObserversSignalEpoch(string epoch) => _receivedSignalEpoch = epoch;
+
+    [TargetRpc]
+    private void TargetSignalEpoch(NetworkConnection connection, string epoch) => _receivedSignalEpoch = epoch;
+
+    private bool AcceptSignalEpoch(string epoch, string signalId, string operation)
+    {
+      if (!string.IsNullOrEmpty(_serverSignalEpoch) && string.Equals(epoch, _serverSignalEpoch, StringComparison.Ordinal))
+        return true;
+      Debug.LogWarning($"[ScenarioNetworkRelay] Rejected stale client signal {operation}: signal={ScenarioSignalParameterStore.FormatForLog(signalId)}");
+      return false;
+    }
     public static event Func<string, string, bool, NetworkConnection, bool> LineTopologyRequestReceived;
     public static event Action<long, string, string, bool> LineTopologyMirrored;
     public static event Action<int, string, string, bool, bool> LineTopologyRequestCompleted;
@@ -570,6 +592,7 @@ namespace MultiplayerInfrastructure.Scenario
     public override void OnStartServer()
     {
       base.OnStartServer();
+      AdvanceSignalEpoch();
       ScenarioSignalParameterStore.FlushLocal();
       SignalUpdateTimesByPlayer.Clear();
       LineTopologyUpdateTimesByClient.Clear();
@@ -596,6 +619,12 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+    public override void OnStopClient()
+    {
+      _receivedSignalEpoch = null;
+      base.OnStopClient();
+    }
+
     public override void OnStopServer()
     {
       if (InstanceFinder.NetworkManager?.ServerManager != null)
@@ -606,6 +635,7 @@ namespace MultiplayerInfrastructure.Scenario
       SignalUpdateTimesByPlayer.Clear();
       ClientSignalAuthorization.ClearAll();
       ReportedUndeclaredClientSignals.Clear();
+      _serverSignalEpoch = null;
       base.OnStopServer();
     }
 
@@ -717,6 +747,7 @@ namespace MultiplayerInfrastructure.Scenario
           configuration.ActingNpcIdentifier, configuration.NetworkObject);
 
       // 재접속 클라이언트의 정적 미러에 이전 세션 값이 남지 않도록, 스냅샷 적용 전에 비운다.
+      TargetSignalEpoch(connection, _serverSignalEpoch);
       TargetFlushSignalParameters(connection);
       foreach (var signal in ScenarioSignalParameterStore.GetAll())
       {
@@ -1125,7 +1156,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 클라이언트 컨텍스트: 중계기로 서버 보고.
       if (_instance != null && InstanceFinder.IsClientStarted)
       {
-        _instance.CmdRaiseScenarioSignal(normalizedSignalId, parameterJson);
+        _instance.CmdRaiseScenarioSignal(normalizedSignalId, parameterJson, _instance._receivedSignalEpoch);
         return;
       }
 
@@ -1151,7 +1182,7 @@ namespace MultiplayerInfrastructure.Scenario
         return RaiseOnServer(normalizedSignalId, parameterJson, playerIdentifier, playerDisplayName, sender);
 
       // 클라이언트가 임의의 플레이어 귀속을 지정할 수 없게 한다. 이 경로는 서버 명령 전용이다.
-      _instance.CmdRaiseScenarioSignal(normalizedSignalId, parameterJson);
+      _instance.CmdRaiseScenarioSignal(normalizedSignalId, parameterJson, _instance._receivedSignalEpoch);
       return true;
     }
 
@@ -1173,6 +1204,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     internal static void ConfigureClientSignalAuthorization(ScenarioGraph graph)
     {
+      if (InstanceFinder.IsServerStarted && _instance != null) _instance.AdvanceSignalEpoch();
       ClientSignalAuthorization.ConfigureScenario(graph);
       // 선언 목록이 그래프마다 다르므로, 이전 실행에서 보고한 신호를 그대로 두면 새 그래프에서
       // 같은 신호가 미선언 상태여도 진단이 나오지 않는다. 실행이 바뀔 때마다 억제 상태를 비운다.
@@ -1181,6 +1213,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     internal static void ClearClientSignalAuthorization()
     {
+      if (InstanceFinder.IsServerStarted && _instance != null) _instance.AdvanceSignalEpoch();
       ClientSignalAuthorization.ClearAll();
       ReportedUndeclaredClientSignals.Clear();
     }
@@ -1626,7 +1659,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (_instance != null && InstanceFinder.IsClientStarted)
       {
-        _instance.CmdClearScenarioSignal(normalizedSignalId);
+        _instance.CmdClearScenarioSignal(normalizedSignalId, _instance._receivedSignalEpoch);
         return;
       }
 
@@ -1698,7 +1731,7 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdRaiseScenarioSignal(string normalizedSignalId, string parameterJson, NetworkConnection sender = null)
+    private void CmdRaiseScenarioSignal(string normalizedSignalId, string parameterJson, string signalEpoch, NetworkConnection sender = null)
     {
       if (!IsValidClientSignal(normalizedSignalId))
       {
@@ -1713,6 +1746,7 @@ namespace MultiplayerInfrastructure.Scenario
           "발신 플레이어를 서버 세션에서 확인할 수 없습니다.", sender);
         return;
       }
+      if (!AcceptSignalEpoch(signalEpoch, normalizedSignalId, "raise")) return;
       if (!ClientSignalAuthorization.CanRaise(
             sender.ClientId, descriptor.Identifier, normalizedSignalId, out string authorizationError,
             out var raiseRejection))
@@ -1730,7 +1764,7 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdClearScenarioSignal(string normalizedSignalId, NetworkConnection sender = null)
+    private void CmdClearScenarioSignal(string normalizedSignalId, string signalEpoch, NetworkConnection sender = null)
     {
       if (!IsValidClientSignal(normalizedSignalId))
       {
@@ -1745,6 +1779,7 @@ namespace MultiplayerInfrastructure.Scenario
           "발신 플레이어를 서버 세션에서 확인할 수 없습니다.", sender);
         return;
       }
+      if (!AcceptSignalEpoch(signalEpoch, normalizedSignalId, "clear")) return;
       if (!ClientSignalAuthorization.CanClear(sender.ClientId, normalizedSignalId,
             out string authorizationError, out var clearRejection))
       {

@@ -15,7 +15,7 @@ namespace MultiplayerInfrastructure.UI
   /// InteractableObjectHintUIController와 연동하여 시나리오 선택지를 표시합니다.
   /// </summary>
   [RequireComponent(typeof(UIDocument))]
-  public class DialoguePanelUIController : UIControllerABC, IUIOverlay
+  public partial class DialoguePanelUIController : UIControllerABC, IUIOverlay
   {
     /// <summary>
     /// 시나리오 대화의 speakerName / dialogueContent에서 플레이어 이름으로 치환되는

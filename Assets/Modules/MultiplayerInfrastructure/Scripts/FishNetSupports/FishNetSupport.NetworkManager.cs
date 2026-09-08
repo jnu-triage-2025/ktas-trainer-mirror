@@ -100,6 +100,18 @@ namespace MultiplayerInfrastructure.FishNetSupports
         return;
       }
 
+#if UNITY_E2E || UNITY_EDITOR
+      if (Automation.AutomationConfiguration.Valid)
+      {
+        // Keep the isolated graphics profile's target instead of FishNet's default 500 FPS.
+        networkManager.ClientManager.SetFrameRate(0);
+        networkManager.ServerManager.SetFrameRate(0);
+        Automation.AutomationEvents.Publish("performance.frame_rate_policy", "runtime",
+          new Newtonsoft.Json.Linq.JObject { ["targetFrameRate"] = Application.targetFrameRate,
+            ["policy"] = "application_profile" });
+      }
+#endif
+
       transport.SetClientAddress(sessionInformation.Address);
       transport.SetPort(sessionInformation.Port);
 

@@ -1,0 +1,90 @@
+{
+  "version": "1.0",
+  "id": "dedicated_four_player_ready",
+  "executionMode": "regression",
+  "participants": {
+    "p1": {
+      "networkRole": "client"
+    },
+    "p2": {
+      "networkRole": "client"
+    },
+    "p3": {
+      "networkRole": "client"
+    },
+    "p4": {
+      "networkRole": "client"
+    }
+  },
+  "steps": [
+    {
+      "id": "ready",
+      "type": "wait",
+      "predicate": "participants.ready",
+      "args": {
+        "players": [
+          "p1",
+          "p2",
+          "p3",
+          "p4"
+        ]
+      },
+      "timeoutMs": 30000
+    },
+    {
+      "id": "spawn_counts",
+      "type": "parallel",
+      "branches": [
+        [
+          {
+            "id": "p1_spawned",
+            "type": "assert",
+            "predicate": "players.count",
+            "args": {
+              "actor": "p1",
+              "count": 4
+            }
+          }
+        ],
+        [
+          {
+            "id": "p2_spawned",
+            "type": "assert",
+            "predicate": "players.count",
+            "args": {
+              "actor": "p2",
+              "count": 4
+            }
+          }
+        ],
+        [
+          {
+            "id": "p3_spawned",
+            "type": "assert",
+            "predicate": "players.count",
+            "args": {
+              "actor": "p3",
+              "count": 4
+            }
+          }
+        ],
+        [
+          {
+            "id": "p4_spawned",
+            "type": "assert",
+            "predicate": "players.count",
+            "args": {
+              "actor": "p4",
+              "count": 4
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "id": "ready_evidence",
+      "type": "checkpoint"
+    }
+  ],
+  "topology": "dedicated_plus_4_clients"
+}

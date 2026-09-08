@@ -1,0 +1,167 @@
+{
+  "version": "1.0",
+  "id": "tutorial_movement_validator",
+  "executionMode": "regression",
+  "topology": "host_plus_3_clients",
+  "content": {
+    "graphId": "tutorial",
+    "dataPacks": [
+      "usability",
+      "debugging"
+    ]
+  },
+  "participants": {
+    "p1": {
+      "networkRole": "host"
+    },
+    "p2": {
+      "networkRole": "client"
+    },
+    "p3": {
+      "networkRole": "client"
+    },
+    "p4": {
+      "networkRole": "client"
+    }
+  },
+  "steps": [
+    {
+      "id": "ready",
+      "type": "wait",
+      "predicate": "participants.ready",
+      "timeoutMs": 30000
+    },
+    {
+      "id": "open_chat",
+      "type": "input",
+      "actor": "p1",
+      "action": "chat"
+    },
+    {
+      "id": "enter_content_command",
+      "type": "uiText",
+      "actor": "p1",
+      "mode": "input_adapter",
+      "text": "/scenario execute @a tutorial"
+    },
+    {
+      "id": "verify_command_text",
+      "type": "assert",
+      "predicate": "ui.valueEquals",
+      "args": {
+        "actor": "p1",
+        "automationId": "chat-input",
+        "value": "/scenario execute @a tutorial"
+      }
+    },
+    {
+      "id": "start_content",
+      "type": "input",
+      "actor": "p1",
+      "sequence": [
+        {
+          "operation": "tap",
+          "key": "Return"
+        }
+      ]
+    },
+    {
+      "id": "host_validator",
+      "type": "wait",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p1",
+        "nodeId": "V_TUT_PLAYER_MOVED",
+        "side": "client"
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "client_validator",
+      "type": "wait",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p2",
+        "nodeId": "V_TUT_PLAYER_MOVED",
+        "side": "client"
+      },
+      "timeoutMs": 15000
+    },
+    {
+      "id": "explicit_compatibility_mode",
+      "type": "assert",
+      "predicate": "scenario.mode",
+      "args": {
+        "actor": "p1",
+        "mode": "Local"
+      }
+    },
+    {
+      "id": "normal_movement",
+      "type": "input",
+      "actor": "p2",
+      "timeoutMs": 10000,
+      "sequence": [
+        {
+          "operation": "lookDelta",
+          "x": 10,
+          "y": 0
+        },
+        {
+          "operation": "hold",
+          "key": "W",
+          "durationMs": 1500
+        },
+        {
+          "operation": "hold",
+          "key": "S",
+          "durationMs": 1500
+        }
+      ]
+    },
+    {
+      "id": "server_received_normal_signal",
+      "type": "assertEventually",
+      "predicate": "event.occurred",
+      "args": {
+        "actor": "p1",
+        "eventType": "signal.registered",
+        "side": "server",
+        "match": {
+          "signalId": "sig.tutorial_player_moved"
+        }
+      },
+      "timeoutMs": 5000
+    },
+    {
+      "id": "client_call_transition",
+      "type": "assertEventually",
+      "predicate": "event.occurred",
+      "args": {
+        "actor": "p2",
+        "eventType": "node.entered",
+        "side": "client",
+        "match": {
+          "graphId": "tutorial",
+          "value": "D_TUT_CALL"
+        }
+      },
+      "timeoutMs": 10000
+    },
+    {
+      "id": "next_interaction_gate",
+      "type": "wait",
+      "predicate": "scenario.node",
+      "args": {
+        "actor": "p2",
+        "side": "client",
+        "nodeId": "V_TUT_HAT_TALK_START"
+      },
+      "timeoutMs": 10000
+    },
+    {
+      "id": "evidence",
+      "type": "checkpoint"
+    }
+  ]
+}

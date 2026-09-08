@@ -604,7 +604,8 @@ namespace MultiplayerInfrastructure.Player
         return false;
 
       Vector3 forward = transform.forward.sqrMagnitude > 0.0001f ? transform.forward.normalized : Vector3.forward;
-      Vector3 spawnPosition = transform.position + forward * 1.25f + Vector3.up * 0.35f;
+      // Keep a stationary drop outside ItemObject's 1.3m auto-pickup radius.
+      Vector3 spawnPosition = transform.position + forward * 1.5f + Vector3.up * 0.35f;
 
       bool dropped = RequestDropWorldItem(itemData, spawnPosition, forward * 2.75f);
       if (!dropped)

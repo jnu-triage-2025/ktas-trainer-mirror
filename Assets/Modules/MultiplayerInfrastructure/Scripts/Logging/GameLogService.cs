@@ -17,7 +17,7 @@ namespace MultiplayerInfrastructure.Logging
   /// - 로컬 시간 기준으로 타임스탬프를 기록한다.
   ///
   /// ## 저장 경로
-  ///   {Application.persistentDataPath}/GameLogs/{sessionSlug}.log
+  ///   {MultiplayerInfrastructure.Automation.RuntimeStorage.PersistentDataPath}/GameLogs/{sessionSlug}.log
   ///
   /// ## 커맨드
   ///   /log folder  — 로그 폴더를 파일 탐색기로 연다 (에디터/빌드, 비배치 모드 전용)
@@ -66,10 +66,10 @@ namespace MultiplayerInfrastructure.Logging
 
     /// <summary>로그 루트 폴더 경로.</summary>
     public static string LogRootPath =>
-      Path.Combine(Application.persistentDataPath, LogSubfolder);
+      Path.Combine(MultiplayerInfrastructure.Automation.RuntimeStorage.PersistentDataPath, LogSubfolder);
 
     public static string DatapackRootPath =>
-      Path.Combine(Application.persistentDataPath, DatapackSubfolder);
+      Path.Combine(MultiplayerInfrastructure.Automation.RuntimeStorage.PersistentDataPath, DatapackSubfolder);
 
     // ── 컨텍스트 ──────────────────────────────────────────────────────────────
 
@@ -292,13 +292,13 @@ namespace MultiplayerInfrastructure.Logging
     }
 
     /// <summary>
-    /// 내보내기 대상이 허용 루트(<see cref="Application.persistentDataPath"/>) 하위인지 확인한다.
+    /// 내보내기 대상이 허용 루트(<see cref="MultiplayerInfrastructure.Automation.RuntimeStorage.PersistentDataPath"/>) 하위인지 확인한다.
     /// 루트 자체와 그 하위만 허용하며, 접두사 문자열이 우연히 일치하는 형제 디렉터리
     /// (예: "GameLogs" 루트에 대한 "GameLogsBackup")는 거부한다.
     /// </summary>
     private static bool IsWithinExportRoot(string fullDestination, out string exportRoot)
     {
-      exportRoot = Path.GetFullPath(Application.persistentDataPath);
+      exportRoot = Path.GetFullPath(MultiplayerInfrastructure.Automation.RuntimeStorage.PersistentDataPath);
 
       string normalizedRoot = exportRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
       if (string.Equals(fullDestination, normalizedRoot, PathComparison))
@@ -348,7 +348,7 @@ namespace MultiplayerInfrastructure.Logging
     {
       string context = _contextLabel;
       bool restartAfterClear = _initialized;
-      // Application.persistentDataPath는 Unity 메인 스레드에서만 접근 가능하므로,
+      // MultiplayerInfrastructure.Automation.RuntimeStorage.PersistentDataPath는 Unity 메인 스레드에서만 접근 가능하므로,
       // 워커 작업에 넘길 절대 경로를 여기서 먼저 확정한다.
       string logDirectory = LogRootPath;
 

@@ -1,4 +1,5 @@
-﻿using MultiplayerInfrastructure.Definitions;
+﻿using Input = MultiplayerInfrastructure.Automation.PlayerInput;
+using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
@@ -375,6 +376,11 @@ namespace MultiplayerInfrastructure.Player
     /// </summary>
     private void HandleDialogueInput()
     {
+      // A remote player may spawn before the scene dialogue UI is available.
+      // Resolve the active overlay when it appears instead of keeping the missing startup reference.
+      if (UIOverlayStack.Top is DialoguePanelUIController activeDialogue)
+        _dialoguePanelUIController = activeDialogue;
+
       if (_dialoguePanelUIController.IsUnityNull())
         return;
       if (!UIOverlayStack.IsTop(_dialoguePanelUIController))

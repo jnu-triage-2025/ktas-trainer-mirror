@@ -109,6 +109,14 @@ namespace MultiplayerInfrastructure.Command
       }
       toGive.CurrentStackCount = count;
 
+      // Remote inventories live on their owning client, as with normal pickup confirmations.
+      if (!targetPlayer.IsOwner)
+      {
+        targetPlayer.TargetGrantCommandItem(targetConn, itemIdentifier, count);
+        message = $"Requested {count}x '{itemIdentifier}' for {ResolveTargetDisplayName(targetIdentifier, targetConn)}.";
+        return true;
+      }
+
       bool fullyAdded = targetPlayer.TryAddItemToInventory(toGive, out ItemSystem.Item leftover);
       if (leftover != null && leftover.CurrentStackCount > 0)
       {
