@@ -603,7 +603,7 @@
             "b": 1,
             "a": 1
           },
-          "nextNodeIdentifier": "N009_CORRECT"
+          "nextNodeIdentifier": "D016"
         },
         {
           "displayText": "15L",
@@ -1143,7 +1143,7 @@
             "b": 1,
             "a": 1
           },
-          "nextNodeIdentifier": "D_EPI_PERIPH_R1_PARTIAL"
+          "nextNodeIdentifier": "N020_retry_b"
         },
         {
           "displayText": "약물 주입 후 생리식염수 주입, 이후 팔 들어올리기",
@@ -1508,7 +1508,7 @@
             "b": 1,
             "a": 1
           },
-          "nextNodeIdentifier": "D_EPI_PERIPH_R2_PARTIAL"
+          "nextNodeIdentifier": "N023_retry_b"
         },
         {
           "displayText": "약물 주입 후 생리식염수 주입, 이후 팔 들어올리기",
@@ -1718,7 +1718,7 @@
             "b": 1,
             "a": 1
           },
-          "nextNodeIdentifier": "N028_3"
+          "nextNodeIdentifier": "C033"
         },
         {
           "displayText": "U(Unconsciousness, 반응 없음)",
@@ -1776,7 +1776,7 @@
             "b": 1,
             "a": 1
           },
-          "nextNodeIdentifier": "N028_4"
+          "nextNodeIdentifier": "C034"
         },
         {
           "displayText": "1점(반응 없음)",
@@ -1867,7 +1867,7 @@
             "b": 1,
             "a": 1
           },
-          "nextNodeIdentifier": "N028_5"
+          "nextNodeIdentifier": "C035"
         }
       ],
       "playTTS": null,
@@ -1914,7 +1914,7 @@
             "b": 1,
             "a": 1
           },
-          "nextNodeIdentifier": "N028_6"
+          "nextNodeIdentifier": "Q030_1"
         },
         {
           "displayText": "3점(이상 굴곡)",
@@ -2342,8 +2342,8 @@
     },
     "D019": {
       "speakerName": "의사",
-      "dialogueContent": "그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_d, @s]선생님, C-line set 건네주세요.",
-      "dialogueContentTTSPassing": "그래도 혈압이 잡히지 않네요. 씨 라인 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_d, @s]선생님, 씨 라인 세트 건네주세요.",
+      "dialogueContent": "그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_c, @s]선생님, C-line set 건네주세요.",
+      "dialogueContentTTSPassing": "그래도 혈압이 잡히지 않네요. 씨 라인 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_c, @s]선생님, 씨 라인 세트 건네주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2358,8 +2358,8 @@
     },
     "D020": {
       "speakerName": "의사",
-      "dialogueContent": "@t=[nurse_d, @s]선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요.",
-      "dialogueContentTTSPassing": "@t=[nurse_d, @s]선생님, 레벨 원 래피드 인퓨저에 플라즈마 솔루션과 혈액백 연결시켜 주세요.",
+      "dialogueContent": "@t=[nurse_c, @s]선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요.",
+      "dialogueContentTTSPassing": "@t=[nurse_c, @s]선생님, 레벨 원 래피드 인퓨저에 플라즈마 솔루션과 혈액백 연결시켜 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2382,7 +2382,7 @@
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": {
-        "preset": "F5"
+        "preset": "F4"
       },
       "identifier": "D021",
       "nodeType": "Dialogue",
@@ -3090,7 +3090,7 @@
       },
       "identifier": "N007_4",
       "nodeType": "Dialogue",
-      "nextIdentifier": "D009"
+      "nextIdentifier": "V013_4"
     },
     "D_STABILIZER_APPLIED_A": {
       "speakerName": "시스템",
@@ -3122,7 +3122,7 @@
       "dialogueContentTTSPassing": null,
       "identifier": "D_SUCTION_INSTALLED_A",
       "nodeType": "Dialogue",
-      "nextIdentifier": "N007_3"
+      "nextIdentifier": null
     },
     "N008": {
       "speakerName": "시스템",
@@ -3199,7 +3199,7 @@
       },
       "identifier": "N009_CORRECT",
       "nodeType": "Dialogue",
-      "nextIdentifier": "D016"
+      "nextIdentifier": null
     },
     "N010": {
       "speakerName": "시스템",
@@ -3583,7 +3583,7 @@
       },
       "identifier": "N028_3",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C033"
+      "nextIdentifier": null
     },
     "N028_4": {
       "speakerName": "@s",
@@ -3598,7 +3598,7 @@
       },
       "identifier": "N028_4",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C034"
+      "nextIdentifier": null
     },
     "N028_5": {
       "speakerName": "@s",
@@ -3613,7 +3613,7 @@
       },
       "identifier": "N028_5",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C035"
+      "nextIdentifier": null
     },
     "N028_6": {
       "speakerName": "@s",
@@ -3628,7 +3628,7 @@
       },
       "identifier": "N028_6",
       "nodeType": "Dialogue",
-      "nextIdentifier": "D_GCS_ROSC_SUM_A"
+      "nextIdentifier": null
     },
     "N028_retry_a": {
       "speakerName": "@s",
@@ -5481,7 +5481,7 @@
       "onWaitTimeout": "ForceAdvance",
       "identifier": "V013_2",
       "nodeType": "Validator",
-      "nextIdentifier": "D_SUCTION_INSTALLED_A"
+      "nextIdentifier": "N007_3"
     },
     "V013_3": {
       "rootConditions": [
@@ -5508,7 +5508,7 @@
       "onWaitTimeout": "ForceAdvance",
       "identifier": "V013_3",
       "nodeType": "Validator",
-      "nextIdentifier": "V013_4"
+      "nextIdentifier": "N007_4"
     },
     "V013_4": {
       "rootConditions": [
@@ -5535,7 +5535,7 @@
       "onWaitTimeout": "ForceAdvance",
       "identifier": "V013_4",
       "nodeType": "Validator",
-      "nextIdentifier": "N007_4"
+      "nextIdentifier": "D009"
     },
     "V014_1": {
       "rootConditions": [
@@ -6140,7 +6140,7 @@
       "onWaitTimeout": "ForceAdvance",
       "identifier": "V022",
       "nodeType": "Validator",
-      "nextIdentifier": "D_PULSE_R1_ACTION"
+      "nextIdentifier": "Q018_1"
     },
     "D_PULSE_R1_ACTION": {
       "speakerName": "@s",
@@ -6153,7 +6153,7 @@
       "ttsVoiceProfile": { "preset": "None" },
       "identifier": "D_PULSE_R1_ACTION",
       "nodeType": "Dialogue",
-      "nextIdentifier": "D_PULSE_R1_RESULT"
+      "nextIdentifier": null
     },
     "D_PULSE_R1_RESULT": {
       "speakerName": "@s",
@@ -6166,7 +6166,7 @@
       "ttsVoiceProfile": { "preset": "None" },
       "identifier": "D_PULSE_R1_RESULT",
       "nodeType": "Dialogue",
-      "nextIdentifier": "Q018_1"
+      "nextIdentifier": null
     },
     "V023_1": {
       "rootConditions": [
@@ -6523,7 +6523,7 @@
       "onWaitTimeout": "ForceAdvance",
       "identifier": "V031",
       "nodeType": "Validator",
-      "nextIdentifier": "D_PULSE_R2_ACTION"
+      "nextIdentifier": "Q027_1"
     },
     "D_PULSE_R2_ACTION": {
       "speakerName": "@s",
@@ -6536,7 +6536,7 @@
       "ttsVoiceProfile": { "preset": "None" },
       "identifier": "D_PULSE_R2_ACTION",
       "nodeType": "Dialogue",
-      "nextIdentifier": "D_PULSE_R2_RESULT"
+      "nextIdentifier": null
     },
     "D_PULSE_R2_RESULT": {
       "speakerName": "@s",
@@ -6549,7 +6549,7 @@
       "ttsVoiceProfile": { "preset": "None" },
       "identifier": "D_PULSE_R2_RESULT",
       "nodeType": "Dialogue",
-      "nextIdentifier": "Q027_1"
+      "nextIdentifier": null
     },
     "V032": {
       "rootConditions": [
@@ -6901,7 +6901,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_EPI_PERIPH_R1_PARTIAL",
       "nodeType": "Dialogue",
-      "nextIdentifier": "Q022_1"
+      "nextIdentifier": null
     },
     "D_EPI_PERIPH_R1_OK": {
       "speakerName": "@s",
@@ -7024,7 +7024,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_EPI_PERIPH_R2_PARTIAL",
       "nodeType": "Dialogue",
-      "nextIdentifier": "Q025_1"
+      "nextIdentifier": null
     },
     "D_EPI_PERIPH_R2_OK": {
       "speakerName": "@s",
@@ -7183,7 +7183,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_GCS_ROSC_SUM_A",
       "nodeType": "Dialogue",
-      "nextIdentifier": "D_GCS_ROSC_REPORT_A"
+      "nextIdentifier": null
     },
     "D_GCS_ROSC_REPORT_A": {
       "speakerName": "@s",
@@ -7196,7 +7196,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_GCS_ROSC_REPORT_A",
       "nodeType": "Dialogue",
-      "nextIdentifier": "Q030_1",
+      "nextIdentifier": null,
       "ttsVoiceProfile": {
         "preset": "F5"
       }
