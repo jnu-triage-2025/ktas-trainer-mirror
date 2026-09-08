@@ -1539,8 +1539,8 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "P_B_TREATMENT",
       "speakerName": "의사",
-      "dialogueContent": "@t=[nurse_c, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
-      "dialogueContentTTSPassing": "@t=[nurse_c, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
+      "dialogueContent": "@t=[nurse_c, ???]선생님, 산소포화도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
+      "dialogueContentTTSPassing": "@t=[nurse_c, ???]선생님, 산소포화도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
@@ -1813,7 +1813,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "A_REC3_DOTS",
       "speakerName": "남성 환자",
-      "dialogueContent": "으으악...! 과장님 제가 분명...!!! 기안 올린거 처리해달라고..!",
+      "dialogueContent": "아흑... 몰라요... 아까 퇴근하는 길이었는데..!!",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
@@ -1965,8 +1965,8 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "A_AVPU",
       "speakerName": "시스템",
-      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. 브이로 분류해야 해.",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)로 분류해야 합니다.",
+      "dialogueContentTTSPassing": " 오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, 브이로 분류해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -1976,8 +1976,8 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "A_AVPU",
       "speakerName": "시스템",
-      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)로 분류해야 합니다.",
+      "dialogueContentTTSPassing": " 오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, 브이로 분류해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -1987,8 +1987,8 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "A_AVPU",
       "speakerName": "시스템",
-      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)로 분류해야 합니다.",
+      "dialogueContentTTSPassing": " 오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, 브이로 분류해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -2038,7 +2038,7 @@
       "nextIdentifier": "A_GCS_E",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 현재 눈을 감고 있다가, 질문을 하면 눈을 뜨고 있습니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류해야 해.",
+      "dialogueContentTTSPassing": "오답입니다. 현재 눈을 감고 있다가, 질문을 하면 눈을 뜨고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -2048,7 +2048,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "A_GCS_V",
       "speakerName": "@s",
-      "dialogueContent": "맞아, 이 환자는 소리에 반응하고 있어. E 3으로 분류하자.",
+      "dialogueContent": "맞아, 이 환자는 소리에 반응하고 있어. E3으로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -2092,7 +2092,7 @@
       "nextIdentifier": "A_GCS_V",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 현재 환자는 시간대를 인지하지 못하며 혼란스러워하는 상태입니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류해야 해.",
+      "dialogueContentTTSPassing": "오답입니다. 현재 환자는 시간대를 인지하지 못하며 혼란스러워하는 상태입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -2102,7 +2102,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "A_GCS_M",
       "speakerName": "@s",
-      "dialogueContent": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류하자.",
+      "dialogueContent": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. V4로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -2150,7 +2150,7 @@
       "nextIdentifier": "A_GCS_M",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 현재 움직임에 대한 명령을 잘 수행하고 있습니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 지시를 따라주었어. 엠 식스로 분류해야 해.",
+      "dialogueContentTTSPassing": "오답입니다. 현재 움직임에 대한 명령을 잘 수행하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -2160,7 +2160,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "A_GCS_SUM1",
       "speakerName": "@s",
-      "dialogueContent": "맞아, 이 환자는 지시를 따라주었어. M 6으로 분류하자.",
+      "dialogueContent": "맞아, 이 환자는 지시를 따라주었어. M6로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 지시를 따라주었어. 엠 식스로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -2316,7 +2316,7 @@
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_b.motor_left",
-      "correctOptionIndex": 5,
+      "correctOptionIndex": 2,
       "options": [
         {
           "displayText": "5점(정상 근력)",
@@ -2325,6 +2325,10 @@
         {
           "displayText": "4점(중력+약간의 저항)",
           "nextNodeIdentifier": "A_LEFT_WRONG"
+        },
+        {
+          "displayText": "3점(중력에 저항 가능)",
+          "nextNodeIdentifier": "A_LEFT_CORRECT"
         },
         {
           "displayText": "2점(중력에 저항 불가, 좌우 운동)",
@@ -2337,10 +2341,6 @@
         {
           "displayText": "0점(움직임 없음)",
           "nextNodeIdentifier": "A_LEFT_WRONG"
-        },
-        {
-          "displayText": "3점(중력에 저항 가능)",
-          "nextNodeIdentifier": "A_LEFT_CORRECT"
         }
       ]
     },
@@ -2375,23 +2375,27 @@
       "correctOptionIndex": 0,
       "options": [
         {
-          "displayText": "5점입니다",
+          "displayText": "5점(정상 근력)",
           "nextNodeIdentifier": "A_RIGHT_CORRECT"
         },
         {
-          "displayText": "4점입니다",
+          "displayText": "4점(중력+약간의 저항)",
           "nextNodeIdentifier": "A_RIGHT_WRONG"
         },
         {
-          "displayText": "3점입니다",
+          "displayText": "3점(중력에 저항 가능)",
           "nextNodeIdentifier": "A_RIGHT_WRONG"
         },
         {
-          "displayText": "2점입니다",
+          "displayText": "2점(중력에 저항 불가, 좌우 운동)",
           "nextNodeIdentifier": "A_RIGHT_WRONG"
         },
         {
-          "displayText": "1점입니다",
+          "displayText": "1점(약간의 근육 수축)",
+          "nextNodeIdentifier": "A_RIGHT_WRONG"
+        },
+        {
+          "displayText": "0점(움직임 없음)",
           "nextNodeIdentifier": "A_RIGHT_WRONG"
         }
       ]
@@ -2430,7 +2434,7 @@
     "A_STRENGTH_WAIT_UPDATE": {
       "identifier": "A_STRENGTH_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_B_INITIAL_A",
+      "nextIdentifier": "CC_B_A",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -2662,7 +2666,7 @@
     "B_VITAL_WAIT_UPDATE": {
       "identifier": "B_VITAL_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_B_INITIAL_C",
+      "nextIdentifier": "CC_B_B",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -2831,7 +2835,7 @@
     "C_PUPIL_WAIT_UPDATE": {
       "identifier": "C_PUPIL_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_B_TREATMENT_A",
+      "nextIdentifier": "CC_B_C",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -3115,7 +3119,7 @@
     "D_WAIT_UPDATE": {
       "identifier": "D_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_B_TREATMENT_C",
+      "nextIdentifier": "CC_B_D",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -3171,8 +3175,8 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "P_C_TREATMENT",
       "speakerName": "의사",
-      "dialogueContent": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
-      "dialogueContentTTSPassing": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
+      "dialogueContent": "@t=[nurse_d, ???]선생님, 산소포화도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
+      "dialogueContentTTSPassing": "@t=[nurse_d, ???]선생님, 산소포화도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
@@ -3421,7 +3425,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_REC3_DOTS",
       "speakerName": "여성 환자",
-      "dialogueContent": "으으악...! 과장님 제가 분명...!!! 기안 올린거 처리해달라고..!",
+      "dialogueContent": "아흑... 몰라요... 아까 퇴근하는 길이었는데..!!",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
@@ -3573,8 +3577,8 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_AVPU",
       "speakerName": "시스템",
-      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. 브이로 분류해야 해.",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)로 분류해야 합니다.",
+      "dialogueContentTTSPassing": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, 브이로 분류해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -3584,8 +3588,8 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_AVPU",
       "speakerName": "시스템",
-      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)로 분류해야 합니다.",
+      "dialogueContentTTSPassing": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, 브이로 분류해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -3595,8 +3599,8 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_AVPU",
       "speakerName": "시스템",
-      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)로 분류해야 합니다.",
+      "dialogueContentTTSPassing": " 오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, 브이로 분류해야 합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -3646,7 +3650,7 @@
       "nextIdentifier": "C_A_GCS_E",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 현재 눈을 감고 있다가, 질문을 하면 눈을 뜨고 있습니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류해야 해.",
+      "dialogueContentTTSPassing": "오답입니다. 현재 눈을 감고 있다가, 질문을 하면 눈을 뜨고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -3656,7 +3660,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_GCS_V",
       "speakerName": "@s",
-      "dialogueContent": "맞아, 이 환자는 소리에 반응하고 있어. E 3으로 분류하자.",
+      "dialogueContent": "맞아, 이 환자는 소리에 반응하고 있어. E3으로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -3700,7 +3704,7 @@
       "nextIdentifier": "C_A_GCS_V",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 현재 환자는 시간대를 인지하지 못하며 혼란스러워하는 상태입니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류해야 해.",
+      "dialogueContentTTSPassing": "오답입니다. 현재 환자는 시간대를 인지하지 못하며 혼란스러워하는 상태입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -3710,7 +3714,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_GCS_M",
       "speakerName": "@s",
-      "dialogueContent": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류하자.",
+      "dialogueContent": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. V4로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -3758,7 +3762,7 @@
       "nextIdentifier": "C_A_GCS_M",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 현재 움직임에 대한 명령을 잘 수행하고 있습니다.",
-      "dialogueContentTTSPassing": "아니야, 이 환자는 지시를 따라주었어. 엠 식스로 분류해야 해.",
+      "dialogueContentTTSPassing": "오답입니다. 현재 움직임에 대한 명령을 잘 수행하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": false
@@ -3768,7 +3772,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_GCS_SUM1",
       "speakerName": "@s",
-      "dialogueContent": "맞아, 이 환자는 지시를 따라주었어. M 6으로 분류하자.",
+      "dialogueContent": "맞아, 이 환자는 지시를 따라주었어. M6으로 분류하자.",
       "dialogueContentTTSPassing": "맞아, 이 환자는 지시를 따라주었어. 엠 식스로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -3927,23 +3931,27 @@
       "correctOptionIndex": 0,
       "options": [
         {
-          "displayText": "5점입니다",
+          "displayText": "5점(정상 근력)",
           "nextNodeIdentifier": "C_A_LEFT_CORRECT"
         },
         {
-          "displayText": "4점입니다",
+          "displayText": "4점(중력+약간의 저항)",
           "nextNodeIdentifier": "C_A_LEFT_WRONG"
         },
         {
-          "displayText": "3점입니다",
+          "displayText": "3점(중력에 저항 불가)",
           "nextNodeIdentifier": "C_A_LEFT_WRONG"
         },
         {
-          "displayText": "2점입니다",
+          "displayText": "2점(중력에 저항 불가, 좌우 운동)",
           "nextNodeIdentifier": "C_A_LEFT_WRONG"
         },
         {
-          "displayText": "1점입니다",
+          "displayText": "1점(약간의 근육 수축)",
+          "nextNodeIdentifier": "C_A_LEFT_WRONG"
+        },
+        {
+          "displayText": "0점(움직임 없음)",
           "nextNodeIdentifier": "C_A_LEFT_WRONG"
         }
       ]
@@ -3952,7 +3960,7 @@
       "identifier": "C_A_LEFT_WRONG",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_RIGHT_GRADE",
-      "speakerName": "@t=[nurse_c, ???]",
+      "speakerName": "@t=[nurse_d, ???]",
       "dialogueContent": "왼쪽 다리는 정상 근력인 것 같은데요. 좌측은 5점으로 고치죠.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -3976,7 +3984,7 @@
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_c.motor_right",
-      "correctOptionIndex": 5,
+      "correctOptionIndex": 2,
       "options": [
         {
           "displayText": "5점(정상 근력)",
@@ -3985,6 +3993,10 @@
         {
           "displayText": "4점(중력+약간의 저항)",
           "nextNodeIdentifier": "C_A_RIGHT_WRONG"
+        },
+        {
+          "displayText": "3점(중력에 저항 가능)",
+          "nextNodeIdentifier": "C_A_RIGHT_CORRECT"
         },
         {
           "displayText": "2점(중력에 저항 불가, 좌우 운동)",
@@ -3998,10 +4010,7 @@
           "displayText": "0점(움직임 없음)",
           "nextNodeIdentifier": "C_A_RIGHT_WRONG"
         },
-        {
-          "displayText": "3점(중력에 저항 가능)",
-          "nextNodeIdentifier": "C_A_RIGHT_CORRECT"
-        }
+        
       ]
     },
     "C_A_RIGHT_WRONG": {
@@ -4038,7 +4047,7 @@
     "C_A_STRENGTH_WAIT_UPDATE": {
       "identifier": "C_A_STRENGTH_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_C_INITIAL_B",
+      "nextIdentifier": "CC_C_A",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -4270,7 +4279,7 @@
     "C_B_VITAL_WAIT_UPDATE": {
       "identifier": "C_B_VITAL_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_C_INITIAL_D",
+      "nextIdentifier": "CC_C_B",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -4439,7 +4448,7 @@
     "C_C_PUPIL_WAIT_UPDATE": {
       "identifier": "C_C_PUPIL_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_C_TREATMENT_B",
+      "nextIdentifier": "CC_C_C",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -4723,7 +4732,7 @@
     "C_D_WAIT_UPDATE": {
       "identifier": "C_D_WAIT_UPDATE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_C_TREATMENT_D",
+      "nextIdentifier": "CC_C_D",
       "operation": "Update",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -4759,7 +4768,7 @@
       "nodeType": "ManualEntrypoint",
       "entrypointIdentifier": "move_patients",
       "manualEnterSetupIdentifier": "SETUP_MOVE_PATIENTS_SNAP_BED_B",
-      "description": "CT 이송 단계 수동 진입 지점. 두 환자와 처치 장비를 이송 전 상태로 즉시 준비한다.",
+      "description": "CT 이송 단계 수동 진입 지점. 환자 B/C와 처치 장비를 이송 전 상태로 즉시 준비한다.",
       "nextIdentifier": "CT_DOCTOR_MARK_SHOW"
     },
     "CT_DOCTOR_MARK_SHOW": {
