@@ -149,6 +149,29 @@ namespace TriageTrainer.Entity
     private string _pendingPositioningPointIdentifier;
 
     public string Identifier => EffectiveBedIdentifier;
+
+#if UNITY_E2E || UNITY_EDITOR
+    public override Newtonsoft.Json.Linq.JObject AutomationState
+    {
+      get
+      {
+        var state = base.AutomationState;
+        state["id"] = Identifier;
+        state["kind"] = "patientBed";
+        state["latchedPointId"] = LatchedPositioningPoint?.Identifier;
+        state["requiredInteractors"] = RequiredInteractorCount;
+        var points = new Newtonsoft.Json.Linq.JArray();
+        foreach (var point in FindObjectsByType<MovingPatientBedPositioningPoint>(FindObjectsSortMode.None))
+          points.Add(new Newtonsoft.Json.Linq.JObject {
+            ["id"] = point.Identifier,
+            ["position"] = new Newtonsoft.Json.Linq.JArray(point.Position.x, point.Position.y, point.Position.z),
+            ["snapDistance"] = point.SnapDistance
+          });
+        state["positioningPoints"] = points;
+        return state;
+      }
+    }
+#endif
     public string PresentationEntityIdentifier => Identifier;
     public string InteractionIdentifier => InteractionIdentifierMoveBed;
     public IInteract[] Interacts
