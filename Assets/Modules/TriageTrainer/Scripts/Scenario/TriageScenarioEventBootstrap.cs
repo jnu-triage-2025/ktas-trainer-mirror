@@ -368,6 +368,7 @@ namespace TriageTrainer.Scenario
       EnablePatientATreatmentSignalHandlers();
       RegisterIntroAndPatientAEvents();
       RegisterPatientBCEvents();
+      Register("show_tutorial_interaction_hint", Event_ShowTutorialInteractionHint);
 
       if (_logRegistrySnapshotOnEnable)
       {
@@ -1132,6 +1133,12 @@ namespace TriageTrainer.Scenario
     /// 안내를 볼 수 없다. 그래서 서버에서는 서버 전역 채팅으로 전파하고, 각 피어가 자기 그래프를 돌리는
     /// 호환 실행 경로와 오프라인에서는 기존처럼 이 피어의 채팅창에만 출력한다.
     /// </summary>
+    private IEnumerator Event_ShowTutorialInteractionHint()
+    {
+      EmitSystemMessage("모자에게 가까이 다가가세요. 화면에 표시된 상호작용 키로 ‘말 걸기’를 선택하면 대화를 시작할 수 있습니다.");
+      yield break;
+    }
+
     private void EmitSystemMessage(string message)
     {
       if (string.IsNullOrWhiteSpace(message))
