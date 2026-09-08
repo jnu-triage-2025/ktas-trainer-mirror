@@ -424,7 +424,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "CC_ANNOUNCE",
       "speakerName": "구내방송",
-      "dialogueContent": "트리아지 구역에 응급 환자 세명 이송. 담당자는 지금 바로 와주세요.",
+      "dialogueContent": "응급 환자 세 명 이송합니다. 모든 간호사는 지금 바로 중증도 분류 구역으로 와주세요.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": null,
@@ -708,7 +708,7 @@
     "TRIAGE_A_Q": {
       "identifier": "TRIAGE_A_Q",
       "nodeType": "QuestControl",
-      "nextIdentifier": "TRIAGE_ENABLE_B",
+      "nextIdentifier": "TRIAGE_INTRO",
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -718,21 +718,21 @@
     "TRIAGE_ENABLE_B": {
       "identifier": "TRIAGE_ENABLE_B",
       "nodeType": "TriageAssessControl",
-      "nextIdentifier": "TRIAGE_ENABLE_C",
+      "nextIdentifier": "TRIAGE_WAIT_ALL",
       "targetEntityIdentifier": "patient_b",
       "assessable": true
     },
     "TRIAGE_ENABLE_C": {
       "identifier": "TRIAGE_ENABLE_C",
       "nodeType": "TriageAssessControl",
-      "nextIdentifier": "TRIAGE_ENABLE_D",
+      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
       "targetEntityIdentifier": "patient_c",
       "assessable": true
     },
     "TRIAGE_ENABLE_D": {
       "identifier": "TRIAGE_ENABLE_D",
       "nodeType": "TriageAssessControl",
-      "nextIdentifier": "TRIAGE_WAIT_ALL",
+      "nextIdentifier": "TRIAGE_A_REMOVE",
       "targetEntityIdentifier": "patient_dummy_d_b",
       "assessable": true
     },
@@ -762,7 +762,7 @@
     "TRIAGE_EVALUATE_CURRENT": {
       "identifier": "TRIAGE_EVALUATE_CURRENT",
       "nodeType": "Validator",
-      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
+      "nextIdentifier": "TRIAGE_B_CONFIRMED",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -810,6 +810,156 @@
       "eventIdentifier": "complete_patient_b_c_triage",
       "moveNextBehavior": "WaitUntilDone"
     },
+    "TRIAGE_INTRO": {
+      "identifier": "TRIAGE_INTRO",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_B_STATE_INFO",
+      "speakerName": "시스템",
+      "dialogueContent": "환자 세 명이 이송되었습니다. @t=[nurse_a, ???] 선생님이 중증도 분류를 시행합니다.",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F1" }
+    },
+    "TRIAGE_B_STATE_INFO": {
+      "identifier": "TRIAGE_B_STATE_INFO",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_B_VITAL_INFO",
+      "speakerName": "시스템",
+      "dialogueContent": "외양: 좌측 상완 개방성 골절, 눈썹 위 타박상 및 약간의 출혈\n주 호소: 두통\n좌우 근력이 비대칭임\n의식 상태: 대화가 가능하나 약간 느리고 지남력이 없음",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": false
+    },
+    "TRIAGE_B_VITAL_INFO": {
+      "identifier": "TRIAGE_B_VITAL_INFO",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_B_PROMPT",
+      "speakerName": "시스템",
+      "dialogueContent": "활력징후 측정 결과:\n혈압: 140/86mmHg\n맥박: 120회/분\n호흡수: 24회/분\n체온: 37.8도\nSpO2: 93%",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": false
+    },
+    "TRIAGE_B_PROMPT": {
+      "identifier": "TRIAGE_B_PROMPT",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_ENABLE_B",
+      "speakerName": "시스템",
+      "dialogueContent": "해당 환자의 중증도 분류를 시행하세요.",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "TRIAGE_B_CONFIRMED": {
+      "identifier": "TRIAGE_B_CONFIRMED",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_D_STATE_INFO",
+      "speakerName": "시스템",
+      "dialogueContent": "해당 환자를 KTAS 2(긴급)로 분류했습니다. 다음 환자를 확인하세요.",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "TRIAGE_D_STATE_INFO": {
+      "identifier": "TRIAGE_D_STATE_INFO",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_D_VITAL_INFO",
+      "speakerName": "시스템",
+      "dialogueContent": "외양: 사지 찰과상 외 양호\n주 호소: 복통\n의식 상태: 명료, 지속적으로 통증 호소함",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": false
+    },
+    "TRIAGE_D_VITAL_INFO": {
+      "identifier": "TRIAGE_D_VITAL_INFO",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_D_PROMPT",
+      "speakerName": "시스템",
+      "dialogueContent": "활력징후 측정 결과:\n혈압: 136/79mmHg\n맥박: 110회/분\n호흡수: 18회/분\n체온: 36.8도\nSpO2: 97%",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": false
+    },
+    "TRIAGE_D_PROMPT": {
+      "identifier": "TRIAGE_D_PROMPT",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_ENABLE_D",
+      "speakerName": "시스템",
+      "dialogueContent": "해당 환자의 중증도 분류를 시행하세요.",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "TRIAGE_D_CONFIRMED": {
+      "identifier": "TRIAGE_D_CONFIRMED",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_C_STATE_INFO",
+      "speakerName": "시스템",
+      "dialogueContent": "해당 환자를 KTAS 5(비응급)로 분류했습니다. 다음 환자를 확인하세요.",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "TRIAGE_C_STATE_INFO": {
+      "identifier": "TRIAGE_C_STATE_INFO",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_C_VITAL_INFO",
+      "speakerName": "시스템",
+      "dialogueContent": "외양: 우측 상완 개방성 골절, 눈썹 위 타박상 및 약간의 출혈\n주 호소: 두통\n좌우 근력이 비대칭임\n의식 상태: 대화가 가능하나 약간 느리고 지남력이 없음",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": false
+    },
+    "TRIAGE_C_VITAL_INFO": {
+      "identifier": "TRIAGE_C_VITAL_INFO",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_C_PROMPT",
+      "speakerName": "시스템",
+      "dialogueContent": "활력징후 측정 결과:\n혈압: 140/86mmHg\n맥박: 120회/분\n호흡수: 24회/분\n체온: 37.8도\nSpO2: 93%",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": false
+    },
+    "TRIAGE_C_PROMPT": {
+      "identifier": "TRIAGE_C_PROMPT",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_ENABLE_C",
+      "speakerName": "시스템",
+      "dialogueContent": "해당 환자의 중증도 분류를 시행하세요.",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "TRIAGE_C_CONFIRMED": {
+      "identifier": "TRIAGE_C_CONFIRMED",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_COMPLETE_EVENT",
+      "speakerName": "시스템",
+      "dialogueContent": "해당 환자를 KTAS 2(긴급)로 분류했습니다.",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": null,
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
+    },
     "TRIAGE_A_REMOVE": {
       "identifier": "TRIAGE_A_REMOVE",
       "nodeType": "Validator",
@@ -837,8 +987,8 @@
       "identifier": "TRIAGE_WRONG",
       "nodeType": "Dialogue",
       "nextIdentifier": "TRIAGE_RESET",
-      "speakerName": "@s",
-      "dialogueContent": "(중증도가 잘못 분류된 것 같다. 다시 분류하자..)",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 해당 환자는 KTAS 2(긴급)로 분류해야 합니다. 다시 분류하세요.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": 4,
@@ -847,7 +997,7 @@
     "TRIAGE_RESET": {
       "identifier": "TRIAGE_RESET",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "TRIAGE_WAIT_ALL",
+      "nextIdentifier": "TRIAGE_B_PROMPT",
       "eventIdentifier": "reset_patient_b_triage_attempt",
       "moveNextBehavior": "WaitUntilDone"
     },
@@ -855,8 +1005,8 @@
       "identifier": "TRIAGE_RESET_REMOVE",
       "nodeType": "Dialogue",
       "nextIdentifier": "TRIAGE_RESET_ADD",
-      "speakerName": "@s",
-      "dialogueContent": "(중증도가 잘못 분류된 것 같다. 다시 분류하자..)",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 해당 환자는 KTAS 2(긴급)로 분류해야 합니다. 다시 분류하세요.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": 4,
@@ -865,7 +1015,7 @@
     "TRIAGE_RESET_ADD": {
       "identifier": "TRIAGE_RESET_ADD",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
+      "nextIdentifier": "TRIAGE_C_PROMPT",
       "eventIdentifier": "reset_patient_c_triage_attempt",
       "moveNextBehavior": "WaitUntilDone"
     },
@@ -873,8 +1023,8 @@
       "identifier": "TRIAGE_REENABLE_B",
       "nodeType": "Dialogue",
       "nextIdentifier": "TRIAGE_REENABLE_C",
-      "speakerName": "@s",
-      "dialogueContent": "(중증도가 잘못 분류된 것 같다. 다시 분류하자..)",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 해당 환자는 KTAS 5(비응급)로 분류해야 합니다. 다시 분류하세요.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": 4,
@@ -883,14 +1033,14 @@
     "TRIAGE_REENABLE_C": {
       "identifier": "TRIAGE_REENABLE_C",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "TRIAGE_A_REMOVE",
+      "nextIdentifier": "TRIAGE_D_PROMPT",
       "eventIdentifier": "reset_patient_dummy_d_b_triage_attempt",
       "moveNextBehavior": "WaitUntilDone"
     },
     "TRIAGE_REENABLE_D": {
       "identifier": "TRIAGE_REENABLE_D",
       "nodeType": "Validator",
-      "nextIdentifier": "TRIAGE_COMPLETE_EVENT",
+      "nextIdentifier": "TRIAGE_D_CONFIRMED",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -911,7 +1061,7 @@
     "TRIAGE_C_EVALUATE_CURRENT": {
       "identifier": "TRIAGE_C_EVALUATE_CURRENT",
       "nodeType": "Validator",
-      "nextIdentifier": "TRIAGE_A_REMOVE",
+      "nextIdentifier": "TRIAGE_C_CONFIRMED",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1757,16 +1907,20 @@
     "A_AVPU": {
       "identifier": "A_AVPU",
       "nodeType": "Choice",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 AVPU는...",
+      "speakerName": "시스템",
+      "dialogueContent": "의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_b.avpu",
-      "correctOptionIndex": 3,
+      "correctOptionIndex": 1,
       "options": [
         {
           "displayText": "AVPU A",
           "nextNodeIdentifier": "A_AVPU_WRONG_A"
+        },
+        {
+          "displayText": "AVPU V",
+          "nextNodeIdentifier": "A_GCS_E"
         },
         {
           "displayText": "AVPU P",
@@ -1775,19 +1929,15 @@
         {
           "displayText": "AVPU U",
           "nextNodeIdentifier": "A_AVPU_WRONG_U"
-        },
-        {
-          "displayText": "AVPU V",
-          "nextNodeIdentifier": "A_AVPU_CORRECT"
         }
       ]
     },
     "A_AVPU_WRONG_A": {
       "identifier": "A_AVPU_WRONG_A",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_GCS_E",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. V로 분류해야해.",
+      "nextIdentifier": "A_AVPU",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -1796,9 +1946,9 @@
     "A_AVPU_WRONG_P": {
       "identifier": "A_AVPU_WRONG_P",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_GCS_E",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
+      "nextIdentifier": "A_AVPU",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -1807,9 +1957,9 @@
     "A_AVPU_WRONG_U": {
       "identifier": "A_AVPU_WRONG_U",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_GCS_E",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
+      "nextIdentifier": "A_AVPU",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -1829,27 +1979,27 @@
     "A_GCS_E": {
       "identifier": "A_GCS_E",
       "nodeType": "Choice",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 GCS E는...",
+      "speakerName": "시스템",
+      "dialogueContent": "관찰된 E(Eye Opening) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_b.gcs_e",
       "correctOptionIndex": 1,
       "options": [
         {
-          "displayText": "E 4",
+          "displayText": "4점(자발적)",
           "nextNodeIdentifier": "A_E_WRONG"
         },
         {
-          "displayText": "E 3",
-          "nextNodeIdentifier": "A_E_CORRECT"
+          "displayText": "3점(명령)",
+          "nextNodeIdentifier": "A_GCS_V"
         },
         {
-          "displayText": "E 2",
+          "displayText": "2점(통증)",
           "nextNodeIdentifier": "A_E_WRONG"
         },
         {
-          "displayText": "E 1",
+          "displayText": "1점(반응 없음)",
           "nextNodeIdentifier": "A_E_WRONG"
         }
       ]
@@ -1857,9 +2007,9 @@
     "A_E_WRONG": {
       "identifier": "A_E_WRONG",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_GCS_V",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 소리에 반응하고 있어. E 3으로 분류해야해.",
+      "nextIdentifier": "A_GCS_E",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 현재 눈을 감고 있다가, 질문을 하면 눈을 뜨고 있습니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -1879,31 +2029,31 @@
     "A_GCS_V": {
       "identifier": "A_GCS_V",
       "nodeType": "Choice",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 GCS V는...",
+      "speakerName": "시스템",
+      "dialogueContent": "관찰된 V(Verbal Response) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_b.gcs_v",
       "correctOptionIndex": 1,
       "options": [
         {
-          "displayText": "V 5",
+          "displayText": "5점(적절한 답변)",
           "nextNodeIdentifier": "A_V_WRONG"
         },
         {
-          "displayText": "V 4",
-          "nextNodeIdentifier": "A_V_CORRECT"
+          "displayText": "4점(혼란)",
+          "nextNodeIdentifier": "A_GCS_M"
         },
         {
-          "displayText": "V 3",
+          "displayText": "3점(부적절한 답변)",
           "nextNodeIdentifier": "A_V_WRONG"
         },
         {
-          "displayText": "V 2",
+          "displayText": "2점(신음소리)",
           "nextNodeIdentifier": "A_V_WRONG"
         },
         {
-          "displayText": "V 1",
+          "displayText": "1점(반응 없음)",
           "nextNodeIdentifier": "A_V_WRONG"
         }
       ]
@@ -1911,9 +2061,9 @@
     "A_V_WRONG": {
       "identifier": "A_V_WRONG",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_GCS_M",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류해야해.",
+      "nextIdentifier": "A_GCS_V",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 현재 환자는 시간대를 인지하지 못하며 혼란스러워하는 상태입니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -1933,35 +2083,35 @@
     "A_GCS_M": {
       "identifier": "A_GCS_M",
       "nodeType": "Choice",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 GCS M은...",
+      "speakerName": "시스템",
+      "dialogueContent": "관찰된 M(Motor Response) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_b.gcs_m",
       "correctOptionIndex": 0,
       "options": [
         {
-          "displayText": "M 6",
-          "nextNodeIdentifier": "A_M_CORRECT"
+          "displayText": "6점(명령 수행)",
+          "nextNodeIdentifier": "A_GCS_SUM1"
         },
         {
-          "displayText": "M 5",
+          "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
           "nextNodeIdentifier": "A_M_WRONG"
         },
         {
-          "displayText": "M 4",
+          "displayText": "4점(통증에 회피)",
           "nextNodeIdentifier": "A_M_WRONG"
         },
         {
-          "displayText": "M 3",
+          "displayText": "3점(이상 굴곡)",
           "nextNodeIdentifier": "A_M_WRONG"
         },
         {
-          "displayText": "M 2",
+          "displayText": "2점(이상 신전)",
           "nextNodeIdentifier": "A_M_WRONG"
         },
         {
-          "displayText": "M 1",
+          "displayText": "1점(반응 없음)",
           "nextNodeIdentifier": "A_M_WRONG"
         }
       ]
@@ -1969,9 +2119,9 @@
     "A_M_WRONG": {
       "identifier": "A_M_WRONG",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_GCS_SUM1",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 지시를 따라주었어. M 6으로 분류해야해.",
+      "nextIdentifier": "A_GCS_M",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 현재 움직임에 대한 명령을 잘 수행하고 있습니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 지시를 따라주었어. 엠 식스로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -1992,30 +2142,28 @@
       "identifier": "A_GCS_SUM1",
       "nodeType": "Dialogue",
       "nextIdentifier": "A_GCS_SUM2",
-      "speakerName": "@s",
-      "dialogueContent": "E는 3, V는 4.. M은 6이었으니까..",
-      "dialogueContentTTSPassing": "이는 쓰리, 브이는 포.. 엠은 식스였으니까..",
+      "speakerName": "시스템",
+      "dialogueContent": "GCS 측정 완료. E3 / V4 / M6 = 총 13점 (Drowsy/Lethargy) 입니다. 근력에 대한 추가 사정을 실시합니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "playTTS": false
+      "autoAdvanceSeconds": 5,
+      "playTTS": true
     },
     "A_GCS_SUM2": {
       "identifier": "A_GCS_SUM2",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_STRENGTH_TRANSITION",
-      "speakerName": "@s",
-      "dialogueContent": "E3 / V4 / M6, GCS 13점입니다.",
-      "dialogueContentTTSPassing": "이 쓰리, 브이 포, 엠 식스, 지 씨 에스 13점입니다.",
+      "nextIdentifier": "A_LEFT_GRADE",
+      "speakerName": "시스템",
+      "dialogueContent": "GCS의 M(Motor Response) 사정 중 왼쪽 다리가 오른쪽 다리의 정상 근력보다 약하고, 저항에 이기지 못하고 있습니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "playTTS": false
+      "autoAdvanceSeconds": 5,
+      "playTTS": true
     },
     "A_STRENGTH_TRANSITION": {
       "identifier": "A_STRENGTH_TRANSITION",
       "nodeType": "Dialogue",
       "nextIdentifier": "A_STRENGTH_Q",
       "speakerName": "@s",
-      "dialogueContent": "이제 근력을 확인해 보자.",
+      "dialogueContent": "근력은 어떻지..?",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -2135,41 +2283,45 @@
     "A_LEFT_GRADE": {
       "identifier": "A_LEFT_GRADE",
       "nodeType": "Choice",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 좌측 근력은",
+      "speakerName": "시스템",
+      "dialogueContent": "정상인 우측(5점)에 비해, 좌측의 근력 수준은?",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_b.motor_left",
-      "correctOptionIndex": 2,
+      "correctOptionIndex": 5,
       "options": [
         {
-          "displayText": "5점입니다",
+          "displayText": "5점(정상 근력)",
           "nextNodeIdentifier": "A_LEFT_WRONG"
         },
         {
-          "displayText": "4점입니다",
+          "displayText": "4점(중력+약간의 저항)",
           "nextNodeIdentifier": "A_LEFT_WRONG"
         },
         {
-          "displayText": "3점입니다",
+          "displayText": "2점(중력에 저항 불가, 좌우 운동)",
+          "nextNodeIdentifier": "A_LEFT_WRONG"
+        },
+        {
+          "displayText": "1점(약간의 근육 수축)",
+          "nextNodeIdentifier": "A_LEFT_WRONG"
+        },
+        {
+          "displayText": "0점(움직임 없음)",
+          "nextNodeIdentifier": "A_LEFT_WRONG"
+        },
+        {
+          "displayText": "3점(중력에 저항 가능)",
           "nextNodeIdentifier": "A_LEFT_CORRECT"
-        },
-        {
-          "displayText": "2점입니다",
-          "nextNodeIdentifier": "A_LEFT_WRONG"
-        },
-        {
-          "displayText": "1점입니다",
-          "nextNodeIdentifier": "A_LEFT_WRONG"
         }
       ]
     },
     "A_LEFT_WRONG": {
       "identifier": "A_LEFT_WRONG",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_RIGHT_GRADE",
-      "speakerName": "@t=[nurse_c, ???]",
-      "dialogueContent": "방금 이쪽 다리 그냥 눌리지 않았나요? 좌측은 3점으로 고치죠.",
+      "nextIdentifier": "A_LEFT_GRADE",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 현재 중력에는 저항 가능하나, 간호사가 저항을 가했을 때 이겨내지 못하는 상태입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -2177,12 +2329,12 @@
     "A_LEFT_CORRECT": {
       "identifier": "A_LEFT_CORRECT",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_RIGHT_GRADE",
-      "speakerName": "@s",
-      "dialogueContent": "(3점으로 기록했다.)",
+      "nextIdentifier": "A_STRENGTH_WAIT_UPDATE",
+      "speakerName": "간호사 A",
+      "dialogueContent": "현재 시나리오 B 환자의 GCS는 13점, 근력(Motor Grade)은 우측 5점, 좌측 3점입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
-      "playTTS": false
+      "playTTS": true
     },
     "A_RIGHT_GRADE": {
       "identifier": "A_RIGHT_GRADE",
@@ -3359,16 +3511,20 @@
     "C_A_AVPU": {
       "identifier": "C_A_AVPU",
       "nodeType": "Choice",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 AVPU는...",
+      "speakerName": "시스템",
+      "dialogueContent": "의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_c.avpu",
-      "correctOptionIndex": 3,
+      "correctOptionIndex": 1,
       "options": [
         {
           "displayText": "AVPU A",
           "nextNodeIdentifier": "C_A_AVPU_WRONG_A"
+        },
+        {
+          "displayText": "AVPU V",
+          "nextNodeIdentifier": "C_A_GCS_E"
         },
         {
           "displayText": "AVPU P",
@@ -3377,19 +3533,15 @@
         {
           "displayText": "AVPU U",
           "nextNodeIdentifier": "C_A_AVPU_WRONG_U"
-        },
-        {
-          "displayText": "AVPU V",
-          "nextNodeIdentifier": "C_A_AVPU_CORRECT"
         }
       ]
     },
     "C_A_AVPU_WRONG_A": {
       "identifier": "C_A_AVPU_WRONG_A",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_GCS_E",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. V로 분류해야해.",
+      "nextIdentifier": "C_A_AVPU",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -3398,9 +3550,9 @@
     "C_A_AVPU_WRONG_P": {
       "identifier": "C_A_AVPU_WRONG_P",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_GCS_E",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
+      "nextIdentifier": "C_A_AVPU",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -3409,9 +3561,9 @@
     "C_A_AVPU_WRONG_U": {
       "identifier": "C_A_AVPU_WRONG_U",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_GCS_E",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
+      "nextIdentifier": "C_A_AVPU",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -3431,27 +3583,27 @@
     "C_A_GCS_E": {
       "identifier": "C_A_GCS_E",
       "nodeType": "Choice",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 GCS E는...",
+      "speakerName": "시스템",
+      "dialogueContent": "관찰된 E(Eye Opening) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_c.gcs_e",
       "correctOptionIndex": 1,
       "options": [
         {
-          "displayText": "E 4",
+          "displayText": "4점(자발적)",
           "nextNodeIdentifier": "C_A_E_WRONG"
         },
         {
-          "displayText": "E 3",
-          "nextNodeIdentifier": "C_A_E_CORRECT"
+          "displayText": "3점(명령)",
+          "nextNodeIdentifier": "C_A_GCS_V"
         },
         {
-          "displayText": "E 2",
+          "displayText": "2점(통증)",
           "nextNodeIdentifier": "C_A_E_WRONG"
         },
         {
-          "displayText": "E 1",
+          "displayText": "1점(반응 없음)",
           "nextNodeIdentifier": "C_A_E_WRONG"
         }
       ]
@@ -3459,9 +3611,9 @@
     "C_A_E_WRONG": {
       "identifier": "C_A_E_WRONG",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_GCS_V",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 소리에 반응하고 있어. E 3으로 분류해야해.",
+      "nextIdentifier": "C_A_GCS_E",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 현재 눈을 감고 있다가, 질문을 하면 눈을 뜨고 있습니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -3481,31 +3633,31 @@
     "C_A_GCS_V": {
       "identifier": "C_A_GCS_V",
       "nodeType": "Choice",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 GCS V는...",
+      "speakerName": "시스템",
+      "dialogueContent": "관찰된 V(Verbal Response) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_c.gcs_v",
       "correctOptionIndex": 1,
       "options": [
         {
-          "displayText": "V 5",
+          "displayText": "5점(적절한 답변)",
           "nextNodeIdentifier": "C_A_V_WRONG"
         },
         {
-          "displayText": "V 4",
-          "nextNodeIdentifier": "C_A_V_CORRECT"
+          "displayText": "4점(혼란)",
+          "nextNodeIdentifier": "C_A_GCS_M"
         },
         {
-          "displayText": "V 3",
+          "displayText": "3점(부적절한 답변)",
           "nextNodeIdentifier": "C_A_V_WRONG"
         },
         {
-          "displayText": "V 2",
+          "displayText": "2점(신음소리)",
           "nextNodeIdentifier": "C_A_V_WRONG"
         },
         {
-          "displayText": "V 1",
+          "displayText": "1점(반응 없음)",
           "nextNodeIdentifier": "C_A_V_WRONG"
         }
       ]
@@ -3513,9 +3665,9 @@
     "C_A_V_WRONG": {
       "identifier": "C_A_V_WRONG",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_GCS_M",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류해야해.",
+      "nextIdentifier": "C_A_GCS_V",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 현재 환자는 시간대를 인지하지 못하며 혼란스러워하는 상태입니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -3535,35 +3687,35 @@
     "C_A_GCS_M": {
       "identifier": "C_A_GCS_M",
       "nodeType": "Choice",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 GCS M은...",
+      "speakerName": "시스템",
+      "dialogueContent": "관찰된 M(Motor Response) 점수는 몇 점입니까?",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_c.gcs_m",
       "correctOptionIndex": 0,
       "options": [
         {
-          "displayText": "M 6",
-          "nextNodeIdentifier": "C_A_M_CORRECT"
+          "displayText": "6점(명령 수행)",
+          "nextNodeIdentifier": "C_A_GCS_SUM1"
         },
         {
-          "displayText": "M 5",
+          "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
           "nextNodeIdentifier": "C_A_M_WRONG"
         },
         {
-          "displayText": "M 4",
+          "displayText": "4점(통증에 회피)",
           "nextNodeIdentifier": "C_A_M_WRONG"
         },
         {
-          "displayText": "M 3",
+          "displayText": "3점(이상 굴곡)",
           "nextNodeIdentifier": "C_A_M_WRONG"
         },
         {
-          "displayText": "M 2",
+          "displayText": "2점(이상 신전)",
           "nextNodeIdentifier": "C_A_M_WRONG"
         },
         {
-          "displayText": "M 1",
+          "displayText": "1점(반응 없음)",
           "nextNodeIdentifier": "C_A_M_WRONG"
         }
       ]
@@ -3571,9 +3723,9 @@
     "C_A_M_WRONG": {
       "identifier": "C_A_M_WRONG",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_GCS_SUM1",
-      "speakerName": "@s",
-      "dialogueContent": "아니야, 이 환자는 지시를 따라주었어. M 6으로 분류해야해.",
+      "nextIdentifier": "C_A_GCS_M",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 현재 움직임에 대한 명령을 잘 수행하고 있습니다.",
       "dialogueContentTTSPassing": "아니야, 이 환자는 지시를 따라주었어. 엠 식스로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
@@ -3594,30 +3746,28 @@
       "identifier": "C_A_GCS_SUM1",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_GCS_SUM2",
-      "speakerName": "@s",
-      "dialogueContent": "E는 3, V는 4.. M은 6이었으니까..",
-      "dialogueContentTTSPassing": "이는 쓰리, 브이는 포.. 엠은 식스이었으니까..",
+      "speakerName": "시스템",
+      "dialogueContent": "GCS 측정 완료. E3 / V4 / M6 = 총 13점 (Drowsy/Lethargy) 입니다. 근력에 대한 추가 사정을 실시합니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "playTTS": false
+      "autoAdvanceSeconds": 5,
+      "playTTS": true
     },
     "C_A_GCS_SUM2": {
       "identifier": "C_A_GCS_SUM2",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_STRENGTH_TRANSITION",
-      "speakerName": "@s",
-      "dialogueContent": "E3 / V4 / M6, GCS 13점입니다.",
-      "dialogueContentTTSPassing": "이 쓰리, 브이 포, 엠 식스, 지 씨 에스 13점입니다.",
+      "nextIdentifier": "C_A_RIGHT_GRADE",
+      "speakerName": "시스템",
+      "dialogueContent": "GCS의 M(Motor Response) 사정 중 오른쪽 다리가 왼쪽 다리의 정상 근력보다 약하고, 간호사가 가하는 저항에 이기지 못하고 있습니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "playTTS": false
+      "autoAdvanceSeconds": 5,
+      "playTTS": true
     },
     "C_A_STRENGTH_TRANSITION": {
       "identifier": "C_A_STRENGTH_TRANSITION",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_STRENGTH_Q",
       "speakerName": "@s",
-      "dialogueContent": "이제 근력을 확인해 보자.",
+      "dialogueContent": "근력은 어떻지..?",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -3789,41 +3939,45 @@
     "C_A_RIGHT_GRADE": {
       "identifier": "C_A_RIGHT_GRADE",
       "nodeType": "Choice",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 우측 근력은",
+      "speakerName": "시스템",
+      "dialogueContent": "정상인 좌측(5점)에 비해, 우측의 근력 수준은?",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
       "assessmentIdentifier": "patient_c.motor_right",
-      "correctOptionIndex": 2,
+      "correctOptionIndex": 5,
       "options": [
         {
-          "displayText": "5점입니다",
+          "displayText": "5점(정상 근력)",
           "nextNodeIdentifier": "C_A_RIGHT_WRONG"
         },
         {
-          "displayText": "4점입니다",
+          "displayText": "4점(중력+약간의 저항)",
           "nextNodeIdentifier": "C_A_RIGHT_WRONG"
         },
         {
-          "displayText": "3점입니다",
+          "displayText": "2점(중력에 저항 불가, 좌우 운동)",
+          "nextNodeIdentifier": "C_A_RIGHT_WRONG"
+        },
+        {
+          "displayText": "1점(약간의 근육 수축)",
+          "nextNodeIdentifier": "C_A_RIGHT_WRONG"
+        },
+        {
+          "displayText": "0점(움직임 없음)",
+          "nextNodeIdentifier": "C_A_RIGHT_WRONG"
+        },
+        {
+          "displayText": "3점(중력에 저항 가능)",
           "nextNodeIdentifier": "C_A_RIGHT_CORRECT"
-        },
-        {
-          "displayText": "2점입니다",
-          "nextNodeIdentifier": "C_A_RIGHT_WRONG"
-        },
-        {
-          "displayText": "1점입니다",
-          "nextNodeIdentifier": "C_A_RIGHT_WRONG"
         }
       ]
     },
     "C_A_RIGHT_WRONG": {
       "identifier": "C_A_RIGHT_WRONG",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_RIGHT_CORRECT",
-      "speakerName": "@t=[nurse_c, ???]",
-      "dialogueContent": "방금 이쪽 다리 그냥 눌리지 않았나요? 우측은 3점으로 고치죠.",
+      "nextIdentifier": "C_A_RIGHT_GRADE",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 현재 중력에는 저항 가능하나, 간호사가 저항을 가했을 때 이겨내지 못하는 상태입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -3831,12 +3985,12 @@
     "C_A_RIGHT_CORRECT": {
       "identifier": "C_A_RIGHT_CORRECT",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_FINAL_SUMMARY",
-      "speakerName": "@s",
-      "dialogueContent": "(3점으로 기록했다.)",
+      "nextIdentifier": "C_A_STRENGTH_WAIT_UPDATE",
+      "speakerName": "간호사 B",
+      "dialogueContent": "현재 시나리오 C 환자의 GCS는 13점, 근력(Motor Grade)은 좌측 5점, 우측 3점입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
-      "playTTS": false
+      "playTTS": true
     },
     "C_A_FINAL_SUMMARY": {
       "identifier": "C_A_FINAL_SUMMARY",
@@ -4681,9 +4835,9 @@
       "identifier": "CT_DOCTOR_ORDER",
       "nodeType": "Dialogue",
       "nextIdentifier": "CT_DOCTOR_MARK_HIDE",
-      "speakerName": "의사",
-      "dialogueContent": "두 분 다 뇌손상이 의심되니 브레인 CT 찍어봅시다. 환자들을 CT실로 옮겨주세요.",
-      "dialogueContentTTSPassing": "두 분 다 뇌손상이 의심되니 브레인 씨티 찍어봅시다. 환자들을 씨티실로 옮겨주세요.",
+      "speakerName": "의사 NPC",
+      "dialogueContent": "기전과 사정 결과를 보니 뇌손상이 의심됩니다. 활력징후는 비교적 안정되어 있으니 지금 Brain CT 찍겠습니다. 지금 환자를 CT실로 이동시켜주세요.",
+      "dialogueContentTTSPassing": "기전과 사정 결과를 보니 뇌손상이 의심됩니다. 활력징후는 비교적 안정되어 있으니 지금 브레인 씨티 찍겠습니다. 지금 환자를 씨티실로 이동시켜주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": true,
@@ -4870,7 +5024,7 @@
       "nodeType": "DisinteractableDialogue",
       "nextIdentifier": null,
       "speakerName": "시스템",
-      "dialogueContent": "시나리오를 완료하였습니다.",
+      "dialogueContent": "시나리오 B, C 환자 대응 종료. 모든 시나리오를 수행하였습니다.",
       "portraitSpriteIdentifier": null,
       "fadeInDuration": { "value": 0.2, "unit": "Seconds" },
       "displayDuration": { "value": 3, "unit": "Seconds" },
