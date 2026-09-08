@@ -35,7 +35,7 @@
   flex-direction: column;
   gap: 16px;
   min-width: 0;
-  flex-shrink: 1;
+  flex-shrink: 0;
 }
 
 .panel-wide {

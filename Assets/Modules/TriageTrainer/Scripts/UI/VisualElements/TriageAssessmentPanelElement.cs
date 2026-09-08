@@ -27,6 +27,7 @@ namespace TriageTrainer.UI
 
     public TriageAssessmentPanelElement()
     {
+      name = "triage-assessment-panel";
       // 전체화면 반투명 backdrop.
       style.position = Position.Absolute;
       style.left = 0;
@@ -38,6 +39,14 @@ namespace TriageTrainer.UI
       style.justifyContent = Justify.Center;
       style.backgroundColor = new Color(0f, 0f, 0f, 0.55f);
 
+      var scroll = new ScrollView(ScrollViewMode.Vertical) { name = "triage-assessment-scroll" };
+      scroll.style.width = Length.Percent(100);
+      scroll.style.maxHeight = Length.Percent(100);
+      scroll.contentContainer.style.alignItems = Align.Center;
+      scroll.contentContainer.style.paddingTop = 16;
+      scroll.contentContainer.style.paddingBottom = 16;
+      Add(scroll);
+
       var title = new Label("트리아지 분류");
       title.style.color = Color.white;
       title.style.fontSize = 26;
@@ -45,28 +54,31 @@ namespace TriageTrainer.UI
       title.style.marginBottom = 6;
       title.style.unityTextOutlineWidth = 0.75f;
       title.style.unityTextOutlineColor = new Color(0f, 0f, 0f, 0.8f);
-      Add(title);
+      scroll.Add(title);
 
       var hint = new Label("환자 상태에 맞는 등급을 선택하세요.");
       hint.style.color = new Color(0.9f, 0.9f, 0.9f, 1f);
       hint.style.fontSize = 15;
       hint.style.marginBottom = 20;
-      Add(hint);
+      scroll.Add(hint);
 
       _row = new VisualElement();
       _row.style.flexDirection = FlexDirection.Row;
       _row.style.alignItems = Align.Center;
       _row.style.justifyContent = Justify.Center;
-      Add(_row);
+      _row.style.flexWrap = Wrap.Wrap;
+      _row.style.width = Length.Percent(100);
+      _row.style.flexShrink = 0;
+      scroll.Add(_row);
 
-      var cancel = new Button(() => CancelRequested?.Invoke()) { text = "취소" };
+      var cancel = new Button(() => CancelRequested?.Invoke()) { text = "취소", name = "triage-assessment-cancel" };
       cancel.style.marginTop = 24;
       cancel.style.paddingLeft = 20;
       cancel.style.paddingRight = 20;
       cancel.style.paddingTop = 8;
       cancel.style.paddingBottom = 8;
       cancel.style.fontSize = 16;
-      Add(cancel);
+      scroll.Add(cancel);
 
       BuildSquares();
     }
@@ -109,9 +121,12 @@ namespace TriageTrainer.UI
       var color = TriageLevelInfo.GetColor(level);
       var textColor = TriageLevelInfo.GetTextColor(level);
 
-      var square = new VisualElement();
+      var square = new VisualElement { name = "triage-level-" + level.ToString().ToLowerInvariant() };
       square.style.width = 150;
       square.style.height = 150;
+      square.style.flexShrink = 0;
+      square.style.marginTop = 8;
+      square.style.marginBottom = 8;
       square.style.marginLeft = 8;
       square.style.marginRight = 8;
       square.style.backgroundColor = color;

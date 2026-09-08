@@ -4,7 +4,7 @@
 >
   <ui:Style src="SceneUIIntroScene.uss" />
   <ui:VisualElement class="root">
-    <ui:VisualElement class="intro-card">
+    <ui:ScrollView name="introMenuScroll" class="intro-card" mode="Vertical" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Auto">
 
       <!-- ═══ Main Menu Panel ═══ -->
       <ui:VisualElement name="mainPanel" class="panel">
@@ -67,7 +67,7 @@
         </ui:VisualElement>
       </ui:VisualElement>
 
-    </ui:VisualElement>
+    </ui:ScrollView>
 
     <ui:Label name="statusLabel" class="status" text="" />
   </ui:VisualElement>
