@@ -461,7 +461,9 @@ namespace MultiplayerInfrastructure.Player
     public void UnlockCursor() { ChangeCursorLock(false); }
 
     /// <summary>
-    /// 현재 피어에서 활성화된 모든 플레이어 CharacterController 쌍의 물리 충돌을 무시한다.
+    /// 현재 피어에서 활성화된 플레이어끼리의 모든 물리 충돌을 무시한다.
+    /// CharacterController 외에 캐릭터 모델이 보유한 Collider도 포함해야, 폴백 모델처럼
+    /// 별도 CapsuleCollider를 가진 경우에도 플레이어가 서로 밀려나지 않는다.
     /// 플레이어는 서로 통과할 수 있지만, 월드·환자·침대 등 다른 Collider와의 충돌은 유지한다.
     /// </summary>
     private void IgnoreCollisionsWithActivePlayers()
@@ -469,26 +471,31 @@ namespace MultiplayerInfrastructure.Player
       if (_characterController == null)
         _characterController = GetComponent<CharacterController>();
 
-      if (_characterController == null)
-        return;
-
       var players = FindObjectsByType<PlayerController>(
         FindObjectsInactive.Exclude,
         FindObjectsSortMode.None);
+
+      var ownColliders = GetComponentsInChildren<Collider>(includeInactive: false);
+      if (ownColliders.Length == 0)
+        return;
 
       foreach (var player in players)
       {
         if (player == null || ReferenceEquals(player, this))
           continue;
 
-        var otherController = player._characterController;
-        if (otherController == null)
-          otherController = player.GetComponent<CharacterController>();
+        var otherColliders = player.GetComponentsInChildren<Collider>(includeInactive: false);
+        foreach (var ownCollider in ownColliders)
+        {
+          if (ownCollider == null)
+            continue;
 
-        if (otherController == null)
-          continue;
-
-        Physics.IgnoreCollision(_characterController, otherController, true);
+          foreach (var otherCollider in otherColliders)
+          {
+            if (otherCollider != null)
+              Physics.IgnoreCollision(ownCollider, otherCollider, true);
+          }
+        }
       }
     }
 
