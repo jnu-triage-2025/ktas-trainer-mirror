@@ -77,33 +77,48 @@
       "nextIdentifier": "C_role_select",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "P001": {
       "identifier": "P001",
       "nodeType": "Parallel",
       "waitMode": "All",
-      "allocationType": "SelfAll",
+      "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "N001",
           "completionConditionIdentifier": "CC_A_Triage",
-          "requiredPlayerTags": [],
+          "requiredPlayerTags": [
+            "nurse_a"
+          ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         },
         {
           "identifier": "N002",
           "completionConditionIdentifier": "CC_BC_Ready",
-          "requiredPlayerTags": [],
+          "requiredPlayerTags": [
+            "nurse_b"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "N002_C",
+          "completionConditionIdentifier": "CC_BC_Ready",
+          "requiredPlayerTags": [
+            "nurse_c"
+          ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         },
         {
           "identifier": "N003",
           "completionConditionIdentifier": "CC_D_Ready",
-          "requiredPlayerTags": [],
+          "requiredPlayerTags": [
+            "nurse_d"
+          ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
@@ -120,7 +135,7 @@
       "nextIdentifier": "Q001",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "Q001": {
       "identifier": "Q001",
@@ -155,7 +170,7 @@
       "nextIdentifier": "q002_item",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "q002_item": {
       "identifier": "q002_item",
@@ -232,7 +247,7 @@
       "nextIdentifier": "E001",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "E001": {
       "identifier": "E001",
@@ -251,7 +266,7 @@
       "nextIdentifier": "N001_2",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_2": {
       "identifier": "N001_2",
@@ -263,7 +278,7 @@
       "nextIdentifier": "V002",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "V002": {
       "identifier": "V002",
@@ -298,7 +313,7 @@
       "nextIdentifier": "INFO_A_2",
       "playTTS": false,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "INFO_A_2": {
       "identifier": "INFO_A_2",
@@ -310,7 +325,7 @@
       "nextIdentifier": "C001",
       "playTTS": false,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C001": {
       "identifier": "C001",
@@ -354,7 +369,7 @@
       "nextIdentifier": "C001",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_3": {
       "identifier": "N001_3",
@@ -366,7 +381,7 @@
       "nextIdentifier": "V003",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "V003": {
       "identifier": "V003",
@@ -401,7 +416,7 @@
       "nextIdentifier": "C002",
       "playTTS": false,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C002": {
       "identifier": "C002",
@@ -445,7 +460,7 @@
       "nextIdentifier": "C002",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_4": {
       "identifier": "N001_4",
@@ -457,7 +472,7 @@
       "nextIdentifier": "N001_5",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_5": {
       "identifier": "N001_5",
@@ -469,7 +484,7 @@
       "nextIdentifier": "V004",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "V004": {
       "identifier": "V004",
@@ -512,7 +527,19 @@
       "nextIdentifier": "Q003",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "N002_C": {
+      "identifier": "N002_C",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "KTAS 1(소생) 환자에 대비하기 위해 처치실로 이동하세요.",
+      "dialogueContentTTSPassing": "케이타스 원 소생 환자에 대비하기 위해 처치실로 이동하세요.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "N002",
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "Q003": {
       "identifier": "Q003",
@@ -569,7 +596,7 @@
       "nextIdentifier": "CC_BC_Ready",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "CC_BC_Ready": {
       "identifier": "CC_BC_Ready",
@@ -589,7 +616,7 @@
       "nextIdentifier": "Q004",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "Q004": {
       "identifier": "Q004",
@@ -625,7 +652,7 @@
       "nextIdentifier": "q006",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "q006": {
       "identifier": "q006",
@@ -698,7 +725,7 @@
       "nextIdentifier": "q007",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "q007": {
       "identifier": "q007",
@@ -777,7 +804,7 @@
       "nextIdentifier": "q008",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "q008": {
       "identifier": "q008",
@@ -904,7 +931,7 @@
       "nextIdentifier": null,
       "playTTS": true,
       "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C_role_select": {
       "identifier": "C_role_select",
