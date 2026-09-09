@@ -128,7 +128,7 @@
     "N001": {
       "identifier": "N001",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "중증도 분류 구역으로 이동하세요.",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
@@ -162,7 +162,7 @@
     "N001_1": {
       "identifier": "N001_1",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "카트 위 활력징후 측정도구를 획득하세요.",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
@@ -271,7 +271,7 @@
     "N001_2": {
       "identifier": "N001_2",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "환자를 차례대로 클릭하여 환자의 상태를 확인하고, 중증도 분류를 실시하세요.",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
@@ -306,7 +306,7 @@
     "INFO_A_1": {
       "identifier": "INFO_A_1",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "외양: 흉부 관통상, 다량의 출혈, 피부 창백하고 차가움\n빈맥\n불규칙한 서호흡\n의식 상태: 대화가 불가능하고 신음소리만 내고 있음",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
@@ -318,7 +318,7 @@
     "INFO_A_2": {
       "identifier": "INFO_A_2",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "활력징후 측정 결과:\n혈압: 70/40mmHg\n맥박: 140회/분 (빠르고 약함)\n호흡수: 8회/분\n체온: 35.9도\nSpO2: 82%",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
@@ -357,12 +357,13 @@
       ],
       "nextIdentifier": null,
       "playTTS": true,
-      "ttsVoiceIdentifier": null
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_retry_a": {
       "identifier": "N001_retry_a",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, KTAS 1(소생)이 적절합니다.",
       "dialogueContentTTSPassing": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, 케이타스 원 소생이 적절합니다.",
       "portraitSpriteIdentifier": null,
@@ -374,7 +375,7 @@
     "N001_3": {
       "identifier": "N001_3",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "해당 환자를 KTAS 1으로 분류했습니다. 다음 환자를 클릭하세요.",
       "dialogueContentTTSPassing": "해당 환자를 케이타스 원으로 분류했습니다. 다음 환자를 클릭하세요.",
       "portraitSpriteIdentifier": null,
@@ -409,7 +410,7 @@
     "INFO_D_1": {
       "identifier": "INFO_D_1",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "외양: 사지에 약간의 타박상\n현재 의식 상태: 원활한 대화 가능\n활력징후 정상\nC/C: 하지 통증",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
@@ -448,12 +449,13 @@
       ],
       "nextIdentifier": null,
       "playTTS": true,
-      "ttsVoiceIdentifier": null
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_retry_b": {
       "identifier": "N001_retry_b",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다.",
       "dialogueContentTTSPassing": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 케이타스 파이브 비응급 상태로 보입니다.",
       "portraitSpriteIdentifier": null,
@@ -465,7 +467,7 @@
     "N001_4": {
       "identifier": "N001_4",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "해당 환자를 KTAS 5로 분류했습니다.",
       "dialogueContentTTSPassing": "해당 환자를 케이타스 파이브로 분류했습니다.",
       "portraitSpriteIdentifier": null,
@@ -477,7 +479,7 @@
     "N001_5": {
       "identifier": "N001_5",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "이제 치료를 위해 이송할 긴급 환자를 클릭하세요.",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
@@ -520,7 +522,7 @@
     "N002": {
       "identifier": "N002",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "KTAS 1(소생) 환자에 대비하기 위해 처치실로 이동하세요.",
       "dialogueContentTTSPassing": "케이타스 원 소생 환자에 대비하기 위해 처치실로 이동하세요.",
       "portraitSpriteIdentifier": null,
@@ -532,7 +534,7 @@
     "N002_C": {
       "identifier": "N002_C",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "KTAS 1(소생) 환자에 대비하기 위해 처치실로 이동하세요.",
       "dialogueContentTTSPassing": "케이타스 원 소생 환자에 대비하기 위해 처치실로 이동하세요.",
       "portraitSpriteIdentifier": null,
@@ -589,7 +591,7 @@
     "N002_1": {
       "identifier": "N002_1",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "처치실에 있는 물품의 위치를 확인하세요.",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
@@ -609,7 +611,7 @@
     "N003": {
       "identifier": "N003",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "준비실로 이동하세요.",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
@@ -643,7 +645,7 @@
     "N003_1": {
       "identifier": "N003_1",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "생리식염수 1L 수액백과 수액세트를 각각 획득하세요.",
       "dialogueContentTTSPassing": "생리식염수 1리터 수액백과 수액세트를 각각 획득하세요.",
       "portraitSpriteIdentifier": null,
@@ -717,7 +719,7 @@
     "N003_2": {
       "identifier": "N003_2",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "플라즈마 솔루션 1L 수액백과 수액세트를 획득하세요.",
       "dialogueContentTTSPassing": "플라즈마 솔루션 1리터 수액백과 수액세트를 획득하세요.",
       "portraitSpriteIdentifier": null,
@@ -796,7 +798,7 @@
     "N003_3": {
       "identifier": "N003_3",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "수액 준비가 완료되었습니다. 혈액백을 클릭해 획득하세요.",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
@@ -924,7 +926,7 @@
     "N004": {
       "identifier": "N004",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "초기 대응과 중증도 분류를 완료했습니다. 다음 처치 시나리오를 진행합니다.",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
@@ -959,7 +961,8 @@
       ],
       "nextIdentifier": null,
       "playTTS": true,
-      "ttsVoiceIdentifier": null
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "TAG_a_0": {
       "identifier": "TAG_a_0",

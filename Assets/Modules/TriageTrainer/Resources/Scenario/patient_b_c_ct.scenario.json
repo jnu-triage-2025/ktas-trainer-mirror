@@ -1699,8 +1699,8 @@
       "identifier": "A_REC1_NOTE",
       "nodeType": "Dialogue",
       "nextIdentifier": "A_REC2_ACT",
-      "speakerName": "@s",
-      "dialogueContent": "(환자는 잠시 눈을 뜨더니 다시 눈을 감는다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 환자가 잠시 눈을 떴다가 다시 감습니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": null,
@@ -1761,8 +1761,8 @@
       "identifier": "A_REC2_NOTE",
       "nodeType": "Dialogue",
       "nextIdentifier": "A_REC3_ACT",
-      "speakerName": "@s",
-      "dialogueContent": "(이 환자는 말에 조금 늦게 반응하고 있다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 환자가 말에 다소 늦게 반응합니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": null,
@@ -1823,7 +1823,7 @@
       "identifier": "A_REC3_DOTS",
       "nodeType": "Dialogue",
       "nextIdentifier": "A_REC3_NOTE",
-      "speakerName": "@s",
+      "speakerName": "시스템",
       "dialogueContent": "...",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -1833,8 +1833,8 @@
       "identifier": "A_REC3_NOTE",
       "nodeType": "Dialogue",
       "nextIdentifier": "A_REC4_ACT",
-      "speakerName": "@s",
-      "dialogueContent": "(이 환자는 무슨 일이 있었는지 기억을 못하는 것 같다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 환자가 사고 경위를 기억하지 못합니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": null,
@@ -1895,8 +1895,8 @@
       "identifier": "A_REC4_NOTE",
       "nodeType": "Dialogue",
       "nextIdentifier": "A_RECOG_REMOVE",
-      "speakerName": "@s",
-      "dialogueContent": "(불평을 하면서도 환자는 다리를 움직인다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 환자가 불평하면서도 다리를 움직입니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": null,
@@ -1948,7 +1948,7 @@
         },
         {
           "displayText": "AVPU V",
-          "nextNodeIdentifier": "A_GCS_E"
+          "nextNodeIdentifier": "A_AVPU_CORRECT"
         },
         {
           "displayText": "AVPU P",
@@ -2020,7 +2020,7 @@
         },
         {
           "displayText": "3점(명령)",
-          "nextNodeIdentifier": "A_GCS_V"
+          "nextNodeIdentifier": "A_E_CORRECT"
         },
         {
           "displayText": "2점(통증)",
@@ -2070,7 +2070,7 @@
         },
         {
           "displayText": "4점(혼란)",
-          "nextNodeIdentifier": "A_GCS_M"
+          "nextNodeIdentifier": "A_V_CORRECT"
         },
         {
           "displayText": "3점(부적절한 답변)",
@@ -2120,7 +2120,7 @@
       "options": [
         {
           "displayText": "6점(명령 수행)",
-          "nextNodeIdentifier": "A_GCS_SUM1"
+          "nextNodeIdentifier": "A_M_CORRECT"
         },
         {
           "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
@@ -2174,7 +2174,8 @@
       "dialogueContent": "GCS 측정 완료. E3 / V4 / M6 = 총 13점 (Drowsy/Lethargy) 입니다. 근력에 대한 추가 사정을 실시합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 5,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "A_GCS_SUM2": {
       "identifier": "A_GCS_SUM2",
@@ -2184,7 +2185,8 @@
       "dialogueContent": "GCS의 M(Motor Response) 사정 중 왼쪽 다리가 오른쪽 다리의 정상 근력보다 약하고, 저항에 이기지 못하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 5,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "A_STRENGTH_TRANSITION": {
       "identifier": "A_STRENGTH_TRANSITION",
@@ -2302,8 +2304,8 @@
       "identifier": "A_LEFT_RESULT",
       "nodeType": "Dialogue",
       "nextIdentifier": "A_LEFT_GRADE",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 다리가 맥없이 눌린다.",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 좌측 다리가 저항 없이 눌립니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -2357,12 +2359,13 @@
     "A_LEFT_CORRECT": {
       "identifier": "A_LEFT_CORRECT",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_STRENGTH_WAIT_UPDATE",
-      "speakerName": "간호사 A",
-      "dialogueContent": "현재 시나리오 B 환자의 GCS는 13점, 근력(Motor Grade)은 우측 5점, 좌측 3점입니다.",
+      "nextIdentifier": "A_RIGHT_GRADE",
+      "speakerName": "@s",
+      "dialogueContent": "좌측 근력을 3점으로 기록했다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F1" }
     },
     "A_RIGHT_GRADE": {
       "identifier": "A_RIGHT_GRADE",
@@ -2415,7 +2418,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "A_FINAL_SUMMARY",
       "speakerName": "@s",
-      "dialogueContent": "(5점으로 기록했다.)",
+      "dialogueContent": "우측 근력을 5점으로 기록했다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -2737,8 +2740,8 @@
       "identifier": "C_PUPIL_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_PUPIL_2",
-      "speakerName": "@s",
-      "dialogueContent": "(펜라이트를 환자의 양쪽 눈에 비춘다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 펜라이트로 양쪽 동공을 확인합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -2747,8 +2750,8 @@
       "identifier": "C_PUPIL_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_PUPIL_3",
-      "speakerName": "@s",
-      "dialogueContent": "(이 환자의 좌측 동공이 빛에 반응하지 않는다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 좌측 동공이 빛에 반응하지 않습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -2757,8 +2760,8 @@
       "identifier": "C_PUPIL_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_IV_WAIT",
-      "speakerName": "@s",
-      "dialogueContent": "(이 환자의 우측 동공은 빛에 반응한다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 우측 동공이 빛에 반응합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -3311,8 +3314,8 @@
       "identifier": "C_A_REC1_NOTE",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_REC2_ACT",
-      "speakerName": "@s",
-      "dialogueContent": "(환자는 잠시 눈을 뜨더니 다시 눈을 감는다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 환자가 잠시 눈을 떴다가 다시 감습니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": null,
@@ -3373,8 +3376,8 @@
       "identifier": "C_A_REC2_NOTE",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_REC3_ACT",
-      "speakerName": "@s",
-      "dialogueContent": "(이 환자는 말에 조금 늦게 반응하고 있다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 환자가 말에 다소 늦게 반응합니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": null,
@@ -3435,7 +3438,7 @@
       "identifier": "C_A_REC3_DOTS",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_REC3_NOTE",
-      "speakerName": "@s",
+      "speakerName": "시스템",
       "dialogueContent": "...",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -3445,8 +3448,8 @@
       "identifier": "C_A_REC3_NOTE",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_REC4_ACT",
-      "speakerName": "@s",
-      "dialogueContent": "(이 환자는 무슨 일이 있었는지 기억을 못하는 것 같다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 환자가 사고 경위를 기억하지 못합니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": null,
@@ -3507,8 +3510,8 @@
       "identifier": "C_A_REC4_NOTE",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_RECOG_REMOVE",
-      "speakerName": "@s",
-      "dialogueContent": "(불평을 하면서도 환자는 다리를 움직인다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 환자가 불평하면서도 다리를 움직입니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": null,
@@ -3560,7 +3563,7 @@
         },
         {
           "displayText": "AVPU V",
-          "nextNodeIdentifier": "C_A_GCS_E"
+          "nextNodeIdentifier": "C_A_AVPU_CORRECT"
         },
         {
           "displayText": "AVPU P",
@@ -3632,7 +3635,7 @@
         },
         {
           "displayText": "3점(명령)",
-          "nextNodeIdentifier": "C_A_GCS_V"
+          "nextNodeIdentifier": "C_A_E_CORRECT"
         },
         {
           "displayText": "2점(통증)",
@@ -3682,7 +3685,7 @@
         },
         {
           "displayText": "4점(혼란)",
-          "nextNodeIdentifier": "C_A_GCS_M"
+          "nextNodeIdentifier": "C_A_V_CORRECT"
         },
         {
           "displayText": "3점(부적절한 답변)",
@@ -3732,7 +3735,7 @@
       "options": [
         {
           "displayText": "6점(명령 수행)",
-          "nextNodeIdentifier": "C_A_GCS_SUM1"
+          "nextNodeIdentifier": "C_A_M_CORRECT"
         },
         {
           "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
@@ -3786,7 +3789,8 @@
       "dialogueContent": "GCS 측정 완료. E3 / V4 / M6 = 총 13점 (Drowsy/Lethargy) 입니다. 근력에 대한 추가 사정을 실시합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 5,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C_A_GCS_SUM2": {
       "identifier": "C_A_GCS_SUM2",
@@ -3796,7 +3800,8 @@
       "dialogueContent": "GCS의 M(Motor Response) 사정 중 오른쪽 다리가 왼쪽 다리의 정상 근력보다 약하고, 간호사가 가하는 저항에 이기지 못하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 5,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C_A_STRENGTH_TRANSITION": {
       "identifier": "C_A_STRENGTH_TRANSITION",
@@ -3878,8 +3883,8 @@
       "identifier": "C_A_RIGHT_RESULT",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_LEFT_LEG",
-      "speakerName": "@s",
-      "dialogueContent": "환자의 다리가 맥없이 눌린다.",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 우측 다리가 저항 없이 눌립니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -3914,8 +3919,8 @@
       "identifier": "C_A_LEFT_RESULT",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_LEFT_GRADE",
-      "speakerName": "@s",
-      "dialogueContent": "눌리지 않는다.",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 좌측 다리가 저항에 눌리지 않습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -3971,7 +3976,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_RIGHT_GRADE",
       "speakerName": "@s",
-      "dialogueContent": "(5점으로 기록했다.)",
+      "dialogueContent": "좌측 근력을 5점으로 기록했다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -4009,8 +4014,7 @@
         {
           "displayText": "0점(움직임 없음)",
           "nextNodeIdentifier": "C_A_RIGHT_WRONG"
-        },
-        
+        }
       ]
     },
     "C_A_RIGHT_WRONG": {
@@ -4026,12 +4030,13 @@
     "C_A_RIGHT_CORRECT": {
       "identifier": "C_A_RIGHT_CORRECT",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_STRENGTH_WAIT_UPDATE",
-      "speakerName": "간호사 B",
-      "dialogueContent": "현재 시나리오 C 환자의 GCS는 13점, 근력(Motor Grade)은 좌측 5점, 우측 3점입니다.",
+      "nextIdentifier": "C_A_FINAL_SUMMARY",
+      "speakerName": "@s",
+      "dialogueContent": "우측 근력을 3점으로 기록했다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F1" }
     },
     "C_A_FINAL_SUMMARY": {
       "identifier": "C_A_FINAL_SUMMARY",
@@ -4350,8 +4355,8 @@
       "identifier": "C_C_PUPIL_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_C_PUPIL_2",
-      "speakerName": "@s",
-      "dialogueContent": "(펜라이트를 환자의 양쪽 눈에 비춘다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 펜라이트로 양쪽 동공을 확인합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -4360,8 +4365,8 @@
       "identifier": "C_C_PUPIL_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_C_PUPIL_3",
-      "speakerName": "@s",
-      "dialogueContent": "(이 환자의 좌측 동공이 빛에 반응하지 않는다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 좌측 동공이 빛에 반응하지 않습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -4370,8 +4375,8 @@
       "identifier": "C_C_PUPIL_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_C_IV_WAIT",
-      "speakerName": "@s",
-      "dialogueContent": "(이 환자의 우측 동공은 빛에 반응한다.)",
+      "speakerName": "시스템",
+      "dialogueContent": "[관찰] 우측 동공이 빛에 반응합니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "playTTS": false
@@ -4876,7 +4881,7 @@
       "identifier": "CT_DOCTOR_ORDER",
       "nodeType": "Dialogue",
       "nextIdentifier": "CT_DOCTOR_MARK_HIDE",
-      "speakerName": "의사 NPC",
+      "speakerName": "의사",
       "dialogueContent": "기전과 사정 결과를 보니 뇌손상이 의심됩니다. 활력징후는 비교적 안정되어 있으니 지금 Brain CT 찍겠습니다. 지금 환자를 CT실로 이동시켜주세요.",
       "dialogueContentTTSPassing": "기전과 사정 결과를 보니 뇌손상이 의심됩니다. 활력징후는 비교적 안정되어 있으니 지금 브레인 씨티 찍겠습니다. 지금 환자를 씨티실로 이동시켜주세요.",
       "portraitSpriteIdentifier": null,
@@ -5063,7 +5068,7 @@
     "CT_SCENARIO_COMPLETE": {
       "identifier": "CT_SCENARIO_COMPLETE",
       "nodeType": "DisinteractableDialogue",
-      "nextIdentifier": null,
+      "nextIdentifier": "E_END_BC_FADE",
       "speakerName": "시스템",
       "dialogueContent": "시나리오 B, C 환자 대응 종료. 모든 시나리오를 수행하였습니다.",
       "portraitSpriteIdentifier": null,
@@ -5072,6 +5077,14 @@
       "fadeOutDuration": { "value": 0.2, "unit": "Seconds" },
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "F1" }
+    },
+    "E_END_BC_FADE": {
+      "identifier": "E_END_BC_FADE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": null,
+      "eventIdentifier": "fade_out_patient_b_c",
+      "invokeOnRoleClient": false,
+      "moveNextBehavior": "WaitUntilDone"
     }
   }
 }
