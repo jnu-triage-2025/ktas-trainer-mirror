@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-08 17:23:26Z" end-time="2026-09-08 17:23:26Z" duration="0.5441259">
+  <test-suite type="TestSuite" id="1000" name="KTASTrainer" fullname="KTASTrainer" runstate="Runnable" testcasecount="728" result="Passed" start-time="2026-09-08 17:23:26Z" end-time="2026-09-08 17:23:26Z" duration="0.544126" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1842" name="Assembly-CSharp-Editor.dll" fullname="/Users/alex/ktas-trainer/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="728" result="Passed" start-time="2026-09-08 17:23:26Z" end-time="2026-09-08 17:23:26Z" duration="0.534676" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="31611" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1843" name="TriageTrainer" fullname="TriageTrainer" runstate="Runnable" testcasecount="302" result="Passed" start-time="2026-09-08 17:23:26Z" end-time="2026-09-08 17:23:26Z" duration="0.529386" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1844" name="Tests" fullname="TriageTrainer.Tests" runstate="Runnable" testcasecount="302" result="Passed" start-time="2026-09-08 17:23:26Z" end-time="2026-09-08 17:23:26Z" duration="0.526624" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1142" name="PatientBCScenarioDataTests" fullname="TriageTrainer.Tests.PatientBCScenarioDataTests" classname="TriageTrainer.Tests.PatientBCScenarioDataTests" runstate="Runnable" testcasecount="87" result="Passed" start-time="2026-09-08 17:23:26Z" end-time="2026-09-08 17:23:26Z" duration="0.523572" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1151" name="PatientBCScenarioLoadsWithSchemaAndCompletesAfterCTTransport" fullname="TriageTrainer.Tests.PatientBCScenarioDataTests.PatientBCScenarioLoadsWithSchemaAndCompletesAfterCTTransport" methodname="PatientBCScenarioLoadsWithSchemaAndCompletesAfterCTTransport" classname="TriageTrainer.Tests.PatientBCScenarioDataTests" runstate="Runnable" seed="1891360528" result="Passed" start-time="2026-09-08 17:23:26Z" end-time="2026-09-08 17:23:26Z" duration="0.514613" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[QuestDefinitionRegistry] Definition 'Quest_Oxygen_PatientA' has duplicate presentation binding target at index 3.
+[QuestDefinitionRegistry] Definition 'Quest_IV_Line_PatientA' has duplicate presentation binding target at index 3.
+Saving results to: /Users/alex/Library/Application Support/KTASTrainerDevTF/KTASTrainer/TestResults.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -9,8 +9,7 @@
     "sig.click_patient_a",
     "sig.click_patient_dummy_d_a",
     "sig.assess_patient_a_triage",
-    "sig.assess_patient_dummy_d_a_triage",
-    "sig.move_patient_a"
+    "sig.assess_patient_dummy_d_a_triage"
   ],
   "defaultEntrypoint": "D001",
   "tags": [
@@ -35,81 +34,25 @@
   ],
   "checklistItemSetsByPlayerTag": {
     "nurse_a": [
-      {
-        "identifier": "vital_set",
-        "count": 1
-      }
+      { "identifier": "vital_set", "count": 1 }
     ],
     "nurse_b": [],
     "nurse_c": [],
     "nurse_d": [
-      {
-        "identifier": "normal_saline_1000ml",
-        "count": 1
-      },
-      {
-        "identifier": "plasma_solution_1000ml",
-        "count": 1
-      },
-      {
-        "identifier": "intravenous_set",
-        "count": 2
-      },
-      {
-        "identifier": "blood_bag",
-        "count": 1
-      }
+      { "identifier": "normal_saline_1000ml", "count": 1 },
+      { "identifier": "plasma_solution_1000ml", "count": 1 },
+      { "identifier": "intravenous_set", "count": 2 },
+      { "identifier": "blood_bag", "count": 1 }
     ]
   },
   "questDefinitionIncludes": [
     "disaster_intro.quests.quest"
   ],
-  "interactions": [
-    {
-      "entity": {
-        "id": "patient_a"
-      },
-      "interaction": "triage_prompt",
-      "kind": "Action",
-      "display": {
-        "text": "환자 활력징후 및 외양 평가 시행하기"
-      },
-      "completionSignal": "assess_patient_a_triage",
-      "afterInteract": "HideForAll",
-      "visibility": {
-        "initial": true
-      }
-    },
-    {
-      "entity": {
-        "id": "patient_dummy_d_a"
-      },
-      "interaction": "triage_prompt",
-      "kind": "Action",
-      "display": {
-        "text": "환자 활력징후 및 외양 평가 시행하기"
-      },
-      "completionSignal": "assess_patient_dummy_d_a_triage",
-      "afterInteract": "HideForAll",
-      "visibility": {
-        "initial": true
-      }
-    },
-    {
-      "entity": {
-        "id": "patient_a"
-      },
-      "interaction": "transfer_prompt",
-      "kind": "Action",
-      "display": {
-        "text": "긴급 환자 이송 선택"
-      },
-      "completionSignal": "move_patient_a",
-      "afterInteract": "HideForAll",
-      "visibility": {
-        "initial": false
-      }
-    }
+  "ttsVoiceProfiles": [
+    { "preset": "F1", "voiceIdentifier": "narrator", "voiceStyleName": "F1" },
+    { "preset": "M1", "voiceIdentifier": "dispatcher", "voiceStyleName": "M1" },
+    { "preset": "M2", "voiceIdentifier": "doctor", "voiceStyleName": "M2" },
+    { "preset": "F3", "voiceIdentifier": "patient", "voiceStyleName": "F3" }
   ],
   "nodes": {
     "D001": {
@@ -117,44 +60,65 @@
       "nodeType": "Dialogue",
       "speakerName": "원내 방송",
       "dialogueContent": "병원 인근 지하철역에서 폭발 사고 발생. 재난 상황 발령되었습니다. 응급실 대비 바랍니다.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "D002",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "D002": {
       "identifier": "D002",
       "nodeType": "Dialogue",
       "speakerName": "시스템",
       "dialogueContent": "의료진 간 재난 상황을 공유하고 초기 대응을 시작합니다.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C_role_select",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "P001": {
       "identifier": "P001",
       "nodeType": "Parallel",
       "waitMode": "All",
-      "allocationType": "SelfAll",
+      "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
           "identifier": "N001",
           "completionConditionIdentifier": "CC_A_Triage",
-          "requiredPlayerTags": [],
+          "requiredPlayerTags": [
+            "nurse_a"
+          ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         },
         {
           "identifier": "N002",
           "completionConditionIdentifier": "CC_BC_Ready",
-          "requiredPlayerTags": [],
+          "requiredPlayerTags": [
+            "nurse_b"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "N002_C",
+          "completionConditionIdentifier": "CC_BC_Ready",
+          "requiredPlayerTags": [
+            "nurse_c"
+          ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         },
         {
           "identifier": "N003",
           "completionConditionIdentifier": "CC_D_Ready",
-          "requiredPlayerTags": [],
+          "requiredPlayerTags": [
+            "nurse_d"
+          ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
@@ -164,11 +128,14 @@
     "N001": {
       "identifier": "N001",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "중증도 분류 구역으로 이동하세요.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q001",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "Q001": {
       "identifier": "Q001",
@@ -195,12 +162,15 @@
     "N001_1": {
       "identifier": "N001_1",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "카트 위 활력징후 측정도구를 획득하세요.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "interactionRequired": true,
       "nextIdentifier": "q002_item",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "q002_item": {
       "identifier": "q002_item",
@@ -243,7 +213,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "ForceAdvance",
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "Q002_2"
     },
     "Q002_2": {
@@ -272,9 +242,12 @@
       "nodeType": "Dialogue",
       "speakerName": "시스템",
       "dialogueContent": "잠시 후 환자가 이송됩니다. 중증도 분류 후 환자 처치가 시작됩니다. 각자의 역할에 대비하세요.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "E001",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "E001": {
       "identifier": "E001",
@@ -287,20 +260,25 @@
       "identifier": "D003_1",
       "nodeType": "Dialogue",
       "speakerName": "시스템",
-      "dialogueContent": "환자 두 명이 이송되었습니다. 간호사 A가 중증도 분류를 시행합니다.",
-      "dialogueContentTTSPassing": "환자 두 명이 이송되었습니다. 간호사 에이가 중증도 분류를 시행합니다.",
+      "dialogueContent": "환자 두 명이 이송되었습니다. @t=[nurse_a, ???]가 중증도 분류를 시행합니다.",
+      "dialogueContentTTSPassing": "환자 두 명이 이송되었습니다. @t=[nurse_a, ???]가 중증도 분류를 시행합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "N001_2",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_2": {
       "identifier": "N001_2",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "환자를 차례대로 클릭하여 환자의 상태를 확인하고, 중증도 분류를 실시하세요.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V002",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "V002": {
       "identifier": "V002",
@@ -322,26 +300,32 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "ForceAdvance",
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "INFO_A_1"
     },
     "INFO_A_1": {
       "identifier": "INFO_A_1",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "외양: 흉부 관통상, 다량의 출혈, 피부 창백하고 차가움\n빈맥\n불규칙한 서호흡\n의식 상태: 대화가 불가능하고 신음소리만 내고 있음",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "INFO_A_2",
-      "playTTS": false
+      "playTTS": false,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "INFO_A_2": {
       "identifier": "INFO_A_2",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "활력징후 측정 결과:\n혈압: 70/40mmHg\n맥박: 140회/분 (빠르고 약함)\n호흡수: 8회/분\n체온: 35.9도\nSpO2: 82%",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C001",
-      "playTTS": false
+      "playTTS": false,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C001": {
       "identifier": "C001",
@@ -350,6 +334,10 @@
       "dialogueContent": "해당 환자의 중증도 분류를 시행하세요.",
       "portraitSpriteIdentifier": null,
       "options": [
+        {
+          "displayText": "KTAS 1(소생)",
+          "nextNodeIdentifier": "N001_3"
+        },
         {
           "displayText": "KTAS 2(긴급)",
           "nextNodeIdentifier": "N001_retry_a"
@@ -365,34 +353,36 @@
         {
           "displayText": "KTAS 5(비응급)",
           "nextNodeIdentifier": "N001_retry_a"
-        },
-        {
-          "displayText": "KTAS 1(소생)",
-          "nextNodeIdentifier": "N001_3"
         }
       ],
-      "nextIdentifier": "N001_3",
-      "playTTS": true
+      "nextIdentifier": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_retry_a": {
       "identifier": "N001_retry_a",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, KTAS 1(소생)이 적절합니다.",
-      "dialogueContentTTSPassing": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, 케이타스 1 소생이 적절합니다.",
+      "dialogueContentTTSPassing": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, 케이타스 원 소생이 적절합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C001",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_3": {
       "identifier": "N001_3",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "해당 환자를 KTAS 1으로 분류했습니다. 다음 환자를 클릭하세요.",
-      "dialogueContentTTSPassing": "해당 환자를 케이타스 1로 분류했습니다. 다음 환자를 클릭하세요.",
+      "dialogueContentTTSPassing": "해당 환자를 케이타스 원으로 분류했습니다. 다음 환자를 클릭하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V003",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "V003": {
       "identifier": "V003",
@@ -414,17 +404,20 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "ForceAdvance",
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "INFO_D_1"
     },
     "INFO_D_1": {
       "identifier": "INFO_D_1",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "외양: 사지에 약간의 타박상\n현재 의식 상태: 원활한 대화 가능\n활력징후 정상\nC/C: 하지 통증",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C002",
-      "playTTS": false
+      "playTTS": false,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C002": {
       "identifier": "C002",
@@ -454,51 +447,46 @@
           "nextNodeIdentifier": "N001_4"
         }
       ],
-      "nextIdentifier": "N001_4",
-      "playTTS": true
+      "nextIdentifier": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_retry_b": {
       "identifier": "N001_retry_b",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다.",
-      "dialogueContentTTSPassing": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 케이타스 5 비응급 상태로 보입니다.",
+      "dialogueContentTTSPassing": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 케이타스 파이브 비응급 상태로 보입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C002",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_4": {
       "identifier": "N001_4",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "해당 환자를 KTAS 5로 분류했습니다.",
-      "dialogueContentTTSPassing": "해당 환자를 케이타스 5로 분류했습니다.",
+      "dialogueContentTTSPassing": "해당 환자를 케이타스 파이브로 분류했습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "N001_5",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "N001_5": {
       "identifier": "N001_5",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "이제 치료를 위해 이송할 긴급 환자를 클릭하세요.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "ISC_SHOW_MOVE_PATIENT_A",
-      "playTTS": true
-    },
-    "ISC_SHOW_MOVE_PATIENT_A": {
-      "identifier": "ISC_SHOW_MOVE_PATIENT_A",
-      "nodeType": "InteractionVisibility",
-      "operation": "Show",
-      "targets": [
-        {
-          "entity": {
-            "id": "patient_a"
-          },
-          "interaction": "transfer_prompt"
-        }
-      ],
-      "nextIdentifier": "V004"
+      "nextIdentifier": "V004",
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "V004": {
       "identifier": "V004",
@@ -534,12 +522,26 @@
     "N002": {
       "identifier": "N002",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "KTAS 1(소생) 환자에 대비하기 위해 처치실로 이동하세요.",
-      "dialogueContentTTSPassing": "케이타스 1 소생 환자에 대비하기 위해 처치실로 이동하세요.",
+      "dialogueContentTTSPassing": "케이타스 원 소생 환자에 대비하기 위해 처치실로 이동하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q003",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "N002_C": {
+      "identifier": "N002_C",
+      "nodeType": "Dialogue",
+      "speakerName": "시스템",
+      "dialogueContent": "KTAS 1(소생) 환자에 대비하기 위해 처치실로 이동하세요.",
+      "dialogueContentTTSPassing": "케이타스 원 소생 환자에 대비하기 위해 처치실로 이동하세요.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "N002",
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "Q003": {
       "identifier": "Q003",
@@ -571,7 +573,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 20,
+      "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance",
       "nextIdentifier": "Q003_1"
     },
@@ -589,11 +591,14 @@
     "N002_1": {
       "identifier": "N002_1",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "처치실에 있는 물품의 위치를 확인하세요.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "CC_BC_Ready",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "CC_BC_Ready": {
       "identifier": "CC_BC_Ready",
@@ -606,11 +611,14 @@
     "N003": {
       "identifier": "N003",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "준비실로 이동하세요.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q004",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "Q004": {
       "identifier": "Q004",
@@ -637,14 +645,16 @@
     "N003_1": {
       "identifier": "N003_1",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "생리식염수 1L 수액백과 수액세트를 각각 획득하세요.",
       "dialogueContentTTSPassing": "생리식염수 1리터 수액백과 수액세트를 각각 획득하세요.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": true,
       "autoAdvanceSeconds": 0.2,
       "nextIdentifier": "q006",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "q006": {
       "identifier": "q006",
@@ -682,7 +692,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "ForceAdvance",
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "q006_1"
     },
     "q006_1": {
@@ -709,13 +719,15 @@
     "N003_2": {
       "identifier": "N003_2",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "플라즈마 솔루션 1L 수액백과 수액세트를 획득하세요.",
       "dialogueContentTTSPassing": "플라즈마 솔루션 1리터 수액백과 수액세트를 획득하세요.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": true,
       "nextIdentifier": "q007",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "q007": {
       "identifier": "q007",
@@ -759,7 +771,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "ForceAdvance",
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "q007_1"
     },
     "q007_1": {
@@ -786,12 +798,15 @@
     "N003_3": {
       "identifier": "N003_3",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "수액 준비가 완료되었습니다. 혈액백을 클릭해 획득하세요.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "interactionRequired": true,
       "nextIdentifier": "q008",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "q008": {
       "identifier": "q008",
@@ -823,7 +838,7 @@
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
-      "onWaitTimeout": "ForceAdvance",
+      "onWaitTimeout": "WarnAndKeepWaiting",
       "nextIdentifier": "q008_1"
     },
     "q008_1": {
@@ -848,11 +863,13 @@
       "identifier": "D004",
       "nodeType": "Dialogue",
       "speakerName": "간호사 A",
-      "dialogueContent": "KTAS 1(소생)으로 분류된 환자를 이송하겠습니다. 간호사 B, C, D선생님, 해당 환자 처치실로 이동하도록 도와주세요.",
-      "dialogueContentTTSPassing": "케이타스 1 소생으로 분류된 환자를 이송하겠습니다. 간호사 비, 씨, 디 선생님, 해당 환자 처치실로 이동하도록 도와주세요.",
+      "dialogueContent": "KTAS 1(소생)으로 분류된 환자를 이송하겠습니다. @t=[nurse_b, ???], @t=[nurse_c, ???], @t=[nurse_d, ???]선생님, 해당 환자 처치실로 이동하도록 도와주세요.",
+      "dialogueContentTTSPassing": "케이타스 원 소생으로 분류된 환자를 이송하겠습니다. @t=[nurse_b, ???], @t=[nurse_c, ???], @t=[nurse_d, ???] 선생님, 해당 환자 처치실로 이동하도록 도와주세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q005",
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F1" }
     },
     "Q005": {
       "identifier": "Q005",
@@ -909,11 +926,14 @@
     "N004": {
       "identifier": "N004",
       "nodeType": "Dialogue",
-      "speakerName": "System",
+      "speakerName": "시스템",
       "dialogueContent": "초기 대응과 중증도 분류를 완료했습니다. 다음 처치 시나리오를 진행합니다.",
+      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
       "nextIdentifier": null,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C_role_select": {
       "identifier": "C_role_select",
@@ -940,7 +960,9 @@
         }
       ],
       "nextIdentifier": null,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "TAG_a_0": {
       "identifier": "TAG_a_0",

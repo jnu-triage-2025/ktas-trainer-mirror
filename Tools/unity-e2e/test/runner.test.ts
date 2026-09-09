@@ -462,3 +462,22 @@ test('navigation recognizes a turn back after overshooting an aligned target',as
  await f.runner.navigate('one',{id:'overshoot',type:'navigate',target:'target',timeoutMs:3000,args:{stuckWindowMs:500}},AbortSignal.timeout(4000));
  assert.equal(commands,7);await f.platform.close();
 });
+
+test('interaction selection initializes an empty selection and reobserves every key', async () => {
+ const f=await fixture();
+ let selected=-1;
+ const keys:string[]=[];
+ f.platform.observe=async()=>({inputBindings:{interact:'E'},interactions:[
+  {interactionId:'other',entityId:'one',index:0,selected:selected===0},
+  {interactionId:'use',entityId:'two',index:1,selected:selected===1},
+  {interactionId:'use',entityId:'three',index:2,selected:selected===2}
+ ]});
+ f.platform.command=async(_id,_type,payload)=>{
+  const key=(payload?.sequence as {key:string}[])[0].key;keys.push(key);
+  if(key==='Equals')selected++;
+  if(key==='Minus')selected--;
+  return {};
+ };
+ await f.runner.interact('one',{id:'use',type:'interact',target:'use',args:{entityId:'three'}},AbortSignal.timeout(3000));
+ assert.deepEqual(keys,['Equals','Equals','Equals','E']);
+});

@@ -309,7 +309,7 @@ namespace TriageTrainer.Tests
       var graph = ScenarioGraphLoader.LoadFromJson(scenarioJson, validateWithSchema: true);
 
       Assert.That(graph.DefaultEntrypoint, Is.EqualTo("GIVE_CHECKLIST_PAPER_IF_MISSING"));
-      Assert.That(graph.Nodes, Has.Count.EqualTo(343));
+      Assert.That(graph.Nodes, Has.Count.EqualTo(361));
       var checklistPaperGrant = graph.Nodes["GIVE_CHECKLIST_PAPER_IF_MISSING"] as ScenarioExecuteCommandNode;
       Assert.That(checklistPaperGrant, Is.Not.Null);
       Assert.That(checklistPaperGrant.CommandLine, Is.EqualTo("give-if-missing checklist_paper @a"));
@@ -363,29 +363,46 @@ namespace TriageTrainer.Tests
       Assert.That(doctorMove.DestinationIdentifier,
         Is.EqualTo(OverworldGameObjectInitializer.DoctorRouteWaypointSetIdentifier));
       Assert.That(graph.Nodes["P_MOVE"].NextIdentifier, Is.EqualTo("MOVE_DOCTOR_TO_CARE_AREA"));
-      var doctorBComplete = graph.Nodes["DOC_B_COMPLETE"] as ScenarioDialogueNode;
-      Assert.That(doctorBComplete, Is.Not.Null);
-      Assert.That(doctorBComplete.SpeakerName, Is.EqualTo("의사"));
-      Assert.That(doctorBComplete.DialogueContent,
-        Is.EqualTo("이 남성 환자는 마무리하고 다음으로 넘어가죠."));
-      Assert.That(doctorBComplete.NextIdentifier, Is.EqualTo("care_patient_c"));
       Assert.That(graph.Nodes["care_patient_c"].NextIdentifier, Is.EqualTo("C_DOC_C"));
-      Assert.That(graph.Nodes["MOVE_DOCTOR_TO_CARE_AREA"].NextIdentifier, Is.EqualTo("care_patient_b"));
+      Assert.That(graph.Nodes["MOVE_DOCTOR_TO_CARE_AREA"].NextIdentifier, Is.EqualTo("P_B_C_CARE"));
       Assert.That(graph.Nodes["care_patient_b"].NextIdentifier, Is.EqualTo("DOC_C"));
       Assert.That(graph.Nodes.ContainsKey("C_ARRIVAL"), Is.False);
       Assert.That(graph.Nodes["C_DOC_C"].NextIdentifier, Is.EqualTo("C_DOC_D"));
-      Assert.That(graph.Nodes["C_DOC_D"].NextIdentifier, Is.EqualTo("P_C_CARE"));
+      Assert.That(graph.Nodes["C_DOC_D"].NextIdentifier, Is.EqualTo("P_C_TREATMENT"));
       Assert.That(graph.Nodes.ContainsKey("P_C_CARE"), Is.True);
-      Assert.That(graph.Nodes.ContainsKey("C_COMPLETE"), Is.True);
+      Assert.That(graph.Nodes.ContainsKey("P_B_C_CARE"), Is.True);
+      Assert.That(graph.Nodes.ContainsKey("P_B_TREATMENT"), Is.True);
+      Assert.That(graph.Nodes.ContainsKey("P_C_TREATMENT"), Is.True);
+      var bothPatientCare = graph.Nodes["P_B_C_CARE"] as ScenarioParallelNode;
+      Assert.That(bothPatientCare, Is.Not.Null);
+      Assert.That(bothPatientCare.AllocationType, Is.EqualTo(ScenarioParallelAllocationType.ByRole));
+      Assert.That(bothPatientCare.WaitMode, Is.EqualTo(ScenarioWaitMode.All));
+      Assert.That(bothPatientCare.NextIdentifier, Is.EqualTo("CT_DOCTOR_ORDER"));
+      Assert.That(bothPatientCare.Branches.Select(branch =>
+        (branch.Identifier, Tag: branch.RequiredPlayerTags.Single(), branch.CompletionConditionIdentifier)),
+        Is.EqualTo(new[]
+        {
+          ("P_B_CARE", "nurse_a", "CC_B_COMPLETE"),
+          ("P_C_CARE", "nurse_b", "CC_C_COMPLETE")
+        }));
       Assert.That(graph.Nodes["P_B_CARE"].NextIdentifier, Is.EqualTo("P_B_WAIT_REMOVE"));
-      Assert.That(graph.Nodes["P_B_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("DOC_B_COMPLETE"));
+      Assert.That(graph.Nodes["P_B_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("DOC_C"));
       Assert.That(graph.Nodes["P_C_CARE"].NextIdentifier, Is.EqualTo("P_C_WAIT_REMOVE"));
-      Assert.That(graph.Nodes["P_C_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("C_COMPLETE"));
-      var doctorCComplete = graph.Nodes["C_COMPLETE"] as ScenarioDialogueNode;
-      Assert.That(doctorCComplete, Is.Not.Null,
-        "환자 처치 종료 선언은 남성 환자와 여성 환자 모두 같은 대사 노드 형식을 쓴다.");
-      Assert.That(doctorCComplete.SpeakerName, Is.EqualTo("의사"));
-      Assert.That(doctorCComplete.NextIdentifier, Is.EqualTo("move_patients"));
+      Assert.That(graph.Nodes["P_C_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("C_DOC_C"));
+      foreach (var expectation in new[]
+               {
+                 (Node: "P_B_CARE", FirstRole: "nurse_a", SecondRole: "nurse_c"),
+                 (Node: "P_B_TREATMENT", FirstRole: "nurse_a", SecondRole: "nurse_c"),
+                 (Node: "P_C_CARE", FirstRole: "nurse_b", SecondRole: "nurse_d"),
+                 (Node: "P_C_TREATMENT", FirstRole: "nurse_b", SecondRole: "nurse_d")
+               })
+      {
+        var carePhase = graph.Nodes[expectation.Node] as ScenarioParallelNode;
+        Assert.That(carePhase, Is.Not.Null, expectation.Node);
+        Assert.That(carePhase.WaitMode, Is.EqualTo(ScenarioWaitMode.All), expectation.Node);
+        Assert.That(carePhase.Branches.Select(branch => branch.RequiredPlayerTags.Single()),
+          Is.EqualTo(new[] { expectation.FirstRole, expectation.SecondRole }), expectation.Node);
+      }
       var movePatients = graph.Nodes["move_patients"] as ScenarioManualEntrypointNode;
       Assert.That(movePatients, Is.Not.Null);
       Assert.That(movePatients.EntrypointIdentifier, Is.EqualTo("move_patients"));
@@ -625,7 +642,8 @@ namespace TriageTrainer.Tests
         (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
       {
         ("patient_c", "recognition_check"),
-        ("patient_c", PatientController.InteractIdIntravenousLineCannula)
+        ("patient_c", PatientController.InteractIdIntravenousLineCannula),
+        ("patient_c", PatientController.InteractIdNormalSalineConnect)
       }));
       Assert.That(pupilQuestC.Tasks.Select(task => (task.Identifier, task.SignalId)), Is.EqualTo(new[]
       {
@@ -748,11 +766,11 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes["TRIAGE_CHECK_CORRECT"].NextIdentifier,
         Is.EqualTo("TRIAGE_C_EVALUATE_CURRENT"));
       Assert.That(graph.Nodes["TRIAGE_C_EVALUATE_CURRENT"].NextIdentifier,
-        Is.EqualTo("TRIAGE_A_REMOVE"));
+        Is.EqualTo("TRIAGE_C_CONFIRMED"));
       Assert.That(graph.Nodes["TRIAGE_A_REMOVE"].NextIdentifier,
         Is.EqualTo("TRIAGE_REENABLE_D"));
       Assert.That(graph.Nodes["TRIAGE_REENABLE_D"].NextIdentifier,
-        Is.EqualTo("TRIAGE_COMPLETE_EVENT"));
+        Is.EqualTo("TRIAGE_D_CONFIRMED"));
       Assert.That(graph.Nodes["TRIAGE_COMPLETE_EVENT"].NextIdentifier,
         Is.EqualTo("TRIAGE_A_FINAL_REMOVE"));
       Assert.That(graph.Nodes["TRIAGE_A_FINAL_REMOVE"].NextIdentifier,
@@ -777,12 +795,12 @@ namespace TriageTrainer.Tests
       var patientCLeftGrade = graph.Nodes["C_A_LEFT_GRADE"] as ScenarioChoiceNode;
       var patientCRightGrade = graph.Nodes["C_A_RIGHT_GRADE"] as ScenarioChoiceNode;
       Assert.That(patientCLeftGrade?.CorrectOptionIndex, Is.EqualTo(0));
-      Assert.That(patientCRightGrade?.CorrectOptionIndex, Is.EqualTo(2));
+      Assert.That(patientCRightGrade?.CorrectOptionIndex, Is.EqualTo(5));
 
       Assert.That((graph.Nodes["A_STRENGTH_TRANSITION"] as ScenarioDialogueNode)?.DialogueContent,
-        Is.EqualTo("이제 근력을 확인해 보자."));
+        Is.EqualTo("근력은 어떻지..?"));
       Assert.That((graph.Nodes["C_A_STRENGTH_TRANSITION"] as ScenarioDialogueNode)?.DialogueContent,
-        Is.EqualTo("이제 근력을 확인해 보자."));
+        Is.EqualTo("근력은 어떻지..?"));
       Assert.That((graph.Nodes["CT_DOCTOR_B_SUMMARY"] as ScenarioDialogueNode)?.DialogueContent,
         Does.Contain("근력은 우측 5점, 좌측 3점"));
 
