@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FishNet;
+using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
@@ -458,6 +459,41 @@ namespace MultiplayerInfrastructure.Automation
         ["performance"] = Performance(), ["buildId"] = Application.buildGUID, ["eventCursor"] = _sequence, ["frame"] = Time.frameCount,
         ["input"] = new JObject { ["horizontal"] = _input.GetAxis("Horizontal"), ["vertical"] = _input.GetAxis("Vertical"), ["w"] = _input.GetKey(KeyCode.W) },
         ["inputBindings"] = local?.AutomationBindings, ["interactions"] = local?.AutomationInteractions() ?? new JArray(),
+        // E2E diagnosis: expose the registry decision separately from proximity
+        // and input selection.  A route can then distinguish an unavailable
+        // scenario definition from a valid definition whose collider was not
+        // reached yet.
+        ["interactionRegistry"] = new JArray(InteractionRegistry.AllEntries.Select(entry =>
+        {
+          string reason = local == null ? "local player unavailable" : null;
+          bool visible = local != null && InteractionRegistry.IsVisible(entry, local, out reason);
+          bool canInteract = entry.Handler is not IInteractorConditional conditional
+            || (local != null && conditional.CanInteract(local.transform));
+          return new JObject {
+            ["entityId"] = entry.Address.EntityIdentifier,
+            ["interactionId"] = entry.Address.InteractionIdentifier,
+            ["source"] = entry.Source,
+            ["scenarioId"] = entry.DataScenarioIdentifier,
+            ["visible"] = visible,
+            ["visibilityReason"] = reason,
+            ["canInteract"] = canInteract,
+            ["initialVisible"] = entry.Definition?.InitialVisible,
+            ["visibilityConditions"] = entry.Definition?.VisibilityConditions == null
+              ? new JArray() : JArray.FromObject(entry.Definition.VisibilityConditions)
+          };
+        })),
+        ["scenarioInteractionDefinitions"] = _scenario?.CurrentGraph?.Interactions == null ? new JArray() :
+          new JArray(_scenario.CurrentGraph.Interactions.Select(definition => new JObject {
+            ["entityId"] = definition?.Entity?.Identifier,
+            ["interactionId"] = definition?.InteractionIdentifier,
+            ["hasVisibilityConditions"] = definition?.HasVisibilityConditions,
+            ["initialVisible"] = definition?.InitialVisible
+          })),
+        ["pendingInteractionDefinitions"] = new JArray(InteractionRegistry.PendingDefinitions.Select(pending => new JObject {
+          ["scenarioId"] = pending.ScenarioIdentifier,
+          ["entityId"] = pending.Definition?.Entity?.Identifier,
+          ["interactionId"] = pending.Definition?.InteractionIdentifier
+        })),
         ["entities"] = new JArray(FindObjectsByType<Entity.Npc>(FindObjectsSortMode.None).Where(n => Registry.Registry.Get<GameObject>(Registry.RegistryType.Npc, n.Identifier) == n.gameObject).Select(n => new JObject { ["id"] = n.Identifier, ["kind"] = "npc", ["position"] = new JArray(n.transform.position.x,n.transform.position.y,n.transform.position.z), ["groundProbe"] = AutomationGeometry.GroundProbe(n.transform.position,n.transform) })),
         ["vehicles"] = new JArray(FindObjectsByType<Entity.MinecraftBoatLikeControl>(FindObjectsSortMode.None).Select(vehicle => vehicle.AutomationState)),
         ["scenarioEntities"] = new JArray(Registry.Registry.GetAllEntities()

@@ -66,7 +66,11 @@ namespace TriageTrainer.Entity
       public bool CanInteract(Transform interactor)
       {
         var cfg = Config;
-        if (cfg == null || !_owner.CanPerformTriageOrAssessment)
+        // Scenario interaction visibility already restricts each assessment
+        // to the owner with its active quest.  A replicated carry flag can be
+        // stale for a patient that has been placed on a moving bed, which used
+        // to hide these quest interactions on remote clients indefinitely.
+        if (cfg == null)
           return false;
 
         // 시나리오 노출 조건은 레지스트리가 판정한다. 여기서는 사정을 수행할 수 있는 상태인지만 본다.
@@ -142,7 +146,7 @@ namespace TriageTrainer.Entity
     private void PerformAssess(string actionIdentifier, PlayerController player, InteractionDefinition definition)
     {
       var cfg = GetAssessAction(actionIdentifier);
-      if (cfg == null || !CanPerformTriageOrAssessment)
+      if (cfg == null)
         return;
 
       // 시나리오 데이터의 completionSignal 우선, 없으면 식별자 규칙 기반 코드 기본값으로 폴백.

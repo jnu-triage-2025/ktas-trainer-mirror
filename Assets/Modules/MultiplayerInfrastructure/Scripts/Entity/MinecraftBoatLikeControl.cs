@@ -6,6 +6,7 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
@@ -248,6 +249,19 @@ namespace MultiplayerInfrastructure.Entity
           detachedAny = true;
           OnServerParticipantExited(participant, null, i);
           _serverInputs.Remove(participant);
+
+          // A snap can move this controller and release its handles in the same
+          // frame.  The owning client otherwise loses its forced-follow anchor
+          // before it has observed the new anchor position, leaving the player
+          // at the controller's pre-snap location.  Commit the current attach
+          // point as the player's authoritative exit position before clearing
+          // the replicated handle.
+          if (i < _playerAttachPoints.Count
+              && _playerAttachPoints[i] != null
+              && TryResolvePlayer(participant, out var player))
+          {
+            player.TeleportToServer(_playerAttachPoints[i].position);
+          }
         }
         SetHandle(i, InvalidClientId);
       }
@@ -513,6 +527,10 @@ namespace MultiplayerInfrastructure.Entity
         $"hitPoint={hit.point} normal={hit.normal} distance={hit.distance:F3} " +
         $"origin={origin} target={target} boundsCenter={collider.bounds.center} boundsSize={collider.bounds.size}",
         collider);
+      if (IsServerStarted)
+        GameLogService.WriteScenario(
+          $"Movement blocked: controller='{GetTransformPath(transform)}' blocker='{GetTransformPath(collider.transform)}' layer={LayerMask.LayerToName(collider.gameObject.layer)}({collider.gameObject.layer}) hit={hit.point}",
+          "movement");
     }
 
     private static string GetTransformPath(Transform target)

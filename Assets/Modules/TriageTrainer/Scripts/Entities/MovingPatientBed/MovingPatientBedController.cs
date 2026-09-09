@@ -25,6 +25,8 @@ namespace TriageTrainer.Entity
     public const string InteractionIdentifierRepose = "repose_patient";
     private const string MoveDisplayText = "침대로 움직이기";
     private const string ReposeDisplayText = "환자 침대에 내려놓기";
+    private readonly HashSet<autoDoorSlide> _automaticDoorsInRange = new();
+    private Collider _automaticDoorTriggerCollider;
 
     /// <summary>
     /// 코드 리터럴 정의. 침대 조종과 눕히기는 시나리오가 제한하지 않는 한 항상 보인다.
@@ -353,9 +355,90 @@ namespace TriageTrainer.Entity
     {
       ResolveSyncedPositioningPointIfPending();
       SyncReposedTargetTransform();
+      UpdateAutomaticDoorTriggers();
       SetMinimumMovementDivisor(RequiredInteractorCount);
       Update_MinecraftBoatLikeControl();
       TrySnapToPositioningPoint();
+    }
+
+    // The bed is moved by a network-controlled transform, rather than by a
+    // Rigidbody simulation step.  Unity therefore does not consistently send
+    // trigger callbacks to the third-party sliding-door component.  Forward
+    // the same callbacks while a locally controlled bed overlaps its trigger
+    // so the door follows its normal open/close implementation.
+    private void UpdateAutomaticDoorTriggers()
+    {
+      if (!IsLocallyControlled)
+      {
+        ReleaseAutomaticDoorTriggers();
+        return;
+      }
+
+      _automaticDoorTriggerCollider ??= GetComponent<Collider>();
+      if (_automaticDoorTriggerCollider == null)
+        return;
+
+      Bounds bedBounds = _automaticDoorTriggerCollider.bounds;
+      var current = new HashSet<autoDoorSlide>();
+      foreach (var door in FindObjectsByType<autoDoorSlide>(FindObjectsSortMode.None))
+      {
+        if (door == null || !door.isActiveAndEnabled)
+          continue;
+
+        bool overlaps = false;
+        foreach (var trigger in door.GetComponents<Collider>())
+        {
+          if (trigger != null && trigger.enabled && trigger.isTrigger && trigger.bounds.Intersects(bedBounds))
+          {
+            overlaps = true;
+            break;
+          }
+        }
+
+        if (!overlaps)
+          continue;
+
+        current.Add(door);
+        if (_automaticDoorsInRange.Add(door))
+          door.SendMessage("OnTriggerEnter", _automaticDoorTriggerCollider, SendMessageOptions.DontRequireReceiver);
+
+        // autoDoorSlide normally performs this interpolation from a physics
+        // trigger callback.  A network-transform-driven bed can miss that
+        // callback on one client, so keep its public door panels advancing
+        // while the bed is physically inside the same trigger volume.
+        GameObject[] panels = door.doors;
+        Vector3[] openPositions = door.doorsOpenPosition;
+        if (panels == null || openPositions == null)
+          continue;
+        int panelCount = Mathf.Min(panels.Length, openPositions.Length);
+        for (int i = 0; i < panelCount; i++)
+        {
+          if (panels[i] == null)
+            continue;
+
+          panels[i].transform.localPosition = Vector3.MoveTowards(
+            panels[i].transform.localPosition,
+            openPositions[i],
+            Mathf.Max(0f, door.doorSpeed) * Time.deltaTime);
+        }
+      }
+
+      foreach (var door in _automaticDoorsInRange)
+        if (!current.Contains(door))
+          door.SendMessage("OnTriggerExit", _automaticDoorTriggerCollider, SendMessageOptions.DontRequireReceiver);
+
+      _automaticDoorsInRange.Clear();
+      _automaticDoorsInRange.UnionWith(current);
+    }
+
+    private void ReleaseAutomaticDoorTriggers()
+    {
+      if (_automaticDoorTriggerCollider != null)
+        foreach (var door in _automaticDoorsInRange)
+          if (door != null)
+            door.SendMessage("OnTriggerExit", _automaticDoorTriggerCollider, SendMessageOptions.DontRequireReceiver);
+
+      _automaticDoorsInRange.Clear();
     }
 
     private void TrySnapToPositioningPoint()
@@ -377,6 +460,21 @@ namespace TriageTrainer.Entity
     {
       if (collider == null)
         return false;
+
+      // This controller is driven by a network transform, so its movement
+      // blocker ray can reach an automatic-door panel before Unity has
+      // delivered the trigger enter that starts opening it.  The panel is not
+      // a wall for a patient bed: allowing this one collider through lets the
+      // bed enter the door trigger and the normal door animation open it.
+      if (collider.GetComponentInParent<autoDoorSlide>() != null)
+        return true;
+
+      // The bed is driven while its operators stand at its handles.  Their
+      // CharacterControllers can cross the center ray used by the generic
+      // movement blocker, causing a fully staffed bed to block itself.
+      // Players are intentionally traversable for movable equipment.
+      if (collider.GetComponentInParent<PlayerController>() != null)
+        return true;
 
       // 침대는 바닥 높이에서 이동한다. 바닥 콜라이더의 윗면이 침대 원점보다
       // 위로 솟지 않는다면, 타일 이음새에서 수평 광선이 충돌로 판정되어서는 안 된다.

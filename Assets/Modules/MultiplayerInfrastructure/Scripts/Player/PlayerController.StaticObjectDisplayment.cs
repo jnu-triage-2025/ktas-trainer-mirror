@@ -175,7 +175,12 @@ namespace MultiplayerInfrastructure.Player
 
       // 거리 검증(픽업과 동일 규약).
       var claimantPosition = ResolveServerPickupOriginPosition();
-      float sqrDistance = (displayment.transform.position - claimantPosition).sqrMagnitude;
+      // Wall-mounted displayments (for example the suction unit) are above a
+      // grounded player's origin.  Interaction discovery is planar, so using
+      // a 3D server distance made an offered wall interaction impossible to
+      // approve solely because of its mounting height.
+      Vector3 offset = displayment.transform.position - claimantPosition;
+      float sqrDistance = offset.x * offset.x + offset.z * offset.z;
       if (sqrDistance > MaxStaticObjectDisplaymentApplyDistanceSqr)
       {
         Debug.LogWarning(

@@ -1,6 +1,6 @@
 import {Platform,E2EError} from './core.ts';
 
-export async function drivePatientBed(platform:Platform,instanceId:string,bedId:string,pointId:string,signal:AbortSignal,timeoutMs=60000,participantIds:string[]=[instanceId],via:number[][]=[]){
+export async function drivePatientBed(platform:Platform,instanceId:string,bedId:string,pointId:string,signal:AbortSignal,timeoutMs=60000,participantIds:string[]=[instanceId],via:number[][]=[],waypointSettleMs=0){
  if(!participantIds.includes(instanceId)||new Set(participantIds).size!==participantIds.length)throw new E2EError('INVALID_PARTICIPANTS');
  if(via.length>32||via.some(point=>point.length!==3||point.some(value=>!Number.isFinite(value))))throw new E2EError('INVALID_VEHICLE_ROUTE');
  const deadline=performance.now()+timeoutMs;let routeIndex=0,lastPeerValidation=-Infinity;
@@ -20,7 +20,14 @@ export async function drivePatientBed(platform:Platform,instanceId:string,bedId:
    const dx=target[0]-bed.position[0],dz=target[2]-bed.position[2];
    const distance=Math.hypot(dx,dz),angle=((Math.atan2(dx,dz)*180/Math.PI-bed.yaw+540)%360)-180;
    if(!Number.isFinite(distance)||!Number.isFinite(angle))throw new E2EError('INVALID_VEHICLE_OBSERVATION');
-   if(routeIndex<via.length&&distance<.6){routeIndex++;bestDistance=Infinity;bestAngle=Infinity;lastProgress=performance.now();continue;}
+   // Allow the bed body to clear doorway and furniture waypoints.
+   if(routeIndex<via.length&&distance<.8){
+    if(waypointSettleMs>0)await new Promise<void>((resolve,reject)=>{
+     const timer=setTimeout(resolve,waypointSettleMs);
+     signal.addEventListener('abort',()=>{clearTimeout(timer);reject(signal.reason);},{once:true});
+    });
+    routeIndex++;bestDistance=Infinity;bestAngle=Infinity;lastProgress=performance.now();continue;
+   }
    if(distance<bestDistance-.05){bestDistance=distance;bestAngle=Infinity;lastProgress=performance.now();}
    if(Math.abs(angle)<bestAngle-1){bestAngle=Math.abs(angle);lastProgress=performance.now();}
    if(performance.now()-lastProgress>5000)throw new E2EError('NAVIGATION_STUCK',bedId);

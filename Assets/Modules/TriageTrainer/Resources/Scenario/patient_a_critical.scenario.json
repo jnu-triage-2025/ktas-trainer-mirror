@@ -372,8 +372,7 @@
         "conditions": [
           {
             "type": "PlayerHasQuest",
-            "questIdentifier": "Quest_Check_Vital_PatientA",
-            "completionCriteriaIdentifier": "assess-vital-patient-a"
+            "questIdentifier": "Quest_Check_Vital_PatientA"
           }
         ]
       }
@@ -391,8 +390,7 @@
         "conditions": [
           {
             "type": "PlayerHasQuest",
-            "questIdentifier": "Quest_Check_GCS_PatientA",
-            "completionCriteriaIdentifier": "assess-gcs-patient-a"
+            "questIdentifier": "Quest_Check_GCS_PatientA"
           }
         ]
       }

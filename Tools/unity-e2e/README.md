@@ -424,3 +424,13 @@ Automation heartbeat는 느린 응답 하나 때문에 다음 갱신을 건너�
 빌드 프로필의 `renderScale`은 0.25~1 범위에서 테스트의 3D 렌더 비율을 지정합니다. 기본값은 기존 0.75이며, 창과 UI 해상도는 960×540을 유지합니다.
 
 원격 실행 범위: HTTPS 서비스 URL은 다른 위치에서 콘솔/MCP 서비스에 접속하기 위한 설정입니다. 현재 Unity 프로세스는 서비스가 실행되는 장비에서 생성되며, 여러 장비에 프로세스를 나누어 배치하는 실행 노드 관리 기능은 아직 없습니다. `attach`도 localhost 브리지 연결에 한정됩니다. 따라서 HTTPS 설정만으로 4인 플레이의 장비 부하가 분산되지는 않습니다.
+
+
+### 시나리오별 재생 테스트 진입점
+
+`test/live-patient-entry.ts <config> <graph> <stage> <profile>`은 시나리오에 맞는 테스트를 선택합니다. 기존 인자 형식과 기본 시나리오(`patient_a_critical`)를 유지합니다.
+
+- `patient_a_critical`은 `test/live-patient-a-critical.ts`에서 A 시나리오의 테스트 경로를 유지합니다.
+- `patient_b_c_ct`는 `test/live-patient-b-c-ct.ts`에서 B/C 시나리오의 테스트 경로를 유지합니다.
+
+공통 실행기와 이동 도구는 두 테스트가 함께 사용합니다. 콘텐츠 병합 전의 실행 기록은 당시 콘텐츠에 대한 기록이며, 병합 후 콘텐츠의 재생 통과를 뜻하지 않습니다.

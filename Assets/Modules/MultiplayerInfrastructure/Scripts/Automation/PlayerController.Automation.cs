@@ -33,9 +33,13 @@ namespace MultiplayerInfrastructure.Player
       var available = CollectAvailableInteracts(_detector?.Nearby);
       if (_detector != null) KeepNearestExclusiveInteracts(available, _detector.DetectionPosition);
       OrderInteractsByDisplayPriority(available);
-      var selected = _interactableHintUI?.GetSelected();
+      // CollectAvailableInteracts can rebuild interaction wrapper objects for
+      // this observation.  The hint UI retains the semantic selected slot, so
+      // reference equality against the freshly collected wrappers can report
+      // no selection even while the player has one.  Export the stable index.
+      int selectedIndex = _interactableHintUI?.GetSelectedIndex() ?? -1;
       return new JArray(available.Select((interaction,index) => new JObject {
-        ["index"] = index, ["text"] = interaction.DisplayText, ["selected"] = ReferenceEquals(interaction,selected),
+        ["index"] = index, ["text"] = interaction.DisplayText, ["selected"] = index == selectedIndex,
         ["entityId"] = (interaction as IQuestPresentationTarget)?.PresentationEntityIdentifier,
         ["interactionId"] = (interaction as IQuestPresentationTarget)?.InteractionIdentifier
       }));

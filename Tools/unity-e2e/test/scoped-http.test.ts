@@ -7,6 +7,7 @@ import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {once} from 'node:events';
 import {setTimeout as delay} from 'node:timers/promises';
+import {fileURLToPath} from 'node:url';
 test('HTTP run credentials are scoped, revocable and expire without exposing tokens in logs',async()=>{
  const root=await mkdtemp(join(tmpdir(),'e2e-scoped-http-'));
  const reservation=createServer();reservation.listen(0,'127.0.0.1');await once(reservation,'listening');
@@ -14,7 +15,7 @@ test('HTTP run credentials are scoped, revocable and expire without exposing tok
  const executable=join(root,'fake-player');await writeFile(executable,'#!/usr/bin/env node\nsetInterval(()=>{},1000);\n',{mode:0o700});
  const config=join(root,'config.json');await writeFile(config,JSON.stringify({port,builds:{fake:{executable}},artifactRoot:join(root,'artifacts')}));
  const operator='a'.repeat(64);
- const child=spawn(process.execPath,[new URL('../src/main.ts',import.meta.url).pathname,config],{env:{...process.env,E2E_CONSOLE_TOKEN:operator,E2E_CREDENTIAL_EXPIRES_AT:undefined},stdio:['ignore','ignore','pipe']});
+ const child=spawn(process.execPath,[fileURLToPath(new URL('../src/main.ts',import.meta.url)),config],{env:{...process.env,E2E_CONSOLE_TOKEN:operator,E2E_CREDENTIAL_EXPIRES_AT:undefined},stdio:['ignore','ignore','pipe']});
  let logs='';child.stderr.on('data',chunk=>logs+=chunk);const exited=once(child,'exit');
  const origin=`http://127.0.0.1:${port}`;
  const call=async(token:string,tool:string,args:unknown={})=>{

@@ -49,6 +49,8 @@ namespace MultiplayerInfrastructure.Player
       public string UserIdentifier { get; set; }
       public StaticPlacedItemVanishMode VanishMode { get; set; }
       public int DecreasedBy { get; set; }
+      public string[] ItemIdentifiers { get; set; }
+      public int[] Amounts { get; set; }
     }
 
     private static readonly Dictionary<string, PendingStaticPickup> _pendingStaticPickups =
@@ -157,6 +159,9 @@ namespace MultiplayerInfrastructure.Player
       // 모드별 Remains 검증 및 선점 감소(예약). AlwaysExists 는 상태를 두지 않는다.
       if (!ServerTryReserveStaticPickup(staticItem, entityIdentifier, claimant, out var pending))
         return;
+
+      pending.ItemIdentifiers = itemIdentifiers;
+      pending.Amounts = amounts;
 
       _pendingStaticPickups[entityIdentifier] = pending;
 
@@ -521,6 +526,26 @@ namespace MultiplayerInfrastructure.Player
 
       if (pending.ClaimantClientId != claimant.ClientId)
         return;
+
+      // Static-pickup grants are confirmed on the owning client first.  Mirror
+      // that already-acknowledged grant into the server-side PlayerController
+      // for remote owners so later server-authoritative equipment exchanges
+      // see the same inventory. The host owner's controller is shared with
+      // its local inventory and must not receive a duplicate grant.
+      if (!IsOwner && pending.ItemIdentifiers != null && pending.Amounts != null)
+      {
+        for (int i = 0; i < pending.ItemIdentifiers.Length && i < pending.Amounts.Length; i++)
+        {
+          var item = Registry.Registry.CreateItemInstance(pending.ItemIdentifiers[i]);
+          if (item == null)
+            continue;
+          item.CurrentStackCount = Mathf.Max(1, pending.Amounts[i]);
+          if (!TryAddItemToInventory(item))
+          {
+            Debug.LogWarning($"[PlayerController] Server inventory mirror failed for static pickup '{entityIdentifier}', item '{pending.ItemIdentifiers[i]}'.");
+          }
+        }
+      }
 
       // 예약 소비(단일 사용).
       _pendingStaticPickups.Remove(entityIdentifier);

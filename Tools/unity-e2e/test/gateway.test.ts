@@ -10,6 +10,7 @@ import {once} from 'node:events';
 import {promisify} from 'node:util';
 import {setTimeout as delay} from 'node:timers/promises';
 import {loadConfig} from '../src/core.ts';
+import {fileURLToPath} from 'node:url';
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {StdioClientTransport} from '@modelcontextprotocol/sdk/client/stdio.js';
 
@@ -23,7 +24,7 @@ test('TLS console validates its certificate, origin and observer permissions',as
  const config={port,builds:{},artifactRoot:join(root,'artifacts'),gateway:{bind:'127.0.0.1',publicOrigin:origin,certFile,keyFile}};
  await writeFile(configFile,JSON.stringify(config));
  const operator='t'.repeat(64),observer='w'.repeat(64),ca=await readFile(certFile);
- const child=spawn(process.execPath,[new URL('../src/main.ts',import.meta.url).pathname,configFile],{env:{...process.env,E2E_CONSOLE_TOKEN:operator,E2E_OBSERVER_TOKEN:observer},stdio:'ignore'});
+ const child=spawn(process.execPath,[fileURLToPath(new URL('../src/main.ts',import.meta.url)),configFile],{env:{...process.env,E2E_CONSOLE_TOKEN:operator,E2E_OBSERVER_TOKEN:observer},stdio:'ignore'});
  const exited=once(child,'exit');
  const call=(tool:string,token:string,requestOrigin=origin)=>new Promise<{status:number,body:any}>((resolve,reject)=>{
   const req=request(origin+'/api',{method:'POST',ca,headers:{authorization:'Bearer '+token,origin:requestOrigin,'content-type':'application/json'}},res=>{
@@ -37,7 +38,7 @@ test('TLS console validates its certificate, origin and observer permissions',as
   assert.equal((await call('input.execute',observer)).status,403);
   assert.equal((await call('instances.list',operator,'https://untrusted.invalid')).status,403);
   assert.equal((await call('instances.list','invalid')).status,401);
-  const transport=new StdioClientTransport({command:process.execPath,args:[new URL('../src/mcp.ts',import.meta.url).pathname],env:{...process.env as Record<string,string>,NODE_EXTRA_CA_CERTS:certFile,E2E_SERVICE_URL:origin,E2E_CONSOLE_TOKEN:observer},stderr:'pipe'});
+  const transport=new StdioClientTransport({command:process.execPath,args:[fileURLToPath(new URL('../src/mcp.ts',import.meta.url))],env:{...process.env as Record<string,string>,NODE_EXTRA_CA_CERTS:certFile,E2E_SERVICE_URL:origin,E2E_CONSOLE_TOKEN:observer},stderr:'pipe'});
   const client=new Client({name:'tls-gateway-test',version:'1.0.0'});
   try {
    await client.connect(transport);

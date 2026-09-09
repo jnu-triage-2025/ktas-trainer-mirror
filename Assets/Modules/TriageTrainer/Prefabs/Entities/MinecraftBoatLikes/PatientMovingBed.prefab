@@ -442,6 +442,7 @@ GameObject:
   - component: {fileID: 8619811087951219274}
   - component: {fileID: 5796848331211291605}
   - component: {fileID: 1512016657929586668}
+  - component: {fileID: 5184012709427084031}
   m_Layer: 0
   m_Name: PatientMovingBed
   m_TagString: Untagged
@@ -634,6 +635,33 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.5, y: 1, z: 1.25}
   m_Center: {x: 0, y: 0.5, z: 0}
+--- !u!54 &5184012709427084031
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5017221584004301368}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &6805644929274069615
 GameObject:
   m_ObjectHideFlags: 0

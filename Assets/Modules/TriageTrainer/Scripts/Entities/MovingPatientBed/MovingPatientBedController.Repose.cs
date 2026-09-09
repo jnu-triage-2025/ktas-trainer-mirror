@@ -246,6 +246,11 @@ namespace TriageTrainer.Entity
 
       _reposedTargetComponent = patient;
       SnapReposedTargetToAnchor(patient);
+      // The carrying player drops the patient before this link is replicated,
+      // but remote peers do not run that local drop path.  Clear the carry
+      // gate here as well so a patient resting on the bed can expose triage
+      // and assessment interactions on every client.
+      patient.OnPlayerAttachedExit();
       ((IReposable)patient).OnMovingPatientBedAttachedEnter();
       patient.SetCurrentBed(this);
       RefreshDisplayName();
