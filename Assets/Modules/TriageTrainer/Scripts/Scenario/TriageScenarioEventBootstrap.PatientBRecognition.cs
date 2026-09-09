@@ -80,13 +80,21 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_ActivatePatientRecognition(PatientRecognitionActivation activation)
     {
       ResolveRuntimeReferencesIfNeeded();
+      string patientIdentifier = activation.TargetPatientC ? "patient_c" : "patient_b";
+
+      // 시나리오가 보관한 프리팹 참조는 네트워크 스폰 뒤에도 남아 있을 수 있다. 인식 상태는
+      // 실제로 레지스트리에 등록된 NetworkObject의 SyncList에 기록해야 하므로 그 인스턴스를
+      // 우선 해석한다.
+      PatientController patient = null;
+      if (MultiplayerInfrastructure.Registry.Registry.TryGetEntity(patientIdentifier, out var descriptor)
+          && descriptor?.GameObject != null)
+        patient = descriptor.GameObject.GetComponentInChildren<PatientController>(true);
+
       var target = activation.TargetPatientC ? _patientCObject : _patientBObject;
-      var patient = target != null
-        ? target.GetComponentInChildren<PatientController>(true)
-        : null;
+      if (patient == null && target != null)
+        patient = target.GetComponentInChildren<PatientController>(true);
       if (patient == null)
       {
-        string patientIdentifier = activation.TargetPatientC ? "patient_c" : "patient_b";
         UnityEngine.Debug.LogError(
           $"[TriageScenarioEventBootstrap] {patientIdentifier} recognition target is missing ({activation.CompletionSignal}).",
           this);

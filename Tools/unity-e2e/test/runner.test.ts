@@ -439,7 +439,9 @@ test('navigation retains current static item discovery only when its target need
    client:{players:[{local:true,position:[0,0,0],canMove:true,walkingSpeed:5}]}};
  };
  for(const targetType of ['waypoint','staticItem'])await f.runner.navigate('one',{id:'target',type:'navigate',mode:'input_adapter',target:'target',timeoutMs:1000,args:{targetType}} as any,AbortSignal.timeout(1000));
- assert.deepEqual(requests,[{includeStaticItems:false},{includeStaticItems:true}]);
+ assert.equal(requests.length,2);
+ assert.equal(requests[0].includeStaticItems,false);assert.equal(requests[1].includeStaticItems,true);
+ for(const request of requests){assert.equal(request.ttlMs,5000);assert.ok(request.signal instanceof AbortSignal);}
  await f.platform.close();
 });
 

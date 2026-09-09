@@ -64,6 +64,12 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// <summary>이 정적 아이템의 전역 식별자(서버/모든 클라이언트 동일).</summary>
     public string EntityIdentifier => _entityIdentifier;
 
+    // A static pickup is still an ordinary nearby interaction.  Giving it a
+    // stable presentation address lets automation select this exact prop when
+    // several unrelated interactions share the same radius.
+    public override string PresentationEntityIdentifier => EntityIdentifier;
+    public override string InteractionIdentifier => "static_pickup";
+
     public StaticPlacedItemVanishMode VanishMode => _vanishMode;
     public StaticPlacedItemVanishBehavior VanishBehavior => _vanishBehavior;
 

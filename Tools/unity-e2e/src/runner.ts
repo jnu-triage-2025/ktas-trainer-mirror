@@ -250,25 +250,41 @@ export class Runner {
         await this.platform.releaseControl(actor!);
         await this.platform.acquire(actor!); break;
       case 'dialogueAdvance': {
-        const value = await this.platform.observe(actor!);
+        const value = await this.platform.observe(actor!, false, { signal, ttlMs:5000 });
         if (!value.dialogue.canAdvance && !value.dialogue.isTextAnimating) throw new E2EError('TARGET_NOT_INTERACTABLE');
-        await this.platform.command(actor!, 'input.execute', { expectedPresentationRevision:value.dialogue.presentationRevision, sequence: [{ operation: 'tap', key: 'KeypadEnter' }] }, { signal }); break;
+        const key=value.inputBindings?.dialogueAdvance;
+        if(!key||key==='None')throw new E2EError('UNSUPPORTED_CAPABILITY','dialogueAdvance');
+        await this.platform.command(actor!, 'input.execute', { expectedPresentationRevision:value.dialogue.presentationRevision, sequence: [{ operation: 'tap', key }] }, { signal }); break;
       }
       case 'dialogueChoose': {
-        const value = await this.platform.observe(actor!);
+        const value = await this.platform.observe(actor!, false, { signal, ttlMs:5000 });
         const choices = value.dialogue.choices ?? [];
         const matches = choices.filter((choice: any) => (choice.choiceId === step.choiceId || choice.nextNodeId === step.choiceId));
         if (matches.length !== 1 || !value.dialogue.hasChoices || value.dialogue.isTextAnimating) throw new E2EError('TARGET_NOT_INTERACTABLE');
-        const index = matches[0].index, selected = value.dialogue.selectedIndex;
-        if (!Number.isInteger(selected) || selected < 0) throw new E2EError('TARGET_NOT_INTERACTABLE');
+        const index = matches[0].index;
+        let selected = value.dialogue.selectedIndex;
+        // Choice panels intentionally open without a selected row.  Prime the
+        // normal input-adapter selection before walking to the requested
+        // choice; otherwise every valid dialogue is misclassified as absent.
+        if (!Number.isInteger(selected) || selected < 0) {
+          await this.platform.command(actor!, 'input.execute', { expectedPresentationRevision:value.dialogue.presentationRevision, sequence: [{ operation: 'tap', key: 'Equals' }] }, { signal });
+          const primed = await this.platform.observe(actor!, false, { signal, ttlMs:5000 });
+          if (primed.dialogue.graphId !== value.dialogue.graphId || primed.dialogue.nodeId !== value.dialogue.nodeId
+            || primed.dialogue.presentationRevision !== value.dialogue.presentationRevision
+            || !Number.isInteger(primed.dialogue.selectedIndex) || primed.dialogue.selectedIndex < 0)
+            throw new E2EError('STATE_CONFLICT');
+          selected = primed.dialogue.selectedIndex;
+        }
         for (let n = 0; n < Math.abs(index - selected); n++)
           await this.platform.command(actor!, 'input.execute', { expectedPresentationRevision:value.dialogue.presentationRevision, sequence: [{ operation: 'tap', key: index > selected ? 'Equals' : 'Minus' }] }, { signal });
-        const confirmed = await this.platform.observe(actor!);
+        const confirmed = await this.platform.observe(actor!, false, { signal, ttlMs:5000 });
         if (confirmed.dialogue.graphId !== value.dialogue.graphId || confirmed.dialogue.nodeId !== value.dialogue.nodeId
           || confirmed.dialogue.presentationRevision !== value.dialogue.presentationRevision
           || confirmed.dialogue.selectedIndex !== index || confirmed.dialogue.choices[index]?.choiceId !== matches[0].choiceId)
           throw new E2EError('STATE_CONFLICT');
-        await this.platform.command(actor!, 'input.execute', { expectedPresentationRevision:value.dialogue.presentationRevision, sequence: [{ operation: 'tap', key: 'KeypadEnter' }] }, { signal }); break;
+        const key=confirmed.inputBindings?.dialogueConfirm;
+        if(!key||key==='None')throw new E2EError('UNSUPPORTED_CAPABILITY','dialogueConfirm');
+        await this.platform.command(actor!, 'input.execute', { expectedPresentationRevision:value.dialogue.presentationRevision, sequence: [{ operation: 'tap', key }] }, { signal }); break;
       }
       case 'interact': await this.interact(actor!,step,signal); break;
       case 'navigate': await this.navigate(actor!, step, signal); break;
@@ -348,14 +364,24 @@ export class Runner {
     }
   }
   async interact(id:string,step:Step,signal:AbortSignal) {
-    const value=await this.platform.observe(id);
-    const matches=(value.interactions??[]).filter((interaction:any)=>interaction.interactionId===step.target&&(!step.args?.entityId||interaction.entityId===step.args.entityId));
-    const selected=(value.interactions??[]).filter((interaction:any)=>interaction.selected);
-    if(matches.length!==1||selected.length!==1)throw new E2EError('TARGET_NOT_INTERACTABLE');
-    const difference=matches[0].index-selected[0].index;
-    for(let n=0;n<Math.abs(difference);n++)await this.platform.command(id,'input.execute',{sequence:[{operation:'tap',key:difference>0?'Equals':'Minus'}]},{signal});
-    const current=await this.platform.observe(id);
-    if(!current.interactions?.some((i:any)=>i.selected&&i.interactionId===step.target&&i.entityId===matches[0].entityId))throw new E2EError('STATE_CONFLICT');
+    let current=await this.platform.observe(id);
+    const targetEntity=step.args?.entityId;
+    // Drive one selection at a time and re-observe.  Multiple input commands
+    // can otherwise be consumed in one Unity frame, leaving the hint on its
+    // original entry despite a nominally correct sequence of key taps.
+    for(let attempt=0;attempt<32;attempt++) {
+      const matches=(current.interactions??[]).filter((interaction:any)=>interaction.interactionId===step.target&&(!targetEntity||interaction.entityId===targetEntity));
+      const selected=(current.interactions??[]).filter((interaction:any)=>interaction.selected);
+      if(matches.length!==1||selected.length!==1)throw new E2EError('TARGET_NOT_INTERACTABLE');
+      if(selected[0].interactionId===step.target&&selected[0].entityId===matches[0].entityId)break;
+      const difference=matches[0].index-selected[0].index;
+      if(difference===0)throw new E2EError('STATE_CONFLICT');
+      await this.platform.command(id,'input.execute',{sequence:[{operation:'tap',key:difference>0?'Equals':'Minus'}]},{signal});
+      await delay(120,undefined,{signal});
+      current=await this.platform.observe(id);
+      if(attempt===31)throw new E2EError('STATE_CONFLICT');
+    }
+    if(!current.interactions?.some((i:any)=>i.selected&&i.interactionId===step.target&&(!targetEntity||i.entityId===targetEntity)))throw new E2EError('STATE_CONFLICT');
     const key=current.inputBindings?.interact;
     if(!key||key==='None')throw new E2EError('UNSUPPORTED_CAPABILITY');
     await this.platform.command(id,'input.execute',{sequence:[{operation:'tap',key}]},{signal});
@@ -369,7 +395,10 @@ export class Runner {
     try {
       while (performance.now() < end) {
         signal.throwIfAborted();
-        const value = await this.platform.observe(id,false,{includeStaticItems:step.args?.targetType==='staticItem'});
+        // Navigation is a polling loop, so an unavailable bridge response must be
+        // bounded by the step's abort signal just like its input command.  Without
+        // this, a single stale observe request can outlive the navigation deadline.
+        const value = await this.platform.observe(id,false,{includeStaticItems:step.args?.targetType==='staticItem',signal,ttlMs:5000});
         const player = value.client.players.find((p: any) => p.local);
         const targets = step.args?.targetType === 'vehicle'
           ? (value.vehicles ?? []).filter((vehicle:any)=>vehicle.id===step.target)

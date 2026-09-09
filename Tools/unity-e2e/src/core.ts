@@ -16,6 +16,7 @@ export type Instance = {
   id: string; runId: string; nodeId: string; role: string; endpoint: string;
   token: string; profile: string; state: string; process?: ChildProcess;
   epoch: number; owner: Owner; heartbeat?: ReturnType<typeof setInterval>;
+  controlLeaseMs?: number;
   frame?: number; lastFrameAt?: number; exitCode?: number | null;
   udpProxy?: UdpFaultProxy; proxyPort?:number;
   stopping?: boolean; eventTimer?: ReturnType<typeof setInterval>; eventTask?: Promise<void>; eventCursor?: number;
@@ -26,7 +27,10 @@ export type Config = { builds: Record<string, Build>; artifactRoot: string; maxC
 export class Platform {
   config: Config;
   private store?: AsyncEventStore;
-  private history() { return this.store ??= new AsyncEventStore(this.config.artifactRoot); }
+  private historyRunId?: string;
+  // A Platform owns one live run at a time.  Keep event history with that
+  // run so prior exploratory runs cannot grow one shared database forever.
+  private history() { return this.store ??= new AsyncEventStore(join(this.config.artifactRoot, safeId(this.historyRunId ?? 'service'))); }
   private launchingRuns = new Set<string>();
   private launchReservations = new Map<string, number>();
   private closing = false;
@@ -169,8 +173,10 @@ export class Platform {
     if (historyErrors.length && reply.result && typeof reply.result === 'object') reply.result.historyErrors=historyErrors;
     return reply.result;
   }
-  async observe(id: string, releaseRead = false, options: {includeStaticItems?:boolean} = {}) {
-    const i = this.get(id), value = await this.command(id, 'game.observe', options, {releaseRead});
+  async observe(id: string, releaseRead = false, options: {includeStaticItems?:boolean; signal?:AbortSignal; ttlMs?:number} = {}) {
+    const i = this.get(id);
+    const {signal, ttlMs, ...payload} = options;
+    const value = await this.command(id, 'game.observe', payload, {releaseRead, signal, ttlMs});
     if (i.frame !== value.frame) { i.frame = value.frame; i.lastFrameAt = Date.now(); }
     if (!i.stopping && !['EXITED','CRASHED','START_FAILED'].includes(i.state)) {
       if (i.lastFrameAt && Date.now() - i.lastFrameAt > 5000) i.state = 'UNRESPONSIVE';
@@ -213,18 +219,21 @@ export class Platform {
     if (owner !== 'Automation') { i.heartbeat = undefined; return; }
     let inFlight = 0;
     const controlEpoch = i.epoch;
+    const leaseMs = i.controlLeaseMs ?? 2000;
     const stop = () => { clearInterval(timer); if (i.heartbeat === timer) i.heartbeat = undefined; };
     const timer = setInterval(async () => {
       if (i.stopping || i.owner !== owner || i.epoch !== controlEpoch || i.heartbeat !== timer) { stop(); return; }
-      // A slow acknowledgement must not suppress the next scheduled renewal.
+      // Under four local Unity clients a frame can take several seconds. Keep
+      // a small, bounded renewal window: this preserves a lease through one
+      // lost reply without allowing an unbounded backlog of bridge requests.
       if (inFlight >= 2) return; inFlight++;
-      try { await this.command(i.id, 'control.heartbeat', {}, { owner, epoch:controlEpoch, ttlMs: 1000 }); }
+      try { await this.command(i.id, 'control.heartbeat', {}, { owner, epoch:controlEpoch, ttlMs: Math.max(1000, Math.min(4000, leaseMs - 1000)) }); }
       catch (error) {
         // A lost reply does not prove expiry. The next scheduled pulse must still use the same epoch.
         if (!(error instanceof E2EError) || error.code !== 'INSTANCE_UNAVAILABLE') stop();
       }
       finally { inFlight--; }
-    }, 500);
+    }, leaseMs <= 2000 ? 500 : Math.max(500, Math.min(1500, Math.floor(leaseMs / 3))));
     i.heartbeat = timer;
     timer.unref();
   }
@@ -283,6 +292,7 @@ export class Platform {
     if(active+reserved+roles.length>limit) throw new E2EError('INSTANCE_CAPACITY_EXCEEDED',`Requested ${roles.length} instances with ${active+reserved} active or reserved; limit is ${limit}`);
     if (editorHost) this.launchingRuns.add(editorHost.runId);
     const runId = editorHost?.runId ?? randomUUID();
+    this.historyRunId = runId;
     this.launchReservations.set(runId,roles.length);
     const created: Instance[] = [];
     try {
@@ -305,7 +315,7 @@ export class Platform {
           allowChatCommands: this.config.fixture?.allowChatCommands === true, allowScenarioFixtures: this.config.fixture?.allowScenarioFixtures === true, allowProtocolTests: this.config.fixture?.allowProtocolTests === true });
         if(this.closing)throw new E2EError('PLATFORM_CLOSING');
         const i: Instance = { id, runId, nodeId: 'local', role, endpoint: `http://127.0.0.1:${port}`,
-          token: randomBytes(32).toString('hex'), profile, state: 'STARTING', epoch: 0, owner: 'None' };
+          token: randomBytes(32).toString('hex'), profile, state: 'STARTING', epoch: 0, owner: 'None', controlLeaseMs: build.controlLeaseMs ?? 2000 };
         if(networkProxy && role === 'client'){i.udpProxy=await UdpFaultProxy.create(gamePort,index+1);i.proxyPort=i.udpProxy.port;}
         if(this.closing){await i.udpProxy?.close();throw new E2EError('PLATFORM_CLOSING');}
         this.instances.set(id, i); created.push(i);
@@ -370,9 +380,14 @@ export class Platform {
     i.stopping = true;
     await i.udpProxy?.close();
     if (i.eventTimer) clearInterval(i.eventTimer);
-    await i.eventTask;
+    // A bridge event read can be stuck while a player is shutting down; do
+    // not let cleanup retain all four Unity processes indefinitely.
+    if (i.eventTask) await Promise.race([i.eventTask.catch(()=>{}), delay(3000, undefined, { ref: false })]);
     if (i.heartbeat) clearInterval(i.heartbeat);
-    if (i.owner !== 'None') { try { await this.handoff(id, 'None', i.owner); } catch { /* lease still expires in the bridge */ } }
+    if (i.owner !== 'None') {
+      try { await Promise.race([this.handoff(id, 'None', i.owner), delay(3000, undefined, { ref: false })]); }
+      catch { /* lease still expires in the bridge */ }
+    }
     if (!i.process) { this.instances.delete(id); return { detached: true }; }
     if (!i.process.pid) return this.publicInstance(i);
     if (i.process.exitCode !== null || i.process.signalCode !== null) return this.publicInstance(i);

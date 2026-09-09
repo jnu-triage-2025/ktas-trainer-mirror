@@ -465,9 +465,14 @@ namespace MultiplayerInfrastructure.Automation
           .Select(pair => new { Id = pair.Key, Object = pair.Value.GameObject,
             Identified = pair.Value.GameObject.GetComponent<Entity.IScenarioIdentifiedEntity>() })
           .Where(entry => entry.Identified != null && entry.Identified.ScenarioEntityIdentifier == entry.Id)
+          .Select(entry => new {
+            entry.Id, entry.Object, entry.Identified,
+            Patient = entry.Object.GetComponentInChildren<TriageTrainer.Entity.PatientController>(true)
+          })
           .Select(entry => new JObject {
             ["id"] = entry.Id, ["componentType"] = entry.Identified.GetType().Name,
-            ["position"] = new JArray(entry.Object.transform.position.x,entry.Object.transform.position.y,entry.Object.transform.position.z)
+            ["position"] = new JArray(entry.Object.transform.position.x,entry.Object.transform.position.y,entry.Object.transform.position.z),
+            ["recognitionSignals"] = entry.Patient == null ? new JArray() : new JArray(entry.Patient.AutomationRecognitionCheckSignals())
           })),
         ["localQuests"] = questManager == null ? null :
           new JArray(questManager.Quests.Select(quest => new JObject {

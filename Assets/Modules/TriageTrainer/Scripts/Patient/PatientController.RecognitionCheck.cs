@@ -115,6 +115,7 @@ namespace TriageTrainer.Entity
 
       public string PresentationEntityIdentifier => _owner.Identifier;
       public string InteractionIdentifier => _interactionIdentifier;
+      public string CompletionSignal => _completionSignal;
 
       public string DisplayText
       {
@@ -212,6 +213,17 @@ namespace TriageTrainer.Entity
 
     private bool HasActiveRecognitionCheck => _recognitionChecks.Count > 0;
 
+#if UNITY_E2E || UNITY_EDITOR
+    /// <summary>E2E 관측용: 이 환자 인스턴스에 실제로 복제된 확인 항목을 노출한다.</summary>
+    public string[] AutomationRecognitionCheckSignals()
+    {
+      var signals = new string[_recognitionChecks.Count];
+      for (int i = 0; i < _recognitionChecks.Count; i++)
+        signals[i] = _recognitionChecks[i].CompletionSignal ?? string.Empty;
+      return signals;
+    }
+#endif
+
     /// <summary>
     /// 마이크 다시 사용 인터랙션만 엔티티 목록에 둔다. 확인 항목 인터랙션은 시나리오 데이터의
     /// interactions 정의(handlerKey "recognition_check")가 선언하고, 레지스트리가 <see cref="TryCreateInteractionHandler"/>
@@ -247,9 +259,35 @@ namespace TriageTrainer.Entity
       return true;
     }
 
-    /// <summary>활성 항목이 바뀌면 힌트만 다시 계산한다. 핸들러 목록은 레지스트리가 관리한다.</summary>
+    /// <summary>
+    /// 활성 항목을 환자 자체 상호작용 목록에도 반영한다. 시나리오 데이터 정의가 엔티티 스폰 뒤에
+    /// 보류 해제되는 정상 경로에서는 레지스트리가 같은 핸들러를 제공한다. 그러나 역할 분기의
+    /// 활성화 시점에는 그 보류 정의가 아직 적용되지 않을 수 있으므로, 이 목록을 함께 유지해야
+    /// 실제 플레이어의 상호작용 힌트가 사라지지 않는다.
+    /// </summary>
     private void RebuildRecognitionCheckInteracts()
     {
+      foreach (var entry in _recognitionChecks)
+      {
+        string signal = entry.CompletionSignal ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(signal))
+          continue;
+        if (!_recognitionCheckInteracts.TryGetValue(signal, out var interact) || interact == null)
+        {
+          interact = new PatientRecognitionCheckInteract(this, signal);
+          _recognitionCheckInteracts[signal] = interact;
+        }
+        if (!_interacts.Contains(interact))
+          _interacts.Add(interact);
+      }
+
+      for (int i = _interacts.Count - 1; i >= 0; i--)
+      {
+        if (_interacts[i] is not PatientRecognitionCheckInteract interact)
+          continue;
+        if (!TryGetRecognitionCheck(interact.CompletionSignal, out _))
+          _interacts.RemoveAt(i);
+      }
       InteractionRegistry.RequestHintRefresh();
     }
 
@@ -461,8 +499,46 @@ namespace TriageTrainer.Entity
       string requiredRoleTag,
       string displayText = "말 걸기")
     {
-      if (!IsFishNetServerStarted && !InstanceFinder.IsOffline)
+      if (IsFishNetServerStarted || InstanceFinder.IsOffline)
+      {
+        ActivateRecognitionCheckAuthoritative(
+          completionSignal,
+          allowMicrophone,
+          requiredRoleTag,
+          displayText);
         return;
+      }
+
+      // 역할 분기는 담당 클라이언트 한 곳에서 먼저 실행될 수 있다. 그 경우에도 활성 상태는
+      // 서버 SyncList에 기록되어야 다른 모든 피어가 같은 인식 항목을 보게 된다.
+      if (IsFishNetClientInitialized)
+        CmdActivateRecognitionCheck(
+          completionSignal ?? string.Empty,
+          allowMicrophone,
+          requiredRoleTag ?? string.Empty,
+          displayText ?? string.Empty);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdActivateRecognitionCheck(
+      string completionSignal,
+      bool allowMicrophone,
+      string requiredRoleTag,
+      string displayText)
+    {
+      ActivateRecognitionCheckAuthoritative(
+        completionSignal,
+        allowMicrophone,
+        requiredRoleTag,
+        displayText);
+    }
+
+    private void ActivateRecognitionCheckAuthoritative(
+      string completionSignal,
+      bool allowMicrophone,
+      string requiredRoleTag,
+      string displayText)
+    {
 
       bool mic = allowMicrophone && ScenarioGameRules.UseMicInRecognitionCheck;
       var entry = new PatientRecognitionCheckEntry(
@@ -472,12 +548,32 @@ namespace TriageTrainer.Entity
         mic,
         ShouldEnableRecognitionInteraction(mic, ScenarioGameRules.DisableInteractionInRecognitionCheck));
 
+      UpsertRecognitionCheck(entry);
+      // PatientController is an entity spawned after the scenario starts. In
+      // that ordering, a SyncList delta can be applied before the client has
+      // installed its hint callback. Mirror the authoritative delta through
+      // an observer RPC so every connected player rebuilds the visible
+      // interaction immediately; the SyncList remains the late-join state.
+      if (IsFishNetServerStarted)
+        RpcUpsertRecognitionCheck(entry.CompletionSignal, entry.DisplayText,
+          entry.RequiredRoleTag, entry.MicrophoneEnabled, entry.InteractionEnabled);
+    }
+
+    private void UpsertRecognitionCheck(PatientRecognitionCheckEntry entry)
+    {
       int index = IndexOfRecognitionCheck(entry.CompletionSignal);
-      if (index >= 0)
-        _recognitionChecks[index] = entry;
-      else
-        _recognitionChecks.Add(entry);
+      if (index >= 0) _recognitionChecks[index] = entry;
+      else _recognitionChecks.Add(entry);
       HandleRecognitionChecksChanged();
+    }
+
+    [ObserversRpc]
+    private void RpcUpsertRecognitionCheck(string completionSignal, string displayText,
+      string requiredRoleTag, bool microphoneEnabled, bool interactionEnabled)
+    {
+      if (IsFishNetServerStarted || InstanceFinder.IsOffline) return;
+      UpsertRecognitionCheck(new PatientRecognitionCheckEntry(completionSignal,
+        displayText, requiredRoleTag, microphoneEnabled, interactionEnabled));
     }
 
     /// <summary>완료되지 않은 확인 항목을 시나리오 쪽에서 닫는다.</summary>
@@ -492,6 +588,7 @@ namespace TriageTrainer.Entity
 
       _recognitionChecks.RemoveAt(index);
       HandleRecognitionChecksChanged();
+      if (IsFishNetServerStarted) RpcRemoveRecognitionCheck(completionSignal?.Trim() ?? string.Empty);
       return true;
     }
 
@@ -505,6 +602,7 @@ namespace TriageTrainer.Entity
 
       _recognitionChecks.Clear();
       HandleRecognitionChecksChanged();
+      if (IsFishNetServerStarted) RpcClearRecognitionChecks();
     }
 
     private int IndexOfRecognitionCheck(string completionSignal)
@@ -601,11 +699,31 @@ namespace TriageTrainer.Entity
       string signal = _recognitionChecks[index].CompletionSignal;
       _recognitionChecks.RemoveAt(index);
       HandleRecognitionChecksChanged();
+      if (IsFishNetServerStarted) RpcRemoveRecognitionCheck(signal);
       if (string.Equals(signal, $"{Identifier}_pupil_checked", StringComparison.Ordinal))
         NotifyPatientBCPupilCompleted();
       if (!string.IsNullOrWhiteSpace(signal))
         ScenarioInteractionSignals.Raise(signal);
       return true;
+    }
+
+    [ObserversRpc]
+    private void RpcRemoveRecognitionCheck(string completionSignal)
+    {
+      if (IsFishNetServerStarted || InstanceFinder.IsOffline) return;
+      int index = IndexOfRecognitionCheck(completionSignal);
+      if (index < 0) return;
+      _recognitionChecks.RemoveAt(index);
+      HandleRecognitionChecksChanged();
+    }
+
+    [ObserversRpc]
+    private void RpcClearRecognitionChecks()
+    {
+      if (IsFishNetServerStarted || InstanceFinder.IsOffline) return;
+      if (_recognitionChecks.Count == 0) return;
+      _recognitionChecks.Clear();
+      HandleRecognitionChecksChanged();
     }
 
     /// <summary>

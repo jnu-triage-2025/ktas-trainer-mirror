@@ -3,12 +3,12 @@ import {Platform,E2EError} from './core.ts';
 export async function drivePatientBed(platform:Platform,instanceId:string,bedId:string,pointId:string,signal:AbortSignal,timeoutMs=60000,participantIds:string[]=[instanceId],via:number[][]=[]){
  if(!participantIds.includes(instanceId)||new Set(participantIds).size!==participantIds.length)throw new E2EError('INVALID_PARTICIPANTS');
  if(via.length>32||via.some(point=>point.length!==3||point.some(value=>!Number.isFinite(value))))throw new E2EError('INVALID_VEHICLE_ROUTE');
- const deadline=performance.now()+timeoutMs;let routeIndex=0;
+ const deadline=performance.now()+timeoutMs;let routeIndex=0,lastPeerValidation=-Infinity;
  let bestDistance=Infinity,bestAngle=Infinity,lastProgress=performance.now();
  try {
   while(performance.now()<deadline){
    signal.throwIfAborted();
-   const snapshot=await platform.observe(instanceId,false,{includeStaticItems:false});
+   const snapshot=await platform.observe(instanceId,false,{includeStaticItems:false,signal,ttlMs:5000});
    const beds=(snapshot.vehicles??[]).filter((v:any)=>v.id===bedId&&v.kind==='patientBed');
    if(beds.length!==1)throw new E2EError('TARGET_NOT_FOUND',bedId);
    const bed=beds[0];
@@ -27,13 +27,19 @@ export async function drivePatientBed(platform:Platform,instanceId:string,bedId:
    const key=Math.abs(angle)>8?(angle>0?'D':'A'):'W';
    const durationMs=key==='W'&&distance>1.5?200:100;
    const peers=participantIds.filter(id=>id!==instanceId);
-   const observations=await Promise.allSettled(peers.map(participant=>platform.observe(participant,false,{includeStaticItems:false})));
-   for(const [index,result] of observations.entries()){
-    if(result.status==='rejected')throw result.reason;
-    const controlled=(result.value.vehicles??[]).filter((v:any)=>v.id===bedId&&v.kind==='patientBed'&&v.locallyControlled);
-    if(controlled.length!==1)throw new E2EError('VEHICLE_NOT_CONTROLLED',peers[index]);
+   // Inputs still go to every participant on every steering step.  Querying
+   // every peer at that same rate, however, overwhelms four local players;
+   // sample ownership at a bounded cadence instead.
+   if(performance.now()-lastPeerValidation>=2000){
+    const observations=await Promise.allSettled(peers.map(participant=>platform.observe(participant,false,{includeStaticItems:false,signal,ttlMs:5000})));
+    for(const [index,result] of observations.entries()){
+     if(result.status==='rejected')throw result.reason;
+     const controlled=(result.value.vehicles??[]).filter((v:any)=>v.id===bedId&&v.kind==='patientBed'&&v.locallyControlled);
+     if(controlled.length!==1)throw new E2EError('VEHICLE_NOT_CONTROLLED',peers[index]);
+    }
+    lastPeerValidation=performance.now();
    }
-   const results=await Promise.allSettled(participantIds.map(id=>platform.command(id,'input.execute',{sequence:[{operation:'hold',key,durationMs}]},{signal,ttlMs:2000})));
+   const results=await Promise.allSettled(participantIds.map(id=>platform.command(id,'input.execute',{sequence:[{operation:'hold',key,durationMs}]},{signal,ttlMs:4000})));
    for(const result of results)if(result.status==='rejected')throw result.reason;
   }
   throw new E2EError('DEADLINE_EXCEEDED',bedId);

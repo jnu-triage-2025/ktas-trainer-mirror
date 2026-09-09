@@ -793,7 +793,9 @@ namespace MultiplayerInfrastructure.UI
       _currentCharIndex = 0;
       _isTyping = true;
       _isWaitingForInput = false;
-      _lastTypeTime = Time.time;
+      // Dialogue overlays can pause scaled gameplay time.  Typing is UI
+      // presentation and must still progress while that overlay is active.
+      _lastTypeTime = Time.unscaledTime;
       _lastTypeProgressUnscaledTime = Time.unscaledTime;
 
       if (_dialogueTextLabel != null)
@@ -817,9 +819,9 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      if (Time.time - _lastTypeTime >= _typingSpeed)
+      if (Time.unscaledTime - _lastTypeTime >= _typingSpeed)
       {
-        _lastTypeTime = Time.time;
+        _lastTypeTime = Time.unscaledTime;
         _lastTypeProgressUnscaledTime = Time.unscaledTime;
         _currentCharIndex++;
 
