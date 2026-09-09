@@ -4058,6 +4058,7 @@
     "D_START_BROADCAST": {
       "speakerName": "구내방송",
       "dialogueContent": "흉부 관통상 환자 한 명 KTAS1 입니다. 모든 간호사는 지금 바로 분류 구역으로 이동하십시오. 환자를 처치실로 이동시키겠습니다.",
+      "dialogueContentTTSPassing": "흉부 관통상 환자 한 명 케이타스 원입니다. 모든 간호사는 지금 바로 분류 구역으로 이동하십시오. 환자를 처치실로 이동시키겠습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "interactionRequired": false,
