@@ -1,3 +1,5 @@
+using FishNet.Connection;
+using FishNet.Object;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
@@ -20,6 +22,22 @@ namespace MultiplayerInfrastructure.Player
 
       _isWallSuctionAvailable = available;
       RefreshInteractableHintsNow();
+
+      // The connected line is created on the interacting client for visuals,
+      // but patient treatment is validated by the server-side PlayerController.
+      // Mirror the owner-local connection state to that authoritative copy.
+      if (IsSpawned && !IsServerStarted)
+        CmdSetWallSuctionAvailable(available);
+    }
+
+    [ServerRpc]
+    private void CmdSetWallSuctionAvailable(bool available, NetworkConnection sender = null)
+    {
+      if (sender == null || !sender.IsValid || Owner == null || !Owner.IsValid
+          || sender.ClientId != Owner.ClientId)
+        return;
+
+      SetWallSuctionAvailable(available);
     }
   }
 }

@@ -7,6 +7,7 @@ import {spawn, type ChildProcess} from 'node:child_process';
 import {createServer} from 'node:net';
 import {once} from 'node:events';
 import {setTimeout as delay} from 'node:timers/promises';
+import {fileURLToPath} from 'node:url';
 test('service restart exposes interrupted requests and rejects late AI completion', async () => {
  const root=await mkdtemp(join(tmpdir(),'e2e-requests-http-'));
  const reservation=createServer(); reservation.listen(0,'127.0.0.1'); await once(reservation,'listening');
@@ -19,7 +20,7 @@ test('service restart exposes interrupted requests and rejects late AI completio
  const token='c'.repeat(64), origin=`http://127.0.0.1:${port}`;
  let child:ChildProcess|undefined, exited:Promise<unknown>|undefined;
  const start=async()=>{
-  child=spawn(process.execPath,[new URL('../src/main.ts',import.meta.url).pathname,config],{env:{...process.env,E2E_CONSOLE_TOKEN:token,E2E_CREDENTIAL_EXPIRES_AT:undefined},stdio:'ignore'});
+  child=spawn(process.execPath,[fileURLToPath(new URL('../src/main.ts',import.meta.url)),config],{env:{...process.env,E2E_CONSOLE_TOKEN:token,E2E_CREDENTIAL_EXPIRES_AT:undefined},stdio:'ignore'});
   exited=once(child,'exit');
   const deadline=performance.now()+15000;
   while(true){try{await fetch(origin,{signal:AbortSignal.timeout(1000)});break;}catch{assert.ok(performance.now()<deadline);assert.equal(child.exitCode,null);await delay(25);}}

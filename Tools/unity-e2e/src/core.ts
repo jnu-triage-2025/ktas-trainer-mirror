@@ -101,9 +101,17 @@ export class Platform {
       commandId: randomUUID(), controlEpoch: options.epoch ?? i.epoch, owner: options.owner ?? 'Automation', type, ttlMs, payload };
     let response;
     try {
-      response = await fetch(i.endpoint + '/command', { method: 'POST',
+      const request = fetch(i.endpoint + '/command', { method: 'POST',
         headers: { Authorization: `Bearer ${i.token}`, 'Content-Type': 'application/json', Connection: 'close' },
         body: JSON.stringify(body), signal: AbortSignal.any([AbortSignal.timeout(ttlMs), ...(options.signal ? [options.signal] : [])]) });
+      // Some transient loopback failures leave undici's fetch promise pending
+      // despite its abort signal.  A live E2E route must classify that state
+      // as an unavailable instance rather than silently stall every role.
+      response = await Promise.race([
+        request,
+        new Promise<never>((_, reject) => setTimeout(
+          () => reject(new E2EError('INSTANCE_UNAVAILABLE', `Command timed out: ${type}`)), ttlMs + 250))
+      ]);
     } catch (error) {
       if (!options.signal?.aborted && !i.stopping && !['EXITED','CRASHED','START_FAILED'].includes(i.state)) i.state = 'DISCONNECTED';
       const code = options.signal?.aborted ? 'CANCELLED' : 'INSTANCE_UNAVAILABLE';

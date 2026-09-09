@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
@@ -92,6 +93,10 @@ namespace MultiplayerInfrastructure.InteractableEntity
     public static bool IsInitCycleActive => _entityInitDepth > 0 || _scenarioInitDepth > 0;
 
     public static IEnumerable<InteractionRegistryEntry> AllEntries => Entries.Values;
+
+    /// <summary>E2E 관측과 에디터 진단을 위한 아직 엔티티에 연결되지 않은 정의 목록.</summary>
+    public static IEnumerable<(string ScenarioIdentifier, InteractionDefinition Definition)> PendingDefinitions
+      => PendingData.Select(pending => (pending.ScenarioIdentifier, pending.Definition));
 
     public static int Count => Entries.Count;
 
@@ -188,6 +193,12 @@ namespace MultiplayerInfrastructure.InteractableEntity
           _suppressChanged = false;
         }
       }
+      // A network entity can register its code handlers after the scenario
+      // was applied (or re-register after its replicated identifier changes).
+      // The registry event normally applies PendingData at entity registration,
+      // but that happens before this source has rebuilt its handlers. Reapply
+      // now so the scenario overlay is never lost on the new code entries.
+      ApplyPendingForEntity(entityIdentifier);
       RaiseChanged();
     }
 

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FishNet.Connection;
+using FishNet.Object;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
@@ -322,7 +324,32 @@ namespace MultiplayerInfrastructure.Player
       // 실제 인벤토리 진입 시점에 획득 훅(OnGet)이 발행되도록 지연 획득 플래그를 설정한다(위 XML 주석 참조).
       outputItem.DeferredOnGet = true;
 
+      // Remote players craft in their local inventory UI, but scenario-side
+      // equipment checks are server-authoritative.  Mirror the same validated
+      // recipe transaction on the owning server inventory so a crafted tool is
+      // usable by world interactions (without replacing the UI cursor item).
+      if (IsSpawned && !IsServerStarted)
+        CmdCraftRecipeOnServer(outputItemIdentifier);
+
       return outputItem;
+    }
+
+    [ServerRpc]
+    private void CmdCraftRecipeOnServer(string outputItemIdentifier, NetworkConnection sender = null)
+    {
+      if (sender == null || !sender.IsValid || Owner == null || !Owner.IsValid
+          || sender.ClientId != Owner.ClientId)
+        return;
+
+      var crafted = TryCraftRecipe(outputItemIdentifier);
+      if (crafted == null)
+        return;
+
+      // The client UI keeps its result on the cursor until the player places
+      // it. The server has no cursor, so retain the authoritative equivalent
+      // directly in its inventory for subsequent interaction validation.
+      crafted.DeferredOnGet = false;
+      TryAddItemToInventory(crafted);
     }
 
     /// <summary>현재 인벤토리의 아이템 수량 맵(Identifier → count)을 만든다.</summary>

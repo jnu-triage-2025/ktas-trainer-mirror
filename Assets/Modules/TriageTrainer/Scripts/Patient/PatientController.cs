@@ -104,7 +104,11 @@ namespace TriageTrainer.Entity
     /// <summary>
     /// 환자가 플레이어에게 들린 상태가 아닐 때만 수행 가능한 정지 상태 사정/분류의 공통 게이트.
     /// </summary>
-    public bool CanPerformTriageOrAssessment => !_isPlayerAttached;
+    // The carry flag is local to the player that picked the patient up and
+    // can arrive a frame later than a replicated bed link on remote peers.
+    // A patient already resting on a bed is stationary and must remain
+    // assessable; only an actively carried patient is gated.
+    public bool CanPerformTriageOrAssessment => !_isPlayerAttached || CurrentBed != null;
 
     private void Awake()
     {

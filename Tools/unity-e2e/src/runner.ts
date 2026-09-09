@@ -80,7 +80,7 @@ export function validate(definition: unknown): { valid: boolean; errors: string[
         if (step.type !== 'assert' && !step.timeoutMs) errors.push(`${step.id}: timeoutMs required`);
         if (step.type === 'assertNever' && step.predicate !== 'event.occurred') errors.push(`${step.id}: no lossless predicate backend available; assertNever cannot use snapshot polling`);
       }
-      if (step.type === 'navigate' && !z.object({targetType:z.enum(['waypoint','npc','item','staticItem','scenarioEntity','vehicle']).optional(),targetOffset:z.tuple([z.number().finite().min(-10).max(10),z.number().finite().min(-10).max(10),z.number().finite().min(-10).max(10)]).optional(),arrivalRadius:z.number().finite().positive().max(10).optional(),stuckWindowMs:z.number().int().min(500).max(30000).optional()}).strict().safeParse(step.args??{}).success) errors.push(`${step.id}: invalid navigation arguments`);
+      if (step.type === 'navigate' && !z.object({targetType:z.enum(['waypoint','npc','item','staticItem','scenarioEntity','vehicle','position']).optional(),targetPosition:z.tuple([z.number().finite(),z.number().finite(),z.number().finite()]).optional(),targetOffset:z.tuple([z.number().finite().min(-10).max(10),z.number().finite().min(-10).max(10),z.number().finite().min(-10).max(10)]).optional(),arrivalRadius:z.number().finite().positive().max(10).optional(),stuckWindowMs:z.number().int().min(500).max(30000).optional()}).strict().safeParse(step.args??{}).success) errors.push(`${step.id}: invalid navigation arguments`);
       if (step.type === 'interact' && !z.object({entityId:textArg.optional()}).strict().safeParse(step.args??{}).success) errors.push(`${step.id}: invalid interaction arguments`);
       if (step.type === 'interact' && (!step.target || step.mode !== 'input_adapter')) errors.push(`${step.id}: interact requires target and input_adapter`);
       if (step.type === 'navigate' && (!step.timeoutMs || !step.target || step.mode !== 'input_adapter')) errors.push(`${step.id}: navigate requires target, timeoutMs and input_adapter`);
@@ -350,10 +350,21 @@ export class Runner {
   async interact(id:string,step:Step,signal:AbortSignal) {
     const value=await this.platform.observe(id);
     const matches=(value.interactions??[]).filter((interaction:any)=>interaction.interactionId===step.target&&(!step.args?.entityId||interaction.entityId===step.args.entityId));
-    const selected=(value.interactions??[]).filter((interaction:any)=>interaction.selected);
+    let selected=(value.interactions??[]).filter((interaction:any)=>interaction.selected);
+    // A panel transition may rebuild the nearest-only list with no selected
+    // entry for one frame.  Initialise its normal keyboard selection instead
+    // of treating an otherwise visible, unique target as unavailable.
+    if(matches.length===1&&selected.length===0){
+      await this.platform.command(id,'input.execute',{sequence:[{operation:'tap',key:'Equals'}]},{signal});
+      await delay(100, undefined, { signal });
+      selected=(await this.platform.observe(id)).interactions?.filter((interaction:any)=>interaction.selected)??[];
+    }
     if(matches.length!==1||selected.length!==1)throw new E2EError('TARGET_NOT_INTERACTABLE');
     const difference=matches[0].index-selected[0].index;
-    for(let n=0;n<Math.abs(difference);n++)await this.platform.command(id,'input.execute',{sequence:[{operation:'tap',key:difference>0?'Equals':'Minus'}]},{signal});
+    for(let n=0;n<Math.abs(difference);n++){
+      await this.platform.command(id,'input.execute',{sequence:[{operation:'tap',key:difference>0?'Equals':'Minus'}]},{signal});
+      await delay(50, undefined, { signal });
+    }
     const current=await this.platform.observe(id);
     if(!current.interactions?.some((i:any)=>i.selected&&i.interactionId===step.target&&i.entityId===matches[0].entityId))throw new E2EError('STATE_CONFLICT');
     const key=current.inputBindings?.interact;
@@ -371,7 +382,9 @@ export class Runner {
         signal.throwIfAborted();
         const value = await this.platform.observe(id,false,{includeStaticItems:step.args?.targetType==='staticItem'});
         const player = value.client.players.find((p: any) => p.local);
-        const targets = step.args?.targetType === 'vehicle'
+        const targets = step.args?.targetType === 'position'
+          ? (Array.isArray(step.args?.targetPosition) ? [{position:step.args.targetPosition}] : [])
+          : step.args?.targetType === 'vehicle'
           ? (value.vehicles ?? []).filter((vehicle:any)=>vehicle.id===step.target)
           : step.args?.targetType === 'scenarioEntity'
           ? (value.scenarioEntities ?? []).filter((entity:any)=>entity.id===step.target)

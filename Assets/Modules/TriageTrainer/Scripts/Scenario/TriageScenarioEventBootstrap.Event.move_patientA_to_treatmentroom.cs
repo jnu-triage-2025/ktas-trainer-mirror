@@ -186,6 +186,11 @@ namespace TriageTrainer.Scenario
         // 침대가 정박한 시점에 이송을 완료로 처리한다. 누가 밀었는지, 다른 플레이어가
         // 침대에서 내렸는지는 진행 조건으로 삼지 않는다. 다만 조종 상태로 침대에 묶여 있는
         // 플레이어는 다음 단계를 수행할 수 없으므로 서버 권위로 함께 풀어 준다.
+        // 일반 수동 이송은 어느 유효 스냅 포인트에서 완료될 수 있다. 완료된 침대를
+        // 그 임시 정박 지점에 그대로 두면 환자와 처치실 장비가 분리되어 다음 퀘스트가
+        // 물리적으로 불가능해진다. 참가자가 붙어 있는 상태에서 자동 대체 경로와 동일하게
+        // 처치실 정박으로 옮긴 뒤 해제해야, 각 클라이언트가 새 정박 위치에서 내린다.
+        PlacePatientABedAtTreatmentPoint(ResolvePatientACurrentBed() ?? bed.gameObject);
         bed.ForceReleaseAllParticipants();
 
         onFinished?.Invoke(true);

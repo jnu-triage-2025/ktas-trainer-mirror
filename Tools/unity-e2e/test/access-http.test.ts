@@ -8,6 +8,7 @@ import {createServer} from 'node:net';
 import {once} from 'node:events';
 import {setTimeout as delay} from 'node:timers/promises';
 import {request as httpRequest} from 'node:http';
+import {fileURLToPath} from 'node:url';
 
 test('HTTP observer cannot elevate caller or mutate and startup logs omit credentials',async()=>{
  const root=await mkdtemp(join(tmpdir(),'e2e-access-'));
@@ -16,7 +17,7 @@ test('HTTP observer cannot elevate caller or mutate and startup logs omit creden
  const config=join(root,'config.json');await writeFile(config,JSON.stringify({port,builds:{},artifactRoot:join(root,'artifacts')}));
  const operator='o'.repeat(64),observer='v'.repeat(64);
  const expiresAt=Date.now()+5000;
- const child=spawn(process.execPath,[new URL('../src/main.ts',import.meta.url).pathname,config],{env:{...process.env,E2E_CONSOLE_TOKEN:operator,E2E_OBSERVER_TOKEN:observer,E2E_CREDENTIAL_EXPIRES_AT:String(expiresAt)},stdio:['ignore','ignore','pipe']});
+ const child=spawn(process.execPath,[fileURLToPath(new URL('../src/main.ts',import.meta.url)),config],{env:{...process.env,E2E_CONSOLE_TOKEN:operator,E2E_OBSERVER_TOKEN:observer,E2E_CREDENTIAL_EXPIRES_AT:String(expiresAt)},stdio:['ignore','ignore','pipe']});
  let logs='';child.stderr.on('data',chunk=>logs+=chunk.toString());const exited=once(child,'exit');
  const origin=`http://127.0.0.1:${port}`;
  const call=(token:string,tool:string,caller='RemoteHuman')=>fetch(origin+'/api',{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json'},body:JSON.stringify({tool,caller,args:{}})});
