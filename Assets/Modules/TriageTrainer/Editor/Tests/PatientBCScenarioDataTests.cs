@@ -309,7 +309,7 @@ namespace TriageTrainer.Tests
       var graph = ScenarioGraphLoader.LoadFromJson(scenarioJson, validateWithSchema: true);
 
       Assert.That(graph.DefaultEntrypoint, Is.EqualTo("GIVE_CHECKLIST_PAPER_IF_MISSING"));
-      Assert.That(graph.Nodes, Has.Count.EqualTo(361));
+      Assert.That(graph.Nodes, Has.Count.EqualTo(362));
       var checklistPaperGrant = graph.Nodes["GIVE_CHECKLIST_PAPER_IF_MISSING"] as ScenarioExecuteCommandNode;
       Assert.That(checklistPaperGrant, Is.Not.Null);
       Assert.That(checklistPaperGrant.CommandLine, Is.EqualTo("give-if-missing checklist_paper @a"));
