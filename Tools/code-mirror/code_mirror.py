@@ -341,23 +341,43 @@ def validate_destination_state(state: dict[str, Any], destination_url: str, rese
         )
 
 
-def check_destination_conflicts(refs: dict[str, str], state: dict[str, Any], current: dict[str, str], rebuild: bool, reset_destination: bool) -> None:
-    """Refuse to overwrite destination refs this tool did not last publish.
+def check_moved_refs(refs: dict[str, str], state: dict[str, Any], current: dict[str, str], reset_destination: bool) -> None:
+    """Refuse to publish over a destination ref that moved outside this tool.
 
-    Nothing here depends on the rewrite, so main() runs it before rewriting to
-    report the conflict immediately instead of after a full history rewrite.
+    No amount of rewriting can make this safe, so main() checks it before
+    spending time on a full history rewrite. A ref with no push record yet
+    (a lost or never-written state file, or a first run) is judged separately
+    in check_destination_conflicts, once the rewrite gives it something to
+    compare the destination against.
     """
     pushed = {} if reset_destination else state.get("pushed_refs", {})
     for ref in refs:
         actual = current.get(ref)
         expected = pushed.get(ref)
-        if expected is None and actual is not None and not rebuild:
-            raise MirrorError(f"Destination already has {ref}. Use --rebuild only after reviewing the rewrite.")
         # A deleted destination ref cannot overwrite anyone else's work.  Let
         # the normal force-with-lease below recreate it, while still refusing
         # to overwrite a ref that was moved to a different commit externally.
         if expected is not None and actual is not None and actual != expected:
             raise MirrorError(f"Destination {ref} changed outside this tool; refusing to overwrite it.")
+
+
+def check_destination_conflicts(refs: dict[str, str], state: dict[str, Any], current: dict[str, str], rebuild: bool, reset_destination: bool, computed: dict[str, str]) -> None:
+    """Refuse to overwrite destination refs this tool did not last publish.
+
+    A ref with no push record in the state file is only let through when the
+    freshly rewritten history for it is byte-identical to what the
+    destination already has: that is a no-op, not an overwrite, and it is the
+    routine case of a state file lost from a reused CI workspace (see
+    Tools/CI/mirror-code.ps1) rather than a filtering change or foreign
+    history that genuinely needs a reviewed --rebuild.
+    """
+    check_moved_refs(refs, state, current, reset_destination)
+    pushed = {} if reset_destination else state.get("pushed_refs", {})
+    for ref in refs:
+        actual = current.get(ref)
+        expected = pushed.get(ref)
+        if expected is None and actual is not None and not rebuild and computed.get(ref) != actual:
+            raise MirrorError(f"Destination already has {ref}. Use --rebuild only after reviewing the rewrite.")
 
 
 def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str, Any], rebuild: bool, reset_destination: bool) -> None:
@@ -370,8 +390,12 @@ def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str
     try:
         current = destination_refs(url)
         # Re-checked here because the destination can change between the early
-        # check in main() and this push.
-        check_destination_conflicts(refs, state, current, rebuild, reset_destination)
+        # check in main() and this push. computed is only available now that
+        # the rewrite has run, which is what lets a ref with no push record
+        # be recognized as already matching instead of always demanding
+        # --rebuild.
+        computed = {ref: state["commits"][source] for ref, source in refs.items()}
+        check_destination_conflicts(refs, state, current, rebuild, reset_destination, computed)
         leases = [f"--force-with-lease={ref}:{current.get(ref) or ''}" for ref in refs]
         refspecs = [f"{state['commits'][source]}:{ref}" for ref, source in refs.items()]
         run_git(["push", *leases, url, *refspecs], env=env)
@@ -442,9 +466,12 @@ def main() -> int:
     if args.push:
         destination_url = str(config["destination"]["url"])
         validate_destination_state(state, destination_url, args.reset_destination)
-        # Rewriting a long history costs far more than one ls-remote, so a
-        # destination conflict is reported before any of that work starts.
-        check_destination_conflicts(refs, state, destination_refs(destination_url), args.rebuild, args.reset_destination)
+        # Rewriting a long history costs far more than one ls-remote, so the
+        # unambiguous conflict (a destination ref moved outside this tool) is
+        # reported before any of that work starts. A ref with no push record
+        # yet cannot be judged without the rewrite, so that case waits for
+        # check_destination_conflicts in push_refs.
+        check_moved_refs(refs, state, destination_refs(destination_url), args.reset_destination)
 
     graph = commit_graph(refs.values())
     # A rewritten commit is a pure function of its source commit and the
