@@ -204,6 +204,58 @@ A의 순서는 `SPAWN_A → SPAWN_DOCTOR → PRESET_A`다. B/C의 순서는 `SPA
 
 환자 스폰 위치는 ENTRY보다 +Z 쪽이고 의사 스폰 위치는 R0보다 -X 쪽이다. 그 사이의 문·가구를 이 그림만으로 확정할 수 없으므로 그래프에 자동 연결하지 않는다.
 
+## NPC의 주요 도착 위치와 최종 위치
+
+다음은 시나리오에 정의된 이동이 완료되었을 때의 목표 위치다. 의사 이동은 `NPCControl`의 `mode: Control`로 실행된다. `destinationType: WaypointSet`은 씬의 `_waypoints` 배열 순서대로 이동하며, `Waypoint`는 지정한 앵커로 이동한다. 노드에 있는 `destinationX/Y/Z: 0`은 이 두 방식의 목적지가 아니다.
+
+| NPC / 단계 | 이동 노드 또는 상태 | 목적지 | 씬 앵커 월드 `[x, y, z]` | 테스트에서의 의미 |
+|---|---|---|---|---|
+| B/C 의사 / 최종 처치 구역 | `MOVE_DOCTOR_TO_CARE_AREA` | `overworld:doctor-route:04` | `[-68, 1, -17.5]` | `P_B_C_CARE` 진입 전의 도착 위치이며, 그래프에 정의된 마지막 이동 목적지다. |
+| A 의사 / 공통 경로 도착 | `MOVE_DOCTOR_TO_CARE_AREA_A` | `overworld:doctor-route:04` | `[-68, 1, -17.5]` | 처치실로 계속 이동하므로 최종 대기 위치로 판단하지 않는다. |
+| A 의사 / 처치실 입구 | `MOVE_DOCTOR_TO_TREATROOM_ENTERANCE` | `scen_a:doctor_treatment_room_waypoint_enterance` | `[-68, 1, -10]` | L5 부근의 중간 도착점이다. 원본 ID의 `enterance` 철자를 유지한다. |
+| A 의사 / 최종 처치실 내부 | `MOVE_DOCTOR_TO_TREATROOM_ENTERED` | `scen_a:doctor_treatment_room_waypoint_entered` | `[-61.5, 1, -10]` | 이후 `Q_WAIT_DOCTOR_REMOVE`로 진행한다. 도착 후 `facingYawDegrees: 0`을 적용한다. |
+| 튜토리얼 안내 NPC / 유지 위치 | `NPC_TUT_REVEAL_HAT_NAME`은 `mode: Update` | `actingNpcs` 정의 위치 | `[76.4300003, 0, 21.6000004]` | 그래프에 이동 지시가 없다. 이름·표시 갱신 뒤에도 스폰 위치를 기준으로 찾는다. |
+
+B/C 의사의 ID는 `npc-doctor-patient-b-c-ct`, A 의사의 ID는 `npc-doctor-patient-a-critical`, 안내 NPC의 ID는 `npc-tutorial-guide-hat`이다. B/C의 단계별 테스트 진입 경로에 있는 `SETUP_CARE_MOVE_DOCTOR`와 `SETUP_MOVE_PATIENTS_MOVE_DOCTOR`도 같은 `overworld:doctor-route`를 사용하되 `moveMode: Instant`로 처리하므로 마지막 목표는 동일하게 `[-68,1,-17.5]`다.
+
+공통 이동 경로는 씬의 `WaypointSet` 컴포넌트 `1209274523`에서 다음 순서로 확인했다. 경로 부모 Transform `1209274522 → 1363733091 → 0`은 항등 변환이다.
+
+| 순서 | 앵커 ID | 월드 `[x, y, z]` | Transform fileID |
+|---|---|---|---|
+| 01 | `overworld:doctor-route:01` | `[-83, 1, -32]` | `1516947578` |
+| 02 | `overworld:doctor-route:02` | `[-77, 1, -32]` | `793346300` |
+| 03 | `overworld:doctor-route:03` | `[-68, 1, -32]` | `1646271681` |
+| 04 | `overworld:doctor-route:04` | `[-68, 1, -17.5]` | `856960787` |
+
+처치실 입구와 내부 앵커의 Transform fileID는 각각 `517236051`, `1404434544`이며, 둘 다 항등 변환인 `1363733091`의 자식이다.
+
+```text
+spawn / route:01 (-83,-32)
+  -> route:02 (-77,-32)
+  -> route:03 (-68,-32) = L0
+  -> route:04 (-68,-17.5)  [B/C final; between L3 and L4]
+       -> entrance (-68,-10)  [A only; near L5]
+       -> entered (-61.5,-10) [A final; facing yaw 0]
+```
+
+```json
+{
+  "doctorCommonRouteAnchors": [
+    [-83, 1, -32], [-77, 1, -32], [-68, 1, -32], [-68, 1, -17.5]
+  ],
+  "doctorATreatmentRoomAnchors": [[-68, 1, -10], [-61.5, 1, -10]],
+  "finalAnchorByNpc": {
+    "npc-doctor-patient-b-c-ct": [-68, 1, -17.5],
+    "npc-doctor-patient-a-critical": [-61.5, 1, -10],
+    "npc-tutorial-guide-hat": [76.4300003, 0, 21.6000004]
+  }
+}
+```
+
+위 배열은 **NPC 목적지 앵커의 좌표**다. `MoveNpcRoutine`은 XZ 평면으로 이동하면서 현재 높이를 유지하거나 지면 검사로 Y를 보정하므로, 실제 NPC의 Y가 앵커의 `1`과 같다고 단정하지 않는다. 도착 검증에는 XZ 거리와 현재 NPC 관측값을 사용하고, A의 최종 방향은 별도로 확인한다. 세 NPC 모두 `despawnOnScenarioEnd: true`이므로 여기서 최종 위치는 시나리오 실행 중의 마지막 목표를 뜻하며, 종료 후에도 NPC가 남아 있다는 뜻은 아니다.
+
+NPC 이동 코드는 NavMesh 경로 탐색 없이 Transform을 직접 이동시키고 지형지물을 통과할 수 있다. 따라서 이 배열을 플레이어의 무장애 보행 경로로 사용하지 않는다. B/C 의사에게는 L3–L4 통로에서 접근하고, A 의사에게는 L5와 A_DOOR를 거쳐 실제 문의 통과 가능 여부를 확인한 뒤 접근한다. 최종 상호작용 대상은 스폰 앵커가 아니라 현재 위치의 NPC ID로 조회한다. 이 추가 항목은 씬과 코드에서 대조했으며 실제 플레이 도착 검증은 수행하지 않았다.
+
 ## E2E에서 사용하는 순서
 
 1. 현재 씬과 활성 시나리오를 확인하고, 필요한 스폰 노드가 실행되어 목표 엔티티가 존재하는지 관측한다.
