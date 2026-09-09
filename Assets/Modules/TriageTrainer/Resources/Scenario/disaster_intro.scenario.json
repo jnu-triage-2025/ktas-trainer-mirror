@@ -54,6 +54,53 @@
     { "preset": "M2", "voiceIdentifier": "doctor", "voiceStyleName": "M2" },
     { "preset": "F3", "voiceIdentifier": "patient", "voiceStyleName": "F3" }
   ],
+  "interactions": [
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "triage_prompt",
+      "kind": "Action",
+      "display": {
+        "text": "환자 활력징후 및 외양 평가 시행하기"
+      },
+      "completionSignal": "assess_patient_a_triage",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "initial": true
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_dummy_d_a"
+      },
+      "interaction": "triage_prompt",
+      "kind": "Action",
+      "display": {
+        "text": "환자 활력징후 및 외양 평가 시행하기"
+      },
+      "completionSignal": "assess_patient_dummy_d_a_triage",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "initial": true
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
+      "interaction": "transfer_prompt",
+      "kind": "Action",
+      "display": {
+        "text": "긴급 환자 이송 선택"
+      },
+      "completionSignal": "move_patient_a",
+      "afterInteract": "HideForAll",
+      "visibility": {
+        "initial": false
+      }
+    }
+  ],
   "nodes": {
     "D001": {
       "identifier": "D001",
@@ -483,7 +530,7 @@
       "dialogueContent": "이제 치료를 위해 이송할 긴급 환자를 클릭하세요.",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V004",
+      "nextIdentifier": "ISC_SHOW_MOVE_PATIENT_A",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": { "preset": "F3" }
@@ -1003,6 +1050,20 @@
       "fromTag": null,
       "toTag": null,
       "nextIdentifier": "P001"
+    },
+    "ISC_SHOW_MOVE_PATIENT_A": {
+      "identifier": "ISC_SHOW_MOVE_PATIENT_A",
+      "nodeType": "InteractionVisibility",
+      "operation": "Show",
+      "targets": [
+        {
+          "entity": {
+            "id": "patient_a"
+          },
+          "interaction": "transfer_prompt"
+        }
+      ],
+      "nextIdentifier": "V004"
     }
   }
 }

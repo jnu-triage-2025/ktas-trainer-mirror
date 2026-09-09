@@ -57,8 +57,7 @@
       "rotationY": 0,
       "rotationZ": 0,
       "spawnOnStart": false,
-      "despawnOnScenarioEnd": true,
-      "interactions": []
+      "despawnOnScenarioEnd": true
     }
   ],
   "ttsVoiceProfiles": [
@@ -66,6 +65,320 @@
     { "preset": "M1", "voiceIdentifier": "dispatcher", "voiceStyleName": "M1" },
     { "preset": "M2", "voiceIdentifier": "doctor", "voiceStyleName": "M2" },
     { "preset": "F3", "voiceIdentifier": "patient", "voiceStyleName": "F3" }
+  ],
+  "interactions": [
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "recognition_1",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "말 걸기"
+      },
+      "completionSignal": "patient_b_recognition_1",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "recognition_2",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "계속해서 말 걸기"
+      },
+      "completionSignal": "patient_b_recognition_2",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "recognition_3",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "계속해서 말 걸기"
+      },
+      "completionSignal": "patient_b_recognition_3",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "recognition_4",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "계속해서 말 걸기"
+      },
+      "completionSignal": "patient_b_recognition_4",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "strength_check",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "근력 확인"
+      },
+      "completionSignal": "patient_b_strength_checked",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "pupil_check",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "동공반사 확인"
+      },
+      "completionSignal": "patient_b_pupil_checked",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "patient_bc_nasal_cannula",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_c"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "intravenous_line_cannula",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_b"
+      },
+      "interaction": "normal_saline_connect",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "recognition_1",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "말 걸기"
+      },
+      "completionSignal": "patient_c_recognition_1",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_b"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "recognition_2",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "말 걸기"
+      },
+      "completionSignal": "patient_c_recognition_2",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_b"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "recognition_3",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "말 걸기"
+      },
+      "completionSignal": "patient_c_recognition_3",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_b"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "recognition_4",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "말 걸기"
+      },
+      "completionSignal": "patient_c_recognition_4",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_b"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "strength_check",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "근력 확인"
+      },
+      "completionSignal": "patient_c_strength_checked",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_b"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "pupil_check",
+      "handlerKey": "recognition_check",
+      "display": {
+        "text": "동공반사 확인"
+      },
+      "completionSignal": "patient_c_pupil_checked",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_b"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "patient_bc_nasal_cannula",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_d"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "intravenous_line_cannula",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_b"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_c"
+      },
+      "interaction": "normal_saline_connect",
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_b"
+          }
+        ]
+      }
+    }
   ],
   "nodes": {
     "GIVE_CHECKLIST_PAPER_IF_MISSING": {

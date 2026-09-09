@@ -472,10 +472,6 @@
     "NPC_TUT_REVEAL_HAT_NAME": {
       "mode": "Update",
       "npcIdentifier": "npc-tutorial-guide-hat",
-      "interactOperation": "None",
-      "interactableIdentifier": null,
-      "interactEnabled": null,
-      "resultStateKey": null,
       "displayName": "모자",
       "showOverheadName": true,
       "destinationType": "Position",
