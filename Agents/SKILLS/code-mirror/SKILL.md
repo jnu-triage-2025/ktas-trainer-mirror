@@ -10,7 +10,7 @@ description: 라이선스와 파일 규칙으로 Git 이력을 필터링해 일�
 ## 작업 절차
 
 1. [Tools/code-mirror/README.md](../../../Tools/code-mirror/README.md)와 `code-mirror.toml`을 읽고, 포함·제외 규칙이 요청한 라이선스 범위를 충족하는지 확인합니다.
-2. Unity 패키지의 MIT 자동 분류가 필요하거나 패키지 매니페스트가 바뀌었으면 `--generate-config`를 실행합니다. 생성된 `code-mirror.gen.toml`은 로컬 산출물이며, 수동 설정 파일보다 낮은 우선순위를 가집니다.
+2. Unity 패키지의 MIT 자동 분류가 필요하거나 패키지 매니페스트가 바뀌었으면 `--generate-config`를 실행합니다. 이 명령은 체크아웃된 커밋(`HEAD`)의 매니페스트만 읽습니다. 생성된 `code-mirror.gen.toml`은 수동 설정 파일보다 낮은 우선순위를 가지지만 필터링 결과를 좌우하므로, 매니페스트를 바꾼 커밋에 함께 포함합니다.
 3. 실제 동기화 전에는 `--dry-run`을 실행해 변환 범위와 제외 결과를 확인합니다.
 4. 대상 원격 저장소를 변경하지 않는 요청에서는 `--push`를 실행하지 않습니다. 실제 push 또는 `--rebuild --push`는 사용자가 명시적으로 요청한 경우에만 수행합니다.
 

@@ -6,7 +6,7 @@ GitLab `origin`의 원격 추적 브랜치 또는 현재 로컬 Git 저장소의
 
 ## 준비
 
-`code-mirror.toml`의 `destination.url`을 대상 Git 저장소 URL로 변경합니다. SSH URL은 해당 키에 쓰기 권한이 있으면 토큰이 필요하지 않습니다. HTTPS 인증이 필요한 경우 `Tools/code-mirror/.env`에서 `token_env`에 지정한 환경 변수와 `http_username`을 설정합니다. 제공자마다 HTTP 사용자명이 다를 수 있으므로, 해당 Git 서버의 토큰 인증 방식을 확인해야 합니다. `.env`와 상태 파일은 Git에서 제외됩니다.
+`code-mirror.toml`의 `destination.url`을 대상 Git 저장소 URL로 변경합니다. SSH URL은 해당 키에 쓰기 권한이 있으면 토큰이 필요하지 않습니다. HTTPS 인증이 필요한 경우 `Tools/code-mirror/.env`에서 `token_env`에 지정한 환경 변수와 `http_username`을 설정합니다. 제공자마다 HTTP 사용자명이 다를 수 있으므로, 해당 Git 서버의 토큰 인증 방식을 확인해야 합니다. `.env`와 상태 파일(`.state/`)은 Git에서 제외됩니다. 반면 `code-mirror.gen.toml`은 필터링 결과를 좌우하므로 `code-mirror.toml`과 함께 Git에 포함합니다.
 
 `[source]`의 `mode`는 원본 참조 범위를 선택합니다. 기본 `remote_tracking`은 이미 로컬에 fetch된 `origin` 원격 추적 브랜치와 로컬 태그를 읽고, `local`은 현재 저장소의 로컬 브랜치와 로컬 태그를 읽습니다. 따라서 원격이 없는 로컬 Git 저장소도 `mode = "local"`로 처리할 수 있습니다. 대상이 로컬 bare 저장소라면 `destination.url`에 절대 경로를 넣으면 됩니다. `remote_tracking`을 지속 동기화할 때에는 실행 전에 별도로 `git fetch origin`을 수행해야 합니다.
 
@@ -19,7 +19,7 @@ python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.
 python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.toml --rebuild --push
 ```
 
-첫 번째 명령은 제외 결과와 변환 대상 커밋 수만 확인합니다. 두 번째 명령은 원본 커밋 해시와 변환된 커밋 해시의 매핑을 `.code-mirror-state.json`에 저장합니다. 세 번째 명령은 상태 저장 후 대상 Git 원격 저장소에 push합니다. `--dry-run`도 Git 객체를 계산하기 위해 로컬 객체 데이터베이스에 도달 불가능 객체를 만들 수는 있지만, 참조·상태 파일·원격 저장소는 변경하지 않습니다.
+첫 번째 명령은 제외 결과와 변환 대상 커밋 수만 확인합니다. 두 번째 명령은 원본 커밋 해시와 변환된 커밋 해시의 매핑을 `.state/code-mirror-state.json`에 저장합니다. 세 번째 명령은 상태 저장 후 대상 Git 원격 저장소에 push합니다. `--dry-run`도 Git 객체를 계산하기 위해 로컬 객체 데이터베이스에 도달 불가능 객체를 만들 수는 있지만, 참조·상태 파일·원격 저장소는 변경하지 않습니다.
 
 ## 규칙과 범위
 
@@ -35,7 +35,7 @@ python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.
 
 `[module_policies]`는 `Assets/Modules/<모듈명>/` 전체에 적용하는 최우선 수동 정책입니다. `FishNet`, `MultiplayerInfrastructure`, `TriageTrainer`, `TextToSpeechService`는 PNG 등의 콘텐츠 확장자와 파일 크기를 포함하여 항상 미러링합니다. 지정된 라이선스 콘텐츠 모듈은 항상 제외하되, Unity 참조 연결에 필요한 `.meta` 파일은 포함합니다.
 
-`--generate-config`는 현재 작업 트리의 `Assets/Modules/*/package.json`을 읽어 `unity` 필드가 있고 `license`가 정확히 `MIT`인 Unity 패키지를 찾아 `code-mirror.gen.toml`을 생성합니다. 이 파일이 추가하는 `always_include` 정책은 수동 `code-mirror.toml`보다 낮은 우선순위를 가지므로, 수동 포함·제외 목록에 적힌 모듈은 자동 분류 결과와 관계없이 수동 설정으로 제어됩니다. 생성 파일은 로컬 산출물이며 Git에서 제외됩니다.
+`--generate-config`는 체크아웃된 커밋(`HEAD`)의 `Assets/Modules/*/package.json`을 읽어 `unity` 필드가 있고 `license`가 정확히 `MIT`인 Unity 패키지를 찾아 `code-mirror.gen.toml`을 생성합니다. 이 파일이 추가하는 `always_include` 정책은 수동 `code-mirror.toml`보다 낮은 우선순위를 가지므로, 수동 포함·제외 목록에 적힌 모듈은 자동 분류 결과와 관계없이 수동 설정으로 제어됩니다. 생성 파일은 Git에 포함하며, 매니페스트를 바꾼 커밋과 함께 갱신해야 합니다. 이 파일의 내용은 필터링 설정 지문에 반영되므로, 갱신하지 않으면 다음 실행이 설정 변경으로 판단해 중단합니다. 작업 트리가 아니라 `HEAD`를 읽기 때문에, 여러 브랜치가 공유하는 CI 작업 디렉터리에 다른 브랜치의 모듈 디렉터리가 남아 있어도 결과는 달라지지 않습니다.
 
 규칙의 `scope.mode`는 다음과 같습니다.
 
@@ -49,7 +49,7 @@ python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.
 
 ## 지속 동기화와 상태
 
-상태 파일은 원본 커밋 해시 → 미러 커밋 해시 매핑, 마지막으로 확인한 원본 참조, 필터링 설정 지문을 직렬화합니다. 같은 설정으로 다시 실행하면 기존 객체를 재사용하며 새 원본 커밋과 새 참조를 반영합니다. 브랜치 범위 규칙(`scope.mode = "branches"`)을 사용하면 원본의 강제 push나 새 브랜치 때문에 같은 커밋의 필터링 결과가 달라질 수 있습니다. 그래서 이런 규칙이 하나라도 설정되어 있으면 매 실행마다 전체 원본 그래프를 다시 판정합니다. 이런 규칙이 없으면 변환 결과는 원본 커밋과 필터링 설정만으로 결정되므로, 설정 지문이 이전 실행과 같고 기록된 객체가 아직 남아 있는 커밋은 다시 계산하지 않고 상태 파일의 결과를 그대로 사용합니다. 기록된 객체가 사라졌다면 그 커밋만 다시 계산하며, 같은 해시가 그대로 재현되기 때문에 뒤따르는 커밋의 기록도 계속 유효합니다.
+상태 파일은 원본 커밋 해시 → 미러 커밋 해시 매핑, 마지막으로 확인한 원본 참조, 필터링 설정 지문을 직렬화합니다. 같은 설정으로 다시 실행하면 기존 객체를 재사용하며 새 원본 커밋과 새 참조를 반영합니다. 브랜치 범위 규칙(`scope.mode = "branches"`)을 사용하면 원본의 강제 push나 새 브랜치 때문에 같은 커밋의 필터링 결과가 달라질 수 있습니다. 그래서 이런 규칙이 하나라도 설정되어 있으면 매 실행마다 전체 원본 그래프를 다시 판정합니다. 이런 규칙이 없으면 변환 결과는 원본 커밋과 필터링 설정만으로 결정되므로, 설정 지문이 이전 실행과 같고 기록된 객체가 아직 남아 있는 커밋은 다시 계산하지 않고 상태 파일의 결과를 그대로 사용합니다. 기록된 객체가 사라졌다면 그 커밋만 다시 계산하며, 같은 해시가 그대로 재현되기 때문에 뒤따르는 커밋의 기록도 계속 유효합니다. 상태 파일은 남았지만 기록된 객체가 로컬에 없으면, `--dry-run`이 아닌 실행은 다시 계산하기 전에 대상 저장소에서 이미 게시된 미러를 `refs/code-mirror/`로 fetch해 복구를 시도합니다. 대상이 비어 있거나 접근할 수 없으면 경고만 남기고 재변환으로 진행합니다.
 
 대상 저장소는 미러이고 내용의 기준은 항상 원본 저장소이므로, push는 대상의 현재 상태를 확인하지 않고 이번 변환 결과로 강제 덮어씁니다. 대상 브랜치가 변환 결과와 갈라져 있어도 중단하지 않으며, 그 브랜치에만 있던 커밋은 사라집니다. 원본에 남아 있는 내용은 다음 실행에서 그대로 다시 게시되므로 이 방식으로 잃는 것은 없습니다. 따라서 상태 파일을 잃은 작업 디렉터리에서 실행하거나 대상 URL을 바꾸더라도 push는 추가 옵션 없이 진행됩니다.
 
