@@ -176,7 +176,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_a"
+            "tag": "nurse_c"
           }
         ]
       }
@@ -190,7 +190,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_c"
+            "tag": "nurse_d"
           }
         ]
       }
@@ -204,7 +204,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_a"
+            "tag": "nurse_c"
           }
         ]
       }
@@ -218,7 +218,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_a"
+            "tag": "nurse_c"
           }
         ]
       }
@@ -332,7 +332,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_b"
+            "tag": "nurse_c"
           }
         ]
       }
@@ -360,7 +360,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_b"
+            "tag": "nurse_c"
           }
         ]
       }
@@ -374,7 +374,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_b"
+            "tag": "nurse_c"
           }
         ]
       }
@@ -1629,7 +1629,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 360,
       "onWaitTimeout": "ForceAdvance"
     },
     "MOVE_A_REMOVE": {
@@ -1678,7 +1678,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 360,
       "onWaitTimeout": "ForceAdvance"
     },
     "MOVE_B_REMOVE": {
@@ -1727,7 +1727,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 360,
       "onWaitTimeout": "ForceAdvance"
     },
     "MOVE_C_REMOVE": {
@@ -1776,7 +1776,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 360,
       "onWaitTimeout": "ForceAdvance"
     },
     "MOVE_D_REMOVE": {
@@ -1850,7 +1850,7 @@
     "DOC_D": {
       "identifier": "DOC_D",
       "nodeType": "Dialogue",
-      "nextIdentifier": "P_B_TREATMENT",
+      "nextIdentifier": "C_DOC_C",
       "speakerName": "의사",
       "dialogueContent": "@t=[nurse_c, ???]선생님, 산소포화도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
       "dialogueContentTTSPassing": "@t=[nurse_c, ???]선생님, 산소포화도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
@@ -1890,25 +1890,81 @@
     "P_B_C_CARE": {
       "identifier": "P_B_C_CARE",
       "nodeType": "Parallel",
-      "nextIdentifier": "CT_DOCTOR_ORDER",
+      "nextIdentifier": "P_B_C_WAIT_REMOVE",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
-          "identifier": "P_B_CARE",
-          "completionConditionIdentifier": "CC_B_COMPLETE",
+          "identifier": "A_RECOG_Q",
+          "completionConditionIdentifier": "CC_B_INITIAL_A",
           "requiredPlayerTags": ["nurse_a"],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         },
         {
-          "identifier": "P_C_CARE",
-          "completionConditionIdentifier": "CC_C_COMPLETE",
+          "identifier": "C_A_RECOG_Q",
+          "completionConditionIdentifier": "CC_C_INITIAL_B",
           "requiredPlayerTags": ["nurse_b"],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "B_VITAL_Q",
+          "completionConditionIdentifier": "CC_B_INITIAL_C",
+          "requiredPlayerTags": ["nurse_c"],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "C_B_VITAL_Q",
+          "completionConditionIdentifier": "CC_C_INITIAL_D",
+          "requiredPlayerTags": ["nurse_d"],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
         }
+      ]
+    },
+    "P_B_C_WAIT_REMOVE": {
+      "identifier": "P_B_C_WAIT_REMOVE",
+      "nodeType": "Parallel",
+      "nextIdentifier": "DOC_C",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Panic",
+      "branches": [
+        { "identifier": "A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_B_INITIAL_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_C_INITIAL_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "B_VITAL_REMOVE", "completionConditionIdentifier": "CC_B_INITIAL_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_B_VITAL_REMOVE", "completionConditionIdentifier": "CC_C_INITIAL_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
+      ]
+    },
+    "P_B_C_TREATMENT": {
+      "identifier": "P_B_C_TREATMENT",
+      "nodeType": "Parallel",
+      "nextIdentifier": "P_B_C_TREATMENT_REMOVE",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Panic",
+      "branches": [
+        { "identifier": "C_PUPIL_Q", "completionConditionIdentifier": "CC_B_TREATMENT_A", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_C_PUPIL_Q", "completionConditionIdentifier": "CC_C_TREATMENT_B", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "D_OXY_Q", "completionConditionIdentifier": "CC_B_TREATMENT_C", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_D_OXY_Q", "completionConditionIdentifier": "CC_C_TREATMENT_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
+      ]
+    },
+    "P_B_C_TREATMENT_REMOVE": {
+      "identifier": "P_B_C_TREATMENT_REMOVE",
+      "nodeType": "Parallel",
+      "nextIdentifier": "move_patients",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Panic",
+      "branches": [
+        { "identifier": "C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_B_TREATMENT_A", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_C_TREATMENT_B", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "D_REMOVE", "completionConditionIdentifier": "CC_B_TREATMENT_C", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_D_REMOVE", "completionConditionIdentifier": "CC_C_TREATMENT_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
       ]
     },
     "P_B_TREATMENT": {
@@ -2744,7 +2800,8 @@
       "dialogueContent": "이 환자 GCS 13점, Motor Grade 우측 5, 좌측 3 입니다.",
       "dialogueContentTTSPassing": "이 환자 지 씨 에스 13점, 모터 그레이드 우측 5, 좌측 3입니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": 2,
       "playTTS": false
     },
     "A_STRENGTH_WAIT_UPDATE": {
@@ -3046,7 +3103,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 600,
       "onWaitTimeout": "ForceAdvance"
     },
     "C_PUPIL_1": {
@@ -3269,7 +3326,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 600,
       "onWaitTimeout": "ForceAdvance"
     },
     "D_NASAL_DONE": {
@@ -3489,7 +3546,7 @@
     "C_DOC_D": {
       "identifier": "C_DOC_D",
       "nodeType": "Dialogue",
-      "nextIdentifier": "P_C_TREATMENT",
+      "nextIdentifier": "P_B_C_TREATMENT",
       "speakerName": "의사",
       "dialogueContent": "@t=[nurse_d, ???]선생님, 산소포화도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
       "dialogueContentTTSPassing": "@t=[nurse_d, ???]선생님, 산소포화도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
@@ -3631,7 +3688,7 @@
       "dialogueContent": "[관찰] 환자가 잠시 눈을 떴다가 다시 감습니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": null,
+      "autoAdvanceSeconds": 2,
       "playTTS": false
     },
     "C_A_REC2_ACT": {
@@ -3693,7 +3750,7 @@
       "dialogueContent": "[관찰] 환자가 말에 다소 늦게 반응합니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": null,
+      "autoAdvanceSeconds": 2,
       "playTTS": false
     },
     "C_A_REC3_ACT": {
@@ -3765,7 +3822,7 @@
       "dialogueContent": "[관찰] 환자가 사고 경위를 기억하지 못합니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": null,
+      "autoAdvanceSeconds": 2,
       "playTTS": false
     },
     "C_A_REC4_ACT": {
@@ -3827,7 +3884,7 @@
       "dialogueContent": "[관찰] 환자가 불평하면서도 다리를 움직입니다.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
-      "autoAdvanceSeconds": null,
+      "autoAdvanceSeconds": 2,
       "playTTS": false
     },
     "C_A_RECOG_REMOVE": {
@@ -4359,7 +4416,8 @@
       "dialogueContent": "이 환자 GCS 13점, Motor Grade 좌측 5, 우측 3 입니다.",
       "dialogueContentTTSPassing": "이 환자 지 씨 에스 13점, 모터 그레이드 좌측 5, 우측 3입니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": 2,
       "playTTS": false
     },
     "C_A_STRENGTH_WAIT_UPDATE": {
@@ -4661,7 +4719,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 600,
       "onWaitTimeout": "ForceAdvance"
     },
     "C_C_PUPIL_1": {
@@ -4884,7 +4942,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 600,
       "onWaitTimeout": "ForceAdvance"
     },
     "C_D_NASAL_DONE": {
@@ -5263,7 +5321,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 600,
       "onWaitTimeout": "ForceAdvance"
     },
     "CT_A_REMOVE": {
@@ -5297,7 +5355,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 600,
       "onWaitTimeout": "ForceAdvance"
     },
     "CT_B_REMOVE": {
@@ -5331,7 +5389,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 600,
       "onWaitTimeout": "ForceAdvance"
     },
     "CT_C_REMOVE": {
@@ -5365,7 +5423,7 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "waitTimeoutSeconds": 180,
+      "waitTimeoutSeconds": 600,
       "onWaitTimeout": "ForceAdvance"
     },
     "CT_D_REMOVE": {

@@ -117,7 +117,12 @@ namespace MultiplayerInfrastructure.UI
       // UXML의 ScrollView가 뷰를 감싸고 있으며, 해상도 부족 시 가로 스크롤을 제공한다.
       var scrollView = root.Q<ScrollView>("InventoryScrollView");
       if (scrollView != null)
+      {
         ApplyScrollContentCentering(scrollView.contentContainer);
+        scrollView.horizontalScroller.lowButton.name = "InventoryScrollLeft";
+        scrollView.horizontalScroller.highButton.name = "InventoryScrollRight";
+        scrollView.horizontalScroller.slider.name = "InventoryHorizontalSlider";
+      }
 
       _view.SlotsMutated += HandleSlotsMutated;
       _view.ItemDroppedOutside += HandleItemDroppedOutside;
@@ -270,6 +275,8 @@ namespace MultiplayerInfrastructure.UI
       _isOpened = visible;
       _view?.SetVisible(visible);
       ApplyDocumentInteractable(visible);
+      if (visible)
+        RefreshCraftableRecipes();
     }
 
     /// <summary>
@@ -290,6 +297,7 @@ namespace MultiplayerInfrastructure.UI
       _isOpened = true;
       ApplyDocumentInteractable(true);
       _view?.SetVisible(true);
+      RefreshCraftableRecipes();
       OverlayPushed?.Invoke();
     }
 
