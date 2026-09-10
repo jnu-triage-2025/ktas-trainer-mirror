@@ -362,14 +362,17 @@ NPC 이동 코드는 NavMesh 경로 탐색 없이 Transform을 직접 이동시�
 4. 마지막 통로 노드에서 목표 엔티티의 최신 위치와 상호작용 가능 여부를 확인한다. 장비·환자 중심으로 파고들지 않도록 `targetOffset` 또는 대상 앞의 접근 좌표를 사용한다.
 5. 정체되면 현재 좌표, 마지막 도착 노드, 목표 ID, 이동 억제 상태, 주변 침대·카트를 기록한다. 같은 직선 이동을 무한 반복하지 않는다. 다인 이동은 출발 간격을 두거나 서로 다른 통로 위치를 사용한다.
 
-[기존 테스트](../test/live-patient-b-c-ct.ts)에서 사용하는 `runner.navigate` 형식에 맞춘 예제다. 현재 위치가 L5이고 다음 구간이 비어 있다는 전제다. `runner`, `instanceId`, `signal`은 테스트 실행 문맥에서 제공한다.
+2026-09-11 병합 재검증에서 B/C 공급 카트가 `(-67, -13.5)`로 옮겨진 뒤, 기존 A 복귀 경로의 `x=-67.5`와 역할별 동쪽 우회선이 카트에 막히는 것을 확인했다. 이 구간은 `x=-68.5`의 서쪽 복도로 이동한다. 서로 다른 역할을 통로 밖으로 벌리지 말고, 좁은 통로 진입에만 순서를 둔다. 접근 가능 구역의 경계와 장비 충돌은 별도로 확인해야 한다.
+
+[A 테스트](../test/live-patient-a-critical.ts)에서 초기 사정 복귀에 사용한 `runner.navigate` 예제다. 현재 위치가 zone_3 활력징후 세트 앞 `[-66.04, 0, -22.6]`이고 통로가 비어 있다는 전제다. `runner`, `instanceId`, `signal`은 테스트 실행 문맥에서 제공한다. 이전 예제의 `[-68, -20.95]`에서 `[-76.3, -20.95]`로 향하는 직선은 연결되지 않은 구간을 가로지르므로 사용하지 않는다.
 
 ```typescript
 const route: number[][] = [
-  [-68, 0, -15.5],
-  [-68, 0, -20.95],
-  [-76.3, 0, -20.95],
-  [-76.3, 0, -22.5],
+  [-68.2, 0, -22.6],
+  [-68.5, 0, -20.75],
+  [-68.5, 0, -9.35],
+  [-65.12, 0, -9.35],
+  [-62, 0, -8.35],
 ];
 for (const [index, targetPosition] of route.entries()) {
   await runner.navigate(instanceId, {
@@ -378,7 +381,7 @@ for (const [index, targetPosition] of route.entries()) {
     target: `corridor_${index}`,
     mode: 'input_adapter',
     timeoutMs: 15000,
-    args: { targetType: 'position', targetPosition, arrivalRadius: 0.6 },
+    args: { targetType: 'position', targetPosition, arrivalRadius: 0.3 },
   }, signal);
 }
 ```

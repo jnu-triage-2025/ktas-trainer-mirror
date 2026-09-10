@@ -73,6 +73,8 @@ MCP 클라이언트에서 다음 프로세스를 stdio 서버로 등록합니다
 
 키 이름은 Unity `KeyCode` 이름을 사용합니다. `lookDelta`는 기존 Legacy Mouse X/Y 축 단위이며, 화면 픽셀이나 카메라 각도를 직접 설정하는 API가 아닙니다. 이동 축은 이 프로젝트 InputManager의 sensitivity=3, gravity=3, snap 설정을 따릅니다. 이 설정이 바뀌면 어댑터와 테스트도 함께 검토해야 합니다.
 
+`scroll`은 가로 `x` 또는 세로 `y` 중 하나 이상을 받습니다. `interactionSelect`와 `interactionExecute`는 관측된 상호작용의 `index`(0~200)를 받으며, `hotbarSelect`는 핫바 슬롯 `index`(0~9)를 받습니다. 이 입력들은 MCP 입력 스키마와 고정 배치의 JSON 스키마에 모두 정의되어 있습니다. 슬롯 선택은 아이템을 지급하거나 퀘스트를 완료하지 않으며, 선택 후 `handlingItemId`와 `selectedHotbarSlot`으로 결과를 확인합니다.
+
 ## 에디터 제어
 
 Unity에서 `Tools > E2E > Enable editor control`을 선택하면 해당 에디터 세션에 한해 제어 채널을 엽니다. 연결 정보는 `Temp/e2e-editor-connection.json`에 저장됩니다. 설정 파일의 `editorConnectionFile`이 이 파일을 가리켜야 합니다.

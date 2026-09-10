@@ -367,22 +367,20 @@ try {
    }
    throw new Error(`STATIC_ITEM_NOT_ACQUIRED:${actor}:${itemId}`);
   };
-  // The treatment-counter copy is obstructed by its own counter collider.
-  // Use the second scene-placed vital set, whose observed global position is
-  // reachable in normal gameplay and grants the same quest item.
-  const vital='static-item:vital_set-(4):fcbf41499f824b13a4341e3ac2dd453f';
+  // Use the zone-3 counter from its open north side, next to bed release.
+  const vital='static-item:vital_set-(8):7de57bf8b4194ab8b4b822f4f01a2933';
   // The BC supply cart now occupies (-67,-13.5). Use the marked west
   // corridor instead of a diagonal from room A through that furniture.
   const vitalStart=(await platform.observe(actors.p2,false,{includeStaticItems:false})).client.players.find((player:any)=>player.local).position;
-  const vitalExit=vitalStart[2]<-15?[[-65.1,0,-20.75],[-68.5,0,-20.75]]:
-   [[-65.12,0,-9.35],[-68.4,0,-9.35],[-68.5,0,-20.75]];
+  const vitalExit=vitalStart[2]<-19?[]:
+   [[-65.12,0,-9.35],[-68.4,0,-9.35],[-68.5,0,-20.75],[-68.2,0,-22.6]];
   for(const [index,targetPosition] of [...vitalExit,
-   [-76.75,0,-20.75],[-76.75,0,-29.2],[-75.4,0,-29.2]].entries())
+   [-66.04,0,-22.6]].entries())
    await runner.navigate(actors.p2,{id:`patient_a_vital_corridor_${index}`,type:'navigate',actor:'p2',
     target:`patient_a_vital_corridor_${index}`,mode:'input_adapter',timeoutMs:30000,
     args:{targetType:'position',targetPosition,arrivalRadius:.3}},signal);
   try {
-   await runner.navigate(actors.p2,{id:'patient_a_pick_vital_set',type:'navigate',actor:'p2',target:vital,mode:'input_adapter',timeoutMs:30000,args:{targetType:'staticItem',arrivalRadius:.55,targetOffset:[.5,0,.5]}},signal);
+   await runner.navigate(actors.p2,{id:'patient_a_pick_vital_set',type:'navigate',actor:'p2',target:vital,mode:'input_adapter',timeoutMs:30000,args:{targetType:'staticItem',arrivalRadius:.25,targetOffset:[0,0,1.25]}},signal);
   } catch (error) {
    const state=await platform.observe(actors.p2,false,{includeStaticItems:false});
    if (!/NAVIGATION_STUCK|MOVEMENT_BLOCKED/.test(String(error))
@@ -426,7 +424,7 @@ try {
     const p2Position=p2Start.client.players.find((candidate:any)=>candidate.local)?.position;
     // Depending on the snap/release replication order, P2 can already be at
     // treatment or remain in zone_3.  Only route the latter through the door.
-    if(p2Position&&p2Position[2]<-15)for(const [index,point] of [[-76.75,0,-29.2],[-76.75,0,-20.75],[-68.5,0,-20.75],[-68.5,0,-9.35],[-65.12,0,-9.35],[-62,0,-8.35]].entries())
+    if(p2Position&&p2Position[2]<-15)for(const [index,point] of [[-68.2,0,-22.6],[-68.5,0,-20.75],[-68.5,0,-9.35],[-65.12,0,-9.35],[-62,0,-8.35]].entries())
      await runner.navigate(actors.p2,{id:`patient_a_p2_return_treatment_${index}`,type:'navigate',actor:'p2',target:`patient_a_p2_return_treatment_${index}`,mode:'input_adapter',timeoutMs:20000,args:{targetType:'position',targetPosition:point,arrivalRadius:.7}},signal);
     try{
      // Approach from the open side of the bed.  Its rear collider leaves a
@@ -478,7 +476,7 @@ try {
     // P3 can be released at the southern zone-3 snap rather than the
     // treatment-room anchor.  Its direct northbound line is inside the room
     // partition; leave west first and use the corridor doorway.
-    for(const [index,point] of [[-67.5,0,-18.8],[-67.5,0,-9.7],[-62,0,-8.35]].entries())
+    for(const [index,point] of [[-68.2,0,-22.6],[-68.5,0,-20.75],[-68.5,0,-9.35],[-65.12,0,-9.35],[-62,0,-8.35]].entries())
      await runner.navigate(actors.p3,{id:`patient_a_p3_return_treatment_${index}`,type:'navigate',actor:'p3',target:`patient_a_p3_return_treatment_${index}`,mode:'input_adapter',timeoutMs:20000,args:{targetType:'position',targetPosition:point,arrivalRadius:.7}},signal);
     try{
      await runner.navigate(actors.p3,{id:'patient_a_p3_to_patient',type:'navigate',actor:'p3',target:'patient_a',mode:'input_adapter',timeoutMs:30000,args:{targetType:'scenarioEntity',arrivalRadius:.25,targetOffset:[-.5,0,.8]}},signal);
@@ -536,7 +534,7 @@ try {
   // P4 is also released at zone_3 when the manual bed snap is observed.  Exit
   // that room through the west corridor before it begins its assigned pickup;
   // the straight treatment-room vector crosses the partition collider.
-  for(const [index,point] of [[-67.5,0,-18.8],[-67.5,0,-9.7],[-62,0,-8.35]].entries())
+  for(const [index,point] of [[-68.2,0,-22.6],[-68.5,0,-20.75],[-68.5,0,-9.35],[-65.12,0,-9.35],[-62,0,-8.35]].entries())
    await runner.navigate(actors.p4,{id:`patient_a_p4_return_treatment_${index}`,type:'navigate',actor:'p4',target:`patient_a_p4_return_treatment_${index}`,mode:'input_adapter',timeoutMs:20000,args:{targetType:'position',targetPosition:point,arrivalRadius:.7}},signal);
   try {
    await runner.navigate(actors.p4,{id:'patient_a_pick_cervical_collar',type:'navigate',actor:'p4',target:collar,mode:'input_adapter',timeoutMs:30000,args:{targetType:'staticItem',arrivalRadius:.8}},signal);
@@ -875,7 +873,7 @@ try {
        // Navigation can stop on a shelf collider after already entering the
        // exact item's interaction radius. Do not walk away to the fallback.
       }else{
-      for(const [index,point] of [[-62,0,-8.35],[-67.5,0,-9.7],[-67.5,0,-18.8]].entries())
+      for(const [index,point] of [[-62,0,-8.35],[-65.12,0,-9.35],[-68.5,0,-9.35],[-68.5,0,-20.75]].entries())
        try {
         await runner.navigate(actors[actor],{id:`advanced_item_corridor_${actor}_${itemId}_${index}`,type:'navigate',actor,target:`advanced_item_corridor_${index}`,mode:'input_adapter',timeoutMs:20000,args:{targetType:'position',targetPosition:point,arrivalRadius:.8}},signal);
        } catch (corridorError) {
@@ -947,8 +945,7 @@ try {
      // reported. Re-acquire its live entity at a close radius before polling
      // the interaction registry again.
      if(entityId==='npc-doctor-patient-a-critical')
-      for(const [index,point] of [[-67.5,0,-18.8],[-67.5,0,-9.7],[-62,0,-8.35],[-61.5,0,-10]].entries())
-       await runner.navigate(actors[actor],{id:`advanced_reapproach_${actor}_${interactionId}_${index}`,type:'navigate',actor,target:`advanced_doctor_room_${interactionId}_${index}`,mode:'input_adapter',timeoutMs:15000,args:{targetType:'position',targetPosition:point,arrivalRadius:1}},signal).catch(()=>{});
+      await navigateAccessible(actor,-61.5,-10,`advanced_reapproach_${actor}_${interactionId}`);
      if(entityId==='npc-doctor-patient-a-critical')
       await platform.command(actors[actor],'input.execute',{sequence:[{operation:'tap',key:'F'}]},{signal});
      await delay(250,undefined,{signal});
@@ -1039,11 +1036,11 @@ try {
    // The central structure cannot be crossed at z=-18.8.  When a moving
    // doctor draws P2 out of the treatment room, join the documented L3
    // crossing first, then follow L4 -> L5 -> the treatment-room entrance.
-   const exitPoints=player.position[0]<-68
-    ? [[player.position[0],0,-20.95],[-68,0,-20.95],[-68,0,-15.5]]
-    : [[-68,0,player.position[2]]];
-   for(const [index,point] of [...exitPoints,[-68,0,-9.65],[-66.6,0,-9.65],[-61.5,0,-10]].entries())
-    await runner.navigate(actors.p2,{id:`advanced_return_doctor_corridor_${index}`,type:'navigate',actor:'p2',target:`advanced_return_doctor_corridor_${index}`,mode:'input_adapter',timeoutMs:20000,args:{targetType:'position',targetPosition:point,arrivalRadius:.9}},signal)
+   const exitPoints=player.position[2]<-19
+    ? [[-68.2,0,-22.6],[-68.5,0,-20.75]]
+    : [[-68.5,0,player.position[2]]];
+   for(const [index,point] of [...exitPoints,[-68.5,0,-9.35],[-65.12,0,-9.35],[-61.5,0,-10]].entries())
+    await runner.navigate(actors.p2,{id:`advanced_return_doctor_corridor_${index}`,type:'navigate',actor:'p2',target:`advanced_return_doctor_corridor_${index}`,mode:'input_adapter',timeoutMs:20000,args:{targetType:'position',targetPosition:point,arrivalRadius:.3}},signal)
      .catch(routeError=>{if(!/NAVIGATION_STUCK|MOVEMENT_BLOCKED/.test(String(routeError)))throw routeError;});
    // Approach from the open west side. The +Z face is occupied by the patient
    // bed and repeatedly leaves the player pushing against its collider.
@@ -1269,17 +1266,22 @@ try {
   for(const result of assignmentOutcomes)if(result.status==='rejected')throw result.reason;
   phase='patient_a_parallel_first_equipment';
   await Promise.all(Object.keys(actors).map(releaseAccidentalBedControl));
-  const routeToTreatmentRoom=async(actor:string)=>{
+  let treatmentCorridorTail:Promise<void>=Promise.resolve();
+  const routeToTreatmentRoom=(actor:string)=>{
+   const route=treatmentCorridorTail.then(async()=>{
    const state=await platform.observe(actors[actor],false,{includeStaticItems:false});
    const position=state.client.players.find((entry:any)=>entry.local)?.position;
    if(!position||position[2]>=-12)return;
-   // Keep concurrent players in separate lanes so their character colliders
-   // do not deadlock at the same narrow L3/L4/L5 and doorway coordinates.
-   const laneOffset=actor==='p1'?.6:actor==='p4'?-.6:0;
+   // The relocated BC cart makes the east lane impassable. Queue only the
+   // narrow corridor traversal; item acquisition remains concurrent.
    const roomX=actor==='p1'?-60.5:actor==='p4'?-62.5:-61.5;
-   const points=[[-68+laneOffset,0,-20.95],[-68+laneOffset,0,-15.5],[-68+laneOffset,0,-9.65],[-66.6,0,-9.65],[roomX,0,-10]];
+   const exitPoints=position[2]<-19?[[-68.2,0,-22.6],[-68.5,0,-20.75]]:[[-68.5,0,position[2]]];
+   const points=[...exitPoints,[-68.5,0,-9.35],[-65.12,0,-9.35],[roomX,0,-10]];
    for(const [index,targetPosition] of points.entries())
-    await runner.navigate(actors[actor],{id:`parallel_equipment_route_${actor}_${index}`,type:'navigate',actor,target:`parallel_equipment_route_${index}`,mode:'input_adapter',timeoutMs:20000,args:{targetType:'position',targetPosition,arrivalRadius:.8}},signal);
+    await runner.navigate(actors[actor],{id:`parallel_equipment_route_${actor}_${index}`,type:'navigate',actor,target:`parallel_equipment_route_${index}`,mode:'input_adapter',timeoutMs:20000,args:{targetType:'position',targetPosition,arrivalRadius:.3}},signal);
+   });
+   treatmentCorridorTail=route.catch(()=>{});
+   return route;
   };
   const equipmentStarted=performance.now();
   const leaveBedPocket=async()=>{
@@ -1393,7 +1395,15 @@ try {
   const firstTreatmentOutcomes=await Promise.allSettled([
    (async()=>{
     await holdInventoryItem('p1','oxyflowmeter');
-    for(const [index,targetPosition] of [[-68,0,-9.35],[-65.12,0,-9.35],[-59.8,0,-8.73]].entries())
+    const oxygenStart=await platform.observe(actors.p1,false,{includeStaticItems:false});
+    await platform.artifact(runId!,'patient-a-oxygen-supply-return-start.json',oxygenStart);
+    const oxygenPosition=oxygenStart.client.players.find((entry:any)=>entry.local)?.position;
+    // The supply rack can be collected from its south face in zone B.
+    // Exit south of the relocated cart before turning into the west aisle;
+    // the diagonal to A's doorway crosses both the cart and the partition.
+    const oxygenExit=oxygenPosition&&oxygenPosition[2]<-12
+     ?[[oxygenPosition[0],0,-15.5],[-68.5,0,-15.5]]:[];
+    for(const [index,targetPosition] of [...oxygenExit,[-68.5,0,-9.35],[-65.12,0,-9.35],[-59.8,0,-8.73]].entries())
      await runner.navigate(actors.p1,{id:`patient_a_p1_oxyflowmeter_route_${index}`,type:'navigate',actor:'p1',target:`patient_a_p1_oxyflowmeter_route_${index}`,mode:'input_adapter',timeoutMs:20000,args:{targetType:'position',targetPosition,arrivalRadius:.35}},signal)
       .catch(async error=>{
        const state=await platform.observe(actors.p1,false,{includeStaticItems:false});
@@ -1410,7 +1420,7 @@ try {
    })(),
    (async()=>({actor:'p3',quest:await equipSterileGloves()}))(),
    (async()=>{
-    for(const [index,targetPosition] of [[-67.9,0,-13.3],[-68.435,0,-11.015],[-68.165,0,-9.35],[-65.12,0,-9.35],[-63,0,-9]].entries())
+    for(const [index,targetPosition] of [[-68.5,0,-16.7],[-68.5,0,-9.35],[-65.12,0,-9.35],[-63,0,-9]].entries())
      await runner.navigate(actors.p4,{id:`patient_a_p4_return_from_18g_${index}`,type:'navigate',actor:'p4',target:`patient_a_p4_return_from_18g_${index}`,mode:'input_adapter',timeoutMs:20000,args:{targetType:'position',targetPosition,arrivalRadius:.35}},signal);
     await runner.navigate(actors.p4,{id:'patient_a_p4_approach_for_iv',type:'navigate',actor:'p4',target:'patient_a',mode:'input_adapter',timeoutMs:20000,args:{targetType:'scenarioEntity',arrivalRadius:.8,targetOffset:[-1.5,0,0]}},signal)
      .catch(error=>{if(!/NAVIGATION_STUCK|MOVEMENT_BLOCKED/.test(String(error)))throw error;});
@@ -1854,7 +1864,7 @@ try {
      if(performance.now()>p1ClearedCounterDeadline)throw new Error('P1_DID_NOT_CLEAR_CPR_SUPPLY_COUNTER');
      await delay(100,undefined,{signal});
     }
-    for(const [index,targetPosition] of [[-65.12,0,-9.35],[-68.165,0,-9.35],[-68.435,0,-11.015],[-67.9,0,-13.3],[-67,0,-16.7]].entries())
+    for(const [index,targetPosition] of [[-65.12,0,-9.35],[-68.5,0,-9.35],[-68.5,0,-16.7],[-67,0,-16.7]].entries())
      await runner.navigate(actors.p4,{id:`patient_a_p4_epi_r1_west_supply_${index}`,type:'navigate',actor:'p4',target:`patient_a_p4_epi_r1_west_supply_${index}`,mode:'input_adapter',timeoutMs:25000,args:{targetType:'position',targetPosition,arrivalRadius:.5}},signal);
     await acquireWorldItem('p4','epinephrine_ampule',[-66.96593,-18.0792332],[0,0,1.3]);
     await acquireWorldItem('p4','syringe_5cc',[-67.1505,-18.104],[0,0,1.3]);
@@ -1862,7 +1872,7 @@ try {
     await acquireWorldItem('p4','normal_saline_20ml',[-66.87743,-18.2294827],[0,0,1.3]);
     await acquireWorldItem('p4','syringe_20cc',[-67.1077042,-18.074],[0,0,1.3]);
     await craft('p4','normal_saline_20cc_syringe');
-    for(const [index,targetPosition] of [[-67.9,0,-13.3],[-68.435,0,-11.015],[-68.165,0,-9.35],[-65.12,0,-9.35],[-62.7,0,-7.25]].entries())
+    for(const [index,targetPosition] of [[-68.5,0,-16.7],[-68.5,0,-9.35],[-65.12,0,-9.35],[-62.7,0,-7.25]].entries())
      await runner.navigate(actors.p4,{id:`patient_a_p4_epi_r1_west_return_${index}`,type:'navigate',actor:'p4',target:`patient_a_p4_epi_r1_west_return_${index}`,mode:'input_adapter',timeoutMs:25000,args:{targetType:'position',targetPosition,arrivalRadius:.5}},signal);
     await approachExactInteraction('p4','patient_a_use_epinephrine_5cc_syringe',[-60.55,-9.35],[0,0,-1],'patient_a_p4_epi_patient_south');
     for(let attempt=0;attempt<4;attempt++){
