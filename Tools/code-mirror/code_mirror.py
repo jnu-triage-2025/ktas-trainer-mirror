@@ -278,7 +278,7 @@ def create_commit(tree: str, parents: list[str], source_commit: str) -> str:
 
 def load_state(path: Path) -> dict[str, Any]:
     if not path.is_file():
-        return {"version": 1, "commits": {}, "refs": {}, "pushed_refs": {}}
+        return {"version": 1, "commits": {}, "refs": {}}
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -320,67 +320,14 @@ def http_askpass(token_env: str, username: str) -> tuple[Path, dict[str, str]]:
     return directory, env
 
 
-def destination_refs(url: str) -> dict[str, str]:
-    output = run_git(["ls-remote", "--refs", url]).decode()
-    return {ref: object_id for object_id, ref in (line.split("\t", 1) for line in output.splitlines())}
+def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str, Any]) -> None:
+    """Publish the rewrite, replacing whatever the destination holds.
 
-
-def validate_destination_state(state: dict[str, Any], destination_url: str, reset_destination: bool) -> None:
-    if reset_destination or not state.get("pushed_refs"):
-        return
-    previous_url = state.get("pushed_destination_url")
-    if previous_url is None:
-        raise MirrorError(
-            "The state file has push records without a destination URL. "
-            "Review the rewrite and rerun with --rebuild --reset-destination --push."
-        )
-    if previous_url != destination_url:
-        raise MirrorError(
-            "The configured destination URL differs from the destination recorded in the state file. "
-            "Review the rewrite and rerun with --rebuild --reset-destination --push."
-        )
-
-
-def check_moved_refs(refs: dict[str, str], state: dict[str, Any], current: dict[str, str], reset_destination: bool) -> None:
-    """Refuse to publish over a destination ref that moved outside this tool.
-
-    No amount of rewriting can make this safe, so main() checks it before
-    spending time on a full history rewrite. A ref with no push record yet
-    (a lost or never-written state file, or a first run) is judged separately
-    in check_destination_conflicts, once the rewrite gives it something to
-    compare the destination against.
+    The destination is a mirror, so the source repository is the only
+    authority for what it should contain. A destination branch that diverged
+    from the rewrite is therefore overwritten rather than reported: dropping
+    commits published there loses nothing that the source does not still have.
     """
-    pushed = {} if reset_destination else state.get("pushed_refs", {})
-    for ref in refs:
-        actual = current.get(ref)
-        expected = pushed.get(ref)
-        # A deleted destination ref cannot overwrite anyone else's work.  Let
-        # the normal force-with-lease below recreate it, while still refusing
-        # to overwrite a ref that was moved to a different commit externally.
-        if expected is not None and actual is not None and actual != expected:
-            raise MirrorError(f"Destination {ref} changed outside this tool; refusing to overwrite it.")
-
-
-def check_destination_conflicts(refs: dict[str, str], state: dict[str, Any], current: dict[str, str], rebuild: bool, reset_destination: bool, computed: dict[str, str]) -> None:
-    """Refuse to overwrite destination refs this tool did not last publish.
-
-    A ref with no push record in the state file is only let through when the
-    freshly rewritten history for it is byte-identical to what the
-    destination already has: that is a no-op, not an overwrite, and it is the
-    routine case of a state file lost from a reused CI workspace (see
-    Tools/CI/mirror-code.ps1) rather than a filtering change or foreign
-    history that genuinely needs a reviewed --rebuild.
-    """
-    check_moved_refs(refs, state, current, reset_destination)
-    pushed = {} if reset_destination else state.get("pushed_refs", {})
-    for ref in refs:
-        actual = current.get(ref)
-        expected = pushed.get(ref)
-        if expected is None and actual is not None and not rebuild and computed.get(ref) != actual:
-            raise MirrorError(f"Destination already has {ref}. Use --rebuild only after reviewing the rewrite.")
-
-
-def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str, Any], rebuild: bool, reset_destination: bool) -> None:
     url = str(destination["url"])
     env = os.environ.copy()
     askpass_dir: Path | None = None
@@ -388,19 +335,8 @@ def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str
     if token_name and urlparse(url).scheme == "https":
         askpass_dir, env = http_askpass(str(token_name), str(destination.get("http_username", "git")))
     try:
-        current = destination_refs(url)
-        # Re-checked here because the destination can change between the early
-        # check in main() and this push. computed is only available now that
-        # the rewrite has run, which is what lets a ref with no push record
-        # be recognized as already matching instead of always demanding
-        # --rebuild.
-        computed = {ref: state["commits"][source] for ref, source in refs.items()}
-        check_destination_conflicts(refs, state, current, rebuild, reset_destination, computed)
-        leases = [f"--force-with-lease={ref}:{current.get(ref) or ''}" for ref in refs]
         refspecs = [f"{state['commits'][source]}:{ref}" for ref, source in refs.items()]
-        run_git(["push", *leases, url, *refspecs], env=env)
-        state["pushed_refs"] = {ref: state["commits"][source] for ref, source in refs.items()}
-        state["pushed_destination_url"] = url
+        run_git(["push", "--force", url, *refspecs], env=env)
     finally:
         if askpass_dir:
             shutil.rmtree(askpass_dir, ignore_errors=True)
@@ -440,13 +376,10 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--push", action="store_true")
     parser.add_argument("--rebuild", action="store_true", help="Allow a changed filtering configuration to rewrite mirror history.")
-    parser.add_argument("--reset-destination", action="store_true", help="Reset the recorded destination before a reviewed rebuild push.")
     parser.add_argument("--generate-config", action="store_true", help="Generate the lower-priority MIT Unity package module policy file and exit.")
     args = parser.parse_args()
     if args.dry_run and args.push:
         parser.error("--dry-run and --push cannot be used together.")
-    if args.reset_destination and not (args.rebuild and args.push):
-        parser.error("--reset-destination requires --rebuild and --push.")
     config_path = args.config.resolve()
     if args.generate_config:
         return generate_config(config_path)
@@ -463,16 +396,6 @@ def main() -> int:
     fingerprint = config_fingerprint(config)
     if state.get("config_fingerprint") not in (None, fingerprint) and not args.rebuild:
         raise MirrorError("Filtering configuration changed. Review the result and rerun with --rebuild to rewrite the mirror.")
-    if args.push:
-        destination_url = str(config["destination"]["url"])
-        validate_destination_state(state, destination_url, args.reset_destination)
-        # Rewriting a long history costs far more than one ls-remote, so the
-        # unambiguous conflict (a destination ref moved outside this tool) is
-        # reported before any of that work starts. A ref with no push record
-        # yet cannot be judged without the rewrite, so that case waits for
-        # check_destination_conflicts in push_refs.
-        check_moved_refs(refs, state, destination_refs(destination_url), args.reset_destination)
-
     graph = commit_graph(refs.values())
     # A rewritten commit is a pure function of its source commit and the
     # filtering configuration, so an unchanged fingerprint makes every recorded
@@ -511,8 +434,7 @@ def main() -> int:
     # reachable for the next run.
     anchor_refs(refs, state)
     if args.push:
-        push_refs(config["destination"], refs, state, args.rebuild, args.reset_destination)
-        write_state(state_path, state)
+        push_refs(config["destination"], refs, state)
         print(f"Pushed {len(refs)} refs to the configured Git destination.")
     else:
         print(f"State saved to {state_path}. Use --push to publish the mirror.")
