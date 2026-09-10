@@ -3416,13 +3416,6 @@
       "moveNextBehavior": "Immediately",
       "identifier": "E025",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "ACT_ARREST_A"
-    },
-    "ACT_ARREST_A": {
-      "eventIdentifier": "activate_patient_a_arrest_actions",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_ARREST_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "D023"
     },
     "E026": {
@@ -3472,13 +3465,6 @@
       "moveNextBehavior": "WaitUntilDone",
       "identifier": "E032",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "ACT_CPR2_A"
-    },
-    "ACT_CPR2_A": {
-      "eventIdentifier": "activate_patient_a_cpr2_actions",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_CPR2_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "D029"
     },
     "E033": {
@@ -3506,13 +3492,6 @@
       "eventIdentifier": "rosc_monitor_ui",
       "moveNextBehavior": "WaitUntilDone",
       "identifier": "E036",
-      "nodeType": "InvokeEvent",
-      "nextIdentifier": "ACT_CLOTHING_REMOVE_A"
-    },
-    "ACT_CLOTHING_REMOVE_A": {
-      "eventIdentifier": "activate_patient_a_clothing_removal",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_CLOTHING_REMOVE_A",
       "nodeType": "InvokeEvent",
       "nextIdentifier": "D034"
     },
@@ -4984,13 +4963,6 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q007",
       "nodeType": "QuestControl",
-      "nextIdentifier": "ACT_VITAL_ASSESS_A"
-    },
-    "ACT_VITAL_ASSESS_A": {
-      "eventIdentifier": "activate_patient_a_vital_assess",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_VITAL_ASSESS_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "V011_1"
     },
     "Q_WAIT_INITIAL_A": {
@@ -5166,13 +5138,6 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q008",
       "nodeType": "QuestControl",
-      "nextIdentifier": "ACT_AVPU_GCS_ASSESS_A"
-    },
-    "ACT_AVPU_GCS_ASSESS_A": {
-      "eventIdentifier": "activate_patient_a_avpu_gcs_assess",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_AVPU_GCS_ASSESS_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "V012"
     },
     "Q008_1": {
@@ -6249,13 +6214,6 @@
       "onWaitTimeout": "ForceAdvance",
       "identifier": "V014_2",
       "nodeType": "Validator",
-      "nextIdentifier": "ACT_STYLET_REMOVE_A"
-    },
-    "ACT_STYLET_REMOVE_A": {
-      "eventIdentifier": "activate_patient_a_stylet_removal",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_STYLET_REMOVE_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "N008_3"
     },
     "V014_3": {
@@ -6364,13 +6322,6 @@
       "onWaitTimeout": "ForceAdvance",
       "identifier": "V015_2",
       "nodeType": "Validator",
-      "nextIdentifier": "ACT_TPIECE_ATTACH_A"
-    },
-    "ACT_TPIECE_ATTACH_A": {
-      "eventIdentifier": "activate_patient_a_tpiece_attach",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "ACT_TPIECE_ATTACH_A",
-      "nodeType": "InvokeEvent",
       "nextIdentifier": "V015_3_1"
     },
     "V015_3_1": {

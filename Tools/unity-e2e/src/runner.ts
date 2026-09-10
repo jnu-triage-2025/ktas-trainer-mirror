@@ -390,9 +390,9 @@ export class Runner {
       if(attempt===31)throw new E2EError('STATE_CONFLICT');
     }
     if(!current.interactions?.some((i:any)=>i.selected&&i.interactionId===step.target&&(!targetEntity||i.entityId===targetEntity)))throw new E2EError('STATE_CONFLICT');
-    const key=current.inputBindings?.interact;
-    if(!key||key==='None')throw new E2EError('UNSUPPORTED_CAPABILITY');
-    await this.platform.command(id,'input.execute',{sequence:[{operation:'hold',key,durationMs:100}]},{signal});
+    const selected=current.interactions.find((i:any)=>i.selected);
+    await this.platform.command(id,'input.execute',{sequence:[{operation:'interactionExecute',index:selected.index,
+      expectedEntityId:selected.entityId??undefined,expectedInteractionId:step.target}]},{signal});
   }
   async navigate(id: string, step: Step, signal: AbortSignal) {
     const end = performance.now() + step.timeoutMs!;

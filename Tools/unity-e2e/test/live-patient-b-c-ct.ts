@@ -6,6 +6,8 @@ import {Runner} from '../src/runner.ts';
 import {monitorMemoryPressure} from '../src/memory-pressure.ts';
 import {verifyPatientRoles} from '../src/patient-roles.ts';
 import {questEvidence} from '../src/quest-evidence.ts';
+import {waitForScenarioCompletion} from '../src/scenario-completion.ts';
+import {auditRuntimeLogs} from '../src/runtime-log-audit.ts';
 import {drivePatientBed} from '../src/vehicle-navigation.ts';
 import {joinInstances} from '../src/startup.ts';
 import {setTimeout as delay} from 'node:timers/promises';
@@ -44,7 +46,12 @@ try {
  const launch=await platform.launch(profile,'host_plus_3_clients');runId=launch.runId;
  const sourcePaths=[`../../../Assets/Modules/TriageTrainer/Resources/Scenario/${graph}.scenario.json`,
   `../../../Assets/Modules/TriageTrainer/Resources/Quest/${graph}.quests.quest.json`,
-  './live-patient-b-c-ct.ts','../src/runner.ts','../src/vehicle-navigation.ts'];
+  './live-patient-b-c-ct.ts','../src/runner.ts','../src/vehicle-navigation.ts','../src/scenario-completion.ts',
+  '../src/runtime-log-audit.ts','../src/quest-evidence.ts','../documentation/positions.md','../documentation/check_accessible.py',
+  '../../../Assets/Scenes/OverworldScene.unity','../../../Assets/Scenes/OverworldSceneMarked.unity',
+  '../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.Interactables.cs',
+  '../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Automation/PlayerController.Automation.cs',
+  '../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Automation/AutomationBridge.cs'];
  const sourceHashes=await Promise.allSettled(sourcePaths.map(async path=>({path,sha256:createHash('sha256').update(await readFile(new URL(path,import.meta.url))).digest('hex')})));
  for(const result of sourceHashes)if(result.status==='rejected')throw result.reason;
  await platform.artifact(runId,'route-manifest.json',{graph,profile,stage:process.argv[4]??'entry',
@@ -1383,13 +1390,16 @@ try {
    await delay(250);
   }
   await platform.artifact(runId!,'full-play-completed.json',completed);
+  const terminal=await waitForScenarioCompletion(platform,actors,graph,'E_END_BC_FADE');
+  await auditRuntimeLogs(platform,runId!);
+  await platform.artifact(runId!,'scenario-terminal-completed.json',{fullPlayPassed:true,observations:terminal.map(e=>e.state),terminalEvidence:terminal.map(e=>({actor:e.actor,...e.evidence}))});
   await platform.artifact(runId!,'route-manifest.json',{graph,profile,stage:'b-care',fullPlayPassed:true,
-   promotion:'Four-player assessment, treatment, and CT transport completed without scenario recovery.',
+   promotion:'Four-player assessment, treatment, CT transport, and terminal lifecycle completed without scenario recovery.',
    sources:sourceHashes.flatMap(result=>result.status==='fulfilled'?[result.value]:[]),
    execution:'Fixed role commands and accessibility-checked routes with observed completion gates; independent care branches execute concurrently.'});
  }
  const host=await platform.observe(actors.p1);
- assert.equal(host.scenario.graphId,graph);
+ assert.equal(host.scenario.graphId,process.argv[4]==='b-care'?null:graph);
  assert.ok(host.staticPlacedItems.length>0);
  await platform.artifact(runId,'entry-events.json',await platform.eventHistory(actors.p1));
  console.log(JSON.stringify({runId,graph,entryObserved:true,fullPlayPassed:process.argv[4]==='b-care',staticItemCount:host.staticPlacedItems.length}));

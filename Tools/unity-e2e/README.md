@@ -75,6 +75,8 @@ MCP 클라이언트에서 다음 프로세스를 stdio 서버로 등록합니다
 
 `scroll`은 가로 `x` 또는 세로 `y` 중 하나 이상을 받습니다. `interactionSelect`와 `interactionExecute`는 관측된 상호작용의 `index`(0~200)를 받으며, `hotbarSelect`는 핫바 슬롯 `index`(0~9)를 받습니다. 이 입력들은 MCP 입력 스키마와 고정 배치의 JSON 스키마에 모두 정의되어 있습니다. 슬롯 선택은 아이템을 지급하거나 퀘스트를 완료하지 않으며, 선택 후 `handlingItemId`와 `selectedHotbarSlot`으로 결과를 확인합니다.
 
+`interactionExecute`에는 `expectedEntityId`와 `expectedInteractionId`를 추가할 수 있습니다. 실행 프레임의 선택 대상이 다르면 실패하며, 다른 슬롯의 상호작용을 대신 실행하지 않습니다. 러너의 이름 있는 상호작용은 이 검사를 사용합니다. 실제 실행은 플레이어의 기존 상호작용 경로를 거치므로 거리·가시성·아이템·대화창 제한은 그대로 적용됩니다.
+
 ## 에디터 제어
 
 Unity에서 `Tools > E2E > Enable editor control`을 선택하면 해당 에디터 세션에 한해 제어 채널을 엽니다. 연결 정보는 `Temp/e2e-editor-connection.json`에 저장됩니다. 설정 파일의 `editorConnectionFile`이 이 파일을 가리켜야 합니다.
@@ -436,3 +438,9 @@ Automation heartbeat는 느린 응답 하나 때문에 다음 갱신을 건너�
 - `patient_b_c_ct`는 `test/live-patient-b-c-ct.ts`에서 B/C 시나리오의 테스트 경로를 유지합니다.
 
 공통 실행기와 이동 도구는 두 테스트가 함께 사용합니다. 콘텐츠 병합 전의 실행 기록은 당시 콘텐츠에 대한 기록이며, 병합 후 콘텐츠의 재생 통과를 뜻하지 않습니다.
+
+전체 재생 명령은 A의 경우 `node test/live-patient-a-critical.ts config.json patient_a_critical full mac_direct`, B/C의 경우 `node test/live-patient-b-c-ct.ts config.json patient_b_c_ct b-care mac_direct`입니다. B/C의 `b-care`는 두 환자의 사정·처치·CT 이송·종료까지 포함합니다.
+
+최종 성공 판정은 네 역할 모두의 마지막 노드 진입과 같은 실행 ID의 종료 이벤트, `Inactive` 상태, 남은 시나리오 퀘스트 없음, 빈 `recoveryNotes`를 요구합니다. 마지막 노드에 도착하거나 호스트 혼자 끝난 것만으로 성공 처리하지 않습니다. 이 검사를 통과한 뒤에만 `route-manifest.json`의 `fullPlayPassed`를 true로 갱신합니다. A의 증거는 `patient-a-full-route-completed.json`, B/C의 종료 증거는 `scenario-terminal-completed.json`이며, B/C의 `full-play-completed.json`은 CT 도착 시점의 별도 관측입니다.
+
+성공을 기록하기 전에 네 플레이어의 `unity.log`에서 관리 코드 예외, Unity `LogError`/`LogException`, 명시적인 `[Error]`, assertion 실패를 검사합니다. 하나라도 있으면 `runtime-log-audit.json`에 근거를 저장하고 실패합니다. manifest에는 씬·접근 가능 구역·지도 문서·경로 검사기·완료 판정 코드·상호작용 대상 수집 코드의 해시도 포함하므로, 변경 전의 성공 기록을 새 배치의 성공으로 재사용하지 않습니다.

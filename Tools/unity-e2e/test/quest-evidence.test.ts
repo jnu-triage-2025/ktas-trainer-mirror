@@ -3,6 +3,15 @@ import assert from 'node:assert/strict';
 import {questEvidence} from '../src/quest-evidence.ts';
 const row=(id:number,body:any={})=>({id,kind:'game',body:{runId:'run',instanceId:'p1',eventType:'quest.completed',
  payload:{scenarioId:'scenario',definitionId:'quest',completed:true,placeholder:false},...body}});
+test('cleared graph ending belongs only to a previously observed execution of this scenario',()=>{
+ const result=questEvidence([
+  row(1,{eventType:'scenario.started',payload:{graphId:'scenario',executionId:'current'}}),
+  row(2,{eventType:'scenario.ended',payload:{graphId:null,executionId:'other'}}),
+  row(3,{eventType:'scenario.ended',payload:{graphId:null,executionId:'current'}})
+ ],'run','p1','scenario');
+ assert.deepEqual(result.scenarioLifecycle.map(e=>e.historyId),[1,3]);
+ assert.equal(result.fullPlayPassed,false);
+});
 test('quest evidence excludes wrong actor/run/scenario and incomplete or placeholder quests',()=>{
  const rows=[row(1),row(2,{instanceId:'p2'}),row(3,{runId:'old'}),
  row(4,{payload:{scenarioId:'other',definitionId:'other',completed:true,placeholder:false}}),

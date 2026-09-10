@@ -226,6 +226,8 @@
                 "maxLength": 256
               },
               "index": { "type": "integer", "minimum": 0, "maximum": 200 },
+              "expectedEntityId": { "type": "string", "minLength": 1, "maxLength": 180 },
+              "expectedInteractionId": { "type": "string", "minLength": 1, "maxLength": 180 },
               "durationMs": {
                 "type": "integer",
                 "minimum": 1,
@@ -243,6 +245,10 @@
               }
             },
             "allOf": [
+              {
+                "if": { "anyOf": [{ "required": ["expectedEntityId"] }, { "required": ["expectedInteractionId"] }] },
+                "then": { "properties": { "operation": { "const": "interactionExecute" } } }
+              },
               {
                 "if": {
                   "properties": {

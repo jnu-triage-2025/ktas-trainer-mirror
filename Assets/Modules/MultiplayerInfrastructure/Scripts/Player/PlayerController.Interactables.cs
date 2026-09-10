@@ -330,6 +330,10 @@ namespace MultiplayerInfrastructure.Player
 
       for (int i = 0; i < nearby.Count; i++)
       {
+        // Interface references retain destroyed Unity objects until the next detector query.
+        // Scenario teardown can refresh quest hints within that interval.
+        if (nearby[i] is UnityEngine.Object owner && owner == null)
+          continue;
         var eachInteracts = nearby[i]?.Interacts;
         if (eachInteracts == null)
           continue;

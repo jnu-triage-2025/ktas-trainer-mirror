@@ -18,6 +18,30 @@ namespace TriageTrainer.Tests
     private const string PatientAScenarioPath =
       "Assets/Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json";
 
+    [Test]
+    public void DestroyedPatientIsIgnoredDuringQuestHintRefresh()
+    {
+      var playerObject = new GameObject("teardown-player");
+      var patientObject = Object.Instantiate(UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+        "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBMale.prefab"));
+      try
+      {
+        var player = playerObject.AddComponent<PlayerController>();
+        IInteractable patient = patientObject.GetComponent<TriageTrainer.Entity.PatientController>();
+        Object.DestroyImmediate(patientObject);
+        Assert.That(ReferenceEquals(patient, null), Is.False);
+        var collect = typeof(PlayerController).GetMethod("CollectAvailableInteracts",
+          System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var result = (List<IInteract>)collect.Invoke(player, new object[] { new[] { patient } });
+        Assert.That(result, Is.Empty);
+      }
+      finally
+      {
+        if (patientObject != null) Object.DestroyImmediate(patientObject);
+        Object.DestroyImmediate(playerObject);
+      }
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void PatientInteractionsIncludeScenarioHandlersBeforeAndAfterSpawn(bool definitionsBeforeSpawn)

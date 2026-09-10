@@ -56,9 +56,22 @@ namespace MultiplayerInfrastructure.Player
       _interactableHintUI?.SetSelected(index);
       RefreshLocalInteractionFocus();
     }
-    internal void AutomationExecuteInteraction(int index)
+    internal void AutomationExecuteInteraction(int index, string expectedEntityId = null, string expectedInteractionId = null)
     {
       AutomationSelectInteraction(index);
+      // Observation and input are separate frames. Never execute a different
+      // nearby target when that slot has changed in the meantime.
+      if (expectedEntityId != null || expectedInteractionId != null)
+      {
+        var target = _interactableHintUI?.GetSelected() as IQuestPresentationTarget;
+        if (target == null
+          || (expectedEntityId != null && target.PresentationEntityIdentifier != expectedEntityId)
+          || (expectedInteractionId != null && target.InteractionIdentifier != expectedInteractionId))
+          throw new System.InvalidOperationException("TARGET_NOT_INTERACTABLE");
+        if ((_dialoguePanelUIController != null && UI.UIOverlayStack.IsTop(_dialoguePanelUIController))
+          || (_interactableHintUI != null && _interactableHintUI.IsDialogueMode))
+          throw new System.InvalidOperationException("STATE_CONFLICT");
+      }
       TryInteractWithSelection();
     }
     internal void AutomationSelectHotbarSlot(int index)

@@ -6,6 +6,8 @@ import {Runner} from '../src/runner.ts';
 import {monitorMemoryPressure} from '../src/memory-pressure.ts';
 import {verifyPatientRoles} from '../src/patient-roles.ts';
 import {questEvidence} from '../src/quest-evidence.ts';
+import {waitForScenarioCompletion} from '../src/scenario-completion.ts';
+import {auditRuntimeLogs} from '../src/runtime-log-audit.ts';
 import {drivePatientBed} from '../src/vehicle-navigation.ts';
 import {joinInstances} from '../src/startup.ts';
 import {setTimeout as delay} from 'node:timers/promises';
@@ -42,7 +44,12 @@ try {
  const launch=await platform.launch(profile,'host_plus_3_clients');runId=launch.runId;
  const sourcePaths=[`../../../Assets/Modules/TriageTrainer/Resources/Scenario/${graph}.scenario.json`,
   `../../../Assets/Modules/TriageTrainer/Resources/Quest/${graph}.quests.quest.json`,
-  './live-patient-a-critical.ts','../src/runner.ts','../src/vehicle-navigation.ts'];
+  './live-patient-a-critical.ts','../src/runner.ts','../src/vehicle-navigation.ts','../src/scenario-completion.ts',
+  '../src/runtime-log-audit.ts','../src/quest-evidence.ts','../documentation/positions.md','../documentation/check_accessible.py',
+  '../../../Assets/Scenes/OverworldScene.unity','../../../Assets/Scenes/OverworldSceneMarked.unity',
+  '../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.Interactables.cs',
+  '../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Automation/PlayerController.Automation.cs',
+  '../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Automation/AutomationBridge.cs'];
  const sourceHashes=await Promise.allSettled(sourcePaths.map(async path=>({path,sha256:createHash('sha256').update(await readFile(new URL(path,import.meta.url))).digest('hex')})));
  for(const result of sourceHashes)if(result.status==='rejected')throw result.reason;
  await platform.artifact(runId,'route-manifest.json',{graph,profile,stage,
@@ -398,8 +405,15 @@ try {
   // not turn that short convergence window into a false route failure.
   const interactWhenScanned=async(id:string,step:any)=>{
    let lastError:unknown;
-   const deadline=performance.now()+5000;
+   const deadline=performance.now()+15000;
    while(performance.now()<deadline){
+    const state=await platform.observe(id,false,{includeStaticItems:false});
+    if(state.inputContext==='DialoguePanelUIController'){
+     if(state.dialogue.hasChoices)throw new Error(`UNEXPECTED_INTERACTION_CHOICE:${step.id}:${state.dialogue.nodeId}`);
+     if(state.dialogue.canAdvance||state.dialogue.isTextAnimating)
+      await runner.step({actors} as any,{id:`${step.id}_instruction`,type:'dialogueAdvance',actor:step.actor},signal);
+     await delay(150,undefined,{signal});continue;
+    }
     try{return await runner.interact(id,step,signal);}
     catch(error){
      lastError=error;
@@ -938,6 +952,13 @@ try {
   const interact=async(actor:string,interactionId:string,entityId='patient_a')=>{
    const deadline=performance.now()+40000;let last:unknown;
    while(performance.now()<deadline){
+    const state=await platform.observe(actors[actor],false,{includeStaticItems:false});
+    if(state.inputContext==='DialoguePanelUIController'){
+     if(state.dialogue.hasChoices)throw new Error(`UNEXPECTED_INTERACTION_CHOICE:${actor}:${interactionId}:${state.dialogue.nodeId}`);
+     if(state.dialogue.canAdvance||state.dialogue.isTextAnimating)
+      await runner.step({actors} as any,{id:`advanced_${actor}_${interactionId}_instruction`,type:'dialogueAdvance',actor},signal);
+     await delay(150,undefined,{signal});continue;
+    }
     try{return await runner.interact(actors[actor],{id:`advanced_${actor}_${interactionId}`,type:'interact',actor,target:interactionId,args:{entityId},mode:'input_adapter'},signal);}
     catch(error){
      last=error;if(!/TARGET_NOT_INTERACTABLE|STATE_CONFLICT/.test(String(error)))throw error;
@@ -1786,6 +1807,7 @@ try {
     }
     await approachExactInteraction('p1','remove_tpiece',[-61.55,-8.35],[-1,0,0],'patient_a_p1_ambu_patient_west');
     for(const [interactionId,target] of [['remove_tpiece',1],['connect_ambubag',2],['connect_o2_to_ambu',3],['start_ambu_r1',4]] as const){
+     await approachExactInteraction('p1',interactionId,[-61.55,-8.35],[-1,0,0],`patient_a_p1_ambu_${interactionId}`);
      await interact('p1',interactionId,'patient_a');
      // Connecting the reservoir advances through its instruction and the
      // one-option volume control before the start interaction becomes active.
@@ -2023,22 +2045,16 @@ try {
   for(const outcome of roscOutcomes)if(outcome.status==='rejected')throw outcome.reason;
 
   phase='patient_a_terminal';
-  const terminalDeadline=performance.now()+60000;
-  while(true){
-   const states=await Promise.all(Object.entries(actors).map(async([actor,id])=>({actor,state:await platform.observe(id,false,{includeStaticItems:false})})));
-   if(states.every(({state})=>state.scenario.graphId===graph&&(state.scenario.nodeId==='E038'||state.scenario.state==='Completed'))){
-    for(const {state} of states)assert.deepEqual(state.scenario.recoveryNotes,[],'SCENARIO_RECOVERY_USED');
-    await platform.artifact(runId!,'patient-a-full-route-completed.json',{fullPlayPassed:true,observations:states.map(({state})=>state)});
-    fullPlayPassed=true;
-    break;
-   }
-   await Promise.all(states.map(async({actor,state})=>{
+  const terminal=await waitForScenarioCompletion(platform,actors,graph,'E038',async(actor,state)=>{
     if(state.inputContext==='DialoguePanelUIController'&&(state.dialogue.canAdvance||state.dialogue.isTextAnimating))
      await runner.step({actors} as any,{id:`patient_a_terminal_advance_${actor}_${state.dialogue.nodeId}`,type:'dialogueAdvance',actor},signal);
-   }));
-   if(performance.now()>terminalDeadline)throw new Error(`PATIENT_A_TERMINAL_NOT_REACHED:${states.map(({actor,state})=>`${actor}:${state.scenario.nodeId}`).join(',')}`);
-   await delay(150,undefined,{signal});
-  }
+  });
+  await auditRuntimeLogs(platform,runId!);
+  await platform.artifact(runId!,'patient-a-full-route-completed.json',{fullPlayPassed:true,observations:terminal.map(e=>e.state),terminalEvidence:terminal.map(e=>({actor:e.actor,...e.evidence}))});
+  await platform.artifact(runId!,'route-manifest.json',{graph,profile,stage,fullPlayPassed:true,
+   promotion:'Four-player quests and terminal lifecycle completed without scenario recovery.',
+   sources:sourceHashes.flatMap(result=>result.status==='fulfilled'?[result.value]:[])});
+  fullPlayPassed=true;
  }
  if(['triage','move','recognition'].includes(process.argv[4])){
   assert.equal(graph,'patient_b_c_ct');phase='triage_waiting_positions';
@@ -2210,7 +2226,7 @@ try {
   }
  }
  const host=await platform.observe(actors.p1);
- assert.equal(host.scenario.graphId,graph);
+ assert.equal(host.scenario.graphId,fullPlayPassed?null:graph);
  assert.ok(host.staticPlacedItems.length>0);
  await platform.artifact(runId,'entry-events.json',await platform.eventHistory(actors.p1));
  console.log(JSON.stringify({runId,graph,entryObserved:true,fullPlayPassed,staticItemCount:host.staticPlacedItems.length}));

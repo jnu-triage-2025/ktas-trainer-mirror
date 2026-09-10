@@ -481,11 +481,28 @@ test('interaction selection initializes an empty selection and confirms the sele
  ]});
  f.platform.command=async(_id,_type,payload)=>{
   const operation=(payload?.sequence as {operation:string,key?:string,y?:number}[])[0];
-  inputs.push(operation.operation==='interactionExecute'?`execute:${(operation as any).index}`:operation.operation==='interactionSelect'?`select:${(operation as any).index}`:operation.key!);
+  if(operation.operation==='interactionExecute')assert.deepEqual(operation,{operation:'interactionExecute',index:2,expectedEntityId:'three',expectedInteractionId:'use'});
+  inputs.push(operation.operation==='interactionExecute'?`execute:${(operation as any).index}`:operation.operation==='interactionSelect'?`select:${(operation as any).index}`:(operation as {key:string}).key);
   if(operation.operation==='interactionExecute')selected=(operation as any).index;
   if(operation.operation==='interactionSelect')selected=(operation as any).index;
   return {};
  };
  await f.runner.interact('one',{id:'use',type:'interact',target:'use',args:{entityId:'three'}},AbortSignal.timeout(3000));
- assert.deepEqual(inputs,['select:2','E']);
+ assert.deepEqual(inputs,['select:2','execute:2']);
+});
+
+test('guarded interaction preserves a stale-target rejection rather than pressing a different slot',async()=>{
+ const f=await fixture();let commands=0;
+ f.platform.observe=async()=>({interactions:[{index:0,selected:true,entityId:'patient_a',interactionId:'connect_ambubag'}]});
+ f.platform.command=async(_id,_type,payload)=>{
+  commands++;assert.deepEqual(payload?.sequence,[{operation:'interactionExecute',index:0,expectedEntityId:'patient_a',expectedInteractionId:'connect_ambubag'}]);
+  throw new E2EError('TARGET_NOT_INTERACTABLE');
+ };
+ await assert.rejects(f.runner.interact('one',{id:'guard',type:'interact',target:'connect_ambubag',args:{entityId:'patient_a'}},AbortSignal.timeout(3000)),/TARGET_NOT_INTERACTABLE/);
+ assert.equal(commands,1);await f.platform.close();
+});
+
+test('batch schema restricts expected target guards to execution',()=>{
+ for(const operation of ['interactionExecute','interactionSelect','hotbarSelect'])
+  assert.equal(validate(definition([{id:'guard',type:'input',actor:'p1',sequence:[{operation,index:0,expectedEntityId:'patient_a',expectedInteractionId:'connect_ambubag'}]}])).valid,operation==='interactionExecute');
 });

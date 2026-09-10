@@ -8,6 +8,36 @@ namespace MultiplayerInfrastructure.Automation.Editor
   public sealed class AutomationInputTests
   {
     [Test]
+    public void GuardedInteractionRejectsMissingTargetInsteadOfExecutingAnotherSelection()
+    {
+      var instance = new GameObject("guarded-interaction-player");
+      try
+      {
+        var player = instance.AddComponent<MultiplayerInfrastructure.Player.PlayerController>();
+        var method = player.GetType().GetMethod("AutomationExecuteInteraction",
+          System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var error = Assert.Throws<System.Reflection.TargetInvocationException>(() =>
+          method.Invoke(player, new object[] { 0, "patient_a", "connect_ambubag" }));
+        Assert.That(error.InnerException.Message, Is.EqualTo("TARGET_NOT_INTERACTABLE"));
+      }
+      finally { Object.DestroyImmediate(instance); }
+    }
+
+    [Test]
+    public void ExpectedInteractionIdentityRequiresBoundedStringsOnExecuteOnly()
+    {
+      var validate = typeof(AutomationBridge).GetMethod("ValidateInput", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+      Assert.DoesNotThrow(() => validate.Invoke(null, new object[] {
+        Newtonsoft.Json.Linq.JArray.Parse("[{\"operation\":\"interactionExecute\",\"index\":0,\"expectedEntityId\":\"patient_a\",\"expectedInteractionId\":\"connect_ambubag\"}]") }));
+      foreach (string operation in new[] { "interactionExecute", "interactionSelect" })
+      {
+        var error = Assert.Throws<System.Reflection.TargetInvocationException>(() => validate.Invoke(null, new object[] {
+          Newtonsoft.Json.Linq.JArray.Parse("[{\"operation\":\"" + operation + "\",\"index\":0,\"expectedInteractionId\":42}]") }));
+        Assert.That(error.InnerException, Is.TypeOf<System.ArgumentException>());
+      }
+    }
+
+    [Test]
     public void PointerExpiresWithoutCreatingDevicesOrDependingOnControlHeartbeat()
     {
       var type = typeof(AutomationBridge).Assembly.GetType("MultiplayerInfrastructure.Automation.AutomationUI");

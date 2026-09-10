@@ -14,7 +14,7 @@ const operation = z.discriminatedUnion('operation', [
   z.object({ operation:z.literal('lookDelta'),x:coordinate,y:coordinate }).strict(),
   z.object({ operation:z.literal('scroll'),x:coordinate.optional(),y:coordinate.optional() }).strict()
   ,z.object({ operation:z.literal('interactionSelect'),index:z.number().int().min(0).max(200) }).strict()
-  ,z.object({ operation:z.literal('interactionExecute'),index:z.number().int().min(0).max(200) }).strict()
+  ,z.object({ operation:z.literal('interactionExecute'),index:z.number().int().min(0).max(200),expectedEntityId:id.optional(),expectedInteractionId:id.optional() }).strict()
   ,z.object({ operation:z.literal('hotbarSelect'),index:z.number().int().min(0).max(9) }).strict()
 ]);
 const definition = z.record(z.unknown());

@@ -35,6 +35,34 @@ namespace TriageTrainer.Tests
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyA.prefab";
 
     [Test]
+    public void FixedExteriorDoorHasNoUninitializedTriggerHandler()
+    {
+      var previousSetup = EditorSceneManager.GetSceneManagerSetup();
+      try
+      {
+        EditorSceneManager.OpenScene(OverworldScenePath, OpenSceneMode.Single);
+        var fixedDoor = GameObject.Find("autoDoor_6");
+        Assert.That(fixedDoor, Is.Not.Null);
+        Assert.That(fixedDoor.GetComponent<autoDoorSlide>(), Is.Null,
+          "Disabled vendor scripts still receive Unity trigger callbacks before Start initializes their state.");
+        var barrier = fixedDoor.GetComponent<BoxCollider>();
+        Assert.That(barrier, Is.Not.Null);
+        Assert.That(barrier.enabled, Is.True, "Keep the exterior barrier solid.");
+        Assert.That(barrier.isTrigger, Is.False);
+        Assert.That(fixedDoor.GetComponent<AudioSource>().enabled, Is.False);
+        Assert.That(GameObject.Find("autoDoor_6 (1)").GetComponent<autoDoorSlide>().enabled, Is.True,
+          "The working interior automatic door must remain enabled.");
+      }
+      finally
+      {
+        if (previousSetup.Length > 0)
+          EditorSceneManager.RestoreSceneManagerSetup(previousSetup);
+        else
+          EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+      }
+    }
+
+    [Test]
     public void CtTransportWaitAllowsSequentialFourPlayerBedTrips()
     {
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(

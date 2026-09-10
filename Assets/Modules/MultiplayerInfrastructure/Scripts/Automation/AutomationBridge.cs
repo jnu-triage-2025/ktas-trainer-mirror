@@ -339,7 +339,8 @@ namespace MultiplayerInfrastructure.Automation
             {
               var localPlayer = FindObjectsByType<PlayerController>(FindObjectsSortMode.None).FirstOrDefault(player => player.IsOwner);
               if (localPlayer == null) throw new InvalidOperationException("PLAYER_NOT_READY");
-              localPlayer.AutomationExecuteInteraction((int)step["index"]);
+              localPlayer.AutomationExecuteInteraction((int)step["index"],
+                (string)step["expectedEntityId"], (string)step["expectedInteractionId"]);
             }
             else if (op == "hotbarSelect")
             {
@@ -432,6 +433,13 @@ namespace MultiplayerInfrastructure.Automation
           var index = step["index"];
           if (index == null || index.Type != JTokenType.Integer || (long)index < 0 || (long)index > 200)
             throw new ArgumentException("INVALID_ARGUMENT");
+          foreach (string field in new[] { "expectedEntityId", "expectedInteractionId" })
+          {
+            var expected = step[field];
+            if (expected != null && (operation != "interactionExecute" || expected.Type != JTokenType.String
+              || string.IsNullOrWhiteSpace((string)expected) || ((string)expected).Length > 180))
+              throw new ArgumentException("INVALID_ARGUMENT");
+          }
         }
         else if (operation == "lookDelta" || operation == "scroll")
         {
