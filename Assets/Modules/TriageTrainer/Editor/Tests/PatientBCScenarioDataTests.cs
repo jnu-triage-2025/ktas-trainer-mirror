@@ -35,6 +35,21 @@ namespace TriageTrainer.Tests
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyA.prefab";
 
     [Test]
+    public void CtTransportWaitAllowsSequentialFourPlayerBedTrips()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(
+        Path.Combine(Application.dataPath,
+          "Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json")));
+
+      foreach (var identifier in new[] { "CT_A_WAIT", "CT_B_WAIT", "CT_C_WAIT", "CT_D_WAIT" })
+      {
+        var gate = (ScenarioValidatorNode)graph.Nodes[identifier];
+        Assert.That(gate.WaitTimeoutSeconds, Is.GreaterThanOrEqualTo(600f),
+          $"{identifier} must cover two sequential four-player CT transports and the return walk.");
+      }
+    }
+
+    [Test]
     public void PatientBCAutoAdvanceIsLimitedToInteractionResultFeedback()
     {
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(
@@ -336,6 +351,27 @@ namespace TriageTrainer.Tests
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
       Assert.That(graph.ActingNpcs.Single().PresetIdentifier, Is.EqualTo("npc_doctor_preset"));
 
+      foreach (var expectation in new[]
+               {
+                 (Patient: "patient_b", Interaction: "pupil_check", Role: "nurse_c"),
+                 (Patient: "patient_b", Interaction: "intravenous_line_cannula", Role: "nurse_c"),
+                 (Patient: "patient_b", Interaction: "normal_saline_connect", Role: "nurse_c"),
+                 (Patient: "patient_b", Interaction: "patient_bc_nasal_cannula", Role: "nurse_d"),
+                 (Patient: "patient_c", Interaction: "pupil_check", Role: "nurse_c"),
+                 (Patient: "patient_c", Interaction: "intravenous_line_cannula", Role: "nurse_c"),
+                 (Patient: "patient_c", Interaction: "normal_saline_connect", Role: "nurse_c"),
+                 (Patient: "patient_c", Interaction: "patient_bc_nasal_cannula", Role: "nurse_d")
+               })
+      {
+        var definition = graph.Interactions.Single(value =>
+          value.Entity.Identifier == expectation.Patient
+          && value.InteractionIdentifier == expectation.Interaction);
+        Assert.That(definition.VisibilityConditions, Has.Count.EqualTo(1),
+          $"{expectation.Patient}/{expectation.Interaction}");
+        Assert.That(definition.VisibilityConditions[0].Tag, Is.EqualTo(expectation.Role),
+          $"{expectation.Patient}/{expectation.Interaction}");
+      }
+
       var patientBSpawn = graph.Nodes["SPAWN_B"] as ScenarioEntityPresetSpawnNode;
       var patientCSpawn = graph.Nodes["SPAWN_C"] as ScenarioEntityPresetSpawnNode;
       Assert.That(patientBSpawn, Is.Not.Null);
@@ -368,7 +404,7 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes["care_patient_b"].NextIdentifier, Is.EqualTo("DOC_C"));
       Assert.That(graph.Nodes.ContainsKey("C_ARRIVAL"), Is.False);
       Assert.That(graph.Nodes["C_DOC_C"].NextIdentifier, Is.EqualTo("C_DOC_D"));
-      Assert.That(graph.Nodes["C_DOC_D"].NextIdentifier, Is.EqualTo("P_C_TREATMENT"));
+      Assert.That(graph.Nodes["C_DOC_D"].NextIdentifier, Is.EqualTo("P_B_C_TREATMENT"));
       Assert.That(graph.Nodes.ContainsKey("P_C_CARE"), Is.True);
       Assert.That(graph.Nodes.ContainsKey("P_B_C_CARE"), Is.True);
       Assert.That(graph.Nodes.ContainsKey("P_B_TREATMENT"), Is.True);
@@ -377,14 +413,21 @@ namespace TriageTrainer.Tests
       Assert.That(bothPatientCare, Is.Not.Null);
       Assert.That(bothPatientCare.AllocationType, Is.EqualTo(ScenarioParallelAllocationType.ByRole));
       Assert.That(bothPatientCare.WaitMode, Is.EqualTo(ScenarioWaitMode.All));
-      Assert.That(bothPatientCare.NextIdentifier, Is.EqualTo("CT_DOCTOR_ORDER"));
+      Assert.That(bothPatientCare.NextIdentifier, Is.EqualTo("P_B_C_WAIT_REMOVE"));
       Assert.That(bothPatientCare.Branches.Select(branch =>
         (branch.Identifier, Tag: branch.RequiredPlayerTags.Single(), branch.CompletionConditionIdentifier)),
         Is.EqualTo(new[]
         {
-          ("P_B_CARE", "nurse_a", "CC_B_COMPLETE"),
-          ("P_C_CARE", "nurse_b", "CC_C_COMPLETE")
+          ("A_RECOG_Q", "nurse_a", "CC_B_INITIAL_A"),
+          ("C_A_RECOG_Q", "nurse_b", "CC_C_INITIAL_B"),
+          ("B_VITAL_Q", "nurse_c", "CC_B_INITIAL_C"),
+          ("C_B_VITAL_Q", "nurse_d", "CC_C_INITIAL_D")
         }));
+      var combinedTreatment = graph.Nodes["P_B_C_TREATMENT"] as ScenarioParallelNode;
+      Assert.That(combinedTreatment, Is.Not.Null);
+      Assert.That(combinedTreatment.Branches.Select(branch => branch.RequiredPlayerTags.Single()),
+        Is.EqualTo(new[] { "nurse_c", "nurse_c", "nurse_d", "nurse_d" }));
+      Assert.That(graph.Nodes["P_B_C_TREATMENT_REMOVE"].NextIdentifier, Is.EqualTo("move_patients"));
       Assert.That(graph.Nodes["P_B_CARE"].NextIdentifier, Is.EqualTo("P_B_WAIT_REMOVE"));
       Assert.That(graph.Nodes["P_B_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("DOC_C"));
       Assert.That(graph.Nodes["P_C_CARE"].NextIdentifier, Is.EqualTo("P_C_WAIT_REMOVE"));

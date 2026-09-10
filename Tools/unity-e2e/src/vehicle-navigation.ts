@@ -1,8 +1,9 @@
 import {Platform,E2EError} from './core.ts';
 
-export async function drivePatientBed(platform:Platform,instanceId:string,bedId:string,pointId:string,signal:AbortSignal,timeoutMs=60000,participantIds:string[]=[instanceId],via:number[][]=[],waypointSettleMs=0,vehicleKind='patientBed'){
+export async function drivePatientBed(platform:Platform,instanceId:string,bedId:string,pointId:string,signal:AbortSignal,timeoutMs=60000,participantIds:string[]=[instanceId],via:number[][]=[],waypointSettleMs=0,vehicleKind='patientBed',finalTargetPosition?:number[]){
  if(!participantIds.includes(instanceId)||new Set(participantIds).size!==participantIds.length)throw new E2EError('INVALID_PARTICIPANTS');
  if(via.length>32||via.some(point=>point.length!==3||point.some(value=>!Number.isFinite(value))))throw new E2EError('INVALID_VEHICLE_ROUTE');
+ if(finalTargetPosition&&(finalTargetPosition.length!==3||finalTargetPosition.some(value=>!Number.isFinite(value))))throw new E2EError('INVALID_VEHICLE_ROUTE');
  const deadline=performance.now()+timeoutMs;let routeIndex=0,lastPeerValidation=-Infinity;
  let bestDistance=Infinity,bestAngle=Infinity,lastProgress=performance.now();
  try {
@@ -12,17 +13,18 @@ export async function drivePatientBed(platform:Platform,instanceId:string,bedId:
    const beds=(snapshot.vehicles??[]).filter((v:any)=>v.id===bedId&&v.kind===vehicleKind);
    // Snapping detaches riders in the same authoritative transition. Treat the
    // observed latch as success before requiring continued local control.
-   if(beds.some((v:any)=>v.latchedPointId===pointId))return;
+   if(!finalTargetPosition&&beds.some((v:any)=>v.latchedPointId===pointId))return;
    const controlledBeds=beds.filter((v:any)=>v.locallyControlled);
    if(controlledBeds.length!==1)throw new E2EError(controlledBeds.length?'TARGET_NOT_FOUND':'VEHICLE_NOT_CONTROLLED',bedId);
    const bed=controlledBeds[0];
    if(!bed.locallyControlled)throw new E2EError('VEHICLE_NOT_CONTROLLED',bedId);
-   const points=(bed.positioningPoints??[]).filter((p:any)=>p.id===pointId);
-   if(points.length!==1)throw new E2EError('TARGET_NOT_FOUND',pointId);
-   const target=via[routeIndex]??points[0].position;
+   const points=finalTargetPosition?[]:(bed.positioningPoints??[]).filter((p:any)=>p.id===pointId);
+   if(!finalTargetPosition&&points.length!==1)throw new E2EError('TARGET_NOT_FOUND',pointId);
+   const target=via[routeIndex]??finalTargetPosition??points[0].position;
    const dx=target[0]-bed.position[0],dz=target[2]-bed.position[2];
    const distance=Math.hypot(dx,dz),angle=((Math.atan2(dx,dz)*180/Math.PI-bed.yaw+540)%360)-180;
    if(!Number.isFinite(distance)||!Number.isFinite(angle))throw new E2EError('INVALID_VEHICLE_OBSERVATION');
+   if(finalTargetPosition&&routeIndex>=via.length&&distance<.8)return;
    // Allow the bed body to clear doorway and furniture waypoints.
    if(routeIndex<via.length&&distance<.8){
     if(waypointSettleMs>0)await new Promise<void>((resolve,reject)=>{

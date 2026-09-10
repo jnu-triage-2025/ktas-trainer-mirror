@@ -20,12 +20,15 @@ test('worker claims once, passes a scoped credential and revokes it after comple
 });
 test('worker preserves cancellation and aborts an active adapter',async()=>{
  const f=fixture();let aborted=false;
+ const keepalive=setInterval(()=>{},1000);
  const agent=async(_context:any,signal:AbortSignal)=>new Promise<string>((_resolve,reject)=>{
   signal.addEventListener('abort',()=>{aborted=true;reject(signal.reason);},{once:true});
   setTimeout(()=>{const r=f.requests.get(f.queued.id)!;f.requests.transition(r.id,r.revision,'cancelled');},5);
  });
- const result=await processRequest(f.call,agent,f.queued,new AbortController().signal,{pollMs:5});
- assert.equal(result.state,'cancelled');assert.equal(aborted,true);assert.deepEqual(f.revoked,['grant']);
+ try{
+  const result=await processRequest(f.call,agent,f.queued,new AbortController().signal,{pollMs:5});
+  assert.equal(result.state,'cancelled');assert.equal(aborted,true);assert.deepEqual(f.revoked,['grant']);
+ }finally{clearInterval(keepalive);}
 });
 test('worker records adapter failure and revokes its credential',async()=>{
  const f=fixture();const result=await processRequest(f.call,async()=>{throw new Error('agent disconnected');},f.queued,new AbortController().signal);

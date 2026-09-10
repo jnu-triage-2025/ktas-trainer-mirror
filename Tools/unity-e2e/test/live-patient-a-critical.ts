@@ -371,6 +371,16 @@ try {
   // Use the second scene-placed vital set, whose observed global position is
   // reachable in normal gameplay and grants the same quest item.
   const vital='static-item:vital_set-(4):fcbf41499f824b13a4341e3ac2dd453f';
+  // The BC supply cart now occupies (-67,-13.5). Use the marked west
+  // corridor instead of a diagonal from room A through that furniture.
+  const vitalStart=(await platform.observe(actors.p2,false,{includeStaticItems:false})).client.players.find((player:any)=>player.local).position;
+  const vitalExit=vitalStart[2]<-15?[[-65.1,0,-20.75],[-68.5,0,-20.75]]:
+   [[-65.12,0,-9.35],[-68.4,0,-9.35],[-68.5,0,-20.75]];
+  for(const [index,targetPosition] of [...vitalExit,
+   [-76.75,0,-20.75],[-76.75,0,-29.2],[-75.4,0,-29.2]].entries())
+   await runner.navigate(actors.p2,{id:`patient_a_vital_corridor_${index}`,type:'navigate',actor:'p2',
+    target:`patient_a_vital_corridor_${index}`,mode:'input_adapter',timeoutMs:30000,
+    args:{targetType:'position',targetPosition,arrivalRadius:.3}},signal);
   try {
    await runner.navigate(actors.p2,{id:'patient_a_pick_vital_set',type:'navigate',actor:'p2',target:vital,mode:'input_adapter',timeoutMs:30000,args:{targetType:'staticItem',arrivalRadius:.55,targetOffset:[.5,0,.5]}},signal);
   } catch (error) {
@@ -416,7 +426,7 @@ try {
     const p2Position=p2Start.client.players.find((candidate:any)=>candidate.local)?.position;
     // Depending on the snap/release replication order, P2 can already be at
     // treatment or remain in zone_3.  Only route the latter through the door.
-    if(p2Position&&p2Position[2]<-15)for(const [index,point] of [[-67.5,0,-18.8],[-67.5,0,-9.7],[-62,0,-8.35]].entries())
+    if(p2Position&&p2Position[2]<-15)for(const [index,point] of [[-76.75,0,-29.2],[-76.75,0,-20.75],[-68.5,0,-20.75],[-68.5,0,-9.35],[-65.12,0,-9.35],[-62,0,-8.35]].entries())
      await runner.navigate(actors.p2,{id:`patient_a_p2_return_treatment_${index}`,type:'navigate',actor:'p2',target:`patient_a_p2_return_treatment_${index}`,mode:'input_adapter',timeoutMs:20000,args:{targetType:'position',targetPosition:point,arrivalRadius:.7}},signal);
     try{
      // Approach from the open side of the bed.  Its rear collider leaves a

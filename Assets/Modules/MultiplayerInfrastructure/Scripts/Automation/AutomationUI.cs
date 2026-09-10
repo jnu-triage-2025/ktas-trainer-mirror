@@ -80,7 +80,9 @@ namespace MultiplayerInfrastructure.Automation
         var origin = e.panel != null ? RuntimePanelUtils.ScreenToPanel(e.panel, Vector2.zero) : Vector2.zero;
         var corner = e.panel != null ? RuntimePanelUtils.ScreenToPanel(e.panel, new Vector2(Screen.width, Screen.height)) : Vector2.one;
         var scale = corner - origin;
-        var scroll = e.GetFirstAncestorOfType<ScrollView>();
+        ScrollView scroll = null;
+        for (var ancestor = e.parent; ancestor != null; ancestor = ancestor.parent)
+          if (ancestor is ScrollView candidate && CenterOnScreen(candidate)) { scroll = candidate; break; }
         var picked = e.panel?.Pick(rect.center);
         bool hit = picked == e || (picked != null && e.Contains(picked));
         result.Add(new JObject {
@@ -183,12 +185,12 @@ namespace MultiplayerInfrastructure.Automation
       var screen = new Vector2(p.x / scale.x * Screen.width, Screen.height - p.y / scale.y * Screen.height);
       Move(screen, pressed);
     }
-    internal void Scroll(float notches)
+    internal void Scroll(Vector2 notches)
     {
       EnsureDevices();
       InputSystem.QueueStateEvent(_mouse, new MouseState {
         position = _position, buttons = (ushort)(_pressed ? 1 : 0),
-        scroll = new Vector2(0, notches * 120f)
+        scroll = notches * 120f
       });
     }
     internal void ExpirePointer(double now)

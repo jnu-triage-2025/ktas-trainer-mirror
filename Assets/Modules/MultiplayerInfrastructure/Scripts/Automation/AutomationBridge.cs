@@ -323,7 +323,12 @@ namespace MultiplayerInfrastructure.Automation
               Guard(request, true);
             }
             else if (op == "lookDelta") _input.Look(new Vector2((float)step["x"], (float)step["y"]));
-            else if (op == "scroll") { var notches = (float)step["y"]; _input.Scroll(new Vector2(0, notches)); _ui.Scroll(notches); }
+            else if (op == "scroll")
+            {
+              var notches = new Vector2((float?)step["x"] ?? 0f, (float?)step["y"] ?? 0f);
+              _input.Scroll(notches);
+              _ui.Scroll(notches);
+            }
             else if (op == "interactionSelect")
             {
               var localPlayer = FindObjectsByType<PlayerController>(FindObjectsSortMode.None).FirstOrDefault(player => player.IsOwner);
@@ -430,14 +435,16 @@ namespace MultiplayerInfrastructure.Automation
         }
         else if (operation == "lookDelta" || operation == "scroll")
         {
-          var coordinates = operation == "scroll" ? new[] { "y" } : new[] { "x", "y" };
+          var coordinates = new[] { "x", "y" };
           foreach (var coordinate in coordinates)
           {
             var value = step[coordinate];
+            if (operation == "scroll" && value == null) continue;
             if (value == null || (value.Type != JTokenType.Integer && value.Type != JTokenType.Float)) throw new ArgumentException("INVALID_ARGUMENT");
             double number = (double)value;
             if (double.IsNaN(number) || double.IsInfinity(number) || Math.Abs(number) > 10000) throw new ArgumentException("INVALID_ARGUMENT");
           }
+          if (operation == "scroll" && step["x"] == null && step["y"] == null) throw new ArgumentException("INVALID_ARGUMENT");
         }
         else
         {

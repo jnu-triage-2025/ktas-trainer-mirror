@@ -10,7 +10,7 @@ async function fixture(){
  const platform=new Platform({builds:{},artifactRoot:root});
  platform.instances.set('one',{id:'one',runId:'recorded-run',nodeId:'local',role:'client',endpoint:'',token:'test',profile:'',state:'EXITED',epoch:0,owner:'None'});
  platform.observe=async()=>({scene:'World',inputContext:'Gameplay'});
- const store=new EventStore(root);
+ const store=new EventStore(join(root,'service'));
  const append=()=>store.append('recorded-run','one','command',{ok:true,command:{type:'input.execute',payload:{sequence:[{operation:'tap',key:'E'}]}}});
  return {platform,store,append};
 }

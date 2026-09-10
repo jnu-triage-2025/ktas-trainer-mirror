@@ -25,10 +25,25 @@ export async function waitForInteractable(platform: Platform, id: string, name: 
           scrollAttempts++;
           await platform.command(id, 'ui.pointer', { ...container.screenCenter, pressed: false,
             screenWidth: container.screenWidth, screenHeight: container.screenHeight, frame: container.uiRevision }, { signal });
-          const direction = target.screenCenter.y < container.screenCenter.y ? -1 : 1;
+          const horizontalDistance = target.screenCenter.x - container.screenCenter.x;
+          const verticalDistance = target.screenCenter.y - container.screenCenter.y;
+          const horizontal = Math.abs(horizontalDistance) > Math.abs(verticalDistance);
+          const direction = (horizontal ? -horizontalDistance : verticalDistance) < 0 ? -1 : 1;
           if (lastDirection && direction !== lastDirection) scrollMagnitude = Math.max(1 / 1024, scrollMagnitude / 2);
           lastDirection = direction;
-          await platform.command(id, 'input.execute', { sequence: [{ operation: 'scroll', y: direction * scrollMagnitude }] }, { signal });
+          if(horizontal && target.scrollContainerId==='InventoryScrollView'){
+            const match=await platform.command(id,'ui.query',{automationId:'InventoryHorizontalSlider'},{signal});
+            if(match.elements.length===1&&match.elements[0].interactable){
+              const slider=match.elements[0];
+              const pointer={x:horizontalDistance>0?slider.screenWidth-20:20,y:slider.screenCenter.y,
+                screenWidth:slider.screenWidth,screenHeight:slider.screenHeight,frame:slider.uiRevision};
+              await platform.command(id,'ui.pointer',{...pointer,pressed:true},{signal});
+              await platform.command(id,'ui.pointer',{...pointer,pressed:false},{signal});
+              return false;
+            }
+          }
+          await platform.command(id, 'input.execute', { sequence: [{ operation: 'scroll',
+            ...(horizontal ? {x:direction * scrollMagnitude} : {y:direction * scrollMagnitude}) }] }, { signal });
         }
       }
       return false;

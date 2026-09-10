@@ -37,11 +37,12 @@ namespace TriageTrainer.Scenario
   public partial class TriageScenarioEventBootstrap
   {
     private const string RecognitionRoleNurseA = "nurse_a";
+    private const string RecognitionRoleNurseB = "nurse_b";
     private const string RecognitionRoleNurseC = "nurse_c";
 
     /// <summary>
     /// 환자 B/C 의식 확인 항목의 활성화 정의. 역할 태그는 patient_b_c_ct 그래프의 P_B_CARE /
-    /// P_C_CARE 분기 역할과 같아야 한다. 말 걸기·근력 확인은 A_RECOG_Q(nurse_a) 분기가, 동공반사
+    /// P_C_CARE 분기 역할과 같아야 한다. 말 걸기·근력 확인은 C_A_RECOG_Q(nurse_b) 분기가, 동공반사
     /// 확인은 C_PUPIL_Q(nurse_c) 분기가 진행하며 펜라이트도 nurse_c 에게만 배분된다.
     /// </summary>
     internal static readonly PatientRecognitionActivation[] PatientBCRecognitionActivations =
@@ -52,11 +53,11 @@ namespace TriageTrainer.Scenario
       new("activate_patient_b_recognition_4", false, "patient_b_recognition_4", false, "계속해서 말 걸기", RecognitionRoleNurseA),
       new("activate_patient_b_strength_check", false, "patient_b_strength_checked", false, "근력 확인", RecognitionRoleNurseA),
       new("activate_patient_b_pupil_check", false, "patient_b_pupil_checked", false, "동공반사 확인", RecognitionRoleNurseC),
-      new("activate_patient_c_recognition_1", true, "patient_c_recognition_1", true, "말 걸기", RecognitionRoleNurseA),
-      new("activate_patient_c_recognition_2", true, "patient_c_recognition_2", true, "말 걸기", RecognitionRoleNurseA),
-      new("activate_patient_c_recognition_3", true, "patient_c_recognition_3", true, "말 걸기", RecognitionRoleNurseA),
-      new("activate_patient_c_recognition_4", true, "patient_c_recognition_4", false, "말 걸기", RecognitionRoleNurseA),
-      new("activate_patient_c_strength_check", true, "patient_c_strength_checked", false, "근력 확인", RecognitionRoleNurseA),
+      new("activate_patient_c_recognition_1", true, "patient_c_recognition_1", true, "말 걸기", RecognitionRoleNurseB),
+      new("activate_patient_c_recognition_2", true, "patient_c_recognition_2", true, "말 걸기", RecognitionRoleNurseB),
+      new("activate_patient_c_recognition_3", true, "patient_c_recognition_3", true, "말 걸기", RecognitionRoleNurseB),
+      new("activate_patient_c_recognition_4", true, "patient_c_recognition_4", false, "말 걸기", RecognitionRoleNurseB),
+      new("activate_patient_c_strength_check", true, "patient_c_strength_checked", false, "근력 확인", RecognitionRoleNurseB),
       new("activate_patient_c_pupil_check", true, "patient_c_pupil_checked", false, "동공반사 확인", RecognitionRoleNurseC),
     };
 

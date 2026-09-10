@@ -3,6 +3,22 @@ import assert from 'node:assert/strict';
 import {drivePatientBed} from '../src/vehicle-navigation.ts';
 import type {Platform} from '../src/core.ts';
 
+test('defibrillator cart latching and CT coordinate completion remain independent',async()=>{
+ for(const coordinateTarget of [false,true]){
+  let moved=false,released=false;
+  const vehicle={id:'cart',kind:'defibrillatorCart',position:[0,0,0],yaw:0,
+   locallyControlled:true,latchedPointId:coordinateTarget?'point':null as string|null,
+   positioningPoints:coordinateTarget?[]:[{id:'point',position:[0,0,2]}]};
+  const p={observe:async()=>({vehicles:[vehicle]}),command:async()=>{
+   moved=true;vehicle.position=[0,0,2];
+   if(!coordinateTarget){vehicle.latchedPointId='point';vehicle.locallyControlled=false;}
+  },release:async()=>{released=true;}} as unknown as Platform;
+  await drivePatientBed(p,'p1','cart','point',AbortSignal.timeout(1000),1000,['p1'],[],0,
+   'defibrillatorCart',coordinateTarget?[0,0,2]:undefined);
+  assert.equal(moved,true);assert.equal(released,true);
+ }
+});
+
 test('bed driving uses steering input and waits for observed latching',async()=>{
  const keys:string[]=[];let released=false;
  const bed={id:'bed',kind:'patientBed',position:[0,0,0],yaw:90,locallyControlled:true,latchedPointId:null as string|null,positioningPoints:[{id:'point',position:[0,0,1]}]};

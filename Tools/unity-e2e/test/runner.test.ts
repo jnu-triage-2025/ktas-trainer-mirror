@@ -75,6 +75,13 @@ test('unknown fields and malformed input commands fail schema validation',()=>{
   assert.equal(validate(definition([{id:'x',type:'input',actor:'p1',sequence:[{operation:'tap'}]}])).valid,false);
 });
 
+test('merged input schema supports A selections and BC horizontal scrolling',()=>{
+  for(const operation of [{operation:'hotbarSelect',index:2},{operation:'interactionSelect',index:1},
+    {operation:'interactionExecute',index:1},{operation:'scroll',x:1},{operation:'scroll',y:-1}])
+    assert.equal(validate(definition([{id:'input',type:'input',actor:'p1',sequence:[operation]}])).valid,true);
+  assert.equal(validate(definition([{id:'input',type:'input',actor:'p1',sequence:[{operation:'hotbarSelect',index:10}]}])).valid,false);
+});
+
 test('predicates reject missing expected values and invalid actor references', () => {
   for (const step of [
     {predicate:'scenario.stateValue',args:{actor:'p1',side:'server',key:'ready'}},

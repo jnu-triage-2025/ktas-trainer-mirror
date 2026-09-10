@@ -103,8 +103,12 @@ class InteractionMigrationTests(unittest.TestCase):
             for definition in definitions:
                 interaction = definition['interaction']
                 initial = interaction.startswith('recognition_') or interaction == 'strength_check'
-                parallel = data['nodes'][f'P_{prefix}_CARE' if initial else f'P_{prefix}_TREATMENT']
-                branch = parallel['branches'][1 if interaction == 'patient_bc_nasal_cannula' else 0]
+                parallel = data['nodes']['P_B_C_CARE' if initial else 'P_B_C_TREATMENT']
+                branch_id = ('A_RECOG_Q' if prefix == 'B' else 'C_A_RECOG_Q') if initial else (
+                    ('D_OXY_Q' if prefix == 'B' else 'C_D_OXY_Q')
+                    if interaction == 'patient_bc_nasal_cannula' else
+                    ('C_PUPIL_Q' if prefix == 'B' else 'C_C_PUPIL_Q'))
+                branch = next(value for value in parallel['branches'] if value['identifier'] == branch_id)
                 self.assertEqual(definition['visibility']['conditions'],
                                  [{'type': 'PlayerHasTag', 'tag': branch['requiredPlayerTags'][0]}])
 

@@ -153,11 +153,11 @@ namespace TriageTrainer.Tests
         ("activate_patient_b_recognition_4", "nurse_a"),
         ("activate_patient_b_strength_check", "nurse_a"),
         ("activate_patient_b_pupil_check", "nurse_c"),
-        ("activate_patient_c_recognition_1", "nurse_a"),
-        ("activate_patient_c_recognition_2", "nurse_a"),
-        ("activate_patient_c_recognition_3", "nurse_a"),
-        ("activate_patient_c_recognition_4", "nurse_a"),
-        ("activate_patient_c_strength_check", "nurse_a"),
+        ("activate_patient_c_recognition_1", "nurse_b"),
+        ("activate_patient_c_recognition_2", "nurse_b"),
+        ("activate_patient_c_recognition_3", "nurse_b"),
+        ("activate_patient_c_recognition_4", "nurse_b"),
+        ("activate_patient_c_strength_check", "nurse_b"),
         ("activate_patient_c_pupil_check", "nurse_c"),
       }));
 

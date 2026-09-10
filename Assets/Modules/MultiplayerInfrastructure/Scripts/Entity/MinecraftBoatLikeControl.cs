@@ -172,6 +172,14 @@ namespace MultiplayerInfrastructure.Entity
 
     protected void Update_MinecraftBoatLikeControl()
     {
+      // A reused network vehicle can retain the authoritative participant
+      // handle while a local follow/control attachment is lost between
+      // consecutive SyncList notifications. Reconcile idempotently so every
+      // owning client represented by a server handle remains an active local
+      // participant instead of becoming a non-interactable ghost occupant.
+      if (IsClientStarted)
+        ApplyLocalParticipant();
+
       HandleLocalExitInput();
       UpdateNetworkMovement();
     }

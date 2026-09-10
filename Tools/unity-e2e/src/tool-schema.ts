@@ -12,9 +12,10 @@ const operation = z.discriminatedUnion('operation', [
   z.object({ operation:z.literal('tap'),key,durationMs:z.number().int().min(1).max(2000).optional() }).strict(),
   z.object({ operation:z.literal('hold'),key,durationMs:z.number().int().min(1).max(2000) }).strict(),
   z.object({ operation:z.literal('lookDelta'),x:coordinate,y:coordinate }).strict(),
-  z.object({ operation:z.literal('scroll'),y:coordinate }).strict()
+  z.object({ operation:z.literal('scroll'),x:coordinate.optional(),y:coordinate.optional() }).strict()
   ,z.object({ operation:z.literal('interactionSelect'),index:z.number().int().min(0).max(200) }).strict()
   ,z.object({ operation:z.literal('interactionExecute'),index:z.number().int().min(0).max(200) }).strict()
+  ,z.object({ operation:z.literal('hotbarSelect'),index:z.number().int().min(0).max(9) }).strict()
 ]);
 const definition = z.record(z.unknown());
 const shapes: Record<string,z.ZodRawShape> = {

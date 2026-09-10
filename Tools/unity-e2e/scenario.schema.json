@@ -214,6 +214,9 @@
                   "hold",
                   "lookDelta",
                   "scroll",
+                  "interactionSelect",
+                  "interactionExecute",
+                  "hotbarSelect",
                   "wait"
                 ]
               },
@@ -222,6 +225,7 @@
                 "minLength": 1,
                 "maxLength": 256
               },
+              "index": { "type": "integer", "minimum": 0, "maximum": 200 },
               "durationMs": {
                 "type": "integer",
                 "minimum": 1,
@@ -282,10 +286,16 @@
                   }
                 },
                 "then": {
-                  "required": [
-                    "y"
-                  ]
+                  "anyOf": [{ "required": ["x"] }, { "required": ["y"] }]
                 }
+              },
+              {
+                "if": { "properties": { "operation": { "enum": ["interactionSelect", "interactionExecute", "hotbarSelect"] } } },
+                "then": { "required": ["index"] }
+              },
+              {
+                "if": { "properties": { "operation": { "const": "hotbarSelect" } } },
+                "then": { "properties": { "index": { "maximum": 9 } } }
               },
               {
                 "if": {
