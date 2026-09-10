@@ -22,6 +22,7 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Iterable
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -75,8 +76,21 @@ def load_config(config_path: Path) -> dict[str, Any]:
     return config
 
 
+@lru_cache(maxsize=None)
+def path_facts(path: str) -> tuple[str, str, tuple[str, ...]]:
+    """Return the file name, lowercased suffix and path components of a path.
+
+    Every rule check of every source commit needs these, and a long history
+    repeats the same paths thousands of times. Parsing each distinct path once
+    keeps a run that cannot reuse recorded rewrites from spending most of its
+    time in the path parser.
+    """
+    parsed = Path(path)
+    return parsed.name, parsed.suffix.lower(), parsed.parts
+
+
 def module_name(path: str) -> str | None:
-    parts = Path(path).parts
+    parts = path_facts(path)[2]
     if len(parts) >= 3 and parts[0:2] == ("Assets", "Modules"):
         return parts[2]
     return None
@@ -211,51 +225,76 @@ def branch_membership(refs: dict[str, str]) -> dict[str, set[str]]:
     return membership
 
 
+@lru_cache(maxsize=None)
+def normalized_extensions(values: tuple[str, ...]) -> frozenset[str]:
+    return frozenset(item.lower() if item.startswith(".") else f".{item.lower()}" for item in values)
+
+
 def matches(rule: dict[str, Any], path: str, size: int) -> bool:
-    if rule.get("preserve_meta", False) and Path(path).suffix.lower() == ".meta":
+    filename, extension, parts = path_facts(path)
+    directory_names = parts[:-1]
+    if rule.get("preserve_meta", False) and extension == ".meta":
         return False
     selector = rule.get("match", {})
     if "max_size_bytes" in selector and size >= int(selector["max_size_bytes"]):
         return True
-    filename = Path(path).name
-    extension = Path(path).suffix.lower()
-    directory_names = Path(path).parts[:-1]
     return (
         any(fnmatch.fnmatchcase(part, pattern) for pattern in selector.get("directory_names", []) for part in directory_names)
         or any(fnmatch.fnmatchcase(filename, pattern) for pattern in selector.get("file_names", []))
-        or extension in {item.lower() if item.startswith(".") else f".{item.lower()}" for item in selector.get("extensions", [])}
+        or extension in normalized_extensions(tuple(selector.get("extensions", [])))
         or any(fnmatch.fnmatchcase(path, pattern) for pattern in selector.get("paths", []))
     )
 
 
 def allowed_by_default(config: dict[str, Any], path: str) -> bool:
     policy = module_policy(config, path)
+    filename, extension, _parts = path_facts(path)
     if policy == "include":
         return True
     if policy == "exclude":
-        return Path(path).suffix.lower() == ".meta" and bool(config.get("module_policies", {}).get("always_include_meta", True))
+        return extension == ".meta" and bool(config.get("module_policies", {}).get("always_include_meta", True))
     include = config.get("include", {})
-    filename = Path(path).name
-    extension = Path(path).suffix.lower()
-    extensions = {item.lower() if item.startswith(".") else f".{item.lower()}" for item in include.get("extensions", [])}
+    extensions = normalized_extensions(tuple(include.get("extensions", [])))
     return extension in extensions or any(fnmatch.fnmatchcase(filename, pattern) for pattern in include.get("file_names", [])) or any(fnmatch.fnmatchcase(path, pattern) for pattern in include.get("paths", []))
 
 
+def path_is_excluded(config: dict[str, Any], path: str, kind: str, size: int, active: list[dict[str, Any]]) -> bool:
+    policy = module_policy(config, path)
+    extension = path_facts(path)[1]
+    excluded_module_meta = policy == "exclude" and extension == ".meta" and bool(config.get("module_policies", {}).get("always_include_meta", True))
+    # Explicit module inclusion and retained excluded-module metadata ignore
+    # generic size and extension rules.
+    force_include = policy == "include" or excluded_module_meta
+    force_exclude = any(rule.get("force", False) and matches(rule, path, size) for rule in active)
+    # Keep explicitly allowed submodule gitlinks so directories such as
+    # Tools remain visible in the filtered mirror. Other tree entry kinds
+    # are still excluded because they cannot be represented safely here.
+    explicitly_allowed_gitlink = kind == "commit" and allowed_by_default(config, path)
+    return (kind != "blob" and not explicitly_allowed_gitlink) or force_exclude or not allowed_by_default(config, path) or (not force_include and any(matches(rule, path, size) for rule in active))
+
+
+# Keyed by the set of active rules, then by the tree entry the verdict describes.
+DECISION_CACHE: dict[tuple[int, ...], dict[tuple[str, str, int], bool]] = {}
+
+
 def excluded_paths(config: dict[str, Any], commit: str, branches: set[str]) -> list[str]:
-    active = [rule for rule in config.get("rules", []) if applies_to_commit(rule.get("scope", {}), commit, branches)]
+    rules = config.get("rules", [])
+    active_indices = tuple(index for index, rule in enumerate(rules) if applies_to_commit(rule.get("scope", {}), commit, branches))
+    active = [rules[index] for index in active_indices]
+    # A verdict depends only on the tree entry and on which rules are active, so
+    # every commit that carries the same entry reaches the same answer. Deciding
+    # each distinct entry once is what keeps a run that cannot reuse recorded
+    # rewrites from evaluating the rule set millions of times over a long
+    # history, where nearly every path is repeated by nearly every commit.
+    cache = DECISION_CACHE.setdefault(active_indices, {})
     result: list[str] = []
     for path, _mode, kind, size in paths_at(commit):
-        policy = module_policy(config, path)
-        excluded_module_meta = policy == "exclude" and Path(path).suffix.lower() == ".meta" and bool(config.get("module_policies", {}).get("always_include_meta", True))
-        # Explicit module inclusion and retained excluded-module metadata ignore
-        # generic size and extension rules.
-        force_include = policy == "include" or excluded_module_meta
-        force_exclude = any(rule.get("force", False) and matches(rule, path, size) for rule in active)
-        # Keep explicitly allowed submodule gitlinks so directories such as
-        # Tools remain visible in the filtered mirror. Other tree entry kinds
-        # are still excluded because they cannot be represented safely here.
-        explicitly_allowed_gitlink = kind == "commit" and allowed_by_default(config, path)
-        if (kind != "blob" and not explicitly_allowed_gitlink) or force_exclude or not allowed_by_default(config, path) or (not force_include and any(matches(rule, path, size) for rule in active)):
+        entry = (path, kind, size)
+        verdict = cache.get(entry)
+        if verdict is None:
+            verdict = path_is_excluded(config, path, kind, size, active)
+            cache[entry] = verdict
+        if verdict:
             result.append(path)
     return result
 

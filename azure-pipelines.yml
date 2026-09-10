@@ -65,6 +65,12 @@ stages:
     jobs:
       - job: PushCodeMirror
         displayName: 'Create and push filtered Git mirror'
+        # A run that cannot reuse a recorded rewrite filters every source commit
+        # again, and that run also fetches and pushes the whole history for the
+        # first time. Together those exceed the 60-minute default, and a job
+        # cancelled there saves no state, so the next run starts cold as well.
+        # Runs that reuse the state file finish in a fraction of the budget.
+        timeoutInMinutes: 240
         pool:
           name: ${{ parameters.mirrorAgentPool }}
         steps:
