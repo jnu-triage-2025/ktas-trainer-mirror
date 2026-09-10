@@ -20,6 +20,7 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private UIDocument _uiDocument;
 
     private HotbarControl _hotbar;
+    private IReadOnlyList<InventorySlotModelDTO> _boundInventory;
     private Label _itemNameLabel;
     private Coroutine _itemNameHideRoutine;
     [Header("State")]
@@ -66,6 +67,8 @@ namespace MultiplayerInfrastructure.UI
       }
 
       _hotbar.Initialize(Math.Clamp(hotbarSlotCount, HotbarControl.MinSlotSize, HotbarControl.MaxSlotSize));
+      if (_boundInventory != null)
+        _hotbar.BindInventory(_boundInventory);
       // _hotbar.BindInventory(Inventory);
       _hotbar.SetSelectedIndex(0);
       // SetupHotbarUI 가 여러 번 호출되어도(플레이어 리스폰 등) 핸들러가 중복 누적되지 않도록
@@ -137,8 +140,31 @@ namespace MultiplayerInfrastructure.UI
       _hotbar.ForceRefresh();
     }
 
-    public void SetSelectedIndex(int index) => _hotbar?.SetSelectedIndex(index);
-    public void CycleSelection(int direction) => _hotbar?.CycleSelection(direction);
-    public void BindInventory(IReadOnlyList<InventorySlotModelDTO> inventory) => _hotbar?.BindInventory(inventory);
+    private bool EnsureHotbarReady()
+    {
+      if (_hotbar != null)
+        return true;
+      SetupHotbarUI();
+      return _hotbar != null;
+    }
+
+    public void SetSelectedIndex(int index)
+    {
+      if (EnsureHotbarReady())
+        _hotbar.SetSelectedIndex(index);
+    }
+
+    public void CycleSelection(int direction)
+    {
+      if (EnsureHotbarReady())
+        _hotbar.CycleSelection(direction);
+    }
+
+    public void BindInventory(IReadOnlyList<InventorySlotModelDTO> inventory)
+    {
+      _boundInventory = inventory;
+      if (EnsureHotbarReady())
+        _hotbar.BindInventory(inventory);
+    }
   }
 }

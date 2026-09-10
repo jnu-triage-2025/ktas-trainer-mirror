@@ -30,6 +30,12 @@ namespace MultiplayerInfrastructure.Player
     }
     internal JArray AutomationInteractions()
     {
+      // Keep the device-input surface and the exported observation on the
+      // same interaction generation. Scenario signals can replace a quest
+      // binding (for example gauze -> plaster) between normal hint refreshes;
+      // without this sync the MCP sees the new target but scroll/F still
+      // operates on the stale or empty UI list.
+      RefreshInteractableHintsNow();
       var available = CollectAvailableInteracts(_detector?.Nearby);
       if (_detector != null) KeepNearestExclusiveInteracts(available, _detector.DetectionPosition);
       OrderInteractsByDisplayPriority(available);
@@ -44,6 +50,30 @@ namespace MultiplayerInfrastructure.Player
         ["interactionId"] = (interaction as IQuestPresentationTarget)?.InteractionIdentifier
       }));
     }
+    internal void AutomationSelectInteraction(int index)
+    {
+      RefreshInteractableHintsNow();
+      _interactableHintUI?.SetSelected(index);
+      RefreshLocalInteractionFocus();
+    }
+    internal void AutomationExecuteInteraction(int index)
+    {
+      AutomationSelectInteraction(index);
+      TryInteractWithSelection();
+    }
+    internal void AutomationSelectHotbarSlot(int index)
+    {
+      if (_hotbarUI == null)
+        _hotbarUI = Registry.Registry.Get<UI.HotbarUIController>(Registry.RegistryType.UI,
+          Registry.Registry.TypeKey<UI.HotbarUIController>());
+      if (_hotbarUI == null || index < 0 || index >= _hotbarUI.SlotCount)
+        throw new System.ArgumentOutOfRangeException(nameof(index));
+      _hotbarUI.SetSelectedIndex(index);
+      // Inventory mutation can replace a same-index ItemInstance without a
+      // slot-change event, so always resolve after an automation selection.
+      ResolveHandledItem();
+    }
+    internal int AutomationSelectedHotbarSlot => _hotbarUI?.SelectedSlot ?? -1;
     internal JObject AutomationDialogueBinding => new JObject {
       ["bound"] = _dialoguePanelUIController != null,
       ["isTop"] = _dialoguePanelUIController != null && UI.UIOverlayStack.IsTop(_dialoguePanelUIController),

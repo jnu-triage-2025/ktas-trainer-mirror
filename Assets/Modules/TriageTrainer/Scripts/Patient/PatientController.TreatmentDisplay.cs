@@ -330,7 +330,7 @@ namespace TriageTrainer.Entity
 
       if (display != TreatmentDisplay.None)
       {
-        if (IsPatientBC && IsFishNetServerStarted)
+        if (IsFishNetServerStarted)
           SetTreatmentDisplayNetworked(display, applied);
         else
           SetTreatmentDisplay(display, applied);
@@ -897,6 +897,53 @@ namespace TriageTrainer.Entity
     private bool _patientBCIvAttachmentPointWarned;
     private const string NurseCRoleTag = "nurse_c";
     private const string NurseDRoleTag = "nurse_d";
+    private const string NurseBRoleTag = "nurse_b";
+
+    public void RequestApplyPatientATreatmentSignal(string signalIdentifier)
+    {
+      if (!IsPatientA || string.IsNullOrWhiteSpace(signalIdentifier))
+        return;
+      if (IsFishNetServerStarted || InstanceFinder.IsOffline)
+      {
+        ApplyPatientATreatmentSignalAuthoritative(signalIdentifier);
+        return;
+      }
+      if (IsFishNetClientInitialized)
+        CmdApplyPatientATreatmentSignal(signalIdentifier);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdApplyPatientATreatmentSignal(
+      string signalIdentifier,
+      NetworkConnection sender = null)
+    {
+      if (!IsPatientA
+          || !TryResolveTreatmentActor(sender, NurseBRoleTag, out _, out _, out _))
+        return;
+      ApplyPatientATreatmentSignalAuthoritative(signalIdentifier);
+    }
+
+    private void ApplyPatientATreatmentSignalAuthoritative(string signalIdentifier)
+    {
+      if (string.Equals(signalIdentifier, "sig.pass_et_tube_ready", System.StringComparison.Ordinal))
+      {
+        SetTreatmentApplied(
+          "endotracheal_tube_stylet_inserted",
+          true,
+          TreatmentDisplay.EndotrachealTubeStyletInserted);
+        return;
+      }
+      if (!string.Equals(signalIdentifier, "sig.remove_intu_stylet", System.StringComparison.Ordinal))
+        return;
+      SetTreatmentApplied(
+        "endotracheal_tube_stylet_inserted",
+        false,
+        TreatmentDisplay.EndotrachealTubeStyletInserted);
+      SetTreatmentApplied(
+        "endotracheal_tube_insert_done",
+        true,
+        TreatmentDisplay.EndotrachealTubeInsertDone);
+    }
     private const float PatientBCTreatmentInteractionDistance = 3f;
 
     private bool IsPatientA =>

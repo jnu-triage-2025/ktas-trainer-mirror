@@ -368,12 +368,14 @@ export class Runner {
     const targetEntity=step.args?.entityId;
     // Drive one selection at a time and re-observe.  Multiple input commands
     // can otherwise be consumed in one Unity frame, leaving the hint on its
-    // original entry despite a nominally correct sequence of key taps.
+    // original entry despite a nominally correct sequence of key taps. Never
+    // execute a just-observed list index directly: concurrent nearby changes
+    // can reorder that index before Unity consumes the command.
     for(let attempt=0;attempt<32;attempt++) {
       const matches=(current.interactions??[]).filter((interaction:any)=>interaction.interactionId===step.target&&(!targetEntity||interaction.entityId===targetEntity));
       const selected=(current.interactions??[]).filter((interaction:any)=>interaction.selected);
       if(matches.length===1&&selected.length===0){
-        await this.platform.command(id,'input.execute',{sequence:[{operation:'tap',key:'Equals'}]},{signal});
+        await this.platform.command(id,'input.execute',{sequence:[{operation:'interactionSelect',index:matches[0].index}]},{signal});
         await delay(120,undefined,{signal});
         current=await this.platform.observe(id);
         continue;
@@ -382,7 +384,7 @@ export class Runner {
       if(selected[0].interactionId===step.target&&selected[0].entityId===matches[0].entityId)break;
       const difference=matches[0].index-selected[0].index;
       if(difference===0)throw new E2EError('STATE_CONFLICT');
-      await this.platform.command(id,'input.execute',{sequence:[{operation:'tap',key:difference>0?'Equals':'Minus'}]},{signal});
+      await this.platform.command(id,'input.execute',{sequence:[{operation:'interactionSelect',index:matches[0].index}]},{signal});
       await delay(120,undefined,{signal});
       current=await this.platform.observe(id);
       if(attempt===31)throw new E2EError('STATE_CONFLICT');
@@ -390,7 +392,7 @@ export class Runner {
     if(!current.interactions?.some((i:any)=>i.selected&&i.interactionId===step.target&&(!targetEntity||i.entityId===targetEntity)))throw new E2EError('STATE_CONFLICT');
     const key=current.inputBindings?.interact;
     if(!key||key==='None')throw new E2EError('UNSUPPORTED_CAPABILITY');
-    await this.platform.command(id,'input.execute',{sequence:[{operation:'tap',key}]},{signal});
+    await this.platform.command(id,'input.execute',{sequence:[{operation:'hold',key,durationMs:100}]},{signal});
   }
   async navigate(id: string, step: Step, signal: AbortSignal) {
     const end = performance.now() + step.timeoutMs!;

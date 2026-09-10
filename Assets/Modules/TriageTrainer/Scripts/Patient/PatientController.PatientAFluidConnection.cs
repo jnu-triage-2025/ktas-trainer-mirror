@@ -216,7 +216,15 @@ namespace TriageTrainer.Entity
 
       if (IsFishNetClientInitialized && !IsFishNetServerStarted)
       {
-        CmdConnectPatientAFluid(isLeftArm);
+        // Inventories are owner-local. Consume through the normal item-use
+        // receipt path before asking the server to create the authoritative
+        // line, then let the TargetRpc confirm or restore that consumption.
+        if (!player.TryConsumeItemUse(IntravenousSet.Identifier, out var receipt))
+          return false;
+        string token = System.Guid.NewGuid().ToString("N");
+        _localPendingItemUseReceipts[token] = new LocalPendingItemUse
+          { Player = player, Receipt = receipt };
+        CmdConnectPatientAFluid(isLeftArm, token);
         return true;
       }
 
@@ -227,17 +235,29 @@ namespace TriageTrainer.Entity
 
     private bool TryConnectPatientAFluidAuthoritative(bool isLeftArm, PlayerController player = null)
     {
-      if (!CanConnectPatientAFluid(isLeftArm)
-          || (player != null && player.CountItemInInventory(IntravenousSet.Identifier) < 1)
-          || !TryGetPatientAFluidConnectionPoints(isLeftArm, out var patientPoint, out var fluidPoint))
+      bool canConnect = CanConnectPatientAFluid(isLeftArm);
+      int intravenousSetCount = player != null
+        ? player.CountItemInInventory(IntravenousSet.Identifier)
+        : -1;
+      bool hasPoints = TryGetPatientAFluidConnectionPoints(
+        isLeftArm, out var patientPoint, out var fluidPoint);
+      // A remote player's inventory is not authoritative on the server. The
+      // remote path has already consumed the set locally and carries a
+      // receipt token; only a host-owned player is consumed and checked here.
+      bool consumeHere = player != null && player.IsOwner;
+      if (!canConnect || (consumeHere && intravenousSetCount == 0) || !hasPoints)
+      {
         return false;
+      }
 
       var service = LineConnectionService.TopologyService
                     ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
       if (service == null || !service.TryCreateAutomaticConnection(fluidPoint, patientPoint))
+      {
         return false;
+      }
 
-      if (player != null && player.RemoveItemFromInventory(IntravenousSet.Identifier, 1) != 1)
+      if (consumeHere && player.RemoveItemFromInventory(IntravenousSet.Identifier, 1) != 1)
       {
         service.DisconnectAutomaticConnection(fluidPoint, patientPoint);
         return false;
@@ -251,15 +271,23 @@ namespace TriageTrainer.Entity
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdConnectPatientAFluid(bool isLeftArm, NetworkConnection sender = null)
+    private void CmdConnectPatientAFluid(bool isLeftArm, string token,
+      NetworkConnection sender = null)
     {
       if (!IsPatientA
           || !TryResolveTreatmentActor(sender, null, out var player, out var actorIdentifier,
             out var actorDisplayName))
+      {
+        if (!string.IsNullOrEmpty(token) && sender != null && sender.IsValid)
+          TargetCompleteApprovedPatientItemConsumption(sender, token, accepted: false);
         return;
+      }
 
+      bool accepted;
       using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
-        TryConnectPatientAFluidAuthoritative(isLeftArm, player);
+        accepted = TryConnectPatientAFluidAuthoritative(isLeftArm, player);
+      if (!string.IsNullOrEmpty(token) && sender != null && sender.IsValid)
+        TargetCompleteApprovedPatientItemConsumption(sender, token, accepted);
     }
   }
 }

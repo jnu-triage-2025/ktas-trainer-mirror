@@ -1,6 +1,6 @@
 import {Platform,E2EError} from './core.ts';
 
-export async function drivePatientBed(platform:Platform,instanceId:string,bedId:string,pointId:string,signal:AbortSignal,timeoutMs=60000,participantIds:string[]=[instanceId],via:number[][]=[],waypointSettleMs=0){
+export async function drivePatientBed(platform:Platform,instanceId:string,bedId:string,pointId:string,signal:AbortSignal,timeoutMs=60000,participantIds:string[]=[instanceId],via:number[][]=[],waypointSettleMs=0,vehicleKind='patientBed'){
  if(!participantIds.includes(instanceId)||new Set(participantIds).size!==participantIds.length)throw new E2EError('INVALID_PARTICIPANTS');
  if(via.length>32||via.some(point=>point.length!==3||point.some(value=>!Number.isFinite(value))))throw new E2EError('INVALID_VEHICLE_ROUTE');
  const deadline=performance.now()+timeoutMs;let routeIndex=0,lastPeerValidation=-Infinity;
@@ -9,10 +9,13 @@ export async function drivePatientBed(platform:Platform,instanceId:string,bedId:
   while(performance.now()<deadline){
    signal.throwIfAborted();
    const snapshot=await platform.observe(instanceId,false,{includeStaticItems:false,signal,ttlMs:5000});
-   const beds=(snapshot.vehicles??[]).filter((v:any)=>v.id===bedId&&v.kind==='patientBed');
-   if(beds.length!==1)throw new E2EError('TARGET_NOT_FOUND',bedId);
-   const bed=beds[0];
-   if(bed.latchedPointId===pointId)return;
+   const beds=(snapshot.vehicles??[]).filter((v:any)=>v.id===bedId&&v.kind===vehicleKind);
+   // Snapping detaches riders in the same authoritative transition. Treat the
+   // observed latch as success before requiring continued local control.
+   if(beds.some((v:any)=>v.latchedPointId===pointId))return;
+   const controlledBeds=beds.filter((v:any)=>v.locallyControlled);
+   if(controlledBeds.length!==1)throw new E2EError(controlledBeds.length?'TARGET_NOT_FOUND':'VEHICLE_NOT_CONTROLLED',bedId);
+   const bed=controlledBeds[0];
    if(!bed.locallyControlled)throw new E2EError('VEHICLE_NOT_CONTROLLED',bedId);
    const points=(bed.positioningPoints??[]).filter((p:any)=>p.id===pointId);
    if(points.length!==1)throw new E2EError('TARGET_NOT_FOUND',pointId);
@@ -41,7 +44,7 @@ export async function drivePatientBed(platform:Platform,instanceId:string,bedId:
     const observations=await Promise.allSettled(peers.map(participant=>platform.observe(participant,false,{includeStaticItems:false,signal,ttlMs:5000})));
     for(const [index,result] of observations.entries()){
      if(result.status==='rejected')throw result.reason;
-     const controlled=(result.value.vehicles??[]).filter((v:any)=>v.id===bedId&&v.kind==='patientBed'&&v.locallyControlled);
+     const controlled=(result.value.vehicles??[]).filter((v:any)=>v.id===bedId&&v.kind===vehicleKind&&v.locallyControlled);
      if(controlled.length!==1)throw new E2EError('VEHICLE_NOT_CONTROLLED',peers[index]);
     }
     lastPeerValidation=performance.now();

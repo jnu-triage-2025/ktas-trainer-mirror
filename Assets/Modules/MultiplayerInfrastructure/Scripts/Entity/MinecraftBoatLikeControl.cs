@@ -360,6 +360,7 @@ namespace MultiplayerInfrastructure.Entity
         new Vector2(Mathf.Clamp(forward, -1f, 1f), Mathf.Clamp(turn, -1f, 1f));
     }
 
+
     private bool MoveFromServerInputs()
     {
       int count = 0;

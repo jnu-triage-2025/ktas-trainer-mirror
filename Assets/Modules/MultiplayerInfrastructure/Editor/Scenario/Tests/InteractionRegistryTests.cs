@@ -188,6 +188,33 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void PendingDefinition_RehooksAfterRegistrySubsystemReset()
+    {
+      Registry.Registry.UnregisterEntity(Entity);
+      // SubsystemRegistration callbacks have no guaranteed ordering. Registry
+      // can clear this event after InteractionRegistry already subscribed.
+      var field = typeof(Registry.Registry).GetField("OnEntryRegistered",
+        System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+      Assert.That(field, Is.Not.Null);
+      var previous = field.GetValue(null);
+      try
+      {
+        using (InteractionRegistry.BeginScenarioInitCycle(Scenario)) { }
+        field.SetValue(null, null);
+        var definition = InteractionDefinition.Code(Entity, "late", "late", true, InteractionKind.Signal);
+        using (InteractionRegistry.BeginScenarioInitCycle(Scenario))
+          InteractionRegistry.ApplyScenarioDefinitions(Scenario, new[] { definition });
+        Registry.Registry.RegisterEntity(Entity, EntityType.Npc, _entityObject);
+        Assert.That(InteractionRegistry.TryGet(new InteractionAddress(Entity, "late"), out var entry), Is.True);
+        Assert.That(entry.Handler, Is.Not.Null);
+      }
+      finally
+      {
+        field.SetValue(null, previous);
+      }
+    }
+
+    [Test]
     public void PendingDefinition_AppliesWhenEntityAppearsAndByTag()
     {
       Registry.Registry.UnregisterEntity(Entity);

@@ -284,7 +284,9 @@ namespace MultiplayerInfrastructure.Player
       // 일반 모드에서는 기존 로직
       var interact = _interactableHintUI?.GetSelected();
       if (interact == null)
+      {
         return;
+      }
 
       // UI가 갱신되는 두 query 사이에 경계를 넘으면 이전 최단 후보가 잠시 선택 상태로 남을 수 있다.
       // 실행 직전에 현재 감지 목록과 조건을 다시 평가하여 더 먼 static entity가 활성화되지 않게 한다.

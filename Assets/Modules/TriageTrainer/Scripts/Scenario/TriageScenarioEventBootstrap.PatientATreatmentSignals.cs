@@ -16,10 +16,7 @@ namespace TriageTrainer.Scenario
       {
         SetActiveIfPresent(_patientAEtTubePreparedVisual, false);
         SetActiveIfPresent(_patientAEtTubeInsertedVisual, true);
-        ResolvePatientAController()?.SetTreatmentApplied(
-          "endotracheal_tube_stylet_inserted",
-          true,
-          TriageTrainer.Entity.PatientController.TreatmentDisplay.EndotrachealTubeStyletInserted);
+        ResolvePatientAController()?.RequestApplyPatientATreatmentSignal(signalIdentifier);
         return;
       }
 
@@ -37,14 +34,7 @@ namespace TriageTrainer.Scenario
       SetActiveIfPresent(_patientAEtTubeInsertedVisual, false);
       SetActiveIfPresent(_patientAEtTubeWithoutStyletVisual, true);
       var patient = ResolvePatientAController();
-      patient?.SetTreatmentApplied(
-        "endotracheal_tube_stylet_inserted",
-        false,
-        TriageTrainer.Entity.PatientController.TreatmentDisplay.EndotrachealTubeStyletInserted);
-      patient?.SetTreatmentApplied(
-        "endotracheal_tube_insert_done",
-        true,
-        TriageTrainer.Entity.PatientController.TreatmentDisplay.EndotrachealTubeInsertDone);
+      patient?.RequestApplyPatientATreatmentSignal(signalIdentifier);
     }
   }
 }

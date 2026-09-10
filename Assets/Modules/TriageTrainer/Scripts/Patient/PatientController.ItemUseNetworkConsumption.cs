@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Player;
+using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 
 using MI = MultiplayerInfrastructure;
@@ -46,8 +47,7 @@ namespace TriageTrainer.Entity
         return;
 
       PruneExpiredPendingItemUses();
-      if (!TryResolveItemUse(
-            itemIdentifier, out _, out string treatmentIdentifier, out _))
+      if (!TryResolveApprovedItemUseKey(itemIdentifier, out string treatmentIdentifier))
         return;
       foreach (var pendingUse in _pendingItemUses.Values)
       {
@@ -67,6 +67,29 @@ namespace TriageTrainer.Entity
         CreatedAt = Time.unscaledTime
       };
       TargetConsumeApprovedPatientItem(player.Owner, token, itemIdentifier);
+    }
+
+    // Patient A's CPR syringes are handled by ApplyItemUse's round-aware branch,
+    // rather than the static ItemUseEffects table.  They still need a stable key
+    // while the server waits for the owning client to confirm inventory
+    // consumption; otherwise remote players can see and execute the interaction
+    // but the approval request is silently discarded.
+    private bool TryResolveApprovedItemUseKey(string itemIdentifier, out string treatmentIdentifier)
+    {
+      if (TryResolveItemUse(itemIdentifier, out _, out treatmentIdentifier, out _))
+        return true;
+
+      if (IsPatientA
+          && (IsEpinephrineSyringeIdentifier(itemIdentifier)
+              || string.Equals(itemIdentifier, NormalSaline20ccSyringe.Identifier,
+                StringComparison.Ordinal)))
+      {
+        treatmentIdentifier = itemIdentifier;
+        return true;
+      }
+
+      treatmentIdentifier = null;
+      return false;
     }
 
     [TargetRpc]
@@ -223,8 +246,7 @@ namespace TriageTrainer.Entity
     private bool HasPendingApprovedItemUse(string itemIdentifier)
     {
       PruneExpiredPendingItemUses();
-      if (!TryResolveItemUse(
-            itemIdentifier, out _, out string treatmentIdentifier, out _))
+      if (!TryResolveApprovedItemUseKey(itemIdentifier, out string treatmentIdentifier))
         return false;
 
       foreach (var pending in _pendingItemUses.Values)

@@ -93,6 +93,28 @@ namespace TriageTrainer.Entity
     public string Identifier => EffectiveIdentifier;
     public DefibrillatorCartSnapPoint LatchedSnapPoint => _latchedSnapPoint;
 
+#if UNITY_E2E || UNITY_EDITOR
+    public override Newtonsoft.Json.Linq.JObject AutomationState
+    {
+      get
+      {
+        var state = base.AutomationState;
+        state["id"] = Identifier;
+        state["kind"] = "defibrillatorCart";
+        state["latchedPointId"] = LatchedSnapPoint?.Identifier;
+        var points = new Newtonsoft.Json.Linq.JArray();
+        foreach (var point in FindObjectsByType<DefibrillatorCartSnapPoint>(FindObjectsSortMode.None))
+          points.Add(new Newtonsoft.Json.Linq.JObject {
+            ["id"] = point.Identifier,
+            ["position"] = new Newtonsoft.Json.Linq.JArray(point.Position.x, point.Position.y, point.Position.z),
+            ["snapDistance"] = point.SnapDistance
+          });
+        state["positioningPoints"] = points;
+        return state;
+      }
+    }
+#endif
+
     /// <summary>
     /// 서버 권위 SyncVar 에 값을 기록해도 되는 컨텍스트인지.
     ///

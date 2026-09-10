@@ -115,8 +115,9 @@ namespace MultiplayerInfrastructure.InteractableEntity
 
     private static void EnsureHooked(bool force = false)
     {
-      if (_hooked && !force)
-        return;
+      // Registry's SubsystemRegistration reset may run after ours and clear
+      // its event without changing _hooked. Rebind at each initialization
+      // boundary; remove-before-add preserves exactly one subscription.
       if (_hooked)
       {
         Registry.Registry.OnEntryRegistered -= HandleRegistryEntryRegistered;

@@ -239,6 +239,15 @@ namespace TriageTrainer.Entity
       // ── 좌/우 팔 배정 ── 환자 모델이 한쪽 표현만 지원하면 그 팔을 우선한다.
       bool supportsLeft = IsTreatmentDisplaySupported(leftDisplay);
       bool supportsRight = IsTreatmentDisplaySupported(rightDisplay);
+      // 원격 Patient A 처치는 서버가 네트워크 처치 표시를 확정하지만 아래 bool은
+      // SyncVar가 아니다. 두 번째 삽입 전에 복제된 표시를 다시 읽어 첫 번째 팔을
+      // 인식하지 않으면 클라이언트가 계속 left 요청을 보내고 서버가 중복으로 거절한다.
+      _cannulaLeftArmInserted = _cannulaLeftArmInserted
+        || IsTreatmentDisplayActive(TreatmentDisplay.Syringe18GInsertedIntoLeftArm)
+        || IsTreatmentDisplayActive(TreatmentDisplay.Syringe20GInsertedIntoLeftArm);
+      _cannulaRightArmInserted = _cannulaRightArmInserted
+        || IsTreatmentDisplayActive(TreatmentDisplay.Syringe18GInsertedIntoRightArm)
+        || IsTreatmentDisplayActive(TreatmentDisplay.Syringe20GInsertedIntoRightArm);
       bool isLeft;
       if (supportsRight && !supportsLeft && !_cannulaRightArmInserted)
         isLeft = false;
@@ -252,6 +261,20 @@ namespace TriageTrainer.Entity
         return; // 양팔 모두 삽입 완료 → 추가 삽입 없음
 
       string side = isLeft ? "left" : "right";
+      if (!IsPatientBC && IsFishNetClientInitialized && !IsFishNetServerStarted)
+      {
+        // 환자 A도 원격 클라이언트의 로컬 표시와 신호만 갱신해서는 안 된다. 서버가
+        // 처치 표시를 네트워크 상태로 확정해야 이후 수액 연결의 서버 권위 조건
+        // (IsPatientACannulaInserted)이 성립한다. 인벤토리는 소유 클라이언트에만 있으므로
+        // B/C와 같은 영수증 흐름으로 먼저 소비하고 서버 판정에 따라 확정/복원한다.
+        if (!player.TryConsumeItemUse(heldIdentifier, out var receipt))
+          return;
+        string token = Guid.NewGuid().ToString("N");
+        _localPendingItemUseReceipts[token] = new LocalPendingItemUse { Player = player, Receipt = receipt };
+        CmdCompletePatientAIv(side, heldIdentifier, token);
+        return;
+      }
+
       if (IsPatientBC && IsFishNetClientInitialized && !IsFishNetServerStarted)
       {
         // 서버는 원격 클라이언트의 인벤토리를 볼 수 없다. 캐뉼라는 여기서 먼저 소비하고 영수증을
@@ -283,7 +306,7 @@ namespace TriageTrainer.Entity
 
       // ── 처치 표현(게이지 + 좌/우) ──
       TreatmentDisplay display = isLeft ? leftDisplay : rightDisplay;
-      ShowTreatmentDisplay(display);
+      SetTreatmentDisplayNetworked(display, true);
 
       // 배정 상태 기록(다음 삽입은 반대 팔로).
       if (isLeft)
@@ -298,6 +321,52 @@ namespace TriageTrainer.Entity
         _intravenousLineCannulaInteractable = false;
 
       player.RefreshInteractableHintsNow();
+    }
+
+    [FishNet.Object.ServerRpc(RequireOwnership = false)]
+    private void CmdCompletePatientAIv(string side, string itemIdentifier, string token,
+      FishNet.Connection.NetworkConnection sender = null)
+    {
+      bool accepted = TryCompletePatientAIvFromRemote(side, itemIdentifier, sender);
+      if (!string.IsNullOrEmpty(token) && sender != null && sender.IsValid)
+        TargetCompleteApprovedPatientItemConsumption(sender, token, accepted);
+    }
+
+    private bool TryCompletePatientAIvFromRemote(string side, string itemIdentifier,
+      FishNet.Connection.NetworkConnection sender)
+    {
+      if (!IsPatientA
+          || (side != "left" && side != "right")
+          || !IsCannulaGaugeAllowed(itemIdentifier)
+          || !TryResolveTreatmentActor(sender, null, out _, out var actorIdentifier,
+            out var actorDisplayName)
+          || !CanInteractIntravenousLineCannula
+          || (side == "left" ? _cannulaLeftArmInserted : _cannulaRightArmInserted))
+        return false;
+
+      bool is18G = string.Equals(itemIdentifier,
+        TriageTrainer.ItemDefinitions.Cannula18g.Identifier, StringComparison.Ordinal);
+      TreatmentDisplay display;
+      if (side == "left")
+        display = is18G ? TreatmentDisplay.Syringe18GInsertedIntoLeftArm : TreatmentDisplay.Syringe20GInsertedIntoLeftArm;
+      else
+        display = is18G ? TreatmentDisplay.Syringe18GInsertedIntoRightArm : TreatmentDisplay.Syringe20GInsertedIntoRightArm;
+      if (!IsTreatmentDisplaySupported(display))
+        return false;
+
+      using (MultiplayerInfrastructure.Scenario.ScenarioSignalPlayerContext.Push(
+               actorIdentifier, actorDisplayName))
+      {
+        SetTreatmentDisplayNetworked(display, true);
+        if (side == "left")
+          _cannulaLeftArmInserted = true;
+        else
+          _cannulaRightArmInserted = true;
+        RaiseCannulaSignal($"insert_iv_{{id}}_{side}");
+      }
+      if (_cannulaLeftArmInserted && _cannulaRightArmInserted)
+        _intravenousLineCannulaInteractable = false;
+      return true;
     }
 
     /// <summary>캐뉼라 신호 템플릿을 환자 Identifier 로 치환해 발신한다(빈 값이면 생략).</summary>

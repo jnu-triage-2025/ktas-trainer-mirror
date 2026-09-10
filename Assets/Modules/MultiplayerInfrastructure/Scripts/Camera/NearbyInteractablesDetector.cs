@@ -29,7 +29,12 @@ namespace MultiplayerInfrastructure.Camera
 
     [SerializeField] private List<IInteractable> _nearby = new List<IInteractable>();
     [SerializeField] private List<IInteractable> _scratch = new List<IInteractable>();
-    private readonly Collider[] overlapColliderBuf = new Collider[32];
+    // A patient on a moving bed can place more than 32 colliders inside the
+    // interaction sphere (patient displays, bed attachments, nearby carts,
+    // and other players). OverlapSphereNonAlloc silently truncates at the
+    // buffer length, which can make a valid bed interaction disappear based
+    // on Physics query order and block scenario progress.
+    private readonly Collider[] overlapColliderBuf = new Collider[128];
     private readonly Dictionary<string, IInteract> _nearestOnly = new Dictionary<string, IInteract>();
     private readonly Dictionary<string, IInteract> _nearestOnlyScratch = new Dictionary<string, IInteract>();
     private readonly Dictionary<string, float> _nearestOnlyDistanceScratch = new Dictionary<string, float>();

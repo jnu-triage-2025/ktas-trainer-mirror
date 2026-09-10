@@ -120,7 +120,9 @@ namespace MultiplayerInfrastructure.Player
       // 로컬 in-flight 가드(연타 방지). 확정 시 즉시 해제되고, 확정이 오지 않아도 쿨다운 만료 후 재시도 가능.
       if (_inFlightStaticObjectApplyExpiry.TryGetValue(entityIdentifier, out var expiry)
           && Time.unscaledTime < expiry)
+      {
         return;
+      }
 
       _inFlightStaticObjectApplyExpiry[entityIdentifier] = Time.unscaledTime + StaticObjectApplyInFlightTimeout;
 
@@ -152,26 +154,38 @@ namespace MultiplayerInfrastructure.Player
       string entityIdentifier, string requiredItemIdentifier, int consumeCount, NetworkConnection claimant)
     {
       if (string.IsNullOrWhiteSpace(entityIdentifier) || claimant == null)
+      {
         return;
+      }
 
       if (Owner != null && Owner.IsValid && claimant.ClientId != Owner.ClientId)
+      {
         return;
+      }
 
       if (!TryGetStaticObjectDisplayment(entityIdentifier, out var displayment) || displayment == null)
+      {
         return;
+      }
       if (!displayment.TryGetServerSharedItemExchange(
             out string authoritativeItemIdentifier, out int authoritativeConsumeCount)
           || !string.Equals(requiredItemIdentifier, authoritativeItemIdentifier, StringComparison.Ordinal)
           || consumeCount != authoritativeConsumeCount)
+      {
         return;
+      }
 
       // 이미 표시(설치/적용)된 상태면 무시(멱등, 중복 소비 방지).
       if (StaticObjectDisplaymentService.IsShown(entityIdentifier))
+      {
         return;
+      }
 
       // 동일 오브젝트에 대한 미확정 예약이 이미 있으면 거부(단일 사용 보장 · 동시 승인 방지).
       if (_pendingStaticObjectApplies.ContainsKey(entityIdentifier))
+      {
         return;
+      }
 
       // 거리 검증(픽업과 동일 규약).
       var claimantPosition = ResolveServerPickupOriginPosition();
@@ -194,8 +208,11 @@ namespace MultiplayerInfrastructure.Player
       // 클라이언트 요청은 실패 안전 방식으로 거부된다.
       if (!string.IsNullOrWhiteSpace(authoritativeItemIdentifier) && authoritativeConsumeCount > 0)
       {
-        if (CountItemInInventory(authoritativeItemIdentifier) < authoritativeConsumeCount)
+        int available=CountItemInInventory(authoritativeItemIdentifier);
+        if (available < authoritativeConsumeCount)
+        {
           return;
+        }
         if (RemoveItemFromInventory(authoritativeItemIdentifier, authoritativeConsumeCount)
             != authoritativeConsumeCount)
           return;

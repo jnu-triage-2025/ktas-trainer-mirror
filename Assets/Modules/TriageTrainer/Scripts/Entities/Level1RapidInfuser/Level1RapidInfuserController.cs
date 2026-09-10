@@ -877,7 +877,10 @@ namespace TriageTrainer.Entity
 
     private const string CLineConnectSignal = "connect_cline_to_lv1";
     private const string PatientAIdentifier = "patient_a";
-    private const string CLineOperatorRoleTag = "nurse_c";
+    // patient_a_critical assigns the IV -> C-line -> Level 1 sequence to the
+    // Q013 owner. With all four roles present that owner is nurse_d; requiring
+    // nurse_c here makes the Owner-scoped Level 1 quest impossible to finish.
+    private const string CLineOperatorRoleTag = "nurse_d";
 
     /// <summary>
     /// C라인 연결 상호작용 가능 여부를 판정한다.

@@ -324,6 +324,24 @@ namespace MultiplayerInfrastructure.Automation
             }
             else if (op == "lookDelta") _input.Look(new Vector2((float)step["x"], (float)step["y"]));
             else if (op == "scroll") { var notches = (float)step["y"]; _input.Scroll(new Vector2(0, notches)); _ui.Scroll(notches); }
+            else if (op == "interactionSelect")
+            {
+              var localPlayer = FindObjectsByType<PlayerController>(FindObjectsSortMode.None).FirstOrDefault(player => player.IsOwner);
+              if (localPlayer == null) throw new InvalidOperationException("PLAYER_NOT_READY");
+              localPlayer.AutomationSelectInteraction((int)step["index"]);
+            }
+            else if (op == "interactionExecute")
+            {
+              var localPlayer = FindObjectsByType<PlayerController>(FindObjectsSortMode.None).FirstOrDefault(player => player.IsOwner);
+              if (localPlayer == null) throw new InvalidOperationException("PLAYER_NOT_READY");
+              localPlayer.AutomationExecuteInteraction((int)step["index"]);
+            }
+            else if (op == "hotbarSelect")
+            {
+              var localPlayer = FindObjectsByType<PlayerController>(FindObjectsSortMode.None).FirstOrDefault(player => player.IsOwner);
+              if (localPlayer == null) throw new InvalidOperationException("PLAYER_NOT_READY");
+              localPlayer.AutomationSelectHotbarSlot((int)step["index"]);
+            }
             else
             {
               if (!Enum.TryParse((string)step["key"], out KeyCode key) || !Enum.IsDefined(typeof(KeyCode), key)) throw new ArgumentException("INVALID_ARGUMENT");
@@ -402,6 +420,12 @@ namespace MultiplayerInfrastructure.Automation
         {
           var duration = step["durationMs"];
           if (duration == null || duration.Type != JTokenType.Integer || (double)duration < 1 || (double)duration > 2000)
+            throw new ArgumentException("INVALID_ARGUMENT");
+        }
+        else if (operation == "interactionSelect" || operation == "interactionExecute" || operation == "hotbarSelect")
+        {
+          var index = step["index"];
+          if (index == null || index.Type != JTokenType.Integer || (long)index < 0 || (long)index > 200)
             throw new ArgumentException("INVALID_ARGUMENT");
         }
         else if (operation == "lookDelta" || operation == "scroll")
@@ -551,6 +575,8 @@ namespace MultiplayerInfrastructure.Automation
             ["ownerId"] = p.OwnerId, ["userIdentifier"] = p.UserIdentifier,
             ["tags"] = new JArray(Tag.PlayerTagService.GetTagsByIdentifier(p.UserIdentifier)),
             ["inventory"] = p.AutomationInventory(),
+            ["handlingItemId"] = p.HandlingItem?.CurrentIdentifier,
+            ["selectedHotbarSlot"] = p.IsOwner ? p.AutomationSelectedHotbarSlot : -1,
             ["questFlags"] = new JArray(Quest.PlayerQuestStateFlagService.GetFlags(p.UserIdentifier)), ["local"] = p.IsOwner, ["objectId"] = p.ObjectId,
             ["position"] = new JArray(p.transform.position.x, p.transform.position.y, p.transform.position.z),
             ["yaw"] = p.transform.eulerAngles.y, ["cameraPitch"] = p.IsOwner ? (float?)p.AutomationCameraPitch : null, ["canMove"] = p.canMove,
