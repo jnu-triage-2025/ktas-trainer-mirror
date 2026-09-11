@@ -3,8 +3,6 @@
 namespace MultiplayerInfrastructure.ItemSystem
 {
   /// <summary>
-  /// 아이템 자동 조합 레시피 정의입니다.
-  ///
   /// 레시피는 하나 이상의 재료 아이템(Identifier + 필요 수량)과
   /// 생성될 결과 아이템(Identifier + 생성 수량)으로 구성됩니다.
   ///
