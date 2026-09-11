@@ -58,8 +58,6 @@ namespace MultiplayerInfrastructure.Scenario
     // 우선해 RaycastAll로 다시 검사한다.
     private const int GroundRaycastHitCapacity = 32;
     private static readonly RaycastHit[] GroundRaycastHits = new RaycastHit[GroundRaycastHitCapacity];
-    private const string ChecklistPaperIdentifier = "checklist_paper";
-
     // WaitMode.All/Any 병렬 노드가 분기 완료를 기다리는 동안 외부 자동 진행이
     // 병렬 부모의 NextIdentifier로 건너뛰지 못하게 한다.
     private int _parallelAdvanceBlockDepth;
@@ -8929,17 +8927,6 @@ namespace MultiplayerInfrastructure.Scenario
         return false;
       }
 
-      if (string.Equals(itemIdentifier, ChecklistPaperIdentifier, StringComparison.Ordinal)
-          && CurrentGraph?.ChecklistItemSetsByPlayerTag?.Count > 0)
-      {
-        targets = targets.Where(IsChecklistPaperRecipient).ToList();
-        if (targets.Count == 0)
-        {
-          result = "No connected player matched a checklist role tag.";
-          return false;
-        }
-      }
-
       int grantedPlayers = 0;
       int alreadyOwnedPlayers = 0;
       int unavailablePlayers = 0;
@@ -8981,20 +8968,6 @@ namespace MultiplayerInfrastructure.Scenario
         + (unavailablePlayers > 0 ? $"; {unavailablePlayers} target(s) were unavailable" : string.Empty)
         + ".";
       return true;
-    }
-
-    private bool IsChecklistPaperRecipient(NetworkConnection connection)
-    {
-      if (connection?.FirstObject == null
-          || !connection.FirstObject.TryGetComponent<PlayerController>(out var player)
-          || player == null
-          || string.IsNullOrWhiteSpace(player.UserIdentifier))
-      {
-        return false;
-      }
-
-      return CurrentGraph.ChecklistItemSetsByPlayerTag.Keys.Any(tag =>
-        !string.IsNullOrWhiteSpace(tag) && PlayerTagService.HasTag(player.UserIdentifier, tag));
     }
 
     private ChatService ResolveChatService()

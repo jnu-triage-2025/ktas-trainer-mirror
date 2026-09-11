@@ -604,6 +604,21 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void ChecklistPaperGrantDoesNotFilterResolvedPlayersByRoleTag()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string source = File.ReadAllText(Path.Combine(projectRoot, ScenarioControllerPath));
+      var method = Regex.Match(source,
+        @"private bool TryExecuteScenarioGiveIfMissing\(.*?\n    \}", RegexOptions.Singleline);
+
+      Assert.That(method.Success, Is.True, "give-if-missing 실행 메서드를 찾지 못했습니다.");
+      StringAssert.DoesNotContain("ChecklistItemSetsByPlayerTag", method.Value,
+        "@a로 선택한 플레이어를 체크리스트 역할 태그로 다시 제한하면 일부 참가자가 지급 대상에서 제외됩니다.");
+      StringAssert.DoesNotContain("IsChecklistPaperRecipient", source,
+        "체크리스트 종이 지급 대상은 선택자로 결정해야 하며 역할 태그로 다시 제한하면 안 됩니다.");
+    }
+
+    [Test]
     public void PatientA636RequiredItemsAreCheckedAtTheirInteractions()
     {
       var patientPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
