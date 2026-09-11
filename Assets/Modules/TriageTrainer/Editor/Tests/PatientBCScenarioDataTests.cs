@@ -2062,6 +2062,19 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PatientBCPreinstalledOxygenWarningUsesThePatientAssignedRole()
+    {
+      string source = File.ReadAllText(Path.Combine(
+        Application.dataPath,
+        "Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientBCEvents.cs"));
+
+      Assert.That(source, Does.Contain(
+        "patient.PatientBCSecondaryTreatmentRoleTag"));
+      Assert.That(source, Does.Not.Contain(
+        "SendPrivateSystemMessageToTaggedPlayer(\"nurse_d\", PreinstalledOxygenWarning)"));
+    }
+
+    [Test]
     public void PatientBCIvAndNormalSalineRequireActivatedPupilSequence()
     {
       var patientObject = new GameObject("patient_c");

@@ -908,7 +908,7 @@ namespace TriageTrainer.Entity
         ? "nurse_a"
         : NurseBRoleTag;
 
-    private string PatientBCSecondaryTreatmentRoleTag =>
+    internal string PatientBCSecondaryTreatmentRoleTag =>
       string.Equals(Identifier, "patient_b", System.StringComparison.Ordinal)
         ? "nurse_c"
         : NurseDRoleTag;

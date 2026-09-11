@@ -55,7 +55,9 @@ namespace TriageTrainer.Scenario
       if (nurseC)
         patient.ActivatePatientBCNurseCStage();
       else if (patient.ActivatePatientBCNurseDStage())
-        SendPrivateSystemMessageToTaggedPlayer("nurse_d", PreinstalledOxygenWarning);
+        SendPrivateSystemMessageToTaggedPlayer(
+          patient.PatientBCSecondaryTreatmentRoleTag,
+          PreinstalledOxygenWarning);
     }
 
     private static void SendPrivateSystemMessageToTaggedPlayer(string tag, string message)
