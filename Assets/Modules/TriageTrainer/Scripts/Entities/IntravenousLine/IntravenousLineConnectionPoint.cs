@@ -608,7 +608,7 @@ namespace TriageTrainer.Entity.IntravenousLine
       player != null && player.CountItemInInventory(IntravenousSet.Identifier) > 0;
 
     public bool TryConsumeRequiredItem(PlayerController player) =>
-      player != null && player.RemoveItemFromInventory(IntravenousSet.Identifier, 1) > 0;
+      player != null && player.TryConsumeItemUse(IntravenousSet.Identifier);
 
     public override bool TryConsumeConnectionRequirement(PlayerController player) =>
       TryConsumeRequiredItem(player);

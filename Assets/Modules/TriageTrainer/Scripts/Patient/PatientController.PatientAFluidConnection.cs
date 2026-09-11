@@ -257,7 +257,7 @@ namespace TriageTrainer.Entity
         return false;
       }
 
-      if (consumeHere && player.RemoveItemFromInventory(IntravenousSet.Identifier, 1) != 1)
+      if (consumeHere && !player.TryConsumeItemUse(IntravenousSet.Identifier))
       {
         service.DisconnectAutomaticConnection(fluidPoint, patientPoint);
         return false;

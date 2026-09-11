@@ -66,6 +66,21 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void IntravenousSetStartsWithSixteenDurabilityAndLosesOnePerUse()
+    {
+      var intravenousSet = new IntravenousSet();
+
+      Assert.That(intravenousSet.HasCurrentDurability, Is.True);
+      Assert.That(intravenousSet.CurrentMaxDurability, Is.EqualTo(16));
+      Assert.That(intravenousSet.CurrentDurability, Is.EqualTo(16));
+      Assert.That(intravenousSet.CurrentDurabilityDeltaOnUse, Is.EqualTo(-1));
+
+      Assert.That(intravenousSet.TryApplyDurabilityOnUse(out bool depleted), Is.True);
+      Assert.That(intravenousSet.CurrentDurability, Is.EqualTo(15));
+      Assert.That(depleted, Is.False);
+    }
+
+    [Test]
     public void FullDurabilityHidesBarAndDamagedDurabilityShowsBar()
     {
       var plaster = new Plaster();

@@ -1074,7 +1074,7 @@ namespace TriageTrainer.Entity
                       ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
         if (service == null || !service.TryCreateAutomaticConnection(salinePoint, patientPoint))
           return false;
-        if (consumeInventory && player != null && player.RemoveItemFromInventory(IntravenousSet.Identifier, 1) != 1)
+        if (consumeInventory && player != null && !player.TryConsumeItemUse(IntravenousSet.Identifier))
         {
           service.DisconnectAutomaticConnection(salinePoint, patientPoint);
           return false;
