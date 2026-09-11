@@ -257,8 +257,12 @@ namespace TriageTrainer.Tests
         "CPR 수행자 위치는 상호작용을 발행한 환자 엔티티를 기준으로 정해야 합니다.");
       StringAssert.Contains("patientPosition.x, patientPosition.y + _cprPerformingPlayerHeightOffset", source);
       StringAssert.Contains("patientPosition.z", source);
+      StringAssert.Contains("new(0.35f, 0.15f, 0f)", source,
+        "CPR 수행자 고정 위치에는 지정된 위치 델타를 더해야 합니다.");
       StringAssert.Contains("state.Patient.transform.eulerAngles.y + 180f", source,
         "CPR 수행자는 환자와 반대 방향을 바라보도록 Y 회전을 180도 보정해야 합니다.");
+      StringAssert.Contains("new(0f, -90f, 0f)", source,
+        "CPR 수행자 고정 회전에는 지정된 회전 델타를 더해야 합니다.");
       StringAssert.Contains("SetMovementSuppressed(state.Anchor, true)", source);
       StringAssert.Contains("SetRidableExitSuppressed(state.Anchor, true)", source);
       StringAssert.Contains("ClearForcedFollowAnchor(state.Anchor)", source,

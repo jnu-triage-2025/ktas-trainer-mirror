@@ -114,6 +114,10 @@ namespace TriageTrainer.Scenario
     /// 플레이어 CharacterController 반지름(0.5)과 환자 누움 콜라이더 반지름(0.3)을 합친 값이다.
     /// </summary>
     private const float PatientACprPerformerExitClearance = 0.9f;
+    private static readonly Vector3 PatientACprPerformerPositionDelta =
+      new(0f, 0.15f, -0.3f);
+    private static readonly Vector3 PatientACprPerformerRotationDelta =
+      new(0f, -90f, 0f);
 
     private readonly Dictionary<Animator, PlayableGraph> _patientACprAnimationGraphs = new();
     private readonly Dictionary<Animator, AnimationClip> _patientACprAnimationClips = new();
@@ -462,10 +466,15 @@ namespace TriageTrainer.Scenario
         return;
 
       Vector3 patientPosition = state.Patient.transform.position;
-      state.Anchor.SetPositionAndRotation(
+      Vector3 anchorPosition =
         new Vector3(patientPosition.x, patientPosition.y + _cprPerformingPlayerHeightOffset,
-          patientPosition.z),
-        Quaternion.Euler(0f, state.Patient.transform.eulerAngles.y + 180f, 0f));
+          patientPosition.z) + PatientACprPerformerPositionDelta;
+      Vector3 anchorRotation =
+        new Vector3(0f, state.Patient.transform.eulerAngles.y + 180f, 0f)
+        + PatientACprPerformerRotationDelta;
+      state.Anchor.SetPositionAndRotation(
+        anchorPosition,
+        Quaternion.Euler(anchorRotation));
 
       state.Player.AlignYawTo(state.Anchor.forward);
       state.Player.SetForcedFollowAnchor(state.Anchor);
