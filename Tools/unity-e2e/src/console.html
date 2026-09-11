@@ -19,7 +19,6 @@ p{margin:0}
 /* 상단 막대 */
 header{display:flex;align-items:center;gap:10px;padding:0 12px;height:46px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
 .brand{display:flex;align-items:center;gap:8px;padding-right:10px;border-right:1px solid var(--line)}
-.brand-mark{width:24px;height:24px;border-radius:8px;background:var(--blue);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;letter-spacing:-.02em}
 .brand small{color:var(--faint);font-size:11px}
 .topbar-spacer{flex:1}
 .topbar-tools{display:flex;align-items:center;gap:6px}
@@ -140,7 +139,7 @@ details.fold>:not(summary){padding:8px;max-height:220px;overflow:auto}
 </style>
 
 <header>
- <div class="brand"><span class="brand-mark">E2E</span><h1>Unity 제어 콘솔</h1></div>
+ <div class="brand"><h1>Unity 제어 콘솔</h1></div>
  <span id="status" class="pill pill-blue" role="status">연결 준비 중</span>
  <span id="control-badge" class="pill">제어: 확인 중</span>
  <div class="topbar-spacer"></div>
@@ -262,12 +261,12 @@ details.fold>:not(summary){padding:8px;max-height:220px;overflow:auto}
    </section>
 
    <section class="panel" id="panel-artifacts" role="tabpanel" aria-labelledby="tab-artifacts">
-    <div class="panel-head"><h2>실행 증거</h2></div>
+    <div class="panel-head"><h2>실행 산출물</h2></div>
     <div>
      <label for="artifact-run">저장된 실행 ID</label>
-     <input id="artifact-run" placeholder="비워 두면 현재 테스트의 증거를 표시합니다." style="width:100%">
+     <input id="artifact-run" placeholder="비워 두면 현재 테스트의 산출물을 표시합니다." style="width:100%">
     </div>
-    <div class="row"><button id="artifacts" class="btn-primary">증거 목록 보기</button></div>
+    <div class="row"><button id="artifacts" class="btn-primary">산출물 목록 보기</button></div>
     <div id="artifact-list" class="row"></div>
     <pre id="artifact-content"></pre>
    </section>
@@ -281,7 +280,7 @@ details.fold>:not(summary){padding:8px;max-height:220px;overflow:auto}
    <button id="tab-scenario" role="tab" data-panel="panel-scenario" aria-selected="false" aria-controls="panel-scenario">
     <svg viewBox="0 0 24 24"><path d="M8 5.5l10 6.5-10 6.5z"/></svg>테스트</button>
    <button id="tab-artifacts" role="tab" data-panel="panel-artifacts" aria-selected="false" aria-controls="panel-artifacts">
-    <svg viewBox="0 0 24 24"><path d="M4 7.5A1.5 1.5 0 015.5 6h3.2l1.6 2h8.2A1.5 1.5 0 0120 9.5v8A1.5 1.5 0 0118.5 19h-13A1.5 1.5 0 014 17.5z"/></svg>증거</button>
+    <svg viewBox="0 0 24 24"><path d="M4 7.5A1.5 1.5 0 015.5 6h3.2l1.6 2h8.2A1.5 1.5 0 0120 9.5v8A1.5 1.5 0 0118.5 19h-13A1.5 1.5 0 014 17.5z"/></svg>산출물</button>
   </nav>
  </aside>
 </div>
