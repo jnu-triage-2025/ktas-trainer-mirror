@@ -1947,9 +1947,9 @@
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
-        { "identifier": "C_PUPIL_Q", "completionConditionIdentifier": "CC_B_TREATMENT_A", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "C_C_PUPIL_Q", "completionConditionIdentifier": "CC_C_TREATMENT_B", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "D_OXY_Q", "completionConditionIdentifier": "CC_B_TREATMENT_C", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_PUPIL_Q", "completionConditionIdentifier": "CC_B_TREATMENT_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_C_PUPIL_Q", "completionConditionIdentifier": "CC_C_TREATMENT_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "D_OXY_Q", "completionConditionIdentifier": "CC_B_TREATMENT_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
         { "identifier": "C_D_OXY_Q", "completionConditionIdentifier": "CC_C_TREATMENT_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
       ]
     },
@@ -1961,9 +1961,9 @@
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
-        { "identifier": "C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_B_TREATMENT_A", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "C_C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_C_TREATMENT_B", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
-        { "identifier": "D_REMOVE", "completionConditionIdentifier": "CC_B_TREATMENT_C", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_B_TREATMENT_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_C_TREATMENT_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "D_REMOVE", "completionConditionIdentifier": "CC_B_TREATMENT_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
         { "identifier": "C_D_REMOVE", "completionConditionIdentifier": "CC_C_TREATMENT_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
       ]
     },

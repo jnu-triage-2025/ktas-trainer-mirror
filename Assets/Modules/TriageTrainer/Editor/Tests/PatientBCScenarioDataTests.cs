@@ -453,9 +453,27 @@ namespace TriageTrainer.Tests
         }));
       var combinedTreatment = graph.Nodes["P_B_C_TREATMENT"] as ScenarioParallelNode;
       Assert.That(combinedTreatment, Is.Not.Null);
-      Assert.That(combinedTreatment.Branches.Select(branch => branch.RequiredPlayerTags.Single()),
-        Is.EqualTo(new[] { "nurse_c", "nurse_c", "nurse_d", "nurse_d" }));
-      Assert.That(graph.Nodes["P_B_C_TREATMENT_REMOVE"].NextIdentifier, Is.EqualTo("move_patients"));
+      Assert.That(combinedTreatment.Branches.Select(branch =>
+        (branch.Identifier, Tag: branch.RequiredPlayerTags.Single())),
+        Is.EqualTo(new[]
+        {
+          ("C_PUPIL_Q", "nurse_a"),
+          ("C_C_PUPIL_Q", "nurse_b"),
+          ("D_OXY_Q", "nurse_c"),
+          ("C_D_OXY_Q", "nurse_d")
+        }));
+      var combinedTreatmentRemove = graph.Nodes["P_B_C_TREATMENT_REMOVE"] as ScenarioParallelNode;
+      Assert.That(combinedTreatmentRemove, Is.Not.Null);
+      Assert.That(combinedTreatmentRemove.Branches.Select(branch =>
+        (branch.Identifier, Tag: branch.RequiredPlayerTags.Single())),
+        Is.EqualTo(new[]
+        {
+          ("C_PUPIL_REMOVE", "nurse_a"),
+          ("C_C_PUPIL_REMOVE", "nurse_b"),
+          ("D_REMOVE", "nurse_c"),
+          ("C_D_REMOVE", "nurse_d")
+        }));
+      Assert.That(combinedTreatmentRemove.NextIdentifier, Is.EqualTo("move_patients"));
       Assert.That(graph.Nodes["P_B_CARE"].NextIdentifier, Is.EqualTo("P_B_WAIT_REMOVE"));
       Assert.That(graph.Nodes["P_B_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("DOC_C"));
       Assert.That(graph.Nodes["P_C_CARE"].NextIdentifier, Is.EqualTo("P_C_WAIT_REMOVE"));
