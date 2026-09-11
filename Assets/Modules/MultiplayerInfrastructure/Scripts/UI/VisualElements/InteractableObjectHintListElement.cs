@@ -276,6 +276,10 @@ namespace MultiplayerInfrastructure.UI
       var icons = interact as IInteractDisplayIcons;
       var displayedSprites = new HashSet<Sprite>();
       int iconCount = 0;
+      Sprite primaryOverride = null;
+      VisualElement primaryOverrideHolder = null;
+      bool hasOverride = QuestPresentationService.ActiveInstance != null
+                         && QuestPresentationService.ActiveInstance.TryGetPrimaryIconOverride(interact, out primaryOverride);
 
       // 시나리오 데이터가 아이콘 식별자를 명시한 등록 항목은 데이터 아이콘을 앞에 둔다.
       if (InteractionRegistry.TryGetDataDisplay(interact, out var dataDisplay) && dataDisplay.IconIdentifiers != null)
@@ -285,12 +289,13 @@ namespace MultiplayerInfrastructure.UI
           var dataSprite = Registry.Registry.Get<Sprite>(RegistryType.IconSprite, dataDisplay.IconIdentifiers[i])
                            ?? Registry.Registry.GetOrLoadIconSprite(dataDisplay.IconIdentifiers[i]);
           if (dataSprite != null && displayedSprites.Add(dataSprite))
-            ConfigureIconHolder(iconCount++, dataSprite, Color.clear);
+          {
+            var holder = ConfigureIconHolder(iconCount++, dataSprite, Color.clear);
+            if (dataSprite == primaryOverride)
+              primaryOverrideHolder = holder;
+          }
         }
       }
-      Sprite primaryOverride = null;
-      bool hasOverride = QuestPresentationService.ActiveInstance != null
-                         && QuestPresentationService.ActiveInstance.TryGetPrimaryIconOverride(interact, out primaryOverride);
 
       int lastListIconIndex = -1;
       if (hasOverride && interact?.DisplayIcon == null && icons?.DisplayIcons != null)
@@ -309,7 +314,9 @@ namespace MultiplayerInfrastructure.UI
           var sprite = hasOverride && i == lastListIconIndex ? primaryOverride : icons.DisplayIcons[i];
           if (sprite == null || !displayedSprites.Add(sprite))
             continue;
-          ConfigureIconHolder(iconCount++, sprite, Color.clear);
+          var holder = ConfigureIconHolder(iconCount++, sprite, Color.clear);
+          if (sprite == primaryOverride)
+            primaryOverrideHolder = holder;
         }
       }
 
@@ -319,7 +326,11 @@ namespace MultiplayerInfrastructure.UI
         ? primaryOverride
         : interact?.DisplayIcon;
       if (displayIcon != null && displayedSprites.Add(displayIcon))
-        ConfigureIconHolder(iconCount++, displayIcon, Color.clear);
+      {
+        var holder = ConfigureIconHolder(iconCount++, displayIcon, Color.clear);
+        if (displayIcon == primaryOverride)
+          primaryOverrideHolder = holder;
+      }
 
       if (iconCount == 0)
       {
@@ -333,9 +344,18 @@ namespace MultiplayerInfrastructure.UI
 
       for (int i = iconCount; i < _iconHolders.Count; i++)
         _iconHolders[i].style.display = DisplayStyle.None;
+
+      // 목록 요소는 재사용되므로 이전 Bind에서 변경한 형제 순서를 먼저 기본 상태로 되돌린다.
+      // 기본 상태에서는 DisplayIcons의 첫 항목(Clear/Fail)이 최상단이다.
+      for (int i = _iconHolders.Count - 1; i >= 0; i--)
+        _iconHolders[i].BringToFront();
+
+      // UI Toolkit은 나중 형제일수록 위에 그린다. QuestMark가 기존 Clear/Fail 등의
+      // 오버레이와 합성되더라도 항상 사용자가 가장 먼저 볼 수 있도록 최상단으로 올린다.
+      primaryOverrideHolder?.BringToFront();
     }
 
-    private void ConfigureIconHolder(int index, Sprite sprite, Color fallbackColor)
+    private VisualElement ConfigureIconHolder(int index, Sprite sprite, Color fallbackColor)
     {
       var holder = GetIconHolder(index);
       holder.style.display = DisplayStyle.Flex;
@@ -344,6 +364,7 @@ namespace MultiplayerInfrastructure.UI
       else
         holder.style.backgroundImage = StyleKeyword.None;
       holder.style.backgroundColor = sprite != null ? Color.clear : fallbackColor;
+      return holder;
     }
 
     private VisualElement GetIconHolder(int index)

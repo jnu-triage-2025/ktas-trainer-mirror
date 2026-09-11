@@ -15,10 +15,11 @@ namespace MultiplayerInfrastructure.Tests.Quest
 {
   public sealed class QuestPresentationTests
   {
-    private sealed class PresentationInteract : IInteract, IQuestPresentationTarget
+    private sealed class PresentationInteract : IInteract, IQuestPresentationTarget, IInteractDisplayIcons
     {
       public string DisplayText => "test";
       public Sprite DisplayIcon => null;
+      public IReadOnlyList<Sprite> DisplayIcons { get; set; }
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
       public string PresentationEntityIdentifier { get; set; }
@@ -343,6 +344,65 @@ namespace MultiplayerInfrastructure.Tests.Quest
         Object.DestroyImmediate(managerObject);
         Object.DestroyImmediate(sprite);
         Object.DestroyImmediate(texture);
+      }
+    }
+
+    [Test]
+    public void InteractionQuestMarkIsRenderedAboveExistingIconLayers()
+    {
+      var managerObject = new GameObject("QuestPresentationTests.IconLayerManager");
+      var baseTexture = new Texture2D(2, 2);
+      var questTexture = new Texture2D(2, 2);
+      var baseSprite = Sprite.Create(baseTexture, new Rect(0, 0, 2, 2), Vector2.one * 0.5f);
+      var questSprite = Sprite.Create(questTexture, new Rect(0, 0, 2, 2), Vector2.one * 0.5f);
+      const string iconIdentifier = "quest-presentation-layer-test-icon";
+      Registry.Registry.RegisterIconSprite(iconIdentifier, questSprite);
+
+      try
+      {
+        managerObject.AddComponent<QuestManager>();
+        _ = managerObject.GetComponent<QuestPresentationService>()
+            ?? managerObject.AddComponent<QuestPresentationService>();
+        var interact = new PresentationInteract
+        {
+          PresentationEntityIdentifier = "doctor",
+          InteractionIdentifier = "report",
+          DisplayIcons = new[] { baseSprite, baseSprite }
+        };
+        QuestPresentationService.SetScenarioMark(
+          QuestPresentationTargetType.Interaction, "doctor", "report", iconIdentifier, priority: 0);
+
+        var element = new InteractableObjectHintListElement();
+        element.Bind(interact, "F", InteractableHintUIMode.Normal, null, isSelected: true);
+
+        const System.Reflection.BindingFlags flags =
+          System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var iconContainer = (UnityEngine.UIElements.VisualElement)typeof(InteractableObjectHintListElement)
+          .GetField("_iconContainer", flags)?.GetValue(element);
+        var holders = (List<UnityEngine.UIElements.VisualElement>)typeof(InteractableObjectHintListElement)
+          .GetField("_iconHolders", flags)?.GetValue(element);
+
+        Assert.That(iconContainer, Is.Not.Null);
+        Assert.That(holders, Has.Count.EqualTo(2));
+        Assert.That(iconContainer.IndexOf(holders[1]), Is.EqualTo(iconContainer.childCount - 1),
+          "상호작용 QuestMark는 기존 아이콘 레이어보다 위에 그려져야 합니다.");
+
+        QuestPresentationService.ClearScenarioMark(
+          QuestPresentationTargetType.Interaction, "doctor", "report");
+        element.Bind(interact, "F", InteractableHintUIMode.Normal, null, isSelected: true);
+
+        Assert.That(iconContainer.IndexOf(holders[0]), Is.EqualTo(iconContainer.childCount - 1),
+          "QuestMark가 사라지면 재사용된 목록 요소의 기본 아이콘 레이어 순서가 복원되어야 합니다.");
+      }
+      finally
+      {
+        QuestPresentationService.ClearScenarioMarks();
+        Registry.Registry.InvalidateIconSprite(iconIdentifier);
+        Object.DestroyImmediate(managerObject);
+        Object.DestroyImmediate(baseSprite);
+        Object.DestroyImmediate(questSprite);
+        Object.DestroyImmediate(baseTexture);
+        Object.DestroyImmediate(questTexture);
       }
     }
 
