@@ -27,8 +27,6 @@ namespace TriageTrainer.Scenario
         _patientCVitalMonitorController,
         _patientCInitialMonitorParameters,
         _applyPatientCInitialMonitorProfile);
-      if (LocalPlayerHasTag("nurse_d"))
-        _patientCVitalMonitorController?.OpenPresentation();
     }
   }
 }

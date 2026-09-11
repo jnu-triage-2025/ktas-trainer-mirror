@@ -535,15 +535,14 @@ try {
    const snapshot=await platform.observe(driver);
    assert.equal(snapshot.scenario.recoveryNotes.length,0,'SCENARIO_RECOVERY_USED');
    await platform.artifact(runId,`after-move-${bed}.json`,snapshot);
-   // Do not pre-position p3/p4 here.  Snapping the second bed can immediately
-   // open their patient-monitor presentation, so navigation races the UI and
-   // is rejected as MOVEMENT_BLOCKED.  The role-specific care routines below
-   // consume that UI first and perform any patient approach they actually need.
+   // Do not pre-position p3/p4 here.  Their vital-sign quests are issued at
+   // P_B_C_CARE and the role-specific care routines below walk each of them
+   // to the bed-side monitor they must operate.
   }
   phase='patient_bed_quest_confirmation';
   const outcomes=await Promise.allSettled(Object.entries(actors).map(async([actor,instance])=>{
    const deadline=performance.now()+60000,signal=AbortSignal.timeout(60000);
-   const expectedQuest=({p1:'Quest_B_Recognition',p2:'Quest_C_Recognition',p3:null,p4:null} as Record<string,string|null>)[actor];
+   const expectedQuest=({p1:'Quest_B_Recognition',p2:'Quest_C_Recognition',p3:'Quest_B_Vital',p4:'Quest_C_Vital'} as Record<string,string|null>)[actor];
    while(true){
     // A stalled game.observe must not defeat this branch's deadline.  In
     // particular, all four clients can be transitioning out of vehicle
@@ -645,16 +644,10 @@ try {
       await delay(150,undefined,{signal});continue;
      }
     }
-    if(!interaction&&(actor==='p3'||actor==='p4')&&snapshot.inputContext==='PatientMonitorDetailOverlay'){
-     const closeQuery=await platform.command(id,'ui.query',{automationId:'PatientMonitorDetailCloseButton'},{signal,ttlMs:5000});
-     const close:any=closeQuery.elements?.find((entry:any)=>entry.interactable);
-     if(close){
-      const pointer={...close.screenCenter,screenWidth:close.screenWidth,screenHeight:close.screenHeight,frame:close.uiRevision};
-      await platform.command(id,'ui.pointer',{...pointer,pressed:true},{signal,ttlMs:5000});
-      await platform.command(id,'ui.pointer',{...pointer,pressed:false},{signal,ttlMs:5000});
-      await delay(150,undefined,{signal});continue;
-     }
-    }
+    // The scenario never opens the monitor presentation by itself.  The vital
+    // routine below opens and closes it deliberately before this loop runs, so
+    // an overlay here means a regression rather than something to dismiss.
+    assert.notEqual(snapshot.inputContext,'PatientMonitorDetailOverlay',`UNEXPECTED_MONITOR_OVERLAY:${actor}`);
     if(['DOC_C','DOC_D','C_DOC_C','C_DOC_D'].includes(snapshot.dialogue.nodeId??'')
       && !snapshot.localQuests?.some((q:any)=>!q.placeholder))return snapshot;
     if(snapshot.inputContext==='DialoguePanelUIController'){
@@ -750,6 +743,131 @@ try {
     }
     await delay(150,undefined,{signal});
    }
+  };
+  // nurse_c / nurse_d own Quest_B_Vital / Quest_C_Vital.  The authored flow is
+  // the ordinary monitor operation: enter the care-zone monitor's patient
+  // selection, pick the patient, open the detail view and close it.  Closing
+  // raises close_vital_ui_b / close_vital_ui_c through the scenario-armed
+  // monitor, which releases the B_/C_B_VITAL_WAIT validator and starts the
+  // vital-sign choice dialogue that finishDialogue answers afterwards.
+  const completeVitalCheck=async(actor:'p3'|'p4',patient:'patient_b'|'patient_c',bed:'bed_b'|'bed_c')=>{
+   const id=actors[actor],signal=AbortSignal.timeout(150000);
+   const vitalQuest=patient==='patient_b'?'Quest_B_Vital':'Quest_C_Vital';
+   const closeSignal=patient==='patient_b'?'sig.close_vital_ui_b':'sig.close_vital_ui_c';
+   const firstChoice=patient==='patient_b'?'B_RR_PULSE':'C_B_RR_PULSE';
+   const observe=()=>platform.observe(id,false,{includeStaticItems:false,signal,ttlMs:5000});
+   const hasInteraction=(snapshot:any,interactionId:string,entityId?:string)=>
+    snapshot.interactions?.some((entry:any)=>entry.interactionId===interactionId&&(!entityId||entry.entityId===entityId))===true;
+   const waitFor=async(label:string,predicate:(snapshot:any)=>boolean,timeoutMs:number)=>{
+    const deadline=performance.now()+timeoutMs;
+    while(true){
+     signal.throwIfAborted();
+     const snapshot=await observe();
+     assert.deepEqual(snapshot.scenario.recoveryNotes,[],'SCENARIO_RECOVERY_USED');
+     if(predicate(snapshot))return snapshot;
+     if(performance.now()>deadline){
+      await platform.artifact(runId!,`vital-${label}-timeout-${actor}.json`,snapshot);
+      throw new Error(`VITAL_${label.toUpperCase().replace(/-/g,'_')}_TIMEOUT:${actor}`);
+     }
+     await delay(200,undefined,{signal});
+    }
+   };
+   const interactWithRetry=async(label:string,interactionId:string,entityId?:string)=>{
+    const deadline=performance.now()+15000;let lastError:unknown;
+    while(performance.now()<deadline){
+     try {
+      return await runner.interact(id,{id:`vital_${label}_${actor}`,type:'interact',actor,target:interactionId,args:entityId?{entityId}:{},mode:'input_adapter'},signal);
+     } catch(error) {
+      // A nearest-only list can be refreshed between the selection and confirm
+      // frames while the other three players move around the same beds.
+      if(!['TARGET_NOT_INTERACTABLE','STATE_CONFLICT'].includes((error as any)?.code))throw error;
+      lastError=error;
+      await delay(150,undefined,{signal});
+     }
+    }
+    throw lastError??new Error(`VITAL_INTERACTION_FAILED:${actor}:${interactionId}`);
+   };
+   // The quest is the evidence that the scenario armed this monitor's close
+   // signal.  Opening the detail view earlier would close without a signal.
+   await waitFor('quest',snapshot=>snapshot.localQuests?.some((quest:any)=>quest.definitionId===vitalQuest&&!quest.placeholder),60000);
+   // Both nurses are still in the entry hall after the bed moves.  Reuse the
+   // corridor the bed drives followed (documentation/positions.md): the door
+   // centre, L5, the single x=-68.3 connector across the partition, then the
+   // west lane at the bed's row.  Every segment is inside the marked
+   // Accessibles union (check_accessible.py path mode).
+   const route:[number,number,number][]=[[-72.7,0,-6],[-68.3,0,-9.68],[-68.435,0,-11.015],[-68.3,0,-13.47]];
+   if(bed==='bed_c')route.push([-68.3,0,-17]);
+   for(const [index,targetPosition] of route.entries())
+    await runner.navigate(id,{id:`vital_route_${actor}_${index}`,type:'navigate',actor,target:`vital_route_${index}`,mode:'input_adapter',timeoutMs:25000,args:{targetType:'position',targetPosition,arrivalRadius:.5,stuckWindowMs:8000}},signal);
+   // The west-side bed stance used by the treatment routines exposes the
+   // nearest-only monitor interactions of the monitor at this bed's head
+   // (observed in after-move-bed_b/c.json and the care-completed artifacts).
+   try {
+    await runner.navigate(id,{id:`vital_stance_${actor}`,type:'navigate',actor,target:bed,mode:'input_adapter',timeoutMs:30000,args:{targetType:'vehicle',arrivalRadius:.3,targetOffset:[-.7,0,0],stuckWindowMs:8000}},signal);
+   } catch(error) {
+    // The bed collider can stop the controller short of the requested point
+    // while the monitor prompt is already in range; the interaction list
+    // below is the authoritative arrival check.
+    if(!['TARGET_NOT_FOUND','NAVIGATION_STUCK','MOVEMENT_BLOCKED'].includes((error as any)?.code))throw error;
+   }
+   await waitFor('select-mode',snapshot=>hasInteraction(snapshot,'select_patient_mode'),15000);
+   await interactWithRetry('select_patient_mode','select_patient_mode');
+   // Selection mode publishes monitor_select on every patient; the one for
+   // this bed's patient raises select_patient_b / select_patient_c.
+   try {
+    await waitFor('monitor-select',snapshot=>hasInteraction(snapshot,'monitor_select',patient),8000);
+   } catch(error) {
+    // Patient pivots can sit a little off the bed after the snap.  Approach
+    // the patient itself from the same clear west lane, then look again.
+    if(!/VITAL_MONITOR_SELECT_TIMEOUT/.test(String(error)))throw error;
+    try {
+     await runner.navigate(id,{id:`vital_patient_${actor}`,type:'navigate',actor,target:patient,mode:'input_adapter',timeoutMs:20000,args:{targetType:'scenarioEntity',arrivalRadius:.15,targetOffset:[-.7,0,0],stuckWindowMs:8000}},signal);
+    } catch(navigationError) {
+     if(!['TARGET_NOT_FOUND','NAVIGATION_STUCK','MOVEMENT_BLOCKED'].includes((navigationError as any)?.code))throw navigationError;
+    }
+    await waitFor('monitor-select-retry',snapshot=>hasInteraction(snapshot,'monitor_select',patient),15000);
+   }
+   await interactWithRetry('monitor_select','monitor_select',patient);
+   // The quest is ordinal: its first task must be completed by the owner's
+   // select_patient_b / select_patient_c signal before the close counts.
+   const selectTask=`select-${patient.replace('_','-')}`;
+   await waitFor('selected',snapshot=>snapshot.localQuests?.some((quest:any)=>quest.definitionId===vitalQuest&&!quest.placeholder
+     && quest.tasks?.some((task:any)=>task.Identifier===selectTask&&task.Completed===true))===true,10000);
+   // Detail view of the monitor now bound to this patient.  Its entity id
+   // switches from the shared patient_monitor tag to the patient once bound,
+   // so match on the interaction alone.
+   await waitFor('detail',snapshot=>hasInteraction(snapshot,'detail_overlay'),15000);
+   await interactWithRetry('detail_overlay','detail_overlay');
+   const opened=await waitFor('overlay-open',snapshot=>snapshot.inputContext==='PatientMonitorDetailOverlay',10000);
+   await platform.artifact(runId!,`vital-overlay-open-${actor}.json`,opened);
+   // Close through the overlay's own button, exactly as a player would.
+   const closeDeadline=performance.now()+20000;
+   while(true){
+    signal.throwIfAborted();
+    const snapshot=await observe();
+    if(snapshot.inputContext!=='PatientMonitorDetailOverlay')break;
+    if(performance.now()>closeDeadline){
+     await platform.artifact(runId!,`vital-overlay-close-timeout-${actor}.json`,snapshot);
+     throw new Error(`VITAL_OVERLAY_DID_NOT_CLOSE:${actor}`);
+    }
+    const closeQuery=await platform.command(id,'ui.query',{automationId:'PatientMonitorDetailCloseButton'},{signal,ttlMs:5000});
+    const close:any=closeQuery.elements?.find((entry:any)=>entry.interactable);
+    if(close){
+     const pointer={...close.screenCenter,screenWidth:close.screenWidth,screenHeight:close.screenHeight,frame:close.uiRevision};
+     await platform.command(id,'ui.pointer',{...pointer,pressed:true},{signal,ttlMs:5000});
+     await platform.command(id,'ui.pointer',{...pointer,pressed:false},{signal,ttlMs:5000});
+    }
+    await delay(250,undefined,{signal});
+   }
+   // The server must accept the close: the quest then leaves its vital task
+   // behind and the choice dialogue starts.  A rejected close (role, zone or
+   // arm mismatch) leaves the validator waiting and is a product failure.
+   const accepted=await waitFor('close-accepted',snapshot=>
+    snapshot.dialogue?.nodeId===firstChoice
+    || snapshot.signalParameters?.some((entry:any)=>entry.SignalIdentifier===closeSignal)===true
+    || snapshot.localQuests?.some((quest:any)=>quest.definitionId===vitalQuest&&quest.completed)===true,20000);
+   await platform.artifact(runId!,`vital-close-accepted-${actor}.json`,accepted);
+   return accepted;
   };
   // All four care branches are activated together.  Start A/B immediately,
   // but do not await them before C/D collect supplies: their validators have
@@ -1135,8 +1253,8 @@ try {
   const [bStrength,cStrength,bVital,cVital]=await withHardDeadline(Promise.all([
    finishDialogue('p1','Quest_B_Wait',{id:'recognition_check',entity:'patient_b'}),
    finishDialogue('p2','Quest_C_Wait',{id:'recognition_1',entity:'patient_c'}),
-   finishDialogue('p3','Quest_B_Wait'),
-   finishDialogue('p4','Quest_C_Wait')
+   completeVitalCheck('p3','patient_b','bed_b').then(()=>finishDialogue('p3','Quest_B_Wait')),
+   completeVitalCheck('p4','patient_c','bed_c').then(()=>finishDialogue('p4','Quest_C_Wait'))
   ]),185000,'patient_b_c_parallel_initial_assessment');
   await platform.artifact(runId!,'b-care-strength-p1.json',bStrength);
   await platform.artifact(runId!,'c-care-strength-p2.json',cStrength);

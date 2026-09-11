@@ -75,18 +75,5 @@ namespace TriageTrainer.Scenario
       }
     }
 
-    private static bool LocalPlayerHasTag(string tag)
-    {
-      var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-      for (int i = 0; i < players.Length; i++)
-      {
-        var player = players[i];
-        if (player != null && player.IsOwner && !string.IsNullOrWhiteSpace(player.UserIdentifier))
-          return PlayerTagService.HasTag(player.UserIdentifier, tag);
-      }
-
-      return false;
-    }
-
   }
 }
