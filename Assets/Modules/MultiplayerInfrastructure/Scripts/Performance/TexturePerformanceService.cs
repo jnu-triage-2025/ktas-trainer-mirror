@@ -18,6 +18,8 @@ namespace MultiplayerInfrastructure.Performance
   public class TexturePerformanceService : MonoBehaviour
   {
     private const string PlayerPrefsKey = "MultiplayerInfrastructure.GraphicsSettings.v2";
+    /// <summary>텍스처 품질만 저장하던 이전 버전의 키입니다. 읽지는 않고 초기화 때 같이 지웁니다.</summary>
+    private const string LegacyTextureQualityPrefsKey = "MultiplayerInfrastructure.TextureQuality";
     private const float GammaVolumePriority = 10000f;
     private GraphicsSettingsData _currentSettings;
     private static Volume _gammaVolume;
@@ -164,6 +166,26 @@ namespace MultiplayerInfrastructure.Performance
     }
 
     public void ResetToDefault() => SetProfile(GraphicsQualityPresets.RuntimeDefaultProfile);
+
+    /// <summary>
+    /// 디스플레이 항목까지 포함해 모든 그래픽 설정을 런타임 기본값으로 되돌리고 저장된 값을 지웁니다.
+    /// <see cref="ResetToDefault"/>와 달리 해상도·창 모드·시야각·감마도 되돌립니다.
+    /// MPPM Lite에서는 저장값만 지웁니다. 실행 중인 설정은 MPPM Lite 전용 값이라 되돌릴 대상이 아닙니다.
+    /// </summary>
+    public void ResetAllToDefault()
+    {
+      if (!MppmLiteMode.IsActive)
+        SetSettings(GraphicsQualityPresets.Create(GraphicsQualityPresets.RuntimeDefaultProfile));
+      ClearStoredValue();
+    }
+
+    /// <summary>저장된 그래픽 설정을 지웁니다. 이전 버전이 남긴 텍스처 품질 키도 함께 지웁니다.</summary>
+    public static void ClearStoredValue()
+    {
+      PlayerPrefs.DeleteKey(PlayerPrefsKey);
+      PlayerPrefs.DeleteKey(LegacyTextureQualityPrefsKey);
+      PlayerPrefs.Save();
+    }
 
     public void LoadAndApply()
     {

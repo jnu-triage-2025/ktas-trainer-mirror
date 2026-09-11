@@ -1,5 +1,4 @@
-﻿using PlayerPrefs = MultiplayerInfrastructure.Automation.ProfilePlayerPrefs;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Registry;
@@ -26,8 +25,6 @@ namespace MultiplayerInfrastructure.UI
   [RequireComponent(typeof(UIDocument))]
   public class SceneUIIntroSceneController : UIDocumentControllerABC
   {
-    private const string PlayerNamePreferenceKey = "IntroScene.PlayerName";
-
     [Header("Scene flow")]
     [SerializeField] private string ingameSceneName = DefaultsSceneControl.IngameSceneName;
     [SerializeField] private string tutorialSceneName = DefaultsSceneControl.TutorialSceneName;
@@ -181,11 +178,24 @@ namespace MultiplayerInfrastructure.UI
     {
       ApplyIntroCursorPolicy();
       InvokeRepeating(nameof(RefreshSessions), 0.5f, 1.0f);
+      UserPreferenceReset.ResetCompleted += HandleUserPreferencesReset;
     }
 
     private void OnDisable()
     {
       CancelInvoke(nameof(RefreshSessions));
+      UserPreferenceReset.ResetCompleted -= HandleUserPreferencesReset;
+    }
+
+    /// <summary>
+    /// 설정 초기화가 저장된 표시 이름을 지운 뒤, 화면에 남은 이름과 런타임 상태의 이름도 비웁니다.
+    /// 그대로 두면 시작 버튼을 누를 때 화면의 이름이 다시 저장되어 초기화가 무효가 됩니다.
+    /// </summary>
+    private void HandleUserPreferencesReset()
+    {
+      if (_nameField != null)
+        _nameField.value = string.Empty;
+      Registry.Registry.Unregister(RegistryType.RuntimeState, RegistryGlobalKeys.UserDisplayName);
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -511,7 +521,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void RestoreUserDisplayName()
     {
-      var name = PlayerPrefs.GetString(PlayerNamePreferenceKey, string.Empty).Trim();
+      var name = PlayerDisplayNamePreference.Read();
       if (string.IsNullOrWhiteSpace(name))
         name = Registry.Registry.Get<string>(RegistryType.RuntimeState, RegistryGlobalKeys.UserDisplayName)?.Trim();
 
@@ -523,18 +533,7 @@ namespace MultiplayerInfrastructure.UI
     }
 
     private static void PersistUserDisplayName(string value)
-    {
-      var name = value?.Trim();
-      if (string.IsNullOrWhiteSpace(name))
-      {
-        PlayerPrefs.DeleteKey(PlayerNamePreferenceKey);
-        PlayerPrefs.Save();
-        return;
-      }
-
-      PlayerPrefs.SetString(PlayerNamePreferenceKey, name);
-      PlayerPrefs.Save();
-    }
+      => PlayerDisplayNamePreference.Persist(value);
 
     private void StoreLaunchRequest(
       SessionInformationModel sessionInformation,

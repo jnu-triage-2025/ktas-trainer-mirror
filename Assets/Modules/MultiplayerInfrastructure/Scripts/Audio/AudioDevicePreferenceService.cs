@@ -200,6 +200,23 @@ namespace MultiplayerInfrastructure.Audio
     public void ResetToSystemDefault() => SetSettings(new AudioDeviceSettingsData());
 
     /// <summary>
+    /// 시스템 설정으로 되돌리고 저장된 값도 지웁니다. 출력 장치가 바뀌면 오디오 엔진을 다시 여는 것까지
+    /// <see cref="ResetToSystemDefault"/>가 맡으므로, 여기서는 그 뒤에 저장값만 정리합니다.
+    /// </summary>
+    public void ResetToDefault()
+    {
+      ResetToSystemDefault();
+      ClearStoredValue();
+    }
+
+    /// <summary>저장된 장치 설정을 지웁니다.</summary>
+    public static void ClearStoredValue()
+    {
+      PlayerPrefs.DeleteKey(PlayerPrefsKey);
+      PlayerPrefs.Save();
+    }
+
+    /// <summary>
     /// 실제로 적용할 식별자입니다. 저장된 장치가 지금 목록에 없으면 시스템 설정을 뜻하는
     /// 빈 문자열이 나옵니다.
     /// </summary>

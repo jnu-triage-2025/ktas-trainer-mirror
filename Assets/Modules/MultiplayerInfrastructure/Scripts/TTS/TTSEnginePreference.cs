@@ -40,5 +40,19 @@ namespace MultiplayerInfrastructure.TTS
     {
       TTSEngineSwitch.SetDisabled(PlayerPrefs.GetInt(PlayerPrefsKey, 0) != 0);
     }
+
+    /// <summary>저장된 값을 지웁니다. 다음 <see cref="LoadAndApply"/>부터 기본값(엔진 사용)이 쓰입니다.</summary>
+    public static void ClearStoredValue()
+    {
+      PlayerPrefs.DeleteKey(PlayerPrefsKey);
+      PlayerPrefs.Save();
+    }
+
+    /// <summary>저장된 값을 지우고 엔진을 다시 쓰는 기본 상태로 되돌립니다.</summary>
+    public static void ResetToDefault()
+    {
+      ClearStoredValue();
+      TTSEngineSwitch.SetDisabled(false);
+    }
   }
 }

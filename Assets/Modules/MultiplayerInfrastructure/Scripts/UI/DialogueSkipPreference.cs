@@ -66,5 +66,16 @@ namespace MultiplayerInfrastructure.UI
       PlayerPrefs.DeleteKey(PlayerPrefsKey);
       PlayerPrefs.Save();
     }
+
+    /// <summary>저장된 값을 지우고 기본값을 즉시 적용합니다. 값이 바뀌면 <see cref="EnabledChanged"/>를 알립니다.</summary>
+    public static void ResetToDefault()
+    {
+      ClearStoredValue();
+
+      bool changed = IsEnabled != DefaultEnabled;
+      IsEnabled = DefaultEnabled;
+      if (changed)
+        EnabledChanged?.Invoke(DefaultEnabled);
+    }
   }
 }

@@ -66,20 +66,39 @@ namespace MultiplayerInfrastructure.Audio
     }
 
     /// <summary>전체 사운드 볼륨을 즉시 적용하고 저장합니다.</summary>
-    public void SetVolume(float volume)
+    public void SetVolume(float volume) => ApplyVolume(volume, persist: true);
+
+    /// <summary>저장된 전체 사운드 볼륨을 읽어 즉시 적용합니다. 읽기만 하므로 다시 저장하지 않습니다.</summary>
+    public void LoadAndApply()
+    {
+      ApplyVolume(PlayerPrefs.GetFloat(PlayerPrefsKey, DefaultVolume), persist: false);
+    }
+
+    /// <summary>저장된 값을 지우고 기본 볼륨을 적용합니다.</summary>
+    public void ResetToDefault()
+    {
+      ClearStoredValue();
+      ApplyVolume(DefaultVolume, persist: false);
+    }
+
+    /// <summary>저장된 전체 사운드 볼륨을 지웁니다.</summary>
+    public static void ClearStoredValue()
+    {
+      PlayerPrefs.DeleteKey(PlayerPrefsKey);
+      PlayerPrefs.Save();
+    }
+
+    private void ApplyVolume(float volume, bool persist)
     {
       CurrentVolume = Mathf.Clamp01(volume);
       if (!MppmLiteMode.IsActive)
         AudioListener.volume = CurrentVolume;
-      PlayerPrefs.SetFloat(PlayerPrefsKey, CurrentVolume);
-      PlayerPrefs.Save();
+      if (persist)
+      {
+        PlayerPrefs.SetFloat(PlayerPrefsKey, CurrentVolume);
+        PlayerPrefs.Save();
+      }
       OnVolumeChanged?.Invoke(CurrentVolume);
-    }
-
-    /// <summary>저장된 전체 사운드 볼륨을 읽어 즉시 적용합니다.</summary>
-    public void LoadAndApply()
-    {
-      SetVolume(PlayerPrefs.GetFloat(PlayerPrefsKey, DefaultVolume));
     }
   }
 }

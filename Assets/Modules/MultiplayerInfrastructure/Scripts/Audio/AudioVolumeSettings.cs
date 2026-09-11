@@ -10,6 +10,7 @@ namespace MultiplayerInfrastructure.Audio
     private const string MasterKey = "audio.masterVolume";
     private const string SfxKey = "audio.sfxVolume";
     private const string BgmKey = "audio.bgmVolume";
+    private const float DefaultVolume = 1f;
 
     public static event Action Changed;
 
@@ -40,7 +41,27 @@ namespace MultiplayerInfrastructure.Audio
       Changed?.Invoke();
     }
 
-    private static float Load(string key) => PlayerPrefs.GetFloat(key, 1f);
+    private static float Load(string key) => PlayerPrefs.GetFloat(key, DefaultVolume);
+
+    /// <summary>저장된 세 음량 값을 지웁니다.</summary>
+    public static void ClearStoredValues()
+    {
+      PlayerPrefs.DeleteKey(MasterKey);
+      PlayerPrefs.DeleteKey(SfxKey);
+      PlayerPrefs.DeleteKey(BgmKey);
+      PlayerPrefs.Save();
+    }
+
+    /// <summary>저장된 값을 지우고 세 음량을 모두 기본값(최대)으로 되돌립니다.</summary>
+    public static void ResetToDefault()
+    {
+      ClearStoredValues();
+      MasterVolume = DefaultVolume;
+      SfxVolume = DefaultVolume;
+      BgmVolume = DefaultVolume;
+      ApplyMasterVolume();
+      Changed?.Invoke();
+    }
 
     private static void ApplyMasterVolume()
     {

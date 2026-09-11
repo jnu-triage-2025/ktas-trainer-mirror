@@ -108,6 +108,26 @@ namespace MultiplayerInfrastructure.Performance
       Debug.Log($"[UIScalePreferenceService] UI 배율 불러오기: {scale}");
     }
 
+    /// <summary>저장된 값을 지우고 기본 배율을 적용합니다.</summary>
+    public void ResetToDefault()
+    {
+      ClearStoredValue();
+      if (_currentScale == DefaultScale)
+        return;
+
+      _currentScale = DefaultScale;
+      ApplyToPanel(DefaultScale);
+      OnScaleChanged?.Invoke(DefaultScale);
+      Debug.Log($"[UIScalePreferenceService] UI 배율 초기화: {DefaultScale}");
+    }
+
+    /// <summary>저장된 UI 배율을 지웁니다.</summary>
+    public static void ClearStoredValue()
+    {
+      PlayerPrefs.DeleteKey(PlayerPrefsKey);
+      PlayerPrefs.Save();
+    }
+
     /// <summary>
     /// 배율 단계에 대응하는 실제 <see cref="PanelSettings.scale"/> 계수를 반환합니다.
     /// </summary>

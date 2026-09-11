@@ -263,15 +263,24 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       CancelRebinding();
+      RestoreDefaultKeyBindings();
+      KeyBindingRepository.DeleteAll(_bindings);
+      PopulateKeyList(_bindings);
+      SetStatusText("키 설정을 기본값으로 초기화했습니다.");
+    }
+
+    /// <summary>메모리에 올라온 바인딩을 기본값으로 되돌립니다. 저장소와 화면은 건드리지 않습니다.</summary>
+    private void RestoreDefaultKeyBindings()
+    {
+      if (_defaultBindings == null)
+        return;
+
       for (int i = 0; i < _bindings.Count; i++)
       {
         var def = _defaultBindings.Find(d => d.actionId == _bindings[i].actionId);
         if (def != null)
           _bindings[i].boundKey = def.boundKey;
       }
-      KeyBindingRepository.DeleteAll(_bindings);
-      PopulateKeyList(_bindings);
-      SetStatusText("키 설정을 기본값으로 초기화했습니다.");
     }
 
     private void HandleEntryClicked(string actionId)
