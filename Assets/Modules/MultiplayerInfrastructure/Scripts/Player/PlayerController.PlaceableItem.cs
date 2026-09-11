@@ -3,7 +3,7 @@ using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Performance;
 using UnityEngine;
-using UnityEngine.Rendering;
+using TriageTrainer.Entity;
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -217,29 +217,16 @@ namespace MultiplayerInfrastructure.Player
       foreach (var body in _placeablePreview.GetComponentsInChildren<Rigidbody>(true))
         body.isKinematic = true;
 
-      var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Transparent");
-      if (shader == null)
+      // 빌드에 포함되지 않는 셰이더를 Shader.Find 로 찾는 대신 Resources 의 머티리얼 에셋을 원본으로 복제한다.
+      _placeablePreviewMaterial = SnapPointHintMaterial.CreateInstance(
+        new Color(0.25f, 0.9f, 1f, 0.38f), "PlacementPreviewMaterial");
+      if (_placeablePreviewMaterial == null)
       {
-        Debug.LogWarning("[PlayerController] Placement preview shader was not found.", this);
+        Debug.LogWarning("[PlayerController] Placement preview material could not be created.", this);
         UnityEngine.Object.Destroy(_placeablePreview);
         _placeablePreview = null;
         return false;
       }
-
-      _placeablePreviewMaterial = new Material(shader) { name = "PlacementPreviewMaterial" };
-      Color tint = new Color(0.25f, 0.9f, 1f, 0.38f);
-      if (_placeablePreviewMaterial.HasProperty("_BaseColor"))
-        _placeablePreviewMaterial.SetColor("_BaseColor", tint);
-      if (_placeablePreviewMaterial.HasProperty("_Color"))
-        _placeablePreviewMaterial.SetColor("_Color", tint);
-      if (_placeablePreviewMaterial.HasProperty("_Surface"))
-        _placeablePreviewMaterial.SetFloat("_Surface", 1f);
-      _placeablePreviewMaterial.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-      _placeablePreviewMaterial.SetOverrideTag("RenderType", "Transparent");
-      _placeablePreviewMaterial.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
-      _placeablePreviewMaterial.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
-      _placeablePreviewMaterial.SetInt("_ZWrite", 0);
-      _placeablePreviewMaterial.renderQueue = (int)RenderQueue.Transparent;
 
       foreach (var renderer in _placeablePreview.GetComponentsInChildren<Renderer>(true))
         renderer.sharedMaterial = _placeablePreviewMaterial;

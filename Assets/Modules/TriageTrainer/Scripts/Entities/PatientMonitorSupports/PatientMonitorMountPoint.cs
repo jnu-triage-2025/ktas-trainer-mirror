@@ -3,7 +3,6 @@ using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
-using UnityEngine.Rendering;
 using PatientMonitorItem = TriageTrainer.ItemDefinitions.PatientMonitor;
 
 namespace TriageTrainer.Entity.PatientMonitor
@@ -161,20 +160,11 @@ namespace TriageTrainer.Entity.PatientMonitor
         collider.enabled = false;
       foreach (var body in _preview.GetComponentsInChildren<Rigidbody>(true))
         body.isKinematic = true;
-      var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Transparent");
-      if (shader == null)
+      // 빌드에 포함되지 않는 셰이더를 Shader.Find 로 찾는 대신 Resources 의 머티리얼 에셋을 원본으로 복제한다.
+      _previewMaterial = SnapPointHintMaterial.CreateInstance(
+        new Color(0.25f, 0.9f, 1f, 0.38f), "PatientMonitorMountPreviewMaterial");
+      if (_previewMaterial == null)
       { Destroy(_preview); _preview = null; return false; }
-      _previewMaterial = new Material(shader) { name = "PatientMonitorMountPreviewMaterial" };
-      var tint = new Color(0.25f, 0.9f, 1f, 0.38f);
-      if (_previewMaterial.HasProperty("_BaseColor"))
-        _previewMaterial.SetColor("_BaseColor", tint);
-      if (_previewMaterial.HasProperty("_Color"))
-        _previewMaterial.SetColor("_Color", tint);
-      _previewMaterial.SetOverrideTag("RenderType", "Transparent");
-      _previewMaterial.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
-      _previewMaterial.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
-      _previewMaterial.SetInt("_ZWrite", 0);
-      _previewMaterial.renderQueue = (int)RenderQueue.Transparent;
       foreach (var renderer in _preview.GetComponentsInChildren<Renderer>(true))
         renderer.sharedMaterial = _previewMaterial;
       return true;

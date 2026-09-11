@@ -79,6 +79,7 @@ namespace TriageTrainer.Entity
     private LineRenderer _runtimeOutline;
     private Material _runtimeFillMaterial;
     private Material _runtimeOutlineMaterial;
+    private bool _runtimeHintRenderable;
 
     private void Awake()
     {
@@ -101,7 +102,7 @@ namespace TriageTrainer.Entity
         CreateRuntimeHint();
 
       if (_runtimeHint != null)
-        _runtimeHint.SetActive(HasLocallyControlledCart());
+        _runtimeHint.SetActive(_runtimeHintRenderable && HasLocallyControlledCart());
     }
 
     private static bool HasLocallyControlledCart()
@@ -161,31 +162,19 @@ namespace TriageTrainer.Entity
         new Vector3( _occupiedSize.x * 0.5f, 0.008f, -_occupiedSize.y * 0.5f)
       });
 
-      Shader shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
-      if (shader == null)
+      // 머티리얼을 만들기 전에 먼저 숨겨서, 머티리얼이 없을 때 기본(마젠타) 상태로 노출되지 않게 한다.
+      _runtimeHint.SetActive(false);
+      _runtimeFillMaterial = SnapPointHintMaterial.CreateInstance(
+        new Color(0.1f, 0.8f, 1f, 0.22f), "DefibrillatorCartSnapPointHintMaterial_Fill");
+      _runtimeOutlineMaterial = SnapPointHintMaterial.CreateInstance(
+        new Color(0.1f, 0.8f, 1f, 0.95f), "DefibrillatorCartSnapPointHintMaterial_Outline");
+      _runtimeHintRenderable = _runtimeFillMaterial != null && _runtimeOutlineMaterial != null;
+      if (!_runtimeHintRenderable)
         return;
-      _runtimeFillMaterial = CreateHintMaterial(shader, new Color(0.1f, 0.8f, 1f, 0.22f), "Fill");
-      _runtimeOutlineMaterial = CreateHintMaterial(shader, new Color(0.1f, 0.8f, 1f, 0.95f), "Outline");
       _runtimeFill.sharedMaterial = _runtimeFillMaterial;
       _runtimeOutline.sharedMaterial = _runtimeOutlineMaterial;
       _runtimeOutline.startColor = new Color(0.1f, 0.8f, 1f, 0.95f);
       _runtimeOutline.endColor = _runtimeOutline.startColor;
-      _runtimeHint.SetActive(false);
-    }
-
-    private static Material CreateHintMaterial(Shader shader, Color color, string suffix)
-    {
-      var material = new Material(shader) { name = "DefibrillatorCartSnapPointHintMaterial_" + suffix };
-      if (material.HasProperty("_BaseColor"))
-        material.SetColor("_BaseColor", color);
-      if (material.HasProperty("_Color"))
-        material.SetColor("_Color", color);
-      material.SetOverrideTag("RenderType", "Transparent");
-      material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
-      material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
-      material.SetInt("_ZWrite", 0);
-      material.renderQueue = (int)RenderQueue.Transparent;
-      return material;
     }
 
     private void OnDestroy()
