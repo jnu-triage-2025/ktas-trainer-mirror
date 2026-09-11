@@ -1,4 +1,5 @@
-﻿using FishNet.Connection;
+﻿using System.Collections.Generic;
+using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Permission;
 using MultiplayerInfrastructure.Player;
@@ -29,11 +30,11 @@ namespace MultiplayerInfrastructure.Command
     {
       new UsageLine("tp x y z",                "Teleport yourself to (x, y, z)."),
       new UsageLine("tp ~x ~y ~z",             "Teleport yourself relative to the current position; each axis may be absolute or relative."),
-      new UsageLine("tp <player> x y z",       "Teleport player to (x, y, z)."),
+      new UsageLine("tp <players> x y z",      "Teleport players to (x, y, z)."),
       new UsageLine("tp <player>",             "Teleport yourself to player."),
-      new UsageLine("tp <player1> <player2>",  "Teleport player1 to player2."),
+      new UsageLine("tp <players> <player>",   "Teleport players to player."),
       new UsageLine("tp <waypoint>",           "Teleport yourself to waypoint."),
-      new UsageLine("tp <player> <waypoint>",  "Teleport player to waypoint."),
+      new UsageLine("tp <players> <waypoint>", "Teleport players to waypoint."),
       new UsageLine("  <player>",              PlayerTargetResolver.ShortSyntaxHint + "."),
       new UsageLine("  <waypoint>",            "Registered waypoint identifier."),
     };
@@ -115,27 +116,33 @@ namespace MultiplayerInfrastructure.Command
     /// /tp <player> x y z
     private void HandlePlayerToCoordinates(NetworkConnection sender, string playerToken, string[] args, int coordinateStart)
     {
-      if (!TryResolveController(playerToken, sender, out var controller, out string error))
+      if (!TryResolveControllers(playerToken, sender, out var controllers, out string error))
       {
         _chat.SendSystemMessage(sender, error);
         return;
       }
 
-      if (!IsAdminOrSelf(sender, controller))
+      if (!CanTeleportAll(sender, controllers))
       {
         _chat.SendSystemMessage(sender, "Permission denied: you can only teleport yourself.");
         return;
       }
 
-      if (!TryParseDestination(args, coordinateStart, controller.transform.position, out Vector3 destination))
+      var messages = new List<string>(controllers.Count);
+      foreach (PlayerController controller in controllers)
       {
-        SendUsage(sender);
-        return;
+        if (!TryParseDestination(args, coordinateStart, controller.transform.position, out Vector3 destination))
+        {
+          SendUsage(sender);
+          return;
+        }
+
+        string name = ResolveDisplayName(playerToken, controller);
+        Teleport(controller, destination);
+        messages.Add($"Teleported {name} to ({destination.x:0.##}, {destination.y:0.##}, {destination.z:0.##}).");
       }
 
-      string name = ResolveDisplayName(playerToken, controller);
-      Teleport(controller, destination);
-      _chat.SendSystemNotification(sender, $"Teleported {name} to ({destination.x:0.##}, {destination.y:0.##}, {destination.z:0.##}).");
+      _chat.SendSystemNotification(sender, string.Join("\n", messages));
     }
 
     /// /tp <target>  — 자기 자신에서 플레이어 또는 웨이포인트로 이동
@@ -177,34 +184,44 @@ namespace MultiplayerInfrastructure.Command
     private void HandleTwoTokens(NetworkConnection sender, string aToken, string bToken)
     {
       // 주체(a)를 해석한다.
-      if (!TryResolveController(aToken, sender, out var subjectController, out string subjectError))
+      if (!TryResolveControllers(aToken, sender, out var subjectControllers, out string subjectError))
       {
         _chat.SendSystemMessage(sender, subjectError);
         return;
       }
 
-      if (!IsAdminOrSelf(sender, subjectController))
+      if (!CanTeleportAll(sender, subjectControllers))
       {
         _chat.SendSystemMessage(sender, "Permission denied: you can only teleport yourself.");
         return;
       }
 
-      string subjectName = ResolveDisplayName(aToken, subjectController);
-
       // b 를 플레이어로 시도한다.
       if (TryResolveController(bToken, sender, out var destController, out _))
       {
         string destName = ResolveDisplayName(bToken, destController);
-        Teleport(subjectController, destController.transform.position);
-        _chat.SendSystemNotification(sender, $"Teleported {subjectName} to {destName}.");
+        var messages = new List<string>(subjectControllers.Count);
+        foreach (PlayerController subjectController in subjectControllers)
+        {
+          string subjectName = ResolveDisplayName(aToken, subjectController);
+          Teleport(subjectController, destController.transform.position);
+          messages.Add($"Teleported {subjectName} to {destName}.");
+        }
+        _chat.SendSystemNotification(sender, string.Join("\n", messages));
         return;
       }
 
       // b 를 웨이포인트로 시도한다.
       if (TryResolveWaypointPosition(bToken, out Vector3 waypointPos))
       {
-        Teleport(subjectController, waypointPos);
-        _chat.SendSystemNotification(sender, $"Teleported {subjectName} to waypoint '{bToken}'.");
+        var messages = new List<string>(subjectControllers.Count);
+        foreach (PlayerController subjectController in subjectControllers)
+        {
+          string subjectName = ResolveDisplayName(aToken, subjectController);
+          Teleport(subjectController, waypointPos);
+          messages.Add($"Teleported {subjectName} to waypoint '{bToken}'.");
+        }
+        _chat.SendSystemNotification(sender, string.Join("\n", messages));
         return;
       }
 
@@ -296,6 +313,17 @@ namespace MultiplayerInfrastructure.Command
       return false;
     }
 
+    private static bool CanTeleportAll(NetworkConnection sender, List<PlayerController> subjects)
+    {
+      foreach (PlayerController subject in subjects)
+      {
+        if (!IsAdminOrSelf(sender, subject))
+          return false;
+      }
+
+      return true;
+    }
+
     private static bool TryResolveWaypointPosition(string identifier, out Vector3 position)
     {
       position = Vector3.zero;
@@ -344,6 +372,11 @@ namespace MultiplayerInfrastructure.Command
     private static bool TryResolveController(string token, NetworkConnection sender,
                                               out PlayerController controller, out string error)
       => PlayerTargetResolver.TryResolveSingleController(sender, token, out controller, out error);
+
+    /// token → PlayerController 목록 (selector, name, id 등 모두 지원)
+    private static bool TryResolveControllers(string token, NetworkConnection sender,
+                                               out List<PlayerController> controllers, out string error)
+      => PlayerTargetResolver.TryResolveControllers(sender, token, out controllers, out error);
 
     private static string ResolveDisplayName(string token, PlayerController controller)
       => PlayerTargetResolver.DescribeTarget(token, controller);

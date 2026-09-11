@@ -9,13 +9,13 @@ namespace MultiplayerInfrastructure.Command
   public class CommandDefinition_Give : IChatCommandModel, IChatCommandUsage
   {
     public string CommandEntry => "give";
-    public string Description => "Give an item to a target.";
+    public string Description => "Give an item to one or more targets.";
     public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
     {
-      new UsageLine("give <item> [count] [target]", "Give an item. Overflow drops in front."),
+      new UsageLine("give <item> [count] [targets]", "Give an item. Overflow drops in front."),
       new UsageLine("  <item>", "Registered item identifier."),
       new UsageLine("  [count]", "Amount to give. Default: 1."),
-      new UsageLine("  [target]", PlayerTargetResolver.ShortSyntaxHint + ". Default: you."),
+      new UsageLine("  [targets]", PlayerTargetResolver.ShortSyntaxHint + ". Default: you."),
     };
     public string PermissionIdentifier => "give";
 
