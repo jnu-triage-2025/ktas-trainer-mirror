@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Registry;
@@ -19,6 +20,7 @@ namespace MultiplayerInfrastructure.UI
     private Button _settingsButton;
     private Button _titleButton;
     private bool _isVisible;
+    private bool _titleTransitionStarted;
 
     public event Action OverlayPushed;
     public event Action OverlayPopped;
@@ -165,15 +167,19 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleTitleClicked()
     {
+      if (_titleTransitionStarted)
+        return;
+
+      _titleTransitionStarted = true;
+      _titleButton?.SetEnabled(false);
+      StartCoroutine(ReturnToTitleRoutine());
+    }
+
+    private IEnumerator ReturnToTitleRoutine()
+    {
       var fishNetSupport = FishNetSupport.Instance ?? FindFirstObjectByType<FishNetSupport>();
       if (fishNetSupport != null)
-        fishNetSupport.StopClient();
-
-      if (Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.IsOpeningServer))
-      {
-        if (fishNetSupport != null)
-          fishNetSupport.StopServer();
-      }
+        yield return fishNetSupport.StopSessionAndWait();
 
       LoadingScreen.LoadSceneAsync(introSceneName);
     }

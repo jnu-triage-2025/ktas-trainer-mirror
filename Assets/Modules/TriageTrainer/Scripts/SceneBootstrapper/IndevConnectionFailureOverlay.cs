@@ -272,11 +272,7 @@ namespace TriageTrainer.SceneBootstrapper
     {
       var fishNetSupport = FishNetSupport.Instance ?? FindFirstObjectByType<FishNetSupport>();
       if (fishNetSupport != null)
-      {
-        fishNetSupport.StopClient();
-        if (RegistryStore.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.IsOpeningServer))
-          fishNetSupport.StopServer();
-      }
+        yield return fishNetSupport.StopSessionAndWait();
 
       StartWorldCleanup();
       while (!_worldCleanupCompleted)

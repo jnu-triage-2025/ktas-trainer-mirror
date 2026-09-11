@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using FishNet.Component.Spawning;
 using FishNet.Connection;
@@ -504,6 +505,55 @@ namespace MultiplayerInfrastructure.FishNetSupports
 
       networkManager.ClientManager.StopConnection();
       _clientStateAssumed = LocalConnectionState.Stopped;
+    }
+
+    /// <summary>
+    /// 현재 로컬 클라이언트와 서버를 모두 종료하고 FishNet 전송 계층이 정지할 때까지 기다립니다.
+    /// NetworkManager는 DontDestroyOnLoad이므로, 완료 전에 다음 씬에서 재시작하면 이전 소켓과
+    /// 연결 정리가 남아 새 튜토리얼 또는 플레이 세션이 시작되지 않을 수 있습니다.
+    /// </summary>
+    public IEnumerator StopSessionAndWait(float timeoutSeconds = 5f)
+    {
+      if (!ResolveNetworkManagerInHierarchy())
+        yield break;
+
+      // 레지스트리에 저장된 시작 모드는 이전 세션의 값일 수 있으므로 실제 실행 상태를 사용한다.
+      if (networkManager.ClientManager != null && networkManager.ClientManager.Started)
+        networkManager.ClientManager.StopConnection();
+      _clientStateAssumed = LocalConnectionState.Stopped;
+
+      if (networkManager.ServerManager != null && networkManager.ServerManager.Started)
+        networkManager.ServerManager.StopConnection(true);
+      _serverStateAssumed = LocalConnectionState.Stopped;
+
+      // StopConnection은 종료 콜백과 전송 계층 정리를 다음 프레임까지 이어서 수행할 수 있다.
+      // 최소 한 프레임을 보낸 뒤 연속 두 프레임 동안 정지 상태가 유지되는지 확인한다.
+      yield return null;
+
+      float deadline = Time.realtimeSinceStartup + Mathf.Max(0.1f, timeoutSeconds);
+      int settledFrames = 0;
+      while (Time.realtimeSinceStartup < deadline)
+      {
+        bool clientStopped = networkManager == null || networkManager.ClientManager == null
+          || !networkManager.ClientManager.Started;
+        bool serverStopped = networkManager == null || networkManager.ServerManager == null
+          || !networkManager.ServerManager.Started;
+
+        if (clientStopped && serverStopped)
+        {
+          settledFrames++;
+          if (settledFrames >= 2)
+            yield break;
+        }
+        else
+        {
+          settledFrames = 0;
+        }
+
+        yield return null;
+      }
+
+      Debug.LogWarning("[FishNetSupport] 세션 종료가 제한 시간 안에 완료되지 않았습니다. 타이틀 전환을 계속합니다.");
     }
 
     private void HideNetworkHudCanvases()
