@@ -19,12 +19,18 @@ namespace MultiplayerInfrastructure.Player
 
     private void OnStopClient_UIOverlaySync()
     {
-      if (!IsOwner)
+      // FishNet이 종료 콜백을 실행하는 시점에는 소유권이 이미 해제될 수 있다.
+      // 실제로 로컬 오버레이 동기화를 시작했던 인스턴스인지 구독 상태로 판별한다.
+      if (!_overlaySyncSubscribed)
         return;
 
       UnsubscribeOverlayStackChanged();
       UIOverlayStack.Clear();
-      SyncOverlayDrivenPlayerState();
+
+      // 클라이언트 종료 뒤에는 더 이상 게임 조작 상태로 돌아가지 않는다.
+      // StopClient 콜백이 IntroScene.Awake보다 늦게 실행될 수 있으므로 여기서 커서를
+      // 다시 잠그면 타이틀 화면은 보이지만 포인터로 조작할 수 없는 상태가 된다.
+      EnterUIOverlayMode();
     }
 
     private void SubscribeOverlayStackChanged()

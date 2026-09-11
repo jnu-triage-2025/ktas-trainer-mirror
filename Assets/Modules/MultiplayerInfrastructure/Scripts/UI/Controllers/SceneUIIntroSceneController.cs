@@ -96,6 +96,9 @@ namespace MultiplayerInfrastructure.UI
       defaultPort = sessionConfiguration.port;
       defaultSessionName = sessionConfiguration.sessionName;
 
+      // 이전 세션의 네트워크 종료 콜백이 늦게 도착하더라도 타이틀 UI가 과거
+      // 오버레이 상태를 물려받지 않도록 씬 진입 시 전역 스택을 초기화한다.
+      UIOverlayStack.Clear();
       ApplyIntroCursorPolicy();
       EnsureDiscoveryService();
 
@@ -185,6 +188,14 @@ namespace MultiplayerInfrastructure.UI
     {
       CancelInvoke(nameof(RefreshSessions));
       UserPreferenceReset.ResetCompleted -= HandleUserPreferencesReset;
+    }
+
+    private void LateUpdate()
+    {
+      // StopClient/OnStopClient는 씬 로드와 비동기로 완료될 수 있다. 이전 플레이어의
+      // 종료 처리가 타이틀 진입 후 커서를 다시 잠가도 IntroScene의 정책을 복원한다.
+      if (UnityEngine.Cursor.lockState != CursorLockMode.None || !UnityEngine.Cursor.visible)
+        ApplyIntroCursorPolicy();
     }
 
     /// <summary>
