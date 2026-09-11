@@ -20,9 +20,10 @@ namespace MultiplayerInfrastructure.Player
   ///
   /// 흐름(픽업의 예약/확정 구조와 동일):
   /// 1. (Owner) <see cref="TryApplyStaticObjectDisplayment"/> → 서버로 요청.
-  /// 2. (Server) 거리/중복/서버 인벤토리를 검증하고 요구 아이템을 차감합니다.
-  /// 3. (Server) 표시 상태를 확정하고 모든 클라이언트에 표시(Show)를 브로드캐스트합니다.
-  /// 4. (Claimant) TargetRpc 로 서버의 소비 결과를 로컬 인벤토리에 반영합니다.
+  /// 2. (Server) 요청자/거리/중복과 설치물이 선언한 아이템 종류·수량을 검증합니다.
+  /// 3. (Claimant) 원격 소유자는 TargetRpc 로 요구 아이템을 소비하고 성공/실패를 서버에 보고합니다.
+  ///    호스트는 공유하는 서버 인벤토리에서 즉시 소비합니다.
+  /// 4. (Server) 소비 성공 후 표시 상태를 확정하고 모든 클라이언트에 표시(Show)를 브로드캐스트합니다.
   /// </summary>
   public partial class PlayerController
   {
@@ -214,26 +215,34 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      // 공유 상태를 클라이언트의 성공 보고만으로 바꾸지 않는다. 서버 인스턴스가 실제 수량을
-      // 확인하고 차감할 수 있을 때만 설치를 확정한다. 서버에 인벤토리 근거가 없는 원격
-      // 클라이언트 요청은 실패 안전 방식으로 거부된다.
-      if (!string.IsNullOrWhiteSpace(authoritativeItemIdentifier) && authoritativeConsumeCount > 0)
-      {
-        int available=CountItemInInventory(authoritativeItemIdentifier);
-        if (available < authoritativeConsumeCount)
-        {
-          return;
-        }
-        if (RemoveItemFromInventory(authoritativeItemIdentifier, authoritativeConsumeCount)
-            != authoritativeConsumeCount)
-          return;
-      }
-
       _pendingStaticObjectApplies[entityIdentifier] = claimant.ClientId;
 
+      // 호스트는 서버와 소유 클라이언트가 같은 PlayerController 인스턴스를 쓰므로
+      // 서버 인벤토리에서 즉시 소비한다.
+      if (IsOwner)
+      {
+        if (!string.IsNullOrWhiteSpace(authoritativeItemIdentifier) && authoritativeConsumeCount > 0)
+        {
+          if (CountItemInInventory(authoritativeItemIdentifier) < authoritativeConsumeCount
+              || RemoveItemFromInventory(authoritativeItemIdentifier, authoritativeConsumeCount)
+              != authoritativeConsumeCount)
+          {
+            _pendingStaticObjectApplies.Remove(entityIdentifier);
+            return;
+          }
+        }
+
+        ServerConfirmStaticObjectApplySuccess(entityIdentifier, claimant);
+        return;
+      }
+
+      // 중요: 원격 소유자의 서버 측 인벤토리는 로컬 UI의 모든 변경을 완전히 복제하지 않는다.
+      // 여기서 호스트와 같이 CountItemInInventory를 서버에서 일괄 검사하면, 원격 nurse_c/nurse_d는
+      // 아이템을 들고 있어도 거부되고 서버 호스트인 nurse_a만 벽면 장비를 설치할 수 있는 회귀가 발생한다.
+      // 따라서 원격 소유자는 TargetRpc에서 실제 소비를 확인하고, 성공 응답을 받은 뒤에만
+      // 공유 설치 상태를 확정해야 한다. 이 분기를 서버 인벤토리 검증으로 합치하지 말 것.
       TargetConfirmApplyStaticObjectDisplayment(
         claimant, entityIdentifier, authoritativeItemIdentifier, authoritativeConsumeCount);
-      ServerConfirmStaticObjectApplySuccess(entityIdentifier, claimant);
     }
 
     // ── 요청자 확정: 아이템 소비 후 성공/실패 보고 ────────────────────────────
@@ -244,17 +253,17 @@ namespace MultiplayerInfrastructure.Player
     {
       ClearInFlightStaticObjectApply(entityIdentifier);
 
-      // 호스트는 위 서버 처리와 같은 PlayerController 인스턴스를 사용하므로 다시 차감하지 않는다.
-      // 원격 소유자는 서버가 이미 확정한 소비 결과를 로컬 표현에 반영한다.
-      if (!IsServerStarted && !string.IsNullOrWhiteSpace(requiredItemIdentifier) && consumeCount > 0)
+      if (!string.IsNullOrWhiteSpace(requiredItemIdentifier) && consumeCount > 0)
       {
-        int removed = RemoveItemFromInventory(requiredItemIdentifier, consumeCount);
-        if (removed < consumeCount)
+        if (CountItemInInventory(requiredItemIdentifier) < consumeCount
+            || RemoveItemFromInventory(requiredItemIdentifier, consumeCount) != consumeCount)
         {
-          Debug.LogError(
-            $"[PlayerController] Static object apply '{entityIdentifier}': local inventory diverged from server ({removed}/{consumeCount}).");
+          ReportStaticObjectApplyFailure(entityIdentifier);
+          return;
         }
       }
+
+      AcknowledgeStaticObjectApplySuccess(entityIdentifier);
     }
 
     private void AcknowledgeStaticObjectApplySuccess(string entityIdentifier)
