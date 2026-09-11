@@ -1,6 +1,48 @@
 {
-  "namespace": "disaster_intro.role_a",
+  "namespace": "disaster_intro",
   "definitions": [
+    {
+      "identifier": "triage_patients",
+      "title": "중증도 분류",
+      "description": "이송된 환자 두 명의 중증도를 분류하세요.",
+      "questContent": "환자 두 명의 중증도 분류",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": true,
+      "tasks": [
+        {
+          "identifier": "triage-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "disaster_intro_triage_submitted_patient_a",
+          "signalScope": "Owner",
+          "displayTextContent": "중증 외상 환자 중증도 분류",
+          "count": 1
+        },
+        {
+          "identifier": "triage-patient-dummy-d-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "disaster_intro_triage_submitted_patient_dummy_d_a",
+          "signalScope": "Owner",
+          "displayTextContent": "경증 외상 환자 중증도 분류",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "identifier": "move_to_treatment_room",
+      "title": "처치실 이동",
+      "description": "KTAS 1 환자 처치를 준비하기 위해 처치실로 이동하세요.",
+      "questContent": "처치실로 이동",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "tasks": []
+    },
     {
       "identifier": "collect_vital_set",
       "title": "활력징후 측정도구 획득",

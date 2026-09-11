@@ -249,7 +249,7 @@
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro.role_a::collect_vital_set",
+      "questDefinitionIdentifier": "disaster_intro::collect_vital_set",
       "quest": null,
       "nextIdentifier": "Q002"
     },
@@ -304,7 +304,7 @@
       "operation": "Remove",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro.role_a::collect_vital_set",
+      "questDefinitionIdentifier": "disaster_intro::collect_vital_set",
       "quest": null,
       "nextIdentifier": "D003"
     },
@@ -334,10 +334,20 @@
       "dialogueContent": "환자 두 명이 이송되었습니다. @t=[nurse_a, ???]가 중증도 분류를 시행합니다.",
       "dialogueContentTTSPassing": "환자 두 명이 이송되었습니다. @t=[nurse_a, ???]가 중증도 분류를 시행합니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N001_2",
+      "nextIdentifier": "Q_TRIAGE_A_ADD",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "Q_TRIAGE_A_ADD": {
+      "identifier": "Q_TRIAGE_A_ADD",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "disaster_intro::triage_patients",
+      "quest": null,
+      "nextIdentifier": "N001_2"
     },
     "N001_2": {
       "identifier": "N001_2",
@@ -638,10 +648,20 @@
       "dialogueContent": "해당 환자를 KTAS 5로 분류했습니다.",
       "dialogueContentTTSPassing": "해당 환자를 케이타스 파이브로 분류했습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N001_5",
+      "nextIdentifier": "Q_TRIAGE_A_REMOVE",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "Q_TRIAGE_A_REMOVE": {
+      "identifier": "Q_TRIAGE_A_REMOVE",
+      "nodeType": "QuestControl",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "disaster_intro::triage_patients",
+      "quest": null,
+      "nextIdentifier": "N001_5"
     },
     "N001_5": {
       "identifier": "N001_5",
@@ -716,9 +736,8 @@
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "quest": {
-        "Id": "Quest_MoveToTreatmentroom"
-      },
+      "questDefinitionIdentifier": "disaster_intro::move_to_treatment_room",
+      "quest": null,
       "nextIdentifier": "V005"
     },
     "V005": {
@@ -750,9 +769,8 @@
       "operation": "Remove",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "quest": {
-        "Id": "Quest_MoveToTreatmentroom"
-      },
+      "questDefinitionIdentifier": "disaster_intro::move_to_treatment_room",
+      "quest": null,
       "nextIdentifier": "N002_1"
     },
     "N002_1": {
@@ -829,7 +847,7 @@
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro.role_a::collect_ns1_and_iv_set",
+      "questDefinitionIdentifier": "disaster_intro::collect_ns1_and_iv_set",
       "quest": null,
       "nextIdentifier": "V006"
     },
@@ -868,7 +886,7 @@
       "operation": "Remove",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro.role_a::collect_ns1_and_iv_set",
+      "questDefinitionIdentifier": "disaster_intro::collect_ns1_and_iv_set",
       "quest": null,
       "nextIdentifier": "A001"
     },
@@ -902,7 +920,7 @@
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro.role_a::collect_ps1_and_iv_set",
+      "questDefinitionIdentifier": "disaster_intro::collect_ps1_and_iv_set",
       "quest": null,
       "nextIdentifier": "V007"
     },
@@ -917,7 +935,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "quest.completed.disaster_intro.role_a::collect_ps1_and_iv_set"
+              "registryIdentifier": "quest.completed.disaster_intro::collect_ps1_and_iv_set"
             },
             {
               "type": "Registry",
@@ -947,7 +965,7 @@
       "operation": "Remove",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro.role_a::collect_ps1_and_iv_set",
+      "questDefinitionIdentifier": "disaster_intro::collect_ps1_and_iv_set",
       "quest": null,
       "nextIdentifier": "A002"
     },
@@ -981,7 +999,7 @@
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro.role_a::collect_blood_bag",
+      "questDefinitionIdentifier": "disaster_intro::collect_blood_bag",
       "quest": null,
       "nextIdentifier": "V008"
     },
@@ -1014,7 +1032,7 @@
       "operation": "Remove",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro.role_a::collect_blood_bag",
+      "questDefinitionIdentifier": "disaster_intro::collect_blood_bag",
       "quest": null,
       "nextIdentifier": "CC_D_Ready"
     },
