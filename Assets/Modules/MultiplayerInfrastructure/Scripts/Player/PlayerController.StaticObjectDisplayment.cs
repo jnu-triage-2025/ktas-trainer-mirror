@@ -79,17 +79,28 @@ namespace MultiplayerInfrastructure.Player
       float sqrDistance = (displayment.transform.position - ResolveServerPickupOriginPosition()).sqrMagnitude;
       if (sqrDistance > MaxStaticObjectDisplaymentApplyDistanceSqr)
         return;
+      var authoritativeItem = Registry.Registry.CreateItemInstance(authoritativeItemIdentifier);
+      if (authoritativeItem == null)
+        return;
       if (!StaticObjectDisplaymentService.ClearShown(entityIdentifier))
         return;
 
       displayment.OnHiddenConfirmed();
       RpcHideStaticObjectDisplaymentGlobal(entityIdentifier);
+      // 다음 재설치도 서버가 검증할 수 있도록 서버 인벤토리를 먼저 복원한다.
+      // TargetRpc 는 원격 소유자의 로컬 인벤토리에 같은 결과를 미러링한다.
+      if (!TryAddItemToInventory(authoritativeItem))
+        TryDropItemInFront(authoritativeItem);
       TargetGrantStaticObjectDisplaymentItem(claimant, authoritativeItemIdentifier);
     }
 
     [TargetRpc]
     private void TargetGrantStaticObjectDisplaymentItem(NetworkConnection connection, string itemIdentifier)
     {
+      // 호스트는 서버 처리와 같은 PlayerController 인스턴스를 사용하므로 다시 지급하지 않는다.
+      if (IsServerStarted)
+        return;
+
       var item = Registry.Registry.CreateItemInstance(itemIdentifier);
       if (item == null)
         return;

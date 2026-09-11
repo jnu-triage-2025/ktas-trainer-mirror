@@ -76,8 +76,15 @@ namespace MultiplayerInfrastructure.Editor.Tests
       Assert.That(source, Does.Contain("consumeCount != authoritativeConsumeCount"));
       Assert.That(source, Does.Contain("CountItemInInventory(authoritativeItemIdentifier)"));
       Assert.That(source, Does.Contain("RemoveItemFromInventory(authoritativeItemIdentifier, authoritativeConsumeCount)"));
+      Assert.That(source, Does.Contain("TryAddItemToInventory(authoritativeItem)"),
+        "회수한 설치 장비는 다음 재설치 검증을 위해 서버 인벤토리에도 복원해야 합니다.");
+      Assert.That(Regex.IsMatch(source, @"if \(IsServerStarted\)\s*return;"), Is.True,
+        "호스트의 TargetRpc 미러가 서버에서 이미 복원한 아이템을 중복 지급하면 안 됩니다.");
       Assert.That(source.IndexOf("ServerConfirmStaticObjectApplySuccess(entityIdentifier, claimant)", System.StringComparison.Ordinal),
         Is.GreaterThan(source.IndexOf("RemoveItemFromInventory(authoritativeItemIdentifier, authoritativeConsumeCount)", System.StringComparison.Ordinal)));
+      Assert.That(source.IndexOf("TargetGrantStaticObjectDisplaymentItem(claimant, authoritativeItemIdentifier)", StringComparison.Ordinal),
+        Is.GreaterThan(source.IndexOf("TryAddItemToInventory(authoritativeItem)", StringComparison.Ordinal)),
+        "서버 인벤토리를 복원한 뒤 원격 소유자에게 결과를 미러링해야 합니다.");
     }
 
     private static readonly string[] RuntimeScriptRoots =
