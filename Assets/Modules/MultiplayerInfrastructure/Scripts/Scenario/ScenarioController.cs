@@ -5659,6 +5659,9 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       idleTracker.IdleWaitingForOthers = true;
+      // 이 게이트에 도달했다는 것은 담당자가 자기 수행을 마치고 다른 참여자의 결과만 기다린다는
+      // 뜻이다. 분기 코루틴은 아직 끝나지 않았더라도 공동 진행 목록에서는 완료한 참여자로 표시한다.
+      context.GroupGateParticipant?.MarkCompleted(left: false);
       try
       {
         yield return ExecuteValidatorGateCore(node, context);

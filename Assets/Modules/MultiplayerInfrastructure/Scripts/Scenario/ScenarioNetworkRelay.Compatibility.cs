@@ -272,9 +272,55 @@ namespace MultiplayerInfrastructure.Scenario
       // 처음 받은 완료 보고만 알린다. 클라이언트는 해제될 때까지 같은 보고를 되풀이하기 때문이다.
       if (barrier.Complete(sender.ClientId))
         ObserversCompatibilityParticipantCompleted(session, nodeIdentifier, visit, sender.ClientId, false);
+      // 최초 ObserversRpc를 놓친 피어도 다음 재보고에서 복구할 수 있도록, 서버가 지금까지 확인한
+      // 완료·이탈 상태 전체를 모든 참여자에게 다시 보낸다. 단일 완료 알림만 재전송하면 다른
+      // 참여자의 이전 완료를 놓친 피어에서는 목록이 계속 오래된 상태로 남는다.
+      SendCompatibilityParticipantCompletionSnapshot(session, nodeIdentifier, visit, barrier);
       // A late participant must receive a release that was already sent to the other participants.
       if (barrier.Released)
         TargetReleaseCompatibilityBarrier(sender, session, key, barrier.TimedOut);
+    }
+
+    private void SendCompatibilityParticipantCompletionSnapshot(
+      string session, string nodeIdentifier, int visit, ScenarioCompletionBarrier barrier)
+    {
+      if (barrier == null)
+        return;
+
+      var completedClientIds = _compatibilityParticipants.Keys
+        .Where(barrier.HasCompleted)
+        .ToArray();
+      var leftClientIds = _compatibilityParticipants.Keys
+        .Where(clientId => !barrier.HasCompleted(clientId)
+                           && _departedCompatibilityParticipants.Contains(clientId))
+        .ToArray();
+      foreach (var target in _compatibilityParticipants.Values)
+      {
+        if (target != null && target.IsActive)
+          TargetCompatibilityParticipantCompletionSnapshot(
+            target, session, nodeIdentifier, visit, completedClientIds, leftClientIds);
+      }
+    }
+
+    [TargetRpc]
+    private void TargetCompatibilityParticipantCompletionSnapshot(NetworkConnection target, string session,
+      string nodeIdentifier, int visit, int[] completedClientIds, int[] leftClientIds)
+    {
+      if (session != _localCompatibilitySession)
+        return;
+
+      ApplyCompatibilityParticipantCompletions(nodeIdentifier, visit, completedClientIds, left: false);
+      ApplyCompatibilityParticipantCompletions(nodeIdentifier, visit, leftClientIds, left: true);
+    }
+
+    private static void ApplyCompatibilityParticipantCompletions(
+      string nodeIdentifier, int visit, IReadOnlyList<int> clientIds, bool left)
+    {
+      if (clientIds == null)
+        return;
+
+      for (int i = 0; i < clientIds.Count; i++)
+        ApplyCompatibilityParticipantCompletion(nodeIdentifier, visit, clientIds[i], left);
     }
 
     private IEnumerator ReleaseCompatibilityBarrier(string session, string graphIdentifier, string nodeIdentifier,
@@ -334,6 +380,12 @@ namespace MultiplayerInfrastructure.Scenario
     {
       if (session != _localCompatibilitySession)
         return;
+      ApplyCompatibilityParticipantCompletion(nodeIdentifier, visit, clientId, left);
+    }
+
+    private static void ApplyCompatibilityParticipantCompletion(
+      string nodeIdentifier, int visit, int clientId, bool left)
+    {
       string key = nodeIdentifier + "|" + visit;
       if (!ReceivedCompatibilityCompletions.TryGetValue(key, out var completions))
       {
