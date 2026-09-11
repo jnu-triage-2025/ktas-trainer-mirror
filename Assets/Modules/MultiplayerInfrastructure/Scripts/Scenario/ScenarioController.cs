@@ -2040,10 +2040,12 @@ namespace MultiplayerInfrastructure.Scenario
           || _activeRemoteBranchPromptClients.Count > 0)
         return;
 
-      if (!_uiController.IsUnityNull()
-          && (_uiController.IsWaitingForInput || _uiController.IsTyping || _uiController.HasActiveSelections))
+      if (!_uiController.IsUnityNull())
       {
-        _uiController.DismissPresentationNode();
+        if (_uiController.IsWaitingForInput || _uiController.IsTyping || _uiController.HasActiveSelections)
+          _uiController.DismissPresentationNode();
+        else
+          _uiController.ReleaseOverlay();
       }
 
       // 서버 권위 실행에서는 각 표시 피어의 화면에도 같은 정리가 필요하다.
@@ -2068,6 +2070,10 @@ namespace MultiplayerInfrastructure.Scenario
                              || !string.IsNullOrEmpty(_uiController.CurrentDialogueOwner);
       if (dialogueEngaged)
         _uiController.DismissPresentationNode();
+      else
+        // 표시 상태는 이미 지워졌는데 오버레이 스택 항목만 남은 경우(다른 창에 가려졌다가
+        // 정리된 뒤 등)에도 스택 항목은 반드시 걷어내야 플레이어 입력이 풀린다.
+        _uiController.ReleaseOverlay();
 
       _uiController.HideDisinteractableDialogue();
       _uiController.ClearDialogueOwner();

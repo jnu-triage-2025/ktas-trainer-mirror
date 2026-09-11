@@ -170,6 +170,17 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public bool HasConsumedInputThisFrame => _lastInputConsumedFrame == Time.frameCount;
 
+    /// <summary>
+    /// 대화창이 지금 실제로 대화/선택지를 표시하며 입력을 기다리는 중인지 여부.
+    /// 오버레이 스택에는 올라가 있는데 이 값이 false 이면 표시할 것이 없는 잔여 항목이므로,
+    /// 입력 경로와 시나리오 정리 경로가 그 항목을 스택에서 걷어내도 된다.
+    /// </summary>
+    public bool IsPresenting =>
+      _isTyping
+      || _isWaitingForInput
+      || _inputContext != DialogueInputContext.None
+      || HasActiveSelections;
+
     /// <summary>현재 대화창 계열 UI를 점유 중인 그래프 식별자(없으면 null).</summary>
     public string CurrentDialogueOwner => _owningGraphIdentifier;
 
@@ -417,10 +428,20 @@ namespace MultiplayerInfrastructure.UI
       _pendingChoiceOptions = null;
       ClearSelections();
 
-      if (!_interactableHintUI.IsUnityNull())
+      if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
         _interactableHintUI.ExitDialogueMode();
 
       HidePanel();
+      UIOverlayStack.Remove(this);
+    }
+
+    /// <summary>
+    /// 표시 중인 내용이 없는데 오버레이 스택에 남아 있는 항목만 걷어낸다.
+    /// 시나리오 정리 경로가 "대화창이 떠 있지 않다"고 판단해 <see cref="DismissPresentationNode"/> 를
+    /// 건너뛰더라도, 스택 항목이 남아 있으면 플레이어 입력이 계속 막히므로 여기서 함께 정리한다.
+    /// </summary>
+    public void ReleaseOverlay()
+    {
       UIOverlayStack.Remove(this);
     }
 
@@ -1089,13 +1110,52 @@ namespace MultiplayerInfrastructure.UI
 
     // IUIOverlay
 
+    // 다른 오버레이에 가려져 표시만 숨긴 상태인지 여부. 덮개가 닫혀 최상단으로 돌아올 때만 복구한다.
+    // (처음 표시되는 경로에서도 OnOverlayPushed 가 호출되므로, 이 플래그 없이 복구하면
+    //  재생이 시작되기도 전에 선택지가 먼저 나타난다.)
+    private bool _hiddenWhileCovered;
+
     public void OnOverlayPushed()
     {
+      // 커맨드 채팅이나 서버가 내려보낸 문제지에 잠시 가려졌다가 다시 최상단으로 돌아온 경우,
+      // 가려지는 동안 유지해 둔 대화/선택지 상태를 화면에 다시 올린다.
+      if (_hiddenWhileCovered)
+      {
+        _hiddenWhileCovered = false;
+
+        if (IsPresenting)
+        {
+          Show();
+
+          // 가려져 있는 사이 다른 흐름이 힌트 UI 모드를 되돌렸다면 선택지가 사라진 채 확정 수단이 없어진다.
+          // 이미 표시했던 선택지는 힌트 UI에 다시 채워 넣는다.
+          if (_inputContext == DialogueInputContext.Choice && HasActiveSelections && _pendingChoiceOptions != null)
+          {
+            var hintUI = EnsureInteractableHintUI();
+            if (!hintUI.IsUnityNull() && !hintUI.HasDialogueSelection())
+              ShowChoices(_pendingChoiceOptions);
+          }
+        }
+      }
+
       OverlayPushed?.Invoke();
     }
 
     public void OnOverlayPopped()
     {
+      // 다른 오버레이가 위에 Push 되어 잠시 가려진 것뿐이면 표시만 숨기고 상태는 그대로 둔다.
+      // 여기서 상태까지 지우면 덮개가 닫힌 뒤 대화창이 보이지 않는 채 스택 최상단에 남아
+      // 진행 키도 Escape 도 통하지 않는 입력 잠금이 된다.
+      if (UIOverlayStack.Contains(this))
+      {
+        _hiddenWhileCovered = true;
+        Hide();
+        OverlayPopped?.Invoke();
+        return;
+      }
+
+      _hiddenWhileCovered = false;
+
       // UIOverlayStack.Clear(), 강제 제거 등 정상 진행 입력 이외의 경로에서도
       // 보이는 패널·선택지·포인터 상태가 남지 않도록 표시 상태를 복구한다.
       _isTyping = false;

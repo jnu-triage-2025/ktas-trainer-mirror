@@ -27,6 +27,21 @@ namespace MultiplayerInfrastructure.UI
       PruneDeadOverlays();
       return Stack.Count > 0 && Stack.Peek() == overlay;
     }
+
+    /// <summary>
+    /// 지정한 오버레이가 스택 어딘가에 남아 있는지 여부.
+    ///
+    /// <see cref="IUIOverlay.OnOverlayPopped"/> 는 두 가지 상황에서 호출된다:
+    /// (1) 다른 오버레이가 위에 Push 되어 잠시 가려질 때, (2) Pop/Remove/Clear 로 실제로 스택에서 빠질 때.
+    /// 콜백 안에서 이 메서드가 true 를 돌려주면 (1)이므로 표시만 숨기고 내부 상태는 유지해야 한다.
+    /// 덮개가 닫히면 <see cref="IUIOverlay.OnOverlayPushed"/> 가 다시 호출되어 최상단으로 돌아온다.
+    /// 콜백 도중에도 안전하게 부를 수 있도록 스택을 재정렬(prune)하지 않는다.
+    /// </summary>
+    public static bool Contains(IUIOverlay overlay)
+    {
+      return overlay != null && Stack.Contains(overlay);
+    }
+
     public static void Push(IUIOverlay overlay)
     {
       int previousCount = Stack.Count;
@@ -207,18 +222,37 @@ namespace MultiplayerInfrastructure.UI
       return true;
     }
 
+    // 콜백에서 예외가 새어 나오면 스택은 이미 바뀌었는데 StackChanged 가 발행되지 않아,
+    // 플레이어의 이동 가능 여부·커서 잠금이 스택과 어긋난 채 다음 변경까지 남는다
+    // (스택은 비었는데 움직일 수 없고 커서만 풀린 상태). 예외는 기록만 하고 진행을 이어 간다.
     private static void SafeOnOverlayPushed(IUIOverlay overlay)
     {
       if (!IsAlive(overlay))
         return;
-      overlay.OnOverlayPushed();
+
+      try
+      {
+        overlay.OnOverlayPushed();
+      }
+      catch (System.Exception exception)
+      {
+        Debug.LogException(exception, overlay as Object);
+      }
     }
 
     private static void SafeOnOverlayPopped(IUIOverlay overlay)
     {
       if (!IsAlive(overlay))
         return;
-      overlay.OnOverlayPopped();
+
+      try
+      {
+        overlay.OnOverlayPopped();
+      }
+      catch (System.Exception exception)
+      {
+        Debug.LogException(exception, overlay as Object);
+      }
     }
 
     private static void NotifyStackChangedIfNeeded(int previousCount, IUIOverlay previousTop)

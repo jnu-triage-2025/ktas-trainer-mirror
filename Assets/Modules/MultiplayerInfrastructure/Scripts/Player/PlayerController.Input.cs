@@ -104,7 +104,13 @@ namespace MultiplayerInfrastructure.Player
       // 대화는 Escape로 취소해도 시나리오 진행 결과를 제출하지 않는다. 여기서 Pop 하면
       // 대화 UI만 사라진 채 시나리오가 다음 입력을 기다리는 불일치 상태가 된다.
       if (!_dialoguePanelUIController.IsUnityNull() && UIOverlayStack.IsTop(_dialoguePanelUIController))
+      {
+        // 다만 표시 중인 대화/선택지가 없는데 스택에만 남아 있는 항목은 입력을 막을 이유가 없다.
+        // 그대로 두면 진행 키도 Escape 도 통하지 않는 잠금이 되므로 Escape 로 걷어낼 수 있게 한다.
+        if (!_dialoguePanelUIController.IsPresenting)
+          UIOverlayStack.Remove(_dialoguePanelUIController);
         return true;
+      }
 
       UIOverlayStack.Pop();
       return true;

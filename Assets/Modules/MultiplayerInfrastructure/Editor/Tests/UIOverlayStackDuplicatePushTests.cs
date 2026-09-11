@@ -1,6 +1,7 @@
 ﻿using System;
 using MultiplayerInfrastructure.UI;
 using NUnit.Framework;
+using UnityEngine.TestTools;
 
 namespace MultiplayerInfrastructure.Tests.UI
 {
@@ -19,6 +20,12 @@ namespace MultiplayerInfrastructure.Tests.UI
       public int PushedCount { get; private set; }
       public int PoppedCount { get; private set; }
 
+      /// <summary>마지막 OnOverlayPopped 시점에 스택에 아직 남아 있었는지(= 가려진 것뿐인지).</summary>
+      public bool WasInStackWhenPopped { get; private set; }
+
+      /// <summary>콜백 안에서 예외를 던지는 상황을 흉내 내기 위한 훅.</summary>
+      public Action PoppedHook { get; set; }
+
       public event Action OverlayPushed;
       public event Action OverlayPopped;
 
@@ -31,6 +38,8 @@ namespace MultiplayerInfrastructure.Tests.UI
       public void OnOverlayPopped()
       {
         PoppedCount++;
+        WasInStackWhenPopped = UIOverlayStack.Contains(this);
+        PoppedHook?.Invoke();
         OverlayPopped?.Invoke();
       }
 
@@ -115,6 +124,80 @@ namespace MultiplayerInfrastructure.Tests.UI
 
       Assert.That(UIOverlayStack.IsEmpty(), Is.True,
         "종료된 대화창이 채팅 아래에 남으면 채팅을 닫은 뒤 월드 입력이 잠긴다.");
+    }
+
+    [Test]
+    public void CoveredOverlayCanTellItIsStillInTheStackAndReturnsToTopWhenUncovered()
+    {
+      // 대화창 위에 커맨드 채팅이 열렸다가 닫히는 상황. 대화창은 가려질 때 상태를 지우면 안 된다.
+      var dialogue = new FakeOverlay("dialogue");
+      var chat = new FakeOverlay("chat");
+
+      UIOverlayStack.Push(dialogue);
+      UIOverlayStack.Push(chat);
+
+      Assert.That(dialogue.PoppedCount, Is.EqualTo(1));
+      Assert.That(dialogue.WasInStackWhenPopped, Is.True,
+        "다른 오버레이에 가려진 것뿐이면 Contains 가 true 여야 표시만 숨기고 상태를 유지할 수 있다.");
+      Assert.That(UIOverlayStack.Contains(dialogue), Is.True);
+
+      UIOverlayStack.Pop(); // chat
+
+      Assert.That(UIOverlayStack.IsTop(dialogue), Is.True);
+      Assert.That(dialogue.PushedCount, Is.EqualTo(2), "덮개가 닫히면 다시 Pushed 통보를 받아 표시를 복구한다.");
+
+      UIOverlayStack.Pop(); // dialogue
+
+      Assert.That(dialogue.WasInStackWhenPopped, Is.False, "실제로 스택에서 빠질 때는 Contains 가 false 다.");
+      Assert.That(UIOverlayStack.Contains(dialogue), Is.False);
+    }
+
+    [Test]
+    public void RemovedOverlayIsNotInTheStackDuringItsPoppedCallback()
+    {
+      var dialogue = new FakeOverlay("dialogue");
+      var chat = new FakeOverlay("chat");
+
+      UIOverlayStack.Push(dialogue);
+      UIOverlayStack.Push(chat);
+      UIOverlayStack.Remove(dialogue);
+
+      Assert.That(dialogue.WasInStackWhenPopped, Is.False);
+
+      UIOverlayStack.Clear();
+
+      Assert.That(chat.WasInStackWhenPopped, Is.False);
+    }
+
+    [Test]
+    public void ExceptionInsidePoppedCallbackStillLeavesStackAndNotificationConsistent()
+    {
+      // 콜백 예외가 새어 나오면 스택은 비었는데 StackChanged 가 발행되지 않아 이동 불가·커서 해제 상태가 남는다.
+      var inventory = new FakeOverlay("inventory")
+      {
+        PoppedHook = () => throw new InvalidOperationException("held item return failed"),
+      };
+
+      int changedCount = 0;
+      Action onChanged = () => changedCount++;
+      UIOverlayStack.StackChanged += onChanged;
+      bool previousIgnore = LogAssert.ignoreFailingMessages;
+      LogAssert.ignoreFailingMessages = true;
+      try
+      {
+        UIOverlayStack.Push(inventory);
+        Assert.That(changedCount, Is.EqualTo(1));
+
+        Assert.DoesNotThrow(() => UIOverlayStack.Pop());
+
+        Assert.That(UIOverlayStack.IsEmpty(), Is.True);
+        Assert.That(changedCount, Is.EqualTo(2), "예외가 나도 스택 변경 통보는 반드시 나가야 한다.");
+      }
+      finally
+      {
+        LogAssert.ignoreFailingMessages = previousIgnore;
+        UIOverlayStack.StackChanged -= onChanged;
+      }
     }
   }
 }

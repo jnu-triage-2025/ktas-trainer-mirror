@@ -56,7 +56,8 @@ namespace TriageTrainer.Entity.PatientMonitor
 
       if (UIOverlayStack.IsTop(_instance))
         UIOverlayStack.Pop();
-      else
+      // 대화창 등에 가려져 스택 중간에 있으면 그 자리에서 제거한다. 스택에 없을 때만 직접 닫는다.
+      else if (!UIOverlayStack.Remove(_instance))
         _instance.OnOverlayPopped();
     }
 
@@ -176,10 +177,27 @@ namespace TriageTrainer.Entity.PatientMonitor
     public event Action OverlayPushed;
     public event Action OverlayPopped;
 
-    public void OnOverlayPushed() => OverlayPushed?.Invoke();
+    public void OnOverlayPushed()
+    {
+      // 서버가 내려보낸 대화 노드 등에 잠시 가려졌다가 돌아온 경우 상세 화면을 다시 보인다.
+      if (_owner != null)
+        SetDocumentVisible(true);
+
+      OverlayPushed?.Invoke();
+    }
 
     public void OnOverlayPopped()
     {
+      // 다른 오버레이가 위에 올라와 가려진 것뿐이면 소유자와 콘텐츠를 유지한 채 숨기기만 한다.
+      // 여기서 소유자를 비우면 덮개가 닫힌 뒤 보이지 않는 오버레이가 최상단에 남아
+      // 닫기 버튼도 Close(owner) 도 통하지 않은 채 입력만 막는다.
+      if (UIOverlayStack.Contains(this))
+      {
+        SetDocumentVisible(false);
+        OverlayPopped?.Invoke();
+        return;
+      }
+
       var restore = _restoreContent;
       var closed = _closed;
       _owner = null;
