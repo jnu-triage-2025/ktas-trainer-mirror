@@ -19,6 +19,20 @@ namespace TriageTrainer.Tests
       Assert.That(parallel.Branches, Has.Count.EqualTo(4));
       Assert.That(parallel.Branches.SelectMany(branch => branch.RequiredPlayerTags),
         Is.EqualTo(new[] { "nurse_a", "nurse_b", "nurse_c", "nurse_d" }));
+      Assert.That(parallel.Branches.Select(branch => branch.Identifier), Is.Unique,
+        "역할별 분기는 서로 다른 시작 노드를 사용해야 참가자 항목이 겹치지 않습니다.");
+      Assert.That(parallel.Branches.Select(branch => branch.CompletionConditionIdentifier), Is.Unique,
+        "역할별 분기는 서로 다른 완료 조건을 사용해야 네 명의 완료를 각각 기다릴 수 있습니다.");
+
+      var allocation = parallel.Branches
+        .Select((branch, index) => (branch, clientId: (int?)index + 1))
+        .ToDictionary(pair => pair.branch, pair => pair.clientId);
+      var groupGate = ScenarioGroupGateTracker.TryCreate(graph.Identifier, parallel, allocation);
+      Assert.That(groupGate, Is.Not.Null);
+      var snapshot = groupGate.BuildSnapshot();
+      Assert.That(snapshot.Participants, Has.Count.EqualTo(4));
+      Assert.That(snapshot.Participants.Select(participant => participant.Role),
+        Is.EqualTo(new[] { "nurse_a", "nurse_b", "nurse_c", "nurse_d" }));
 
       var nurseB = parallel.Branches.Single(branch => branch.RequiredPlayerTags.Contains("nurse_b"));
       var nurseC = parallel.Branches.Single(branch => branch.RequiredPlayerTags.Contains("nurse_c"));
@@ -32,43 +46,41 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void DisasterIntroPreparesPatientsBeforeRoleSpecificExecution()
+    public void DisasterIntroPreparesPatientsBetweenArrivalDialogues()
     {
       var path = Path.Combine(Application.dataPath,
         "Modules/TriageTrainer/Resources/Scenario/disaster_intro.scenario.json");
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
-      var commonNodes = new System.Collections.Generic.List<IScenarioNode>();
+      var preparationNodes = new System.Collections.Generic.List<IScenarioNode>();
       var visited = new System.Collections.Generic.HashSet<string>();
-      string cursor = graph.DefaultEntrypoint;
+      string cursor = graph.Nodes["D003"].NextIdentifier;
       while (!string.IsNullOrWhiteSpace(cursor) && visited.Add(cursor))
       {
-        var node = graph.Nodes[cursor];
-        if (node is ScenarioChoiceNode || node is ScenarioParallelNode)
+        if (cursor == "D003_1")
           break;
-        commonNodes.Add(node);
+        var node = graph.Nodes[cursor];
+        preparationNodes.Add(node);
         cursor = node.NextIdentifier;
       }
 
-      Assert.That(cursor, Is.EqualTo("C_role_select"));
-      // A remote nurse_a cannot execute server-only setup. Every host role must reach it
-      // before role selection, including the medical presets and triage signal bindings.
+      Assert.That(cursor, Is.EqualTo("D003_1"));
       foreach (var node in graph.Nodes.Values.Where(node =>
                  node is ScenarioEntityPresetSpawnNode
                  || node is ScenarioPatientMedicalStatePresetNode
                  || node is ScenarioEntityStateSignalBindingNode))
-        Assert.That(commonNodes, Does.Contain(node), node.Identifier);
+        Assert.That(preparationNodes, Does.Contain(node), node.Identifier);
 
-      Assert.That(commonNodes.OfType<ScenarioEntityPresetSpawnNode>()
+      Assert.That(preparationNodes.OfType<ScenarioEntityPresetSpawnNode>()
         .Select(node => node.SpawnedEntityIdentifier),
         Is.EquivalentTo(new[] { "patient_a", "patient_dummy_d_a" }));
-      foreach (var spawn in commonNodes.OfType<ScenarioEntityPresetSpawnNode>())
+      foreach (var spawn in preparationNodes.OfType<ScenarioEntityPresetSpawnNode>())
       {
-        var preset = commonNodes.OfType<ScenarioPatientMedicalStatePresetNode>()
+        var preset = preparationNodes.OfType<ScenarioPatientMedicalStatePresetNode>()
           .Single(node => node.TargetEntityIdentifier == spawn.SpawnedEntityIdentifier);
-        Assert.That(commonNodes.IndexOf(spawn), Is.LessThan(commonNodes.IndexOf(preset)));
+        Assert.That(preparationNodes.IndexOf(spawn), Is.LessThan(preparationNodes.IndexOf(preset)));
       }
 
-      Assert.That(graph.Nodes["D003"].NextIdentifier, Is.EqualTo("E001"));
+      Assert.That(graph.Nodes["D003"].NextIdentifier, Is.EqualTo("DISASTER_INTRO_SPAWN_A"));
       Assert.That(graph.Nodes["E001"].NextIdentifier, Is.EqualTo("D003_1"));
     }
 

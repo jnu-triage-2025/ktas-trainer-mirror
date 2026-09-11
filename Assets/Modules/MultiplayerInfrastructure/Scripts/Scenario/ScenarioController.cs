@@ -7120,6 +7120,15 @@ namespace MultiplayerInfrastructure.Scenario
           ExecuteSignalListenerNode(signalListener);
           break;
         case ScenarioEntityStateSignalBindingNode stateBinding:
+          if (context.ReplicateEventsToPeers && !InstanceFinder.IsServerStarted
+              && ScenarioNetworkRelay.HasCompatibilitySession(_currentGraph?.Identifier))
+          {
+            bool completed = false;
+            yield return ScenarioNetworkRelay.WaitForCompatibilityAuthorityNode(
+              _currentGraph.Identifier, stateBinding.Identifier, result => completed = result);
+            if (completed)
+              break;
+          }
           ExecuteEntityStateSignalBindingNode(stateBinding);
           break;
         case ScenarioSignalCounterNode signalCounter:
@@ -7177,6 +7186,15 @@ namespace MultiplayerInfrastructure.Scenario
           yield return ExecuteServerInternalSignalNode(internalSignal, context);
           break;
         case ScenarioEntityPresetSpawnNode entityPresetSpawn:
+          if (context.ReplicateEventsToPeers && !InstanceFinder.IsServerStarted
+              && ScenarioNetworkRelay.HasCompatibilitySession(_currentGraph?.Identifier))
+          {
+            bool completed = false;
+            yield return ScenarioNetworkRelay.WaitForCompatibilityAuthorityNode(
+              _currentGraph.Identifier, entityPresetSpawn.Identifier, result => completed = result);
+            if (completed)
+              break;
+          }
           ExecuteEntityPresetSpawnNode(entityPresetSpawn);
           break;
         case ScenarioEntityTagNode entityTag:
@@ -7203,6 +7221,15 @@ namespace MultiplayerInfrastructure.Scenario
           yield return ExecuteParallelNode(nestedParallel, context);
           break;
         case ScenarioPatientMedicalStatePresetNode patientPreset:
+          if (context.ReplicateEventsToPeers && !InstanceFinder.IsServerStarted
+              && ScenarioNetworkRelay.HasCompatibilitySession(_currentGraph?.Identifier))
+          {
+            bool completed = false;
+            yield return ScenarioNetworkRelay.WaitForCompatibilityAuthorityNode(
+              _currentGraph.Identifier, patientPreset.Identifier, result => completed = result);
+            if (completed)
+              break;
+          }
           // 수동 진입 준비 체인이 환자 의료 상태를 복원할 때 쓴다. 메인 경로와 같은 실행기를
           // 대기시켜야, 프리셋 적용과 RPC 전파가 끝난 뒤 다음 준비 노드로 넘어간다.
           yield return ExecutePatientMedicalStatePresetNode(patientPreset);
@@ -7226,6 +7253,41 @@ namespace MultiplayerInfrastructure.Scenario
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type in branch chain: {node.GetType().Name} (id='{node.Identifier}'). Skipping.");
           break;
+      }
+    }
+
+    /// <summary>
+    /// 호환 실행 경로에서 담당 클라이언트가 요청한 서버 권한 노드를 실행한다. 호출자는 요청자가
+    /// 실제 배정된 역할 분기 안의 노드를 지목했는지 검증한 뒤 이 메서드를 호출해야 한다.
+    /// </summary>
+    public IEnumerator ExecuteCompatibilityAuthorityNode(string graphIdentifier, string nodeIdentifier)
+    {
+      if (!InstanceFinder.IsServerStarted
+          || _executionMode == ExecutionMode.ServerAuthoritative
+          || _currentGraph == null
+          || !string.Equals(_currentGraph.Identifier, graphIdentifier, StringComparison.Ordinal)
+          || !_currentGraph.TryGetNode(nodeIdentifier, out var node))
+        yield break;
+
+      _globalAdvanceSuppressionDepth++;
+      try
+      {
+        switch (node)
+        {
+          case ScenarioEntityPresetSpawnNode spawn:
+            ExecuteEntityPresetSpawnNode(spawn);
+            break;
+          case ScenarioPatientMedicalStatePresetNode patientPreset:
+            yield return ExecutePatientMedicalStatePresetNode(patientPreset);
+            break;
+          case ScenarioEntityStateSignalBindingNode stateBinding:
+            ExecuteEntityStateSignalBindingNode(stateBinding);
+            break;
+        }
+      }
+      finally
+      {
+        _globalAdvanceSuppressionDepth--;
       }
     }
 

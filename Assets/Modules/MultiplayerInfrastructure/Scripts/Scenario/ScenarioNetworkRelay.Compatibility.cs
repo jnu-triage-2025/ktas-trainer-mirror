@@ -38,6 +38,8 @@ namespace MultiplayerInfrastructure.Scenario
     private static readonly Dictionary<string, int> CompatibilityAllocationVisits = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, int[]> ReceivedCompatibilityAllocations = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, bool> ReleasedCompatibilityBarriers = new(StringComparer.Ordinal);
+    private static readonly Dictionary<int, bool> CompletedCompatibilityAuthorityRequests = new();
+    private static int _nextCompatibilityAuthorityRequestId;
     private static readonly Dictionary<string, Dictionary<int, bool>> ReceivedCompatibilityCompletions = new(StringComparer.Ordinal);
     private static readonly IReadOnlyDictionary<int, bool> EmptyCompatibilityCompletions = new Dictionary<int, bool>();
 
@@ -73,6 +75,7 @@ namespace MultiplayerInfrastructure.Scenario
       ReceivedCompatibilityAllocations.Clear();
       ReleasedCompatibilityBarriers.Clear();
       ReceivedCompatibilityCompletions.Clear();
+      CompletedCompatibilityAuthorityRequests.Clear();
     }
 
     /// <summary>이 피어가 <paramref name="nodeIdentifier"/> 에 대해 다음에 보고할 합류 방문 번호.</summary>
@@ -142,6 +145,122 @@ namespace MultiplayerInfrastructure.Scenario
     public static bool HasCompatibilitySession(string graphIdentifier)
       => _instance != null && InstanceFinder.IsClientStarted
          && !string.IsNullOrEmpty(_localCompatibilitySession) && _localCompatibilityGraph == graphIdentifier;
+
+    /// <summary>
+    /// 호환 실행 경로의 역할 분기에서 서버 권한이 필요한 노드를 서버에 실행시키고 완료를 기다린다.
+    /// 담당 클라이언트가 다음 노드로 먼저 진행하면 스폰과 초기화 순서가 뒤바뀔 수 있으므로 TargetRpc
+    /// 확인을 받을 때까지 분기 체인을 정지한다.
+    /// </summary>
+    public static IEnumerator WaitForCompatibilityAuthorityNode(
+      string graphIdentifier, string nodeIdentifier, Action<bool> completed)
+    {
+      if (_instance == null || !InstanceFinder.IsClientStarted || InstanceFinder.IsServerStarted
+          || string.IsNullOrEmpty(_localCompatibilitySession)
+          || _localCompatibilityGraph != graphIdentifier
+          || string.IsNullOrWhiteSpace(nodeIdentifier))
+      {
+        completed?.Invoke(false);
+        yield break;
+      }
+
+      int requestId = ++_nextCompatibilityAuthorityRequestId;
+      string session = _localCompatibilitySession;
+      _instance.CmdExecuteCompatibilityAuthorityNode(session, graphIdentifier, nodeIdentifier, requestId);
+      double deadline = Time.realtimeSinceStartupAsDouble + 15d;
+      while (session == _localCompatibilitySession && InstanceFinder.IsClientStarted
+             && !CompletedCompatibilityAuthorityRequests.ContainsKey(requestId)
+             && Time.realtimeSinceStartupAsDouble < deadline)
+        yield return null;
+
+      bool succeeded = CompletedCompatibilityAuthorityRequests.TryGetValue(requestId, out bool result) && result;
+      CompletedCompatibilityAuthorityRequests.Remove(requestId);
+      completed?.Invoke(succeeded);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdExecuteCompatibilityAuthorityNode(
+      string session, string graphIdentifier, string nodeIdentifier, int requestId,
+      NetworkConnection sender = null)
+    {
+      if (requestId <= 0 || !IsCompatibilityParticipant(sender, session, graphIdentifier))
+        return;
+      if (!Registry.Registry.TryGetScenarioGraph(graphIdentifier, out ScenarioGraph graph, out _)
+          || !graph.TryGetNode(nodeIdentifier, out var node)
+          || ScenarioController.Instance == null
+          || node is not ScenarioEntityPresetSpawnNode
+             && node is not ScenarioPatientMedicalStatePresetNode
+             && node is not ScenarioEntityStateSignalBindingNode
+          || !IsAssignedCompatibilityBranchNode(graph, nodeIdentifier, sender.ClientId))
+      {
+        TargetCompatibilityAuthorityNodeCompleted(sender, session, requestId, false);
+        return;
+      }
+
+      StartCoroutine(ExecuteCompatibilityAuthorityNodeAndReply(
+        sender, session, graphIdentifier, nodeIdentifier, requestId));
+    }
+
+    private IEnumerator ExecuteCompatibilityAuthorityNodeAndReply(
+      NetworkConnection sender, string session, string graphIdentifier, string nodeIdentifier, int requestId)
+    {
+      yield return ScenarioController.Instance.ExecuteCompatibilityAuthorityNode(graphIdentifier, nodeIdentifier);
+      if (IsCompatibilityParticipant(sender, session, graphIdentifier))
+        TargetCompatibilityAuthorityNodeCompleted(sender, session, requestId, true);
+    }
+
+    [TargetRpc]
+    private void TargetCompatibilityAuthorityNodeCompleted(
+      NetworkConnection target, string session, int requestId, bool succeeded)
+    {
+      if (session == _localCompatibilitySession)
+        CompletedCompatibilityAuthorityRequests[requestId] = succeeded;
+    }
+
+    private bool IsAssignedCompatibilityBranchNode(ScenarioGraph graph, string nodeIdentifier, int clientId)
+    {
+      foreach (var pair in _compatibilityAllocations)
+      {
+        int separator = pair.Key.LastIndexOf('|');
+        string parallelIdentifier = separator >= 0 ? pair.Key.Substring(0, separator) : pair.Key;
+        if (!graph.TryGetNode(parallelIdentifier, out var rawParallel)
+            || rawParallel is not ScenarioParallelNode parallel)
+          continue;
+        for (int i = 0; i < pair.Value.Length && i < parallel.Branches.Count; i++)
+        {
+          if (pair.Value[i] == clientId
+              && IsReachableBeforeJoin(graph, parallel.Branches[i].Identifier,
+                parallel.NextIdentifier, nodeIdentifier))
+            return true;
+        }
+      }
+      return false;
+    }
+
+    private static bool IsReachableBeforeJoin(
+      ScenarioGraph graph, string startIdentifier, string joinIdentifier, string targetIdentifier)
+    {
+      var pending = new Queue<string>();
+      var visited = new HashSet<string>(StringComparer.Ordinal);
+      pending.Enqueue(startIdentifier);
+      while (pending.Count > 0)
+      {
+        string identifier = pending.Dequeue();
+        if (string.Equals(identifier, targetIdentifier, StringComparison.Ordinal))
+          return true;
+        if (string.IsNullOrWhiteSpace(identifier)
+            || string.Equals(identifier, joinIdentifier, StringComparison.Ordinal)
+            || !visited.Add(identifier)
+            || !graph.TryGetNode(identifier, out var node))
+          continue;
+        if (!string.IsNullOrWhiteSpace(node.NextIdentifier))
+          pending.Enqueue(node.NextIdentifier);
+        if (node is ScenarioChoiceNode choice && choice.Options != null)
+          foreach (var option in choice.Options)
+            if (!string.IsNullOrWhiteSpace(option?.NextNodeIdentifier))
+              pending.Enqueue(option.NextNodeIdentifier);
+      }
+      return false;
+    }
 
     /// <summary>호환 실행 중 원격 참가자가 선택한 자기 역할 태그를 서버에 적용하도록 요청한다.</summary>
     public static bool RequestCompatibilityPlayerTag(string graphIdentifier, string nodeIdentifier)
