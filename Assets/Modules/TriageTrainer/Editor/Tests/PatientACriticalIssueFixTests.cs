@@ -947,6 +947,11 @@ namespace TriageTrainer.Tests
       StringAssert.Contains("\"dialogueContent\": \"(환자의 목에 손을 대고 경동맥을 촉지한다.)\"", scenario);
       StringAssert.Contains("\"identifier\": \"D_PULSE_R1_RESULT\"", scenario);
       StringAssert.Contains("\"dialogueContent\": \"(아무것도 느껴지지 않는다.)\"", scenario);
+
+      var pulseReport = graph.Nodes["D024"] as ScenarioDialogueNode;
+      Assert.That(pulseReport, Is.Not.Null);
+      Assert.That(pulseReport.SpeakerName, Is.EqualTo("@t=[nurse_b, ???]"),
+        "첫 CPR 주기의 맥박 확인 결과 대화에는 Nurse_b 태그를 가진 플레이어의 이름이 표시되어야 합니다.");
     }
 
     [Test]

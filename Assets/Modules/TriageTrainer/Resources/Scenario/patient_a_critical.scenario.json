@@ -3095,7 +3095,7 @@
       "nextIdentifier": "Q018"
     },
     "D024": {
-      "speakerName": "@s",
+      "speakerName": "@t=[nurse_b, ???]",
       "dialogueContent": "맥박 없습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
