@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using MultiplayerInfrastructure.Audio;
 using MultiplayerInfrastructure.TTS;
+using MultiplayerInfrastructure.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -22,6 +23,11 @@ namespace MultiplayerInfrastructure.UI
     private DropdownField _inputDeviceField;
     private SliderInt _masterVolumeField;
     private Toggle _ttsDisabledField;
+    private Toggle _voiceEnabledField;
+    private DropdownField _voiceModeField;
+    private SliderInt _voiceInputVolumeField;
+    private SliderInt _voiceOutputVolumeField;
+    private SliderInt _voiceSensitivityField;
     private Label _outputRoutingNote;
     private bool _audioFormInitializing;
 
@@ -56,6 +62,11 @@ namespace MultiplayerInfrastructure.UI
       _inputDeviceField = null;
       _masterVolumeField = null;
       _ttsDisabledField = null;
+      _voiceEnabledField = null;
+      _voiceModeField = null;
+      _voiceInputVolumeField = null;
+      _voiceOutputVolumeField = null;
+      _voiceSensitivityField = null;
       _outputRoutingNote = null;
       _audioTabContent = null;
       _outputDevices.Clear();
@@ -102,6 +113,7 @@ namespace MultiplayerInfrastructure.UI
         BuildVolumeSection();
         BuildOutputSection(settings);
         BuildInputSection(settings);
+        BuildVoiceChatSection();
         BuildSpeechSection();
         BuildAudioActions();
       }
@@ -109,6 +121,50 @@ namespace MultiplayerInfrastructure.UI
       {
         _audioFormInitializing = false;
       }
+    }
+
+    private void BuildVoiceChatSection()
+    {
+      var section = AddAudioSection("근접 음성채팅",
+        "2m 안에서는 기본 음량으로 들리고, 이후 점차 작아져 15m 밖에서는 들리지 않습니다.");
+      _voiceEnabledField = new Toggle { value = VoiceChatSettings.Enabled };
+      _voiceEnabledField.RegisterValueChangedCallback(change => VoiceChatSettings.SetEnabled(change.newValue));
+      AddRow(section, "음성채팅 사용", _voiceEnabledField);
+      var modes = new List<string> { "음성 감지", "Push-to-Talk" };
+      _voiceModeField = new DropdownField(modes, (int)VoiceChatSettings.ActivationMode);
+      _voiceModeField.RegisterValueChangedCallback(_ => VoiceChatSettings.SetActivationMode((VoiceActivationMode)_voiceModeField.index));
+      AddRow(section, "발화 방식", _voiceModeField);
+      _voiceInputVolumeField = AddVoiceSlider(section, "송신 음량", VoiceChatSettings.InputVolume, VoiceChatSettings.SetInputVolume);
+      _voiceOutputVolumeField = AddVoiceSlider(section, "수신 음량", VoiceChatSettings.OutputVolume, VoiceChatSettings.SetOutputVolume);
+      _voiceSensitivityField = AddVoiceSlider(section, "음성 감지 민감도", VoiceChatSettings.Sensitivity, VoiceChatSettings.SetSensitivity);
+      var test = new Button(() =>
+      {
+        VoiceChatSettings.StartMicrophoneTest();
+        SetStatusText("5초 동안 내 목소리를 재생합니다. 울림을 막으려면 헤드폰을 사용해 주세요.");
+      }) { text = "내 목소리 테스트" };
+      test.SetEnabled(MultiplayerInfrastructure.Player.PlayerController.IsMicrophoneTestAvailable);
+      test.AddToClassList("settings__secondary-btn");
+      section.Add(test);
+      if (!MultiplayerInfrastructure.Player.PlayerController.IsMicrophoneTestAvailable)
+        AddAudioNote(section, "내 목소리 테스트는 LAN 세션에 참가한 뒤 사용할 수 있습니다.");
+      AddAudioNote(section, "Push-to-Talk 키는 키 설정에서 바꿀 수 있으며 기본값은 V입니다.");
+      foreach (var pair in UserDescriptorService.GetAll())
+      {
+        var descriptor = pair.Value;
+        if (descriptor == null) continue;
+        var mute = new Toggle { value = VoiceChatSettings.IsPlayerMuted(descriptor.Identifier) };
+        string identifier = descriptor.Identifier;
+        mute.RegisterValueChangedCallback(change => VoiceChatSettings.SetPlayerMuted(identifier, change.newValue));
+        AddRow(section, $"{descriptor.DisplayName} 음소거", mute);
+      }
+    }
+
+    private SliderInt AddVoiceSlider(VisualElement section, string label, float value, System.Action<float> changed)
+    {
+      var slider = new SliderInt(0, 100) { value = Mathf.RoundToInt(value * 100f), showInputField = true };
+      slider.RegisterValueChangedCallback(change => { if (!_audioFormInitializing) changed(change.newValue / 100f); });
+      AddRow(section, label, slider);
+      return slider;
     }
 
     private void BuildVolumeSection()

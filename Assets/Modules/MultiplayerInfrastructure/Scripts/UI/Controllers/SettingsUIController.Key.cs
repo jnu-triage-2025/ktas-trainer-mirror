@@ -1,6 +1,7 @@
 ﻿using Input = MultiplayerInfrastructure.Automation.PlayerInput;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.Audio;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -29,6 +30,8 @@ namespace MultiplayerInfrastructure.UI
       new KeyBindingEntry("camera_distance_modifier", "POV 조정 수정자", KeyCode.LeftAlt),
       new KeyBindingEntry(DefaultsKeyConfiguration.ShowPlayerListActionId, "접속자 목록 보기",
         DefaultsKeyConfiguration.ShowPlayerList),
+      new KeyBindingEntry(VoiceChatSettings.PushToTalkActionId, "음성채팅 Push-to-Talk",
+        VoiceChatSettings.DefaultPushToTalkKey),
     };
 
     private List<KeyBindingEntry> _defaultBindings;

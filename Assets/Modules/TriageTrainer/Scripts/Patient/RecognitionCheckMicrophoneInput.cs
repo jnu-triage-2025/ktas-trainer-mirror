@@ -171,6 +171,8 @@ namespace TriageTrainer.Entity
     /// </summary>
     private void EnsureRecordingCore()
     {
+      if (MultiplayerInfrastructure.Player.PlayerController.TryGetLocalVoiceInputLevel(out _))
+        return;
       if (_clip != null || _targets.Count == 0
           || !_permissionRequestCompleted
           || _recordingFailed
@@ -210,6 +212,11 @@ namespace TriageTrainer.Entity
     {
       if (_targets.Count == 0)
         return;
+      if (MultiplayerInfrastructure.Player.PlayerController.TryGetLocalVoiceInputLevel(out float sharedRms))
+      {
+        ProcessRms(sharedRms);
+        return;
+      }
       if (_clip == null)
       {
         EnsureRecording();
@@ -236,6 +243,11 @@ namespace TriageTrainer.Entity
       for (int i = 0; i < _samples.Length; i++)
         sum += _samples[i] * _samples[i];
       float rms = Mathf.Sqrt(sum / _samples.Length);
+      ProcessRms(rms);
+    }
+
+    private void ProcessRms(float rms)
+    {
       MicrophoneCaptureIndicatorUIController.SetGaugeLevel(rms / GaugeFullScaleVolume);
       _aboveThresholdSeconds = rms >= VolumeThreshold
         ? _aboveThresholdSeconds + Time.unscaledDeltaTime

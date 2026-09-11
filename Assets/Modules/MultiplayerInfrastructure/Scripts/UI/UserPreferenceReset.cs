@@ -36,6 +36,7 @@ namespace MultiplayerInfrastructure.UI
       AudioVolumeSettings.ClearStoredValues();
       AudioVolumePreferenceService.ClearStoredValue();
       AudioDevicePreferenceService.ClearStoredValue();
+      VoiceChatSettings.ClearStoredValues();
       TexturePerformanceService.ClearStoredValue();
       UIScalePreferenceService.ClearStoredValue();
       PlayerDisplayNamePreference.Clear();

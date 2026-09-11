@@ -88,6 +88,7 @@ namespace MultiplayerInfrastructure.Player
       }
 
       PlayerGamemodeService.RegisterPlayer(this);
+      OnStartServer_VoiceChat();
       UserDescriptorService.Register(Owner.ClientId, descriptor);
       RegisterPlayerEntity();
       OnStartServer_PlayerModel();
@@ -113,6 +114,7 @@ namespace MultiplayerInfrastructure.Player
         _worldItemTransformSyncAuthority = null;
 
       PlayerGamemodeService.UnregisterPlayer(this);
+      OnStopServer_VoiceChat();
       OnStopServer_PlayerModel();
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
       PlayerTagService.ClearTags(_userIdentifier.Value);

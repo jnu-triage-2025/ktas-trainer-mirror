@@ -52,6 +52,7 @@ namespace MultiplayerInfrastructure.Player
       if (!IsOwner)
         return;
       Update_Input();
+      Update_VoiceChat();
       Update_Movement();
       Update_ReposableCarry();
       Update_Animation();
@@ -74,6 +75,7 @@ namespace MultiplayerInfrastructure.Player
       // 뒤따르는 소유자 전용 바인딩이 통째로 건너뛰어져, UI 오버레이가 열려도 커서 잠금이 풀리지 않고
       // 입력 컨트롤러 참조도 비어 있는 채로 플레이가 시작된다(UI가 보이는데 아무것도 클릭되지 않는 상태).
       RunClientLifecycleStep(OnStartClient_AnyPeer, nameof(OnStartClient_AnyPeer));   // 모든 클라이언트 — owner 여부 무관
+      RunClientLifecycleStep(OnStartClient_VoiceChat, nameof(OnStartClient_VoiceChat));
       RunClientLifecycleStep(() => MppmLiteMode.StripVisuals(gameObject), nameof(MppmLiteMode.StripVisuals));
       if (!IsOwner)
         return;
@@ -103,6 +105,7 @@ namespace MultiplayerInfrastructure.Player
       // 종료도 같은 이유로 격리한다. 오버레이 동기화 해제가 실패하면 정적 스택 구독이 남아
       // 파괴된 컨트롤러가 다음 세션의 커서/이동 상태를 계속 건드린다.
       RunClientLifecycleStep(OnStopClient_UIOverlaySync, nameof(OnStopClient_UIOverlaySync));
+      RunClientLifecycleStep(OnStopClient_VoiceChat, nameof(OnStopClient_VoiceChat));
       RunClientLifecycleStep(OnStopClient_Dialogue, nameof(OnStopClient_Dialogue));
       RunClientLifecycleStep(OnStopClient_AnyPeer, nameof(OnStopClient_AnyPeer));    // 모든 클라이언트 — owner 여부 무관
       base.OnStopClient();
