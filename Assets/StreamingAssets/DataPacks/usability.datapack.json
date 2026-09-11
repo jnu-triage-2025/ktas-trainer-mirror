@@ -21,6 +21,9 @@
     { "name": "opall", "target": "/permission user set @a operator" },
     { "name": "s1", "target": "/scenario execute @a disaster_intro" },
     { "name": "s2", "target": "/scenario execute @a patient_a_critical" },
-    { "name": "s3", "target": "/scenario execute @a patient_b_c_ct" }
+    { "name": "s3", "target": "/scenario execute @a patient_b_c_ct" },
+    { "name": "es", "target": "/tp ~1 ~ ~" },
+    { "name": "escape", "target": "/tp ~1 ~ ~" },
+    { "name": "탈출", "target": "/tp ~1 ~ ~" }
   ]
 }
