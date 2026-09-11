@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MultiplayerInfrastructure.Quest;
@@ -46,6 +47,13 @@ namespace TriageTrainer.Tests
       var nurseCDialogue = (ScenarioDialogueNode)graph.Nodes[nurseC.Identifier];
       Assert.That(nurseCDialogue.DialogueContent, Is.EqualTo(nurseBDialogue.DialogueContent));
       Assert.That(nurseCDialogue.DialogueContentTTSPassing, Is.EqualTo(nurseBDialogue.DialogueContentTTSPassing));
+
+      var requiresCompleteRoleSelection = typeof(ScenarioNetworkRelay).GetMethod(
+        "RequiresCompleteCompatibilityRoleSelection",
+        BindingFlags.Static | BindingFlags.NonPublic);
+      Assert.That(requiresCompleteRoleSelection, Is.Not.Null);
+      Assert.That(requiresCompleteRoleSelection.Invoke(null, new object[] { graph, parallel }), Is.True,
+        "역할 선택이 늦게 끝나도 nurse_c를 부재 역할로 확정하여 플레이 흐름에서 제외하면 안 됩니다.");
     }
 
     [Test]

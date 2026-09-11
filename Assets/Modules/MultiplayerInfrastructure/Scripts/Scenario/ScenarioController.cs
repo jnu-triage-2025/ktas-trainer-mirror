@@ -6021,8 +6021,12 @@ namespace MultiplayerInfrastructure.Scenario
         if (sharedRoleAllocation)
         {
           int[] owners = null;
+          double allocationTimeout = ScenarioNetworkRelay.RequiresCompleteCompatibilityRoleSelection(
+            _currentGraph, node)
+            ? double.PositiveInfinity
+            : RecoveryWaitSeconds;
           yield return ScenarioNetworkRelay.WaitForCompatibilityAllocation(
-            _currentGraph.Identifier, node.Identifier, result => owners = result, RecoveryWaitSeconds);
+            _currentGraph.Identifier, node.Identifier, result => owners = result, allocationTimeout);
           if (_currentGraph == null)
             yield break;
           if (owners == null || owners.Length != node.Branches.Count)

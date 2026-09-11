@@ -150,6 +150,45 @@ namespace MultiplayerInfrastructure.Scenario
          && !string.IsNullOrEmpty(_localCompatibilitySession) && _localCompatibilityGraph == graphIdentifier;
 
     /// <summary>
+    /// 병렬 노드가 요구하는 역할을 현재 그래프의 선택지에서 직접 배정하는지 확인한다.
+    /// 이런 그래프는 모든 참여자가 역할을 선택한 뒤에만 배정표를 확정해야 한다. 등록 유예가 지났다는
+    /// 이유로 늦게 선택한 역할을 부재 처리하면, 이후 태그가 도착해도 캐시된 배정표에서 계속 제외된다.
+    /// </summary>
+    internal static bool RequiresCompleteCompatibilityRoleSelection(
+      ScenarioGraph graph, ScenarioParallelNode parallel)
+    {
+      if (graph?.Nodes == null || parallel?.Branches == null)
+        return false;
+
+      var requiredRoles = parallel.Branches
+        .Where(branch => branch?.RequiredPlayerTags != null)
+        .SelectMany(branch => branch.RequiredPlayerTags)
+        .Where(role => !string.IsNullOrWhiteSpace(role))
+        .Select(role => role.Trim())
+        .Distinct(StringComparer.Ordinal)
+        .ToArray();
+      if (requiredRoles.Length == 0)
+        return false;
+
+      var selectableRoles = graph.Nodes.Values
+        .OfType<ScenarioChoiceNode>()
+        .Where(choice => choice.Options != null)
+        .SelectMany(choice => choice.Options)
+        .Select(option => option?.NextNodeIdentifier)
+        .Where(target => !string.IsNullOrWhiteSpace(target)
+                         && graph.TryGetNode(target, out var node)
+                         && node is ScenarioPlayerTagNode tagNode
+                         && tagNode.Operation == ScenarioPlayerTagOperationType.Add
+                         && tagNode.Scope == ScenarioPlayerTagScope.Current)
+        .Select(target => ((ScenarioPlayerTagNode)graph.Nodes[target]).Tag)
+        .Where(role => !string.IsNullOrWhiteSpace(role))
+        .Select(role => role.Trim())
+        .ToHashSet(StringComparer.Ordinal);
+
+      return requiredRoles.All(selectableRoles.Contains);
+    }
+
+    /// <summary>
     /// 호환 실행 경로의 역할 분기에서 서버 권한이 필요한 노드를 서버에 실행시키고 완료를 기다린다.
     /// 담당 클라이언트가 다음 노드로 먼저 진행하면 스폰과 초기화 순서가 뒤바뀔 수 있으므로 TargetRpc
     /// 확인을 받을 때까지 분기 체인을 정지한다.
@@ -442,10 +481,11 @@ namespace MultiplayerInfrastructure.Scenario
           _compatibilityAllocationRequestedAt[key] = now;
         }
         bool graceElapsed = now - requestedAt >= CompatibilityAllocationGraceSeconds;
+        bool requiresCompleteRoleSelection = RequiresCompleteCompatibilityRoleSelection(graph, parallel);
         if (!controller.TryAllocateCompatibilityRoles(graph, parallel, connected, out owners,
-              requireEveryParticipantRegistered: !graceElapsed))
+              requireEveryParticipantRegistered: requiresCompleteRoleSelection || !graceElapsed))
         {
-          if (!graceElapsed)
+          if (requiresCompleteRoleSelection || !graceElapsed)
             return; // Registration is still in flight. The client retries; no branch is discarded.
           // 유예가 지나도 로스터를 만들 수 없으면(중복 역할 등) 어느 분기도 배정하지 않고 응답한다.
           // 응답이 없으면 네 명이 모두 이 노드에서 멈추므로, 분기를 건너뛰는 쪽이 낫다.
@@ -454,7 +494,7 @@ namespace MultiplayerInfrastructure.Scenario
             + $"{CompatibilityAllocationGraceSeconds:0}s after the first request; skipping every branch.");
           owners = Enumerable.Repeat(-1, parallel.Branches?.Count ?? 0).ToArray();
         }
-        else if (graceElapsed)
+        else if (graceElapsed && !requiresCompleteRoleSelection)
         {
           Debug.LogWarning(
             $"[ScenarioNetworkRelay] Compatibility role allocation for '{nodeIdentifier}' proceeded without "
