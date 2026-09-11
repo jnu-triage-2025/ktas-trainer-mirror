@@ -20,8 +20,13 @@
     "triage_lead",
     "vital_team"
   ],
-  "activeRoleTags": [],
-  "skipAbsentRoleBranches": null,
+  "activeRoleTags": [
+    "nurse_a",
+    "nurse_b",
+    "nurse_c",
+    "nurse_d"
+  ],
+  "skipAbsentRoleBranches": true,
   "checklistItemSetsByPlayerTag": {
     "nurse_a": [
       {
