@@ -79,6 +79,53 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       }
     }
 
+    /// <summary>
+    /// 병렬 브랜치 실행기는 전역 CurrentNode 를 옮기지 않으므로, 브랜치 안의 InvokeEvent 핸들러가
+    /// 자기를 부른 노드로 동작을 갈라야 할 때(예: 환자 A CPR 라운드 판정)는 CurrentInvokeEventNode 를 써야 한다.
+    /// </summary>
+    [Test]
+    public void InvokeEventHandlerCanReadTheNodeThatInvokedItWhileRunning()
+    {
+      const string eventIdentifier = "test.invoke-event.current-node";
+      var gameObject = new GameObject("scenario-invoke-event-current-node-test");
+      var controller = gameObject.AddComponent<ScenarioController>();
+      var executeInvokeEvent = typeof(ScenarioController).GetMethod(
+        "ExecuteInvokeEventNode",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      string observedIdentifier = null;
+      ScenarioEventIdentifierRegistry.Register(eventIdentifier,
+        () => Probe(() => observedIdentifier = controller.CurrentInvokeEventNode?.Identifier));
+
+      try
+      {
+        Assert.That(executeInvokeEvent, Is.Not.Null);
+        Assert.That(controller.CurrentInvokeEventNode, Is.Null);
+
+        var node = new ScenarioInvokeEventNode
+        {
+          Identifier = "E033",
+          EventIdentifier = eventIdentifier,
+          MoveNextBehavior = ScenarioInvokeEventMoveNextBehavior.WaitUntilDone
+        };
+        var routine = (IEnumerator)executeInvokeEvent.Invoke(controller, new object[] { node });
+
+        Assert.That(routine.MoveNext(), Is.True);
+        var handlerRoutine = routine.Current as IEnumerator;
+        Assert.That(handlerRoutine, Is.Not.Null);
+        Assert.That(handlerRoutine.MoveNext(), Is.True);
+
+        Assert.That(observedIdentifier, Is.EqualTo("E033"),
+          "핸들러가 실행되는 동안에는 자기를 부른 InvokeEvent 노드를 조회할 수 있어야 합니다.");
+        Assert.That(controller.CurrentInvokeEventNode, Is.Null,
+          "핸들러가 yield 한 뒤에는 실행 중인 InvokeEvent 노드가 남아 있으면 안 됩니다.");
+      }
+      finally
+      {
+        ScenarioEventIdentifierRegistry.Unregister(eventIdentifier);
+        UnityEngine.Object.DestroyImmediate(gameObject);
+      }
+    }
+
     [Test]
     public void ParallelBranchWaitBlocksExternalGlobalAdvance()
     {

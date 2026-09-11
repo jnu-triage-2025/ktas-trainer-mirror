@@ -287,6 +287,16 @@ namespace MultiplayerInfrastructure.Scenario
     public bool HasActiveScenario => _currentGraph != null;
     public State CurrentState => _state;
     public IScenarioNode CurrentNode => _currentNode;
+
+    private ScenarioInvokeEventNode _executingInvokeEventNode;
+
+    /// <summary>
+    /// 지금 핸들러 코루틴이 진행 중인 InvokeEvent 노드. 핸들러 루틴의 MoveNext 가 실행되는 동안에만
+    /// 설정되고 그 밖에서는 null 이다. 병렬 브랜치 실행기(<see cref="RunBranchChain"/>)는 전역
+    /// <see cref="CurrentNode"/> 를 옮기지 않아 그 값이 병렬 노드에 머물므로, 브랜치 안의 InvokeEvent
+    /// 핸들러가 자기를 부른 노드로 동작을 가를 때는 <see cref="CurrentNode"/> 대신 이 값을 써야 한다.
+    /// </summary>
+    public IScenarioNode CurrentInvokeEventNode => _executingInvokeEventNode;
     public ScenarioGraph CurrentGraph => _currentGraph;
 
     /// <summary>
@@ -5429,6 +5439,10 @@ namespace MultiplayerInfrastructure.Scenario
       {
         bool hasNext;
         object yielded = null;
+        // 핸들러가 자기를 부른 노드를 조회할 수 있도록 MoveNext 동안만 실행 중인 노드를 노출한다.
+        // 중첩 루틴은 같은 노드를 다시 설정하고, MoveNext 가 끝나면 바깥 값으로 되돌린다.
+        ScenarioInvokeEventNode previousInvokeEventNode = _executingInvokeEventNode;
+        _executingInvokeEventNode = node;
         try
         {
           hasNext = routine.MoveNext();
@@ -5440,6 +5454,10 @@ namespace MultiplayerInfrastructure.Scenario
           Debug.LogException(ex, this);
           ReportInvokeEventFailure(node, "handler threw while running");
           yield break;
+        }
+        finally
+        {
+          _executingInvokeEventNode = previousInvokeEventNode;
         }
 
         if (!hasNext)

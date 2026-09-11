@@ -27,8 +27,9 @@ namespace TriageTrainer.Scenario
       SetAnimatorsBool(_chestCompressionAnimators, _chestCompressionBoolName, true);
       PlayPatientAChestCompressionAnimation();
 
-      // E028/E033 은 역할 브랜치 밖의 InvokeEvent 노드라서 그래프를 순회하는 권위 피어에서만
-      // 실행된다. 통지하지 않으면 가슴압박에 상호작용한 피어 외에는 CPR 연출을 볼 수 없다.
+      // E028/E033 은 병렬 노드(P005/P006)의 역할 브랜치 안에 있는 InvokeEvent 노드로, 서버 권위
+      // 실행에서는 그래프를 순회하는 권위 피어에서만 실행된다. 통지하지 않으면 가슴압박에
+      // 상호작용한 피어 외에는 CPR 연출을 볼 수 없다.
       // 라운드마다 가슴압박 역할이 다른데 표시 피어에는 이 노드가 CurrentNode 로 남지 않으므로,
       // 라운드 판정을 표시 피어에 맡기지 않고 라운드별 연출 이벤트로 구분해서 통지한다.
       ScenarioNetworkRelay.InvokePresentationEventAuthoritative(

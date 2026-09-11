@@ -13,6 +13,10 @@ namespace TriageTrainer.Scenario
 
     private IEnumerator Event_PatientCrashUi()
     {
+      // 심정지 발생 시점에 CPR 주기 종료 횟수를 처음으로 되돌린다. 같은 세션에서 시나리오를 다시
+      // 시작해도 이전 회차의 횟수가 2주기 판정에 남지 않게 한다.
+      ResetPatientACprCycleCount();
+
       var patient = ResolvePatientAController();
       if (patient != null)
       {

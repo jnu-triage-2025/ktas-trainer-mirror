@@ -74,6 +74,8 @@ namespace TriageTrainer.Scenario
     private IEnumerator EnsurePatientAForManualEntry()
     {
       _manualPatientASetupSucceeded = false;
+      // 환자 스폰에 실패해 준비가 중단되더라도 이전 회차의 CPR 주기 종료 횟수는 남기지 않는다.
+      ResetPatientACprCycleCount();
       ResolveRuntimeReferencesIfNeeded();
       if (_patientAObject == null)
       {

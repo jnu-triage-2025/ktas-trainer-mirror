@@ -568,6 +568,55 @@ namespace TriageTrainer.Tests
         "상호작용한 피어는 로컬 시작 직후 같은 연출 통지를 받으므로, 재시작으로 클립이 되감기면 안 됩니다.");
     }
 
+    /// <summary>
+    /// E028/E033 은 병렬 노드(P005/P006)의 역할 브랜치 안에서 실행된다. 브랜치 실행기는 전역
+    /// CurrentNode 를 옮기지 않으므로, CurrentNode 로 라운드를 판정하면 2주기(E033)에서도 병렬 노드가
+    /// 보여 기본값인 nurse_b 로 오판된다. 그러면 2주기에 nurse_b 가 다시 가슴압박 자세를 취하고
+    /// nurse_a 에게는 연출이 통지되지 않는다.
+    /// </summary>
+    [Test]
+    public void CprRoundIsResolvedFromTheInvokingNodeInsteadOfTheGlobalCursor()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string animationSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientACprAnimations.cs"));
+
+      int resolveIndex = animationSource.IndexOf(
+        "private string ResolvePatientACprNurseTag()", StringComparison.Ordinal);
+      Assert.That(resolveIndex, Is.GreaterThanOrEqualTo(0),
+        "라운드 판정은 주기 종료 횟수를 읽어야 하므로 인스턴스 메서드여야 합니다.");
+      int resolveEndIndex = animationSource.IndexOf(
+        "ResolvePatientACprRoundPresentationEventIdentifier()", resolveIndex, StringComparison.Ordinal);
+      Assert.That(resolveEndIndex, Is.GreaterThan(resolveIndex));
+      string resolveSource = animationSource.Substring(resolveIndex, resolveEndIndex - resolveIndex);
+
+      StringAssert.Contains("CurrentInvokeEventNode", resolveSource,
+        "라운드는 실행 중인 InvokeEvent 노드(E028/E033)로 판정해야 합니다. 병렬 브랜치 안에서는 CurrentNode 가 병렬 노드에 머뭅니다.");
+      Assert.That(resolveSource, Does.Not.Contain("CurrentNode?.Identifier"),
+        "전역 CurrentNode 는 브랜치 안의 InvokeEvent 노드를 가리키지 않으므로 라운드 판정에 쓰면 안 됩니다.");
+      Assert.That(resolveSource, Does.Not.Contain("_ => PatientACprRoundOneNurseTag"),
+        "판정 불가를 무조건 1주기(nurse_b)로 처리하면 2주기에 nurse_b 가 다시 가슴압박을 수행합니다.");
+      StringAssert.Contains("_patientACprCompletedCycleCount", resolveSource,
+        "호출 노드를 알 수 없는 경로(다른 피어의 역할 브랜치가 복제한 이벤트)는 이 피어가 본 주기 종료 횟수로 라운드를 갈라야 합니다.");
+
+      int completeIndex = animationSource.IndexOf(
+        "private void CompletePatientACprCycle()", StringComparison.Ordinal);
+      Assert.That(completeIndex, Is.GreaterThanOrEqualTo(0));
+      int countIncrementIndex = animationSource.IndexOf(
+        "_patientACprCompletedCycleCount++;", completeIndex, StringComparison.Ordinal);
+      Assert.That(countIncrementIndex, Is.GreaterThan(completeIndex),
+        "주기 종료(stop_ambu_and_comp)마다 종료 횟수를 올려야 보조 판정이 2주기를 구분합니다.");
+
+      string manualEntrySource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.prepare_patient_a_manual_entry.cs"));
+      string crashSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.patient_crash_ui.cs"));
+      StringAssert.Contains("ResetPatientACprCycleCount();", manualEntrySource,
+        "수동 진입 준비는 이전 회차의 주기 종료 횟수를 지워야 합니다.");
+      StringAssert.Contains("ResetPatientACprCycleCount();", crashSource,
+        "심정지 발생 시점에 이전 회차의 주기 종료 횟수를 지워야 합니다.");
+    }
+
     [Test]
     public void CprStopEndsPatientPresentationAndRestoresOffsetTogether()
     {

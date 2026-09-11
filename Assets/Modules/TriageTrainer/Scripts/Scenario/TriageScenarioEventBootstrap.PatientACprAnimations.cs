@@ -145,27 +145,49 @@ namespace TriageTrainer.Scenario
     }
 
     /// <summary>
-    /// 그래프를 순회하는 피어에서 현재 CPR 라운드의 가슴압박 역할 태그를 판정한다.
-    /// 표시 전용 피어에는 InvokeEvent 노드가 <c>CurrentNode</c> 로 남지 않으므로 이 판정을 쓸 수 없다.
+    /// 이 피어가 지금까지 본 CPR 주기 종료(<c>stop_ambu_and_comp</c>, E031/E035) 횟수.
+    /// 가슴압박 시작 이벤트가 그래프 순회 밖에서 실행되어(다른 피어의 역할 브랜치가 복제한 이벤트)
+    /// 호출 노드로 라운드를 판정할 수 없을 때만 보조 판정에 쓴다. 주기 종료는 메인 체인 이벤트라서
+    /// 모든 피어가 같은 횟수를 본다.
     /// </summary>
-    private static string ResolvePatientACprNurseTag()
+    private int _patientACprCompletedCycleCount;
+
+    /// <summary>
+    /// 현재 CPR 라운드의 가슴압박 역할 태그를 판정한다.
+    /// E028/E033 은 병렬 노드(P005/P006)의 역할 브랜치 안에서 실행되는 InvokeEvent 노드다. 브랜치
+    /// 실행기는 전역 <c>CurrentNode</c> 를 옮기지 않아 그 값이 병렬 노드에 머물므로, 실행 중인
+    /// InvokeEvent 노드(<c>CurrentInvokeEventNode</c>)로 판정해야 2주기(E033)가 1주기로 오판되지 않는다.
+    /// 호출 노드를 알 수 없는 경로(연출 전용 실행)에서는 이 피어가 본 주기 종료 횟수로 라운드를 가른다.
+    /// </summary>
+    private string ResolvePatientACprNurseTag()
     {
-      string currentNodeIdentifier = ScenarioController.Instance?.CurrentNode?.Identifier;
-      return currentNodeIdentifier switch
+      switch (ScenarioController.Instance?.CurrentInvokeEventNode?.Identifier)
       {
-        PatientACprRoundTwoNodeIdentifier => PatientACprRoundTwoNurseTag,
-        PatientACprRoundOneNodeIdentifier => PatientACprRoundOneNurseTag,
-        _ => PatientACprRoundOneNurseTag
-      };
+        case PatientACprRoundTwoNodeIdentifier:
+          return PatientACprRoundTwoNurseTag;
+        case PatientACprRoundOneNodeIdentifier:
+          return PatientACprRoundOneNurseTag;
+      }
+
+      return _patientACprCompletedCycleCount > 0
+        ? PatientACprRoundTwoNurseTag
+        : PatientACprRoundOneNurseTag;
     }
 
     /// <summary>
     /// 권위 피어가 판정한 라운드를 표시 피어에 전달하기 위한 연출 이벤트 식별자를 고른다.
     /// </summary>
-    private static string ResolvePatientACprRoundPresentationEventIdentifier()
+    private string ResolvePatientACprRoundPresentationEventIdentifier()
       => ResolvePatientACprNurseTag() == PatientACprRoundTwoNurseTag
         ? PatientACprRoundTwoPresentationEventIdentifier
         : PatientACprRoundOnePresentationEventIdentifier;
+
+    /// <summary>
+    /// CPR 주기 종료 횟수를 처음으로 되돌린다. 심정지 발생(<c>patient_crash_ui</c>)과 수동 진입 준비가
+    /// 호출한다. 같은 세션에서 앞 단계로 다시 진입해도 이전 회차의 횟수가 라운드 판정에 남지 않게 한다.
+    /// </summary>
+    private void ResetPatientACprCycleCount()
+      => _patientACprCompletedCycleCount = 0;
 
     /// <summary>
     /// 레지스트리 항목이 수행되었을 때. 환자 A 의 가슴압박 액션(1주기 <c>click_to_start_comp</c>, 2주기 <c>interact_chest</c>)이면
@@ -508,6 +530,7 @@ namespace TriageTrainer.Scenario
       // stop_ambu_and_comp(E031/E035)는 수행자뿐 아니라 환자의 CPR 연출도 종료한다.
       // 그래프 종료와 모델 Y 오프셋 복원을 반드시 한 경로에서 함께 수행해야 한다.
       StopPatientACprAnimations();
+      _patientACprCompletedCycleCount++;
     }
 
     private Animator ResolveAnimator(GameObject target)
