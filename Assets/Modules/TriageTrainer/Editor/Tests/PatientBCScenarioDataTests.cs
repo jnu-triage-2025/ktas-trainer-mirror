@@ -1462,6 +1462,45 @@ namespace TriageTrainer.Tests
       }
     }
 
+    [Test]
+    public void OxyflowmeterAttachmentBindingRearmsAfterSignalClear()
+    {
+      const string signal = "oxyflowmeter_attached_patient_b";
+      var patientObject = new GameObject("patient_b");
+      var flowmeterObject = new GameObject("oxyflowmeter");
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier("patient_b");
+        var flowmeter = flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+
+        Assert.That(ScenarioEntityStateSignalBindings.Register(
+          "test_b_oxy_raw",
+          patient,
+          PatientController.StateEventOxyflowmeterAttachmentChanged,
+          "Attached",
+          signal,
+          consumeOnce: true), Is.True);
+
+        InvokePrivate(patient, "ReportOxyflowmeterAttachment", flowmeter, true);
+        Assert.That(ScenarioInteractionSignals.IsRaised(signal), Is.True);
+
+        ScenarioInteractionSignals.Clear(signal);
+        InvokePrivate(patient, "ReportOxyflowmeterAttachment", flowmeter, false);
+        InvokePrivate(patient, "ReportOxyflowmeterAttachment", flowmeter, true);
+
+        Assert.That(ScenarioInteractionSignals.IsRaised(signal), Is.True,
+          "신호를 지운 뒤에는 consumeOnce 바인딩이 다시 활성화되어 재설치도 처리해야 합니다.");
+      }
+      finally
+      {
+        ScenarioEntityStateSignalBindings.ClearAll();
+        ScenarioInteractionSignals.Clear(signal);
+        Object.DestroyImmediate(flowmeterObject);
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
     [TestCase("patient_b")]
     [TestCase("patient_c")]
     public void PatientBCBleedingStagesRaisePatientSpecificQuestSignals(string patientIdentifier)
