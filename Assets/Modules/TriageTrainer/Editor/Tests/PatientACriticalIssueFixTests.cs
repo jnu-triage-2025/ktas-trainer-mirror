@@ -1126,6 +1126,18 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PatientALevel1CLineConnectionAllowsTheAssignedNurseC()
+    {
+      var roleField = typeof(Level1RapidInfuserController).GetField(
+        "CLineOperatorRoleTag",
+        BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(roleField, Is.Not.Null);
+      Assert.That(roleField.GetRawConstantValue(), Is.EqualTo("nurse_c"),
+        "Level 1 C-line 서버 검증은 대량 수액 공급 퀘스트를 수행하는 nurse_c를 허용해야 합니다.");
+    }
+
+    [Test]
     public void PatientATriageReturnGateIsScopedToTheNurseAHolder()
     {
       string scenarioPath = Path.Combine(Application.dataPath,
