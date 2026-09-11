@@ -37,6 +37,15 @@ namespace MultiplayerInfrastructure.Scenario
     private static readonly Dictionary<string, int> CompatibilityAllocationVisits = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, int[]> ReceivedCompatibilityAllocations = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, bool> ReleasedCompatibilityBarriers = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, Dictionary<int, bool>> ReceivedCompatibilityCompletions = new(StringComparer.Ordinal);
+    private static readonly IReadOnlyDictionary<int, bool> EmptyCompatibilityCompletions = new Dictionary<int, bool>();
+
+    /// <summary>
+    /// 서버 합류 배리어가 어떤 참여자의 완료(또는 이탈)를 확인했을 때 모든 피어에서 발생한다. 인자는 병렬
+    /// 노드 식별자, 그 노드의 합류 방문 번호, 클라이언트 식별자, 이탈 여부다. 호환 실행 경로의 피어는 자기
+    /// 분기만 실행하므로 다른 참여자의 완료 상황은 이 알림으로만 알 수 있다.
+    /// </summary>
+    public static event Action<string, int, int, bool> CompatibilityParticipantCompleted;
 
     public static string BeginCompatibilitySession(string graphIdentifier, IEnumerable<NetworkConnection> participants)
     {
@@ -62,7 +71,24 @@ namespace MultiplayerInfrastructure.Scenario
       CompatibilityAllocationVisits.Clear();
       ReceivedCompatibilityAllocations.Clear();
       ReleasedCompatibilityBarriers.Clear();
+      ReceivedCompatibilityCompletions.Clear();
     }
+
+    /// <summary>이 피어가 <paramref name="nodeIdentifier"/> 에 대해 다음에 보고할 합류 방문 번호.</summary>
+    public static int PeekCompatibilityJoinVisit(string nodeIdentifier)
+    {
+      CompatibilityVisits.TryGetValue(nodeIdentifier ?? string.Empty, out int visit);
+      return visit + 1;
+    }
+
+    /// <summary>
+    /// 해당 노드 방문에 대해 서버가 이미 알린 참여자별 완료 상황(값은 이탈 여부). 집계기가 알림보다 늦게
+    /// 만들어진 피어가 놓친 완료를 되짚는 용도다. 없으면 빈 사전을 돌려준다.
+    /// </summary>
+    public static IReadOnlyDictionary<int, bool> GetCompatibilityParticipantCompletions(string nodeIdentifier, int visit)
+      => ReceivedCompatibilityCompletions.TryGetValue(nodeIdentifier + "|" + visit, out var completions)
+        ? completions
+        : EmptyCompatibilityCompletions;
 
     /// <summary>이 피어가 지금 <paramref name="graphIdentifier"/> 에 대해 속한 호환 세션. 없으면 null.</summary>
     public static string GetLocalCompatibilitySession(string graphIdentifier)
@@ -241,19 +267,25 @@ namespace MultiplayerInfrastructure.Scenario
         barrier = new ScenarioCompletionBarrier(_compatibilityParticipants.Keys,
           Time.realtimeSinceStartupAsDouble + CompatibilityJoinLastResortSeconds);
         _compatibilityBarriers.Add(key, barrier);
-        StartCoroutine(ReleaseCompatibilityBarrier(session, graphIdentifier, key, barrier));
+        StartCoroutine(ReleaseCompatibilityBarrier(session, graphIdentifier, nodeIdentifier, visit, barrier));
       }
-      barrier.Complete(sender.ClientId);
+      // 처음 받은 완료 보고만 알린다. 클라이언트는 해제될 때까지 같은 보고를 되풀이하기 때문이다.
+      if (barrier.Complete(sender.ClientId))
+        ObserversCompatibilityParticipantCompleted(session, nodeIdentifier, visit, sender.ClientId, false);
       // A late participant must receive a release that was already sent to the other participants.
       if (barrier.Released)
         TargetReleaseCompatibilityBarrier(sender, session, key, barrier.TimedOut);
     }
 
-    private IEnumerator ReleaseCompatibilityBarrier(string session, string graphIdentifier, string key, ScenarioCompletionBarrier barrier)
+    private IEnumerator ReleaseCompatibilityBarrier(string session, string graphIdentifier, string nodeIdentifier,
+      int visit, ScenarioCompletionBarrier barrier)
     {
+      string key = nodeIdentifier + "|" + visit;
+      var announcedDepartures = new HashSet<int>();
       while (session == _compatibilitySession)
       {
         var connected = GetConnectedCompatibilityParticipants();
+        AnnounceCompatibilityDepartures(session, nodeIdentifier, visit, barrier, connected, announcedDepartures);
         if (barrier.Evaluate(connected, Time.realtimeSinceStartupAsDouble))
         {
           if (barrier.TimedOut)
@@ -273,6 +305,45 @@ namespace MultiplayerInfrastructure.Scenario
     {
       if (session == _localCompatibilitySession)
         ReleasedCompatibilityBarriers[key] = timedOut;
+    }
+
+    /// <summary>
+    /// 합류를 기다리는 동안 접속이 끊기거나 흐름을 끝낸 참여자를 나머지 피어에 알린다. 배리어는 그런
+    /// 참여자를 기다리지 않으므로, 참여자 화면에서도 "이탈함" 으로 표시해야 완료 인원수와 배리어 판정이
+    /// 어긋나지 않는다. 이미 완료를 보고한 참여자는 접속이 끊겨도 완료로 남긴다.
+    /// </summary>
+    private void AnnounceCompatibilityDepartures(string session, string nodeIdentifier, int visit,
+      ScenarioCompletionBarrier barrier, ISet<int> connected, HashSet<int> announced)
+    {
+      foreach (int clientId in _compatibilityParticipants.Keys)
+      {
+        if (connected.Contains(clientId) || barrier.HasCompleted(clientId) || !announced.Add(clientId))
+          continue;
+        ObserversCompatibilityParticipantCompleted(session, nodeIdentifier, visit, clientId, true);
+      }
+    }
+
+    /// <summary>
+    /// 서버 합류 배리어가 확인한 참여자의 완료·이탈을 모든 피어에 알린다. 호스트도 자기 상태기를 돌리는
+    /// 피어이므로 서버를 제외하지 않는다. 각 피어의 공동 진행 게이트 집계기가 이 알림으로 다른 참여자의
+    /// 완료 상황을 표시한다. 완료 기록은 이탈 알림으로 덮어쓰지 않는다.
+    /// </summary>
+    [ObserversRpc(BufferLast = false)]
+    private void ObserversCompatibilityParticipantCompleted(string session, string nodeIdentifier, int visit,
+      int clientId, bool left)
+    {
+      if (session != _localCompatibilitySession)
+        return;
+      string key = nodeIdentifier + "|" + visit;
+      if (!ReceivedCompatibilityCompletions.TryGetValue(key, out var completions))
+      {
+        completions = new Dictionary<int, bool>();
+        ReceivedCompatibilityCompletions.Add(key, completions);
+      }
+      if (completions.TryGetValue(clientId, out bool knownLeft) && (left || !knownLeft))
+        return;
+      completions[clientId] = left;
+      CompatibilityParticipantCompleted?.Invoke(nodeIdentifier, visit, clientId, left);
     }
   }
 }

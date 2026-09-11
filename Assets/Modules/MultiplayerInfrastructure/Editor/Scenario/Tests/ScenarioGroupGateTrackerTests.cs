@@ -116,6 +116,49 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void MarkClientCompletedMarksEveryBranchOfThatClientOnce()
+    {
+      var a = CreateBranch("A", "nurse_a");
+      var b = CreateBranch("B", "nurse_b");
+      var b2 = CreateBranch("B2", "nurse_b");
+      var node = CreateNode(ScenarioWaitMode.All, a, b, b2);
+      var allocation = new Dictionary<ScenarioParallelBranch, int?> { [a] = 1, [b] = 2, [b2] = 2 };
+      var tracker = ScenarioGroupGateTracker.TryCreate("graph", node, allocation);
+      var snapshots = new List<ScenarioGroupGateSnapshot>();
+      tracker.Changed = snapshots.Add;
+
+      Assert.That(tracker.MarkClientCompleted(99, left: false), Is.False, "게이트에 없는 클라이언트는 무시해야 합니다.");
+      Assert.That(tracker.MarkClientCompleted(2, left: false), Is.True);
+      Assert.That(tracker.MarkClientCompleted(2, left: false), Is.False, "같은 완료를 되풀이해도 스냅샷을 다시 내보내지 않아야 합니다.");
+
+      Assert.That(snapshots, Has.Count.EqualTo(1));
+      var participants = snapshots[0].Participants;
+      Assert.That(participants[0].Completed, Is.False);
+      Assert.That(participants[1].ClientId, Is.EqualTo(2));
+      Assert.That(participants[1].Completed, Is.True, "원격 참여자의 분기를 모두 완료로 표시해야 합니다.");
+      Assert.That(participants[1].Left, Is.False);
+    }
+
+    [Test]
+    public void MarkClientCompletedUpgradesLeftToCompletedButNotTheReverse()
+    {
+      var a = CreateBranch("A", "nurse_a");
+      var b = CreateBranch("B", "nurse_b");
+      var node = CreateNode(ScenarioWaitMode.All, a, b);
+      var allocation = new Dictionary<ScenarioParallelBranch, int?> { [a] = 1, [b] = 2 };
+      var tracker = ScenarioGroupGateTracker.TryCreate("graph", node, allocation);
+
+      Assert.That(tracker.MarkClientCompleted(2, left: true), Is.True);
+      Assert.That(tracker.BuildSnapshot().Participants[1].Left, Is.True);
+
+      Assert.That(tracker.MarkClientCompleted(2, left: false), Is.True, "실제 완료 보고는 이탈 표시를 완료로 바꿔야 합니다.");
+      Assert.That(tracker.BuildSnapshot().Participants[1].Left, Is.False);
+
+      Assert.That(tracker.MarkClientCompleted(2, left: true), Is.False, "완료한 참여자는 이탈 알림으로 되돌리지 않아야 합니다.");
+      Assert.That(tracker.BuildSnapshot().Participants[1].Left, Is.False);
+    }
+
+    [Test]
     public void CloseEmitsInactiveSnapshotAndIgnoresLaterChanges()
     {
       var a = CreateBranch("A", "nurse_a");

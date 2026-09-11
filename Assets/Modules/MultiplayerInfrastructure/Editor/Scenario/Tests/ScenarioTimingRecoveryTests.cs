@@ -25,6 +25,9 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       }
       Assert.That(barrier.Complete(3), Is.False, "Duplicate reports must not replace another player's work.");
       Assert.That(barrier.Complete(99), Is.False);
+      Assert.That(barrier.HasCompleted(3), Is.True);
+      Assert.That(barrier.HasCompleted(2), Is.False);
+      Assert.That(barrier.HasCompleted(99), Is.False);
       Assert.That(barrier.Evaluate(connected, 20), Is.False);
       barrier.Complete(2);
       Assert.That(barrier.Evaluate(connected, 21), Is.True);

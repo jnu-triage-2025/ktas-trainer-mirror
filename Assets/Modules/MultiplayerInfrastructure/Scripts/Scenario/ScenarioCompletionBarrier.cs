@@ -21,6 +21,9 @@ namespace MultiplayerInfrastructure.Scenario
     public bool Complete(int clientId)
       => _expected.Contains(clientId) && _completed.Add(clientId);
 
+    /// <summary>이 참여자의 완료 보고를 이미 받았는지 여부.</summary>
+    public bool HasCompleted(int clientId) => _completed.Contains(clientId);
+
     public bool Evaluate(ISet<int> connected, double now)
     {
       if (Released) return true;

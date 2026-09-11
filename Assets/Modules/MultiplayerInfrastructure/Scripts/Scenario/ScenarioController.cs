@@ -127,6 +127,12 @@ namespace MultiplayerInfrastructure.Scenario
     private readonly HashSet<int> _cancelledBranchClientIds = new HashSet<int>();
 
     /// <summary>
+    /// 호환 실행 경로에서 서버 합류 배리어의 참여자 완료 알림을 공동 진행 게이트 집계기에 잇는 구독의
+    /// 해제 동작. 병렬 노드가 정상 종료되지 않아도 그래프가 끝나거나 새로 시작하면 함께 해제한다.
+    /// </summary>
+    private readonly List<Action> _compatibilityGroupGateUnbinders = new();
+
+    /// <summary>
     /// 담당자 이탈 경고에 "어떤 브랜치를 남기고 나갔는지" 적기 위해, 클라이언트마다 현재 배정된
     /// ByRole 브랜치 식별자를 배정 순서대로 보관한다.
     /// </summary>
@@ -803,6 +809,7 @@ namespace MultiplayerInfrastructure.Scenario
       _parallelAdvanceBlockDepth = 0;
       _executionMode = ExecutionMode.ClientPresentation;
       ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
+      UnbindCompatibilityGroupGates();
       ScenarioGroupGateState.ClearGraph(graph.Identifier);
       _currentGraph = graph;
       _currentNode = null;
@@ -1029,6 +1036,7 @@ namespace MultiplayerInfrastructure.Scenario
       CancelInlineTTSPrewarm();
       CancelDialogueAutoAdvance();
       StopAllPresentationNpcMoves();
+      UnbindCompatibilityGroupGates();
       ScenarioGroupGateState.ClearGraph(graphIdentifier);
       InteractionRegistry.ClearScenarioDefinitions(graphIdentifier);
       InteractionVisibilityState.ClearAll();
@@ -1206,6 +1214,7 @@ namespace MultiplayerInfrastructure.Scenario
       _scenarioOwnerClientId = ownerClientId;
       ScenarioNetworkRelay.ConfigureClientSignalAuthorization(graph);
       ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
+      UnbindCompatibilityGroupGates();
       ScenarioGroupGateState.ClearGraph(graph.Identifier);
       ReportActiveRoleRosterProblemsAtStart();
 
@@ -5977,10 +5986,17 @@ namespace MultiplayerInfrastructure.Scenario
         // 서로 다른 두 명 이상이 분기를 맡은 waitMode: All 병렬은 한 사람이 끝내도 나머지를 기다린다.
         // 그 기다림을 퀘스트 HUD 가 보여 줄 수 있도록 분기별 퀘스트 발행과 완료를 집계해 배포한다.
         var groupGate = ScenarioGroupGateTracker.TryCreate(_currentGraph?.Identifier, node, allocation);
+        Action unbindGroupGate = null;
         if (groupGate != null)
         {
           groupGate.DisplayNameResolver = ResolveGroupGateParticipantDisplayName;
           groupGate.Changed = PublishGroupGateSnapshot;
+          // 호환 실행 경로에서는 다른 참여자의 분기가 이 피어에서 돌지 않으므로 그 완료를 이 집계기가
+          // 직접 볼 수 없다. 서버 합류 배리어가 알려 주는 완료·이탈을 반영해야 "기다리기(n/N)" 의
+          // n 이 올라가고 참여자 목록의 완료 표시가 바뀐다.
+          if (_executionMode != ExecutionMode.ServerAuthoritative
+              && ScenarioNetworkRelay.HasCompatibilitySession(_currentGraph?.Identifier))
+            unbindGroupGate = BindCompatibilityGroupGate(groupGate, node.Identifier);
           groupGate.Publish();
         }
 
@@ -6129,6 +6145,11 @@ namespace MultiplayerInfrastructure.Scenario
 
         // 모든 분기가 끝났으므로 참여자 화면의 대기 표시를 내린다.
         groupGate?.Close();
+        if (unbindGroupGate != null)
+        {
+          unbindGroupGate();
+          _compatibilityGroupGateUnbinders.Remove(unbindGroupGate);
+        }
 
         // 병렬 노드 완료 후에는 NextIdentifier 로 진행한다.
         // (기존의 무조건 EndScenario 호출은 병렬 이후 노드를 모두 건너뛰고
@@ -6195,6 +6216,7 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private void CloseGroupGatesForGraph(string graphIdentifier)
     {
+      UnbindCompatibilityGroupGates();
       if (string.IsNullOrEmpty(graphIdentifier))
         return;
 
@@ -6217,6 +6239,37 @@ namespace MultiplayerInfrastructure.Scenario
 
     private static string ResolveGroupGateParticipantDisplayName(int clientId)
       => UserDescriptorService.TryGetByClientId(clientId, out var descriptor) ? descriptor?.DisplayName : null;
+
+    /// <summary>
+    /// 서버 합류 배리어가 알리는 참여자 완료·이탈을 이 병렬 노드의 공동 진행 게이트 집계기에 반영한다.
+    /// 빠른 피어의 완료 알림이 이 피어의 집계기보다 먼저 도착했을 수 있으므로 이미 받은 내용을 먼저
+    /// 반영하고, 그다음 알림을 구독한다. 방문 번호가 다른 알림(같은 노드의 이전 실행)은 무시한다.
+    /// </summary>
+    /// <returns>구독 해제 동작. <see cref="_compatibilityGroupGateUnbinders"/> 에도 등록된다.</returns>
+    private Action BindCompatibilityGroupGate(ScenarioGroupGateTracker groupGate, string nodeIdentifier)
+    {
+      int joinVisit = ScenarioNetworkRelay.PeekCompatibilityJoinVisit(nodeIdentifier);
+      foreach (var pair in ScenarioNetworkRelay.GetCompatibilityParticipantCompletions(nodeIdentifier, joinVisit))
+        groupGate.MarkClientCompleted(pair.Key, pair.Value);
+
+      void Handler(string completedNode, int visit, int clientId, bool left)
+      {
+        if (visit == joinVisit && string.Equals(completedNode, nodeIdentifier, StringComparison.Ordinal))
+          groupGate.MarkClientCompleted(clientId, left);
+      }
+
+      ScenarioNetworkRelay.CompatibilityParticipantCompleted += Handler;
+      Action unbind = () => ScenarioNetworkRelay.CompatibilityParticipantCompleted -= Handler;
+      _compatibilityGroupGateUnbinders.Add(unbind);
+      return unbind;
+    }
+
+    private void UnbindCompatibilityGroupGates()
+    {
+      for (int i = 0; i < _compatibilityGroupGateUnbinders.Count; i++)
+        _compatibilityGroupGateUnbinders[i]?.Invoke();
+      _compatibilityGroupGateUnbinders.Clear();
+    }
 
     /// <summary>병렬 브랜치의 완료 여부를 추적하는 플래그 홀더.</summary>
     private sealed class BranchCompletionTracker

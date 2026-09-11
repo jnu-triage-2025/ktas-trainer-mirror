@@ -72,9 +72,14 @@ namespace MultiplayerInfrastructure.Scenario
         if (Completed)
           return;
 
+        SetCompleted(left);
+        _owner.NotifyChanged();
+      }
+
+      internal void SetCompleted(bool left)
+      {
         Completed = true;
         Left = left;
-        _owner.NotifyChanged();
       }
     }
 
@@ -140,6 +145,33 @@ namespace MultiplayerInfrastructure.Scenario
 
     public Participant GetParticipant(ScenarioParallelBranch branch)
       => branch != null && _participantsByBranch.TryGetValue(branch, out var participant) ? participant : null;
+
+    /// <summary>
+    /// 다른 피어에서 실행된 분기의 완료를 반영한다. 호환 실행 경로에서는 피어마다 자기 분기만 실행하므로
+    /// 다른 참여자의 완료는 서버 합류 배리어가 알려 주는 대로 여기서 표시한다. 그 참여자가 맡은 분기를
+    /// 모두 완료로 표시하며, 이 게이트에 없는 클라이언트는 무시한다. 이탈로 표시됐던 참여자가 실제로
+    /// 완료 보고를 보내면 "이탈함" 을 "완료함" 으로 바꾼다.
+    /// </summary>
+    /// <returns>실제로 바뀐 분기가 하나라도 있으면 true.</returns>
+    public bool MarkClientCompleted(int clientId, bool left)
+    {
+      bool changed = false;
+      for (int i = 0; i < _participants.Count; i++)
+      {
+        var participant = _participants[i];
+        if (participant.ClientId != clientId)
+          continue;
+        if (participant.Completed && (left || !participant.Left))
+          continue;
+
+        participant.SetCompleted(left);
+        changed = true;
+      }
+
+      if (changed)
+        NotifyChanged();
+      return changed;
+    }
 
     /// <summary>현재 상태를 한 번 내보낸다. 병렬 노드가 분기를 시작하기 직전에 참여자 목록을 알리는 용도.</summary>
     public void Publish() => NotifyChanged();
