@@ -1874,7 +1874,7 @@
     "P_WAIT_DOCTOR_REMOVE": {
       "identifier": "P_WAIT_DOCTOR_REMOVE",
       "nodeType": "Parallel",
-      "nextIdentifier": "DOC_C",
+      "nextIdentifier": "P_B_C_CARE",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",

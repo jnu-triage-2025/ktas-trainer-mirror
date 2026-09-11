@@ -155,7 +155,7 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void DoctorArrivalWaitsForAllRolesThenPresentsInstructions()
+    public void DoctorArrivalWaitsForAllRolesThenStartsInitialAssessments()
     {
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(
         Path.Combine(Application.dataPath,
@@ -168,7 +168,8 @@ namespace TriageTrainer.Tests
 
       var removeWait = graph.Nodes["P_WAIT_DOCTOR_REMOVE"] as ScenarioParallelNode;
       Assert.That(removeWait, Is.Not.Null);
-      Assert.That(removeWait.NextIdentifier, Is.EqualTo("DOC_C"));
+      Assert.That(removeWait.NextIdentifier, Is.EqualTo("P_B_C_CARE"),
+        "의사 도착 대기 후에는 의식·활력징후 사정을 먼저 시작해야 한다.");
       Assert.That(removeWait.Branches.Select(branch => branch.RequiredPlayerTags.Single()),
         Is.EqualTo(new[] { "nurse_a", "nurse_b", "nurse_c", "nurse_d" }));
 
@@ -495,7 +496,8 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes["care_patient_b"].NextIdentifier, Is.EqualTo("DOC_C"));
       var waitDoctorRemove = graph.Nodes["P_WAIT_DOCTOR_REMOVE"] as ScenarioParallelNode;
       Assert.That(waitDoctorRemove, Is.Not.Null);
-      Assert.That(waitDoctorRemove.NextIdentifier, Is.EqualTo("DOC_C"));
+      Assert.That(waitDoctorRemove.NextIdentifier, Is.EqualTo("P_B_C_CARE"),
+        "의사 도착 대기 퀘스트를 제거한 뒤 의식·활력징후 사정 단계를 건너뛰면 안 된다.");
       Assert.That(waitDoctorRemove.Branches.Select(branch => branch.RequiredPlayerTags.Single()),
         Is.EqualTo(new[] { "nurse_a", "nurse_b", "nurse_c", "nurse_d" }));
       foreach (string role in new[] { "A", "B", "C", "D" })
