@@ -1,6 +1,10 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using MultiplayerInfrastructure.ItemSystem;
+using MultiplayerInfrastructure.Player;
 using NUnit.Framework;
 using TriageTrainer.Entity;
+using TriageTrainer.ItemDefinitions;
 using TriageTrainer.Patient;
 using UnityEngine;
 
@@ -107,6 +111,51 @@ namespace TriageTrainer.Tests
       }
       finally
       {
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    [Test]
+    public void BleedingControlRequiresEquippedGloves()
+    {
+      var patientObject = new GameObject("glove-required-patient");
+      var playerObject = new GameObject("glove-required-player");
+
+      try
+      {
+        var displayState = patientObject.AddComponent<PatientDisplayState>();
+        displayState.DisplaySupports.GauzePatchedOnThorax = true;
+        var patient = patientObject.AddComponent<PatientController>();
+        var player = playerObject.AddComponent<PlayerController>();
+
+        var gauze = (Item)System.Activator.CreateInstance(typeof(Gauze));
+        gauze.CurrentStackCount = 1;
+        var inventorySlot = new InventorySlotModelDTO();
+        inventorySlot.SetItem(gauze);
+        typeof(PlayerController).GetField("_slots", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.SetValue(player, new List<InventorySlotModelDTO> { inventorySlot });
+
+        var gloveSlot = new EquipmentSlotModelDTO(EquipmentSlotType.Glove);
+        typeof(PlayerController).GetField("_equipmentSlots", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.SetValue(player, new List<EquipmentSlotModelDTO> { gloveSlot });
+
+        Assert.That(patient.OnItemUsed(player.PlayerEntity, Gauze.Identifier), Is.False,
+          "장갑을 착용하지 않은 플레이어는 거즈로 지혈할 수 없어야 합니다.");
+        Assert.That(player.CountItemInInventory(Gauze.Identifier), Is.EqualTo(1),
+          "장갑 미착용으로 지혈이 거부되면 거즈를 소비하면 안 됩니다.");
+        Assert.That(patient.IsTreatmentApplied(PatientController.TreatmentGauze), Is.False);
+
+        var gloves = (Item)System.Activator.CreateInstance(typeof(SterileGloves));
+        gloves.CurrentStackCount = 1;
+        gloveSlot.Equip(gloves);
+
+        Assert.That(patient.OnItemUsed(player.PlayerEntity, Gauze.Identifier), Is.True,
+          "장갑을 착용한 플레이어는 거즈로 지혈할 수 있어야 합니다.");
+        Assert.That(patient.IsTreatmentApplied(PatientController.TreatmentGauze), Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(playerObject);
         Object.DestroyImmediate(patientObject);
       }
     }

@@ -11,6 +11,7 @@ using TriageTrainer.Entity.CentralLine;
 using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.Patient;
 using TriageTrainer.Entity.SuctionLine;
+using TriageTrainer.ItemDefinitions;
 using TriageTrainer.Patient;
 using UnityEngine;
 using MI = MultiplayerInfrastructure;
@@ -221,6 +222,12 @@ namespace TriageTrainer.Entity
       if (sourcePlayer != null && sourcePlayer.CountItemInInventory(itemIdentifier) < 1)
         return false;
 
+      if (sourcePlayer != null && IsBleedingControlItem(itemIdentifier) && !HasEquippedGloves(sourcePlayer))
+      {
+        PresentGlovesRequiredDialogue();
+        return false;
+      }
+
       if (IsFishNetClientInitialized && !IsFishNetServerStarted)
       {
         CmdApplyPatientItemUse(itemIdentifier);
@@ -238,6 +245,38 @@ namespace TriageTrainer.Entity
       bool applied = ApplyItemUse(itemIdentifier);
       sourcePlayer?.CompleteConsumedItemUse(receipt, applied);
       return applied;
+    }
+
+    private static bool IsBleedingControlItem(string itemIdentifier) =>
+      string.Equals(itemIdentifier, Gauze.Identifier, StringComparison.Ordinal)
+      || string.Equals(itemIdentifier, Plaster.Identifier, StringComparison.Ordinal);
+
+    private static bool HasEquippedGloves(PlayerController player)
+    {
+      if (player == null)
+        return false;
+
+      var equipmentSlots = player.EquipmentSlots;
+      for (int i = 0; i < equipmentSlots.Count; i++)
+      {
+        var slot = equipmentSlots[i];
+        if (slot != null && slot.SlotType == EquipmentSlotType.Glove && !slot.IsEmpty)
+          return true;
+      }
+
+      return false;
+    }
+
+    private static void PresentGlovesRequiredDialogue()
+    {
+      var dialogue = Registry.Get<DialoguePanelUIController>(
+        RegistryType.UI, Registry.TypeKey<DialoguePanelUIController>());
+      if (dialogue == null)
+        dialogue = FindFirstObjectByType<DialoguePanelUIController>(FindObjectsInactive.Exclude);
+
+      dialogue?.TryPresentTransientDialogue(
+        DialoguePanelUIController.PlayerNamePlaceholder,
+        "(지혈하려면 장갑을 착용해야 한다.)");
     }
 
     public void SetCurrentBed(MovingPatientBedController bed)
