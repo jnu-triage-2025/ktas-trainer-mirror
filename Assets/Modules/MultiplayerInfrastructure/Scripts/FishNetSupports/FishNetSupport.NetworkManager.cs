@@ -517,12 +517,20 @@ namespace MultiplayerInfrastructure.FishNetSupports
       if (!ResolveNetworkManagerInHierarchy())
         yield break;
 
-      // 레지스트리에 저장된 시작 모드는 이전 세션의 값일 수 있으므로 실제 실행 상태를 사용한다.
-      if (networkManager.ClientManager != null && networkManager.ClientManager.Started)
+      var transport = networkManager.TransportManager?.Transport;
+
+      // Manager.Started는 Stopping으로 바뀌는 즉시 false가 된다. 따라서 이전 구현처럼
+      // Started만 보면 소켓 종료가 끝나기 전에 다음 씬으로 넘어갈 수 있다.
+      // Starting 상태에서 타이틀 복귀가 요청된 경우도 포함해 전송 계층의 실제 상태로 판단한다.
+      if (networkManager.ClientManager != null
+          && transport != null
+          && transport.GetConnectionState(false) != LocalConnectionState.Stopped)
         networkManager.ClientManager.StopConnection();
       _clientStateAssumed = LocalConnectionState.Stopped;
 
-      if (networkManager.ServerManager != null && networkManager.ServerManager.Started)
+      if (networkManager.ServerManager != null
+          && transport != null
+          && transport.GetConnectionState(true) != LocalConnectionState.Stopped)
         networkManager.ServerManager.StopConnection(true);
       _serverStateAssumed = LocalConnectionState.Stopped;
 
@@ -534,10 +542,11 @@ namespace MultiplayerInfrastructure.FishNetSupports
       int settledFrames = 0;
       while (Time.realtimeSinceStartup < deadline)
       {
-        bool clientStopped = networkManager == null || networkManager.ClientManager == null
-          || !networkManager.ClientManager.Started;
-        bool serverStopped = networkManager == null || networkManager.ServerManager == null
-          || !networkManager.ServerManager.Started;
+        transport = networkManager == null ? null : networkManager.TransportManager?.Transport;
+        bool clientStopped = transport == null
+          || transport.GetConnectionState(false) == LocalConnectionState.Stopped;
+        bool serverStopped = transport == null
+          || transport.GetConnectionState(true) == LocalConnectionState.Stopped;
 
         if (clientStopped && serverStopped)
         {
