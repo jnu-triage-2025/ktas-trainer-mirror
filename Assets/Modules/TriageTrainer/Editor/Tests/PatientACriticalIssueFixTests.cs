@@ -885,6 +885,26 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PatientATPieceIsShownBeforeTheIntubationCompletionDialogue()
+    {
+      var graph = LoadPatientAGraph();
+      var intubationQuestRemoval = graph.Nodes["Q010_1"];
+      Assert.That(intubationQuestRemoval.NextIdentifier,
+        Is.EqualTo("EI_SHOW_TPIECE_AFTER_INTUBATION"));
+
+      var displayNode = graph.Nodes["EI_SHOW_TPIECE_AFTER_INTUBATION"] as ScenarioEntityInitNode;
+      Assert.That(displayNode, Is.Not.Null);
+      Assert.That(displayNode.TargetEntityIdentifier, Is.EqualTo("patient_a"));
+      Assert.That(displayNode.StateOperations, Has.Count.EqualTo(1));
+      Assert.That(displayNode.StateOperations[0].Kind,
+        Is.EqualTo(ScenarioEntityStateOperationKind.DisplayState));
+      Assert.That(displayNode.StateOperations[0].Key,
+        Is.EqualTo(nameof(PatientController.TreatmentDisplay.TPieceAttachedToNasalCannula)));
+      Assert.That(displayNode.StateOperations[0].DisplayActive, Is.True);
+      Assert.That(displayNode.NextIdentifier, Is.EqualTo("D014"));
+    }
+
+    [Test]
     public void PatientA862PulseQuestTargetsFirstArrestPulseAssessment()
     {
       string projectRoot = Directory.GetParent(Application.dataPath).FullName;

@@ -5188,6 +5188,19 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q010_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "EI_SHOW_TPIECE_AFTER_INTUBATION"
+    },
+    "EI_SHOW_TPIECE_AFTER_INTUBATION": {
+      "targetEntityIdentifier": "patient_a",
+      "stateOperations": [
+        {
+          "kind": "DisplayState",
+          "key": "TPieceAttachedToNasalCannula",
+          "displayActive": true
+        }
+      ],
+      "identifier": "EI_SHOW_TPIECE_AFTER_INTUBATION",
+      "nodeType": "EntityInit",
       "nextIdentifier": "D014"
     },
     "Q011": {
