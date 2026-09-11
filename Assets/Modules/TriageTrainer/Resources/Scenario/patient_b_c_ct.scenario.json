@@ -80,6 +80,36 @@
   ],
   "interactions": [
     {
+      "entity": { "id": "patient_b" },
+      "interaction": "triage_assess",
+      "extras": {
+        "triageBriefing": "외양: 좌측 상완 개방성 골절, 눈썹 위 타박상 및 약간의 출혈\n주 호소: 두통\n좌우 근력이 비대칭임\n의식 상태: 대화가 가능하나 약간 느리고 지남력이 없음\n\n활력징후 측정 결과:\n혈압: 140/86mmHg\n맥박: 120회/분\n호흡수: 24회/분\n체온: 37.8도\nSpO2: 93%"
+      },
+      "visibility": {
+        "conditions": [{ "type": "PlayerHasTag", "tag": "nurse_a" }]
+      }
+    },
+    {
+      "entity": { "id": "patient_c" },
+      "interaction": "triage_assess",
+      "extras": {
+        "triageBriefing": "외양: 우측 상완 개방성 골절, 눈썹 위 타박상 및 약간의 출혈\n주 호소: 두통\n좌우 근력이 비대칭임\n의식 상태: 대화가 가능하나 약간 느리고 지남력이 없음\n\n활력징후 측정 결과:\n혈압: 140/86mmHg\n맥박: 120회/분\n호흡수: 24회/분\n체온: 37.8도\nSpO2: 93%"
+      },
+      "visibility": {
+        "conditions": [{ "type": "PlayerHasTag", "tag": "nurse_a" }]
+      }
+    },
+    {
+      "entity": { "id": "patient_dummy_d_b" },
+      "interaction": "triage_assess",
+      "extras": {
+        "triageBriefing": "외양: 사지 찰과상 외 양호\n주 호소: 복통\n의식 상태: 명료, 지속적으로 통증 호소함\n\n활력징후 측정 결과:\n혈압: 136/79mmHg\n맥박: 110회/분\n호흡수: 18회/분\n체온: 36.8도\nSpO2: 97%"
+      },
+      "visibility": {
+        "conditions": [{ "type": "PlayerHasTag", "tag": "nurse_a" }]
+      }
+    },
+    {
       "entity": {
         "id": "patient_b"
       },
@@ -1033,7 +1063,7 @@
     "TRIAGE_A_Q": {
       "identifier": "TRIAGE_A_Q",
       "nodeType": "QuestControl",
-      "nextIdentifier": "TRIAGE_INTRO",
+      "nextIdentifier": "TRIAGE_ENABLE_B",
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
@@ -1043,21 +1073,21 @@
     "TRIAGE_ENABLE_B": {
       "identifier": "TRIAGE_ENABLE_B",
       "nodeType": "TriageAssessControl",
-      "nextIdentifier": "TRIAGE_WAIT_ALL",
+      "nextIdentifier": "TRIAGE_ENABLE_C",
       "targetEntityIdentifier": "patient_b",
       "assessable": true
     },
     "TRIAGE_ENABLE_C": {
       "identifier": "TRIAGE_ENABLE_C",
       "nodeType": "TriageAssessControl",
-      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
+      "nextIdentifier": "TRIAGE_ENABLE_D",
       "targetEntityIdentifier": "patient_c",
       "assessable": true
     },
     "TRIAGE_ENABLE_D": {
       "identifier": "TRIAGE_ENABLE_D",
       "nodeType": "TriageAssessControl",
-      "nextIdentifier": "TRIAGE_A_REMOVE",
+      "nextIdentifier": "TRIAGE_WAIT_ALL",
       "targetEntityIdentifier": "patient_dummy_d_b",
       "assessable": true
     },
@@ -1184,7 +1214,7 @@
     "TRIAGE_B_CONFIRMED": {
       "identifier": "TRIAGE_B_CONFIRMED",
       "nodeType": "Dialogue",
-      "nextIdentifier": "TRIAGE_D_STATE_INFO",
+      "nextIdentifier": "TRIAGE_A_REMOVE",
       "speakerName": "시스템",
       "dialogueContent": "해당 환자를 KTAS 2(긴급)로 분류했습니다. 다음 환자를 확인하세요.",
       "portraitSpriteIdentifier": null,
@@ -1230,7 +1260,7 @@
     "TRIAGE_D_CONFIRMED": {
       "identifier": "TRIAGE_D_CONFIRMED",
       "nodeType": "Dialogue",
-      "nextIdentifier": "TRIAGE_C_STATE_INFO",
+      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
       "speakerName": "시스템",
       "dialogueContent": "해당 환자를 KTAS 5(비응급)로 분류했습니다. 다음 환자를 확인하세요.",
       "portraitSpriteIdentifier": null,

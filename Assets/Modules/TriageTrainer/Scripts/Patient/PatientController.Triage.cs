@@ -108,7 +108,10 @@ namespace TriageTrainer.Entity
 
       public void Interact(Transform interactor)
       {
-        _owner.BeginTriageAssessment(interactor);
+        string briefing = null;
+        if (InteractionRegistry.TryGetDefinition(this, out var definition))
+          briefing = definition.GetExtra("triageBriefing");
+        _owner.BeginTriageAssessment(interactor, briefing);
       }
     }
 
@@ -298,7 +301,7 @@ namespace TriageTrainer.Entity
     /// 트리아지 평가를 시작한다(상호작용한 플레이어에게 트리아지 UI 를 연다).
     /// UI 는 로컬 플레이어 클라이언트에서만 열리며, 선택 결과는 <see cref="SubmitTriageAssessment"/> 로 반영된다.
     /// </summary>
-    private void BeginTriageAssessment(Transform interactor)
+    private void BeginTriageAssessment(Transform interactor, string briefing = null)
     {
       if (!EffectiveAssessable || !CanPerformTriageOrAssessment)
         return;
@@ -307,14 +310,32 @@ namespace TriageTrainer.Entity
       if (player == null || !player.IsOwner)
         return;
 
-      var ui = TriageTrainer.UI.TriageAssessmentUIController.ActiveInstance;
-      if (ui == null)
+      void OpenAssessmentUI()
       {
-        Debug.LogWarning("[PatientController] TriageAssessmentUIController 를 찾을 수 없어 트리아지 UI 를 열 수 없습니다.", this);
+        var ui = TriageTrainer.UI.TriageAssessmentUIController.ActiveInstance;
+        if (ui == null)
+        {
+          Debug.LogWarning("[PatientController] TriageAssessmentUIController 를 찾을 수 없어 트리아지 UI 를 열 수 없습니다.", this);
+          return;
+        }
+
+        ui.Open(AssessedTriage, selected => SubmitTriageAssessment(selected));
+      }
+
+      if (string.IsNullOrWhiteSpace(briefing))
+      {
+        OpenAssessmentUI();
         return;
       }
 
-      ui.Open(AssessedTriage, selected => SubmitTriageAssessment(selected));
+      var dialogue = MultiplayerInfrastructure.Registry.Registry.Get<
+        MultiplayerInfrastructure.UI.DialoguePanelUIController>(
+        MultiplayerInfrastructure.Registry.RegistryType.UI,
+        MultiplayerInfrastructure.Registry.Registry.TypeKey<MultiplayerInfrastructure.UI.DialoguePanelUIController>());
+      if (dialogue != null && dialogue.TryPresentTransientDialogue("시스템", briefing, 4f, onFinished: OpenAssessmentUI))
+        return;
+
+      OpenAssessmentUI();
     }
 
     /// <summary>

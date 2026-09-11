@@ -35,6 +35,35 @@ namespace TriageTrainer.Tests
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyA.prefab";
 
     [Test]
+    public void TriageInteractionsCarryOnlyTheirOwnPatientBriefing()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(
+        Path.Combine(Application.dataPath,
+          "Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json")));
+
+      foreach (var expectation in new[]
+               {
+                 (Patient: "patient_b", DistinctText: "좌측 상완 개방성 골절"),
+                 (Patient: "patient_c", DistinctText: "우측 상완 개방성 골절"),
+                 (Patient: "patient_dummy_d_b", DistinctText: "사지 찰과상 외 양호")
+               })
+      {
+        var definition = graph.Interactions.Single(value =>
+          value.Entity.Identifier == expectation.Patient
+          && value.InteractionIdentifier == PatientController.InteractIdTriage);
+        Assert.That(definition.GetExtra("triageBriefing"), Does.Contain(expectation.DistinctText));
+        Assert.That(definition.VisibilityConditions.Single().Tag, Is.EqualTo("nurse_a"));
+      }
+
+      Assert.That(graph.Nodes["TRIAGE_A_Q"].NextIdentifier, Is.EqualTo("TRIAGE_ENABLE_B"));
+      Assert.That(graph.Nodes["TRIAGE_ENABLE_B"].NextIdentifier, Is.EqualTo("TRIAGE_ENABLE_C"));
+      Assert.That(graph.Nodes["TRIAGE_ENABLE_C"].NextIdentifier, Is.EqualTo("TRIAGE_ENABLE_D"));
+      Assert.That(graph.Nodes["TRIAGE_ENABLE_D"].NextIdentifier, Is.EqualTo("TRIAGE_WAIT_ALL"));
+      Assert.That(graph.Nodes["TRIAGE_B_CONFIRMED"].NextIdentifier, Is.EqualTo("TRIAGE_A_REMOVE"));
+      Assert.That(graph.Nodes["TRIAGE_D_CONFIRMED"].NextIdentifier, Is.EqualTo("TRIAGE_CHECK_CORRECT"));
+    }
+
+    [Test]
     public void FixedExteriorDoorHasNoUninitializedTriggerHandler()
     {
       var previousSetup = EditorSceneManager.GetSceneManagerSetup();
