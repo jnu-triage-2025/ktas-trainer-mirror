@@ -1729,7 +1729,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.enter_treatmentroom"
+              "registryIdentifier": "quest.completed.disaster_intro::move_to_treatment_room"
             }
           ]
         }

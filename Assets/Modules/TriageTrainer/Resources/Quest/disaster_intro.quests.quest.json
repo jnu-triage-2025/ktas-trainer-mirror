@@ -37,11 +37,21 @@
       "description": "KTAS 1 환자 처치를 준비하기 위해 처치실로 이동하세요.",
       "questContent": "처치실로 이동",
       "isTrackable": true,
-      "isAutoComplete": false,
+      "isAutoComplete": true,
       "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
-      "tasks": []
+      "tasks": [],
+      "completionCriteria": [
+        {
+          "type": "WaypointReached",
+          "waypointIdentifier": "treatment-room-enterance",
+          "reachDistance": 6,
+          "displayTextContent": "처치실로 이동",
+          "onCompleteSignalIdentifier": "quest.completed.disaster_intro::move_to_treatment_room",
+          "conditions": []
+        }
+      ]
     },
     {
       "identifier": "collect_vital_set",
