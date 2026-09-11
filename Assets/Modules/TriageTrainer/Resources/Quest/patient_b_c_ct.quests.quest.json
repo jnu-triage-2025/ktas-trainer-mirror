@@ -304,6 +304,19 @@
       ]
     },
     {
+      "identifier": "Quest_Wait_Doctor_BC",
+      "title": "의사 대기",
+      "description": "의사가 처치 구역에 도착할 때까지 기다립니다.",
+      "questContent": "의사가 도착할 때까지 기다리기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": []
+    },
+    {
       "identifier": "Quest_B_Pupil_IV",
       "title": "남성 환자 동공반사 및 정맥로 확보",
       "description": "동공반사를 확인하고 20G 정맥로와 생리식염수를 연결합니다.",

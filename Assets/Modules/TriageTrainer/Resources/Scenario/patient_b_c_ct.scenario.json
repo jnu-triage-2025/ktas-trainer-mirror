@@ -1622,7 +1622,7 @@
     "MOVE_DOCTOR_TO_CARE_AREA": {
       "identifier": "MOVE_DOCTOR_TO_CARE_AREA",
       "nodeType": "NPCControl",
-      "nextIdentifier": "P_B_C_CARE",
+      "nextIdentifier": "P_WAIT_DOCTOR_REMOVE",
       "mode": "Control",
       "npcIdentifier": "npc-doctor-patient-b-c-ct",
       "destinationType": "WaypointSet",
@@ -1677,11 +1677,21 @@
     "MOVE_A_REMOVE": {
       "identifier": "MOVE_A_REMOVE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_MOVE_A",
+      "nextIdentifier": "WAIT_DOCTOR_A_ADD",
       "operation": "Remove",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Move_BC",
+      "quest": null
+    },
+    "WAIT_DOCTOR_A_ADD": {
+      "identifier": "WAIT_DOCTOR_A_ADD",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_MOVE_A",
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_Wait_Doctor_BC",
       "quest": null
     },
     "MOVE_B_Q": {
@@ -1726,11 +1736,21 @@
     "MOVE_B_REMOVE": {
       "identifier": "MOVE_B_REMOVE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_MOVE_B",
+      "nextIdentifier": "WAIT_DOCTOR_B_ADD",
       "operation": "Remove",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Move_BC",
+      "quest": null
+    },
+    "WAIT_DOCTOR_B_ADD": {
+      "identifier": "WAIT_DOCTOR_B_ADD",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_MOVE_B",
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_Wait_Doctor_BC",
       "quest": null
     },
     "MOVE_C_Q": {
@@ -1775,11 +1795,21 @@
     "MOVE_C_REMOVE": {
       "identifier": "MOVE_C_REMOVE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_MOVE_C",
+      "nextIdentifier": "WAIT_DOCTOR_C_ADD",
       "operation": "Remove",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Move_BC",
+      "quest": null
+    },
+    "WAIT_DOCTOR_C_ADD": {
+      "identifier": "WAIT_DOCTOR_C_ADD",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_MOVE_C",
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_Wait_Doctor_BC",
       "quest": null
     },
     "MOVE_D_Q": {
@@ -1824,11 +1854,99 @@
     "MOVE_D_REMOVE": {
       "identifier": "MOVE_D_REMOVE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_MOVE_D",
+      "nextIdentifier": "WAIT_DOCTOR_D_ADD",
       "operation": "Remove",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Move_BC",
+      "quest": null
+    },
+    "WAIT_DOCTOR_D_ADD": {
+      "identifier": "WAIT_DOCTOR_D_ADD",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_MOVE_D",
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_Wait_Doctor_BC",
+      "quest": null
+    },
+    "P_WAIT_DOCTOR_REMOVE": {
+      "identifier": "P_WAIT_DOCTOR_REMOVE",
+      "nodeType": "Parallel",
+      "nextIdentifier": "DOC_C",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Ignore",
+      "branches": [
+        {
+          "identifier": "WAIT_DOCTOR_A_REMOVE",
+          "completionConditionIdentifier": "CC_WAIT_DOCTOR_A",
+          "requiredPlayerTags": ["nurse_a"],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "WAIT_DOCTOR_B_REMOVE",
+          "completionConditionIdentifier": "CC_WAIT_DOCTOR_B",
+          "requiredPlayerTags": ["nurse_b"],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "WAIT_DOCTOR_C_REMOVE",
+          "completionConditionIdentifier": "CC_WAIT_DOCTOR_C",
+          "requiredPlayerTags": ["nurse_c"],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "WAIT_DOCTOR_D_REMOVE",
+          "completionConditionIdentifier": "CC_WAIT_DOCTOR_D",
+          "requiredPlayerTags": ["nurse_d"],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        }
+      ]
+    },
+    "WAIT_DOCTOR_A_REMOVE": {
+      "identifier": "WAIT_DOCTOR_A_REMOVE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_WAIT_DOCTOR_A",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_Wait_Doctor_BC",
+      "quest": null
+    },
+    "WAIT_DOCTOR_B_REMOVE": {
+      "identifier": "WAIT_DOCTOR_B_REMOVE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_WAIT_DOCTOR_B",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_Wait_Doctor_BC",
+      "quest": null
+    },
+    "WAIT_DOCTOR_C_REMOVE": {
+      "identifier": "WAIT_DOCTOR_C_REMOVE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_WAIT_DOCTOR_C",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_Wait_Doctor_BC",
+      "quest": null
+    },
+    "WAIT_DOCTOR_D_REMOVE": {
+      "identifier": "WAIT_DOCTOR_D_REMOVE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_WAIT_DOCTOR_D",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_Wait_Doctor_BC",
       "quest": null
     },
     "care_patient_b": {

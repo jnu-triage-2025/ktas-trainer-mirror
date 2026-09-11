@@ -155,6 +155,40 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void DoctorArrivalWaitsForAllRolesThenPresentsInstructions()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(
+        Path.Combine(Application.dataPath,
+          "Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json")),
+        validateWithSchema: true);
+
+      Assert.That(graph.Nodes["P_MOVE"].NextIdentifier, Is.EqualTo("MOVE_DOCTOR_TO_CARE_AREA"));
+      Assert.That(graph.Nodes["MOVE_DOCTOR_TO_CARE_AREA"].NextIdentifier,
+        Is.EqualTo("P_WAIT_DOCTOR_REMOVE"));
+
+      var removeWait = graph.Nodes["P_WAIT_DOCTOR_REMOVE"] as ScenarioParallelNode;
+      Assert.That(removeWait, Is.Not.Null);
+      Assert.That(removeWait.NextIdentifier, Is.EqualTo("DOC_C"));
+      Assert.That(removeWait.Branches.Select(branch => branch.RequiredPlayerTags.Single()),
+        Is.EqualTo(new[] { "nurse_a", "nurse_b", "nurse_c", "nurse_d" }));
+
+      foreach (string role in new[] { "A", "B", "C", "D" })
+      {
+        Assert.That(
+          (graph.Nodes[$"WAIT_DOCTOR_{role}_ADD"] as ScenarioQuestControlNode)?.QuestDefinitionIdentifier,
+          Is.EqualTo("Quest_Wait_Doctor_BC"), role);
+        Assert.That(
+          (graph.Nodes[$"WAIT_DOCTOR_{role}_REMOVE"] as ScenarioQuestControlNode)?.QuestDefinitionIdentifier,
+          Is.EqualTo("Quest_Wait_Doctor_BC"), role);
+      }
+
+      var firstInstruction = graph.Nodes["DOC_C"] as ScenarioDialogueNode;
+      Assert.That(firstInstruction, Is.Not.Null);
+      Assert.That(firstInstruction.PlayTTS, Is.True);
+      Assert.That(firstInstruction.NextIdentifier, Is.EqualTo("DOC_D"));
+    }
+
+    [Test]
     public void CareZoneRegistersUnattachedEquipmentWithoutActiveColliders()
     {
       var root = new GameObject("CareZoneUnattachedEquipmentTest");
@@ -457,8 +491,22 @@ namespace TriageTrainer.Tests
         Is.EqualTo(OverworldGameObjectInitializer.DoctorRouteWaypointSetIdentifier));
       Assert.That(graph.Nodes["P_MOVE"].NextIdentifier, Is.EqualTo("MOVE_DOCTOR_TO_CARE_AREA"));
       Assert.That(graph.Nodes["care_patient_c"].NextIdentifier, Is.EqualTo("C_DOC_C"));
-      Assert.That(graph.Nodes["MOVE_DOCTOR_TO_CARE_AREA"].NextIdentifier, Is.EqualTo("P_B_C_CARE"));
+      Assert.That(graph.Nodes["MOVE_DOCTOR_TO_CARE_AREA"].NextIdentifier, Is.EqualTo("P_WAIT_DOCTOR_REMOVE"));
       Assert.That(graph.Nodes["care_patient_b"].NextIdentifier, Is.EqualTo("DOC_C"));
+      var waitDoctorRemove = graph.Nodes["P_WAIT_DOCTOR_REMOVE"] as ScenarioParallelNode;
+      Assert.That(waitDoctorRemove, Is.Not.Null);
+      Assert.That(waitDoctorRemove.NextIdentifier, Is.EqualTo("DOC_C"));
+      Assert.That(waitDoctorRemove.Branches.Select(branch => branch.RequiredPlayerTags.Single()),
+        Is.EqualTo(new[] { "nurse_a", "nurse_b", "nurse_c", "nurse_d" }));
+      foreach (string role in new[] { "A", "B", "C", "D" })
+      {
+        var addWait = graph.Nodes[$"WAIT_DOCTOR_{role}_ADD"] as ScenarioQuestControlNode;
+        var removeWait = graph.Nodes[$"WAIT_DOCTOR_{role}_REMOVE"] as ScenarioQuestControlNode;
+        Assert.That(addWait, Is.Not.Null, role);
+        Assert.That(removeWait, Is.Not.Null, role);
+        Assert.That(addWait.QuestDefinitionIdentifier, Is.EqualTo("Quest_Wait_Doctor_BC"), role);
+        Assert.That(removeWait.QuestDefinitionIdentifier, Is.EqualTo("Quest_Wait_Doctor_BC"), role);
+      }
       Assert.That(graph.Nodes.ContainsKey("C_ARRIVAL"), Is.False);
       Assert.That(graph.Nodes["C_DOC_C"].NextIdentifier, Is.EqualTo("C_DOC_D"));
       Assert.That(graph.Nodes["C_DOC_D"].NextIdentifier, Is.EqualTo("P_B_C_TREATMENT"));
