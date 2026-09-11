@@ -80,6 +80,7 @@ namespace MultiplayerInfrastructure.Scenario
       graph.Identifier = ResolveGraphIdentifier(dto);
       graph.Tags = NormalizeTags(dto.Tags);
       graph.ActiveRoleTags = NormalizeTags(dto.ActiveRoleTags);
+      graph.AssignsActiveRoleTags = dto.AssignsActiveRoleTags ?? false;
       graph.SkipAbsentRoleBranches = dto.SkipAbsentRoleBranches ?? false;
       graph.ChecklistItemSetsByPlayerTag = ConvertChecklistItemSetsByPlayerTag(dto.ChecklistItemSetsByPlayerTag);
       graph.ClientSignalIdentifiers = ResolveClientSignalIdentifiers(dto);
@@ -1351,6 +1352,7 @@ namespace MultiplayerInfrastructure.Scenario
         Identifier = string.IsNullOrWhiteSpace(graph.Identifier) ? "scenario_graph" : graph.Identifier.Trim(),
         Tags = NormalizeTags(graph.Tags).ToList(),
         ActiveRoleTags = NormalizeTags(graph.ActiveRoleTags).ToList(),
+        AssignsActiveRoleTags = graph.AssignsActiveRoleTags ? true : (bool?)null,
         SkipAbsentRoleBranches = graph.SkipAbsentRoleBranches ? true : (bool?)null,
         ChecklistItemSetsByPlayerTag = ConvertChecklistItemSetsByPlayerTagToDTO(graph.ChecklistItemSetsByPlayerTag),
         ClientSignalIdentifiers = NormalizeSignalSpecification(graph.ClientSignalIdentifiers).ToList(),

@@ -2347,7 +2347,8 @@ namespace MultiplayerInfrastructure.Scenario
 
       // 채팅 명령 시작과 같은 기준으로, 역할 로스터를 구성할 수 없는 세션은 시작하지 않는다.
       // 트리거 존이나 NPC 상호작용으로 시작하는 경로에서도 원인이 시작 시점에 드러나야 한다.
-      if (!TryValidateActiveRoleRosterForStart(graph, out string rosterError))
+      if (!graph.AssignsActiveRoleTags
+          && !TryValidateActiveRoleRosterForStart(graph, out string rosterError))
       {
         string message =
           $"Scenario '{graph?.Identifier}' cannot start: {rosterError}. "

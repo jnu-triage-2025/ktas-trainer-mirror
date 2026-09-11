@@ -26,6 +26,7 @@
     "nurse_c",
     "nurse_d"
   ],
+  "assignsActiveRoleTags": true,
   "skipAbsentRoleBranches": true,
   "checklistItemSetsByPlayerTag": {
     "nurse_a": [

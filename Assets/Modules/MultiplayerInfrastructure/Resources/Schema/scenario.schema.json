@@ -30,6 +30,14 @@
       "uniqueItems": true,
       "description": "Declared player role tags used to build the server-authoritative active roster."
     },
+    "assignsActiveRoleTags": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "default": false,
+      "description": "Defers active-role roster validation until this scenario assigns its declared role tags during the default entry flow."
+    },
     "skipAbsentRoleBranches": {
       "type": [
         "boolean",

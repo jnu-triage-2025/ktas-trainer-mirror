@@ -17,6 +17,12 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>이 그래프의 권위 있는 활성 로스터를 이루는 접속 플레이어 역할들.</summary>
     public IReadOnlyList<string> ActiveRoleTags { get; set; } = Array.Empty<string>();
 
+    /// <summary>
+    /// 기본 진입 흐름에서 활성 역할 태그를 직접 부여하는지 여부입니다.
+    /// true 이면 시나리오가 역할 선택에 도달하기 전에는 활성 로스터를 요구하지 않습니다.
+    /// </summary>
+    public bool AssignsActiveRoleTags { get; set; }
+
     /// <summary>활성 로스터에 없는 선언 역할의 ByRole 분기를 건너뛸 수 있게 한다.</summary>
     public bool SkipAbsentRoleBranches { get; set; }
 

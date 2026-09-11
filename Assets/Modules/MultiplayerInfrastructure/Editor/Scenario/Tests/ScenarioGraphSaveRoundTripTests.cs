@@ -994,6 +994,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         Identifier = "active-role-roster",
         DefaultEntrypoint = "counter",
         ActiveRoleTags = new[] { "nurse_a", "nurse_b" },
+        AssignsActiveRoleTags = true,
         SkipAbsentRoleBranches = true
       };
       graph.Add(new ScenarioSignalCounterNode
@@ -1010,6 +1011,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
 
       Assert.That(reloaded.ActiveRoleTags, Is.EqualTo(new[] { "nurse_a", "nurse_b" }));
+      Assert.That(reloaded.AssignsActiveRoleTags, Is.True);
       Assert.That(reloaded.SkipAbsentRoleBranches, Is.True);
       Assert.That(((ScenarioSignalCounterNode)reloaded.Nodes["counter"]).UseActiveRoleRosterThreshold, Is.True);
     }

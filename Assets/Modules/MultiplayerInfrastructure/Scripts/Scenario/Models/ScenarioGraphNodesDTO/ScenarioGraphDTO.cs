@@ -14,6 +14,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("activeRoleTags")]
     public List<string> ActiveRoleTags { get; set; }
 
+    [JsonPropertyName("assignsActiveRoleTags")]
+    public bool? AssignsActiveRoleTags { get; set; }
+
     [JsonPropertyName("skipAbsentRoleBranches")]
     public bool? SkipAbsentRoleBranches { get; set; }
 

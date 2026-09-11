@@ -532,7 +532,8 @@ namespace MultiplayerInfrastructure.Chat
       // 역할 태그가 중복 부여된 세션은 시작해도 첫 ByRole 병렬에서 모든 브랜치가 건너뛰어져,
       // 아무도 수행하지 않은 단계의 신호를 기다리다 멈춘다. 원인과 증상이 멀리 떨어져 있어
       // 운영자가 찾기 어려우므로 시작 자체를 거부하고 바로잡을 명령을 안내한다.
-      if (!ScenarioController.TryValidateActiveRoleRosterForStart(graph, out string rosterError))
+      if (!graph.AssignsActiveRoleTags
+          && !ScenarioController.TryValidateActiveRoleRosterForStart(graph, out string rosterError))
       {
         error = $"Scenario '{scenarioIdentifier}' cannot start: {rosterError}. "
                 + "Check the role tags with '/tag show @a' and fix them with '/tag remove' or '/tag change' before starting.";
@@ -546,6 +547,7 @@ namespace MultiplayerInfrastructure.Chat
       // 처음 시작할 때는 역할 보유자 전원이 대상에 포함되어야 한다. 진입 지점을 지정한 재합류 시작은
       // 한 명만을 대상으로 하므로 이 검사에서 제외한다.
       if (!hasEntrypoint
+          && !graph.AssignsActiveRoleTags
           && ScenarioController.TryGetActiveRoleHolderClientIds(graph, out var roleHolderClientIds))
       {
         var targetClientIds = new HashSet<int>(resolvedTargets.Select(target => (int)target.ClientId));
