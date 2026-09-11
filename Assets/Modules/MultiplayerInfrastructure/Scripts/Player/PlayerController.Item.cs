@@ -137,7 +137,10 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      if (_hotbarUI == null)
+      // 핫바 UI 는 로컬 소유자 전용이다. 호스트에서는 원격 플레이어 인스턴스도 서버 인벤토리 변경 경로
+      // (OnInventoryChangedAndReturn -> ResolveHandledItem)로 여기에 도달하는데, 그때 레지스트리의 로컬 핫바를 잡아 두면
+      // 이후 인벤토리 변경마다 호스트 핫바가 다른 플레이어의 슬롯에 바인딩된다.
+      if (_hotbarUI == null && IsLocalHotbarOwner)
         _hotbarUI = Registry.Registry.Get<HotbarUIController>(RegistryType.UI, Registry.Registry.TypeKey<HotbarUIController>());
 
       int selectedIndex = _hotbarUI != null ? _hotbarUI.SelectedSlot : 0;

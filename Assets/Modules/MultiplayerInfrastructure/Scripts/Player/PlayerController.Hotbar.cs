@@ -9,6 +9,13 @@ namespace MultiplayerInfrastructure.Player
   {
     [SerializeField] private HotbarUIController _hotbarUI;
 
+    /// <summary>
+    /// 이 인스턴스가 로컬 핫바 UI를 소유·조작해도 되는지 여부.
+    /// 핫바 UI는 씬에 하나뿐이므로 로컬 소유자만 바인딩해야 한다. 스폰되지 않은(EditMode/오프라인)
+    /// 오브젝트는 소유권 개념이 없으므로 허용하고, 스폰된 뒤에는 IsOwner 인 경우에만 허용한다.
+    /// </summary>
+    private bool IsLocalHotbarOwner => NetworkObject == null || IsOwner;
+
     private void Start_Hotbar()
     {
       if (_hotbarUI == null)

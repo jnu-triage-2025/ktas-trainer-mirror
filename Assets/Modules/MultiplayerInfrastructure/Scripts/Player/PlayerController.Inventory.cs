@@ -738,8 +738,11 @@ namespace MultiplayerInfrastructure.Player
     {
       _inventoryRenderRequired = true;
 
-      // 인벤토리 변경 시 핫바 표시를 동기화한다
-      _hotbarUI?.BindInventory(_slots);
+      // 인벤토리 변경 시 핫바 표시를 동기화한다.
+      // 서버(호스트)에서는 원격 플레이어의 인벤토리 변경도 이 경로를 지나므로, 로컬 소유자가 아니면
+      // 핫바를 건드리지 않는다(호스트 핫바가 다른 플레이어의 슬롯에 바인딩되는 문제 방지).
+      if (IsLocalHotbarOwner)
+        _hotbarUI?.BindInventory(_slots);
 
       // 데이터(_slots)를 코드로 직접 변경(예: /give, 아이템 획득/제거/조합)한 경우에는
       // HotbarUIController.OnSelectedSlotChanged / InventoryUIController.OnItemAtSelectedSlotChanged

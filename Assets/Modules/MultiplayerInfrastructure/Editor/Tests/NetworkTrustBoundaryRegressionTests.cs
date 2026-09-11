@@ -116,6 +116,29 @@ namespace MultiplayerInfrastructure.Editor.Tests
         + Environment.NewLine + string.Join(Environment.NewLine, violations));
     }
 
+    [Test]
+    public void HostHotbarIsBoundOnlyByTheLocallyOwnedPlayer()
+    {
+      // 호스트에서는 원격 플레이어의 서버 인벤토리 변경도 PlayerController 인스턴스를 거친다.
+      // 그 경로가 레지스트리의 로컬 핫바를 잡거나 바인딩하면 호스트 핫바에 다른 사람의 아이템이 보인다.
+      string hotbarSource = File.ReadAllText(
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.Hotbar.cs");
+      string itemSource = File.ReadAllText(
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.Item.cs");
+      string inventorySource = File.ReadAllText(
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.Inventory.cs");
+
+      Assert.That(hotbarSource, Does.Contain("private bool IsLocalHotbarOwner => NetworkObject == null || IsOwner;"));
+      Assert.That(itemSource, Does.Contain("if (_hotbarUI == null && IsLocalHotbarOwner)"));
+
+      int bindCalls = Regex.Matches(inventorySource, @"_hotbarUI\?\.BindInventory\(_slots\);").Count;
+      int guardedBindCalls = Regex.Matches(
+        inventorySource, @"if \(IsLocalHotbarOwner\)\s*_hotbarUI\?\.BindInventory\(_slots\);").Count;
+      Assert.That(bindCalls, Is.GreaterThan(0));
+      Assert.That(guardedBindCalls, Is.EqualTo(bindCalls),
+        "Every hotbar binding in PlayerController.Inventory.cs must be guarded by IsLocalHotbarOwner.");
+    }
+
     private static void CollectClientRpcChainViolations(string path, List<string> violations)
     {
       string[] lines = File.ReadAllLines(path);
