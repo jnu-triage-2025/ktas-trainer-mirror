@@ -90,6 +90,9 @@ namespace MultiplayerInfrastructure.Editor.Tests
     [Test]
     public void StaticDisplaymentUsesAuthoritativeItemExchange()
     {
+      // 회귀 방지: 서버 호스트의 인벤토리만 직접 검사하는 구조로 되돌리면,
+      // 원격 nurse_c/nurse_d에게 할당된 wall_suction·oxyflowmeter 설치가 조용히 거부된다.
+      // 원격 소유자의 TargetRpc 소비와 성공/실패 응답 경로를 반드시 유지해야 한다.
       string source = File.ReadAllText(
         "Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.StaticObjectDisplayment.cs");
 
