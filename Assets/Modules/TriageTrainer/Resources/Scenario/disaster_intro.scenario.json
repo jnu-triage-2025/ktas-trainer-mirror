@@ -428,7 +428,7 @@
       },
       "identifier": "D002",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_role_select"
+      "nextIdentifier": "DISASTER_INTRO_SPAWN_A"
     },
     "D003": {
       "speakerName": "시스템",
@@ -448,7 +448,7 @@
       },
       "identifier": "D003",
       "nodeType": "Dialogue",
-      "nextIdentifier": "DISASTER_INTRO_SPAWN_A"
+      "nextIdentifier": "E001"
     },
     "D003_1": {
       "speakerName": "시스템",
@@ -542,7 +542,7 @@
       "consumeOnce": null,
       "identifier": "DISASTER_INTRO_BIND_DUMMY_D_A_CORRECT",
       "nodeType": "EntityStateSignalBinding",
-      "nextIdentifier": "E001"
+      "nextIdentifier": "C_role_select"
     },
     "DISASTER_INTRO_PRESET_A": {
       "targetEntityIdentifier": "patient_a",

@@ -8,6 +8,47 @@ namespace TriageTrainer.Tests
 {
   public sealed class PatientBCGateRecoveryTests
   {
+    [Test]
+    public void DisasterIntroPreparesPatientsBeforeRoleSpecificExecution()
+    {
+      var path = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/disaster_intro.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+      var commonNodes = new System.Collections.Generic.List<IScenarioNode>();
+      var visited = new System.Collections.Generic.HashSet<string>();
+      string cursor = graph.DefaultEntrypoint;
+      while (!string.IsNullOrWhiteSpace(cursor) && visited.Add(cursor))
+      {
+        var node = graph.Nodes[cursor];
+        if (node is ScenarioChoiceNode || node is ScenarioParallelNode)
+          break;
+        commonNodes.Add(node);
+        cursor = node.NextIdentifier;
+      }
+
+      Assert.That(cursor, Is.EqualTo("C_role_select"));
+      // A remote nurse_a cannot execute server-only setup. Every host role must reach it
+      // before role selection, including the medical presets and triage signal bindings.
+      foreach (var node in graph.Nodes.Values.Where(node =>
+                 node is ScenarioEntityPresetSpawnNode
+                 || node is ScenarioPatientMedicalStatePresetNode
+                 || node is ScenarioEntityStateSignalBindingNode))
+        Assert.That(commonNodes, Does.Contain(node), node.Identifier);
+
+      Assert.That(commonNodes.OfType<ScenarioEntityPresetSpawnNode>()
+        .Select(node => node.SpawnedEntityIdentifier),
+        Is.EquivalentTo(new[] { "patient_a", "patient_dummy_d_a" }));
+      foreach (var spawn in commonNodes.OfType<ScenarioEntityPresetSpawnNode>())
+      {
+        var preset = commonNodes.OfType<ScenarioPatientMedicalStatePresetNode>()
+          .Single(node => node.TargetEntityIdentifier == spawn.SpawnedEntityIdentifier);
+        Assert.That(commonNodes.IndexOf(spawn), Is.LessThan(commonNodes.IndexOf(preset)));
+      }
+
+      Assert.That(graph.Nodes["D003"].NextIdentifier, Is.EqualTo("E001"));
+      Assert.That(graph.Nodes["E001"].NextIdentifier, Is.EqualTo("D003_1"));
+    }
+
     [TestCase("patient_b_c_ct")]
     [TestCase("patient_a_critical")]
     [TestCase("disaster_intro")]
