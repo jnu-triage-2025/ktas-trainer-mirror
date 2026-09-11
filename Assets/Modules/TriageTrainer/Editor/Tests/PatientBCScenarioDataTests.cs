@@ -381,13 +381,13 @@ namespace TriageTrainer.Tests
 
       foreach (var expectation in new[]
                {
-                 (Patient: "patient_b", Interaction: "pupil_check", Role: "nurse_c"),
-                 (Patient: "patient_b", Interaction: "intravenous_line_cannula", Role: "nurse_c"),
-                 (Patient: "patient_b", Interaction: "normal_saline_connect", Role: "nurse_c"),
-                 (Patient: "patient_b", Interaction: "patient_bc_nasal_cannula", Role: "nurse_d"),
-                 (Patient: "patient_c", Interaction: "pupil_check", Role: "nurse_c"),
-                 (Patient: "patient_c", Interaction: "intravenous_line_cannula", Role: "nurse_c"),
-                 (Patient: "patient_c", Interaction: "normal_saline_connect", Role: "nurse_c"),
+                 (Patient: "patient_b", Interaction: "pupil_check", Role: "nurse_a"),
+                 (Patient: "patient_b", Interaction: "intravenous_line_cannula", Role: "nurse_a"),
+                 (Patient: "patient_b", Interaction: "normal_saline_connect", Role: "nurse_a"),
+                 (Patient: "patient_b", Interaction: "patient_bc_nasal_cannula", Role: "nurse_c"),
+                 (Patient: "patient_c", Interaction: "pupil_check", Role: "nurse_b"),
+                 (Patient: "patient_c", Interaction: "intravenous_line_cannula", Role: "nurse_b"),
+                 (Patient: "patient_c", Interaction: "normal_saline_connect", Role: "nurse_b"),
                  (Patient: "patient_c", Interaction: "patient_bc_nasal_cannula", Role: "nurse_d")
                })
       {

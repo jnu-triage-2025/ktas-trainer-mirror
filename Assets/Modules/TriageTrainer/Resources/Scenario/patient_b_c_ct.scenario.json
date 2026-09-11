@@ -20,24 +20,36 @@
   "activeRoleTags": ["nurse_a", "nurse_b", "nurse_c", "nurse_d"],
   "skipAbsentRoleBranches": true,
   "checklistItemSetsByPlayerTag": {
-    "nurse_a": [],
+    "nurse_a": [
+      { "identifier": "penlight", "count": 1 },
+      { "identifier": "cannula_20g", "count": 1 },
+      { "identifier": "intravenous_set", "count": 1 },
+      { "identifier": "normal_saline_1000ml", "count": 1 }
+    ],
     "nurse_b": [
-      { "identifier": "vital_set", "count": 1 }
+      { "identifier": "vital_set", "count": 1 },
+      { "identifier": "penlight", "count": 1 },
+      { "identifier": "cannula_20g", "count": 1 },
+      { "identifier": "intravenous_set", "count": 1 },
+      { "identifier": "normal_saline_1000ml", "count": 1 }
     ],
     "nurse_c": [
-      { "identifier": "penlight", "count": 1 },
-      { "identifier": "cannula_20g", "count": 2 },
-      { "identifier": "intravenous_set", "count": 2 },
-      { "identifier": "normal_saline_1000ml", "count": 2 }
+      { "identifier": "humidifier_bottle", "count": 1 },
+      { "identifier": "sterile_distilled_water", "count": 1 },
+      { "identifier": "flowmeter", "count": 1 },
+      { "identifier": "nasal_cannula", "count": 1 },
+      { "identifier": "sterile_gloves", "count": 1 },
+      { "identifier": "gauze", "count": 1 },
+      { "identifier": "plaster", "count": 1 }
     ],
     "nurse_d": [
-      { "identifier": "humidifier_bottle", "count": 2 },
-      { "identifier": "sterile_distilled_water", "count": 2 },
-      { "identifier": "flowmeter", "count": 2 },
-      { "identifier": "nasal_cannula", "count": 2 },
-      { "identifier": "sterile_gloves", "count": 2 },
-      { "identifier": "gauze", "count": 2 },
-      { "identifier": "plaster", "count": 2 }
+      { "identifier": "humidifier_bottle", "count": 1 },
+      { "identifier": "sterile_distilled_water", "count": 1 },
+      { "identifier": "flowmeter", "count": 1 },
+      { "identifier": "nasal_cannula", "count": 1 },
+      { "identifier": "sterile_gloves", "count": 1 },
+      { "identifier": "gauze", "count": 1 },
+      { "identifier": "plaster", "count": 1 }
     ]
   },
   "questDefinitionIncludes": [
@@ -176,7 +188,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_c"
+            "tag": "nurse_a"
           }
         ]
       }
@@ -190,7 +202,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_d"
+            "tag": "nurse_c"
           }
         ]
       }
@@ -204,7 +216,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_c"
+            "tag": "nurse_a"
           }
         ]
       }
@@ -218,7 +230,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_c"
+            "tag": "nurse_a"
           }
         ]
       }
@@ -332,7 +344,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_c"
+            "tag": "nurse_b"
           }
         ]
       }
@@ -360,7 +372,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_c"
+            "tag": "nurse_b"
           }
         ]
       }
@@ -374,7 +386,7 @@
         "conditions": [
           {
             "type": "PlayerHasTag",
-            "tag": "nurse_c"
+            "tag": "nurse_b"
           }
         ]
       }

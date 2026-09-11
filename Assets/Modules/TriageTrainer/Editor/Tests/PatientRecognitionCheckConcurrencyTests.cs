@@ -142,6 +142,33 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PupilChecksMatchAssignedAssessmentRolesAndProvidePenlights()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(
+        File.ReadAllText(Path.Combine(
+          Application.dataPath,
+          "Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json")),
+        validateWithSchema: true);
+      var activations = GetRecognitionActivations();
+
+      foreach (var expectation in new[]
+               {
+                 (Patient: "patient_b", Event: "activate_patient_b_pupil_check", Role: "nurse_a"),
+                 (Patient: "patient_c", Event: "activate_patient_c_pupil_check", Role: "nurse_b")
+               })
+      {
+        Assert.That(activations.Single(each => each.EventIdentifier == expectation.Event).RequiredRoleTag,
+          Is.EqualTo(expectation.Role));
+        var interaction = graph.Interactions.Single(each =>
+          each.Entity.Identifier == expectation.Patient && each.InteractionIdentifier == "pupil_check");
+        Assert.That(interaction.VisibilityConditions.Single().Tag, Is.EqualTo(expectation.Role));
+        Assert.That(graph.ChecklistItemSetsByPlayerTag[expectation.Role]
+            .Any(each => each.Identifier == "penlight" && each.Count > 0),
+          Is.True, $"{expectation.Role} 역할에는 펜라이트가 지급되어야 한다.");
+      }
+    }
+
+    [Test]
     public void RecognitionActivationRoleTagsMatchScenarioBranchRoles()
     {
       var activations = GetRecognitionActivations();
@@ -152,13 +179,13 @@ namespace TriageTrainer.Tests
         ("activate_patient_b_recognition_3", "nurse_a"),
         ("activate_patient_b_recognition_4", "nurse_a"),
         ("activate_patient_b_strength_check", "nurse_a"),
-        ("activate_patient_b_pupil_check", "nurse_c"),
+        ("activate_patient_b_pupil_check", "nurse_a"),
         ("activate_patient_c_recognition_1", "nurse_b"),
         ("activate_patient_c_recognition_2", "nurse_b"),
         ("activate_patient_c_recognition_3", "nurse_b"),
         ("activate_patient_c_recognition_4", "nurse_b"),
         ("activate_patient_c_strength_check", "nurse_b"),
-        ("activate_patient_c_pupil_check", "nurse_c"),
+        ("activate_patient_c_pupil_check", "nurse_b"),
       }));
 
       var graph = ScenarioGraphLoader.LoadFromJson(
