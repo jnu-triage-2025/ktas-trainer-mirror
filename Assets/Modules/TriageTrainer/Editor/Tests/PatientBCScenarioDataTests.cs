@@ -2742,6 +2742,19 @@ namespace TriageTrainer.Tests
       method.Invoke(patient, argument == null ? null : new[] { argument });
     }
 
+    private static void InvokePrivate(
+      PatientController patient,
+      string methodName,
+      object firstArgument,
+      object secondArgument)
+    {
+      var method = typeof(PatientController).GetMethod(
+        methodName,
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      Assert.That(method, Is.Not.Null, methodName);
+      method.Invoke(patient, new[] { firstArgument, secondArgument });
+    }
+
     private static void SetPrivateField(object target, string fieldName, object value)
     {
       var field = FindInstanceField(target.GetType(), fieldName);
