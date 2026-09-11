@@ -27,6 +27,10 @@ namespace MultiplayerInfrastructure.UI
     // 가드가 관리하는 모든 모듈이 공유하며 절대 폐기하지 않는 액션 에셋.
     private static DefaultInputActions _guardActions;
 
+    // 복구가 반복될 때 경고가 매 프레임 쌓이지 않도록 기록 간격을 제한한다.
+    private const float RepairWarningIntervalSeconds = 2f;
+    private static float _lastRepairWarningTime = float.NegativeInfinity;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetOnSubsystemRegistration()
     {
@@ -34,6 +38,7 @@ namespace MultiplayerInfrastructure.UI
       _bootstrapped = false;
       _recoveryDriver = null;
       _guardActions = null;
+      _lastRepairWarningTime = float.NegativeInfinity;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -167,9 +172,16 @@ namespace MultiplayerInfrastructure.UI
       }
 
       if (created)
+      {
         Debug.Log($"{LogPrefix} UI 입력 모듈을 새로 만들고 액션을 연결했습니다. eventSystem={inputModule.gameObject.name}@{inputModule.gameObject.scene.name}");
-      else
-        Debug.LogWarning($"{LogPrefix} UI 입력 액션이 꺼져 있거나 폐기되어 다시 연결했습니다. eventSystem={inputModule.gameObject.name}@{inputModule.gameObject.scene.name}, pointEnabled={inputModule.point?.action?.enabled}, clickEnabled={inputModule.leftClick?.action?.enabled}");
+        return;
+      }
+
+      if (Time.unscaledTime - _lastRepairWarningTime < RepairWarningIntervalSeconds)
+        return;
+
+      _lastRepairWarningTime = Time.unscaledTime;
+      Debug.LogWarning($"{LogPrefix} UI 입력 액션이 꺼져 있거나 폐기되어 다시 연결했습니다. eventSystem={inputModule.gameObject.name}@{inputModule.gameObject.scene.name}, pointEnabled={inputModule.point?.action?.enabled}, clickEnabled={inputModule.leftClick?.action?.enabled}");
     }
 
     private static EventSystem ResolveEventSystem()

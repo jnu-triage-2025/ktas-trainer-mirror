@@ -1066,7 +1066,11 @@ namespace MultiplayerInfrastructure.UI
 
     private void RestoreInteractivePresentation()
     {
-      SetPickingModeRecursive(_root, PickingMode.Position);
+      // Choices belong to a separate UIDocument. Keep the fullscreen document root
+      // transparent to picking when restoring the visible dialogue panel.
+      if (_root != null)
+        _root.pickingMode = PickingMode.Ignore;
+      SetPickingModeRecursive(_dialoguePanel, PickingMode.Position);
       if (_dialoguePanel != null)
         _dialoguePanel.style.opacity = 1f;
     }
