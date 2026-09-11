@@ -42,6 +42,8 @@
       RegisterEvent_ShowPatientACompletionTitle();
       RegisterEvent_PreparePatientAManualEntry();
       RegisterEvent_ArmPatientATriageReturn();
+      Register("reset_disaster_intro_patient_a_triage", () => Event_ResetDisasterIntroTriageAttempt("patient_a"));
+      Register("reset_disaster_intro_patient_dummy_d_a_triage", () => Event_ResetDisasterIntroTriageAttempt("patient_dummy_d_a"));
     }
   }
 }

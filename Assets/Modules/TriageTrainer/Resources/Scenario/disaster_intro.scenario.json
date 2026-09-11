@@ -7,11 +7,9 @@
     "sig.click_intravenous_set",
     "sig.click_blood_bag",
     "sig.click_patient_a",
-    "sig.click_patient_dummy_d_a",
-    "sig.assess_patient_a_triage",
-    "sig.assess_patient_dummy_d_a_triage"
+    "sig.click_patient_dummy_d_a"
   ],
-  "defaultEntrypoint": "D001",
+  "defaultEntrypoint": "DISASTER_INTRO_SPAWN_A",
   "tags": [
     "access_support",
     "airway_team",
@@ -59,36 +57,6 @@
       "entity": {
         "id": "patient_a"
       },
-      "interaction": "triage_prompt",
-      "kind": "Action",
-      "display": {
-        "text": "환자 활력징후 및 외양 평가 시행하기"
-      },
-      "completionSignal": "assess_patient_a_triage",
-      "afterInteract": "HideForAll",
-      "visibility": {
-        "initial": true
-      }
-    },
-    {
-      "entity": {
-        "id": "patient_dummy_d_a"
-      },
-      "interaction": "triage_prompt",
-      "kind": "Action",
-      "display": {
-        "text": "환자 활력징후 및 외양 평가 시행하기"
-      },
-      "completionSignal": "assess_patient_dummy_d_a_triage",
-      "afterInteract": "HideForAll",
-      "visibility": {
-        "initial": true
-      }
-    },
-    {
-      "entity": {
-        "id": "patient_a"
-      },
       "interaction": "transfer_prompt",
       "kind": "Action",
       "display": {
@@ -102,6 +70,62 @@
     }
   ],
   "nodes": {
+    "DISASTER_INTRO_SPAWN_A": {
+      "identifier": "DISASTER_INTRO_SPAWN_A", "nodeType": "EntityPresetSpawn",
+      "nextIdentifier": "DISASTER_INTRO_SPAWN_DUMMY_D_A",
+      "presetIdentifier": "patient_a", "spawnedEntityIdentifier": "patient_a",
+      "positionSourceEntityIdentifier": null,
+      "positionX": -71.73906, "positionY": 0.01, "positionZ": 0.07443,
+      "rotationX": 0, "rotationY": -90, "rotationZ": 0
+    },
+    "DISASTER_INTRO_SPAWN_DUMMY_D_A": {
+      "identifier": "DISASTER_INTRO_SPAWN_DUMMY_D_A", "nodeType": "EntityPresetSpawn",
+      "nextIdentifier": "DISASTER_INTRO_PRESET_A",
+      "presetIdentifier": "patient_dummy_d_a", "spawnedEntityIdentifier": "patient_dummy_d_a",
+      "positionSourceEntityIdentifier": null,
+      "positionX": -70, "positionY": 0, "positionZ": 2.3,
+      "rotationX": 0, "rotationY": -90, "rotationZ": 0
+    },
+    "DISASTER_INTRO_PRESET_A": {
+      "identifier": "DISASTER_INTRO_PRESET_A", "nodeType": "PatientMedicalStatePreset",
+      "nextIdentifier": "DISASTER_INTRO_PRESET_DUMMY_D_A",
+      "targetEntityIdentifier": "patient_a", "transitionMode": "Immediate",
+      "name": "중증 외상 환자", "intendedTriage": "Level1"
+    },
+    "DISASTER_INTRO_PRESET_DUMMY_D_A": {
+      "identifier": "DISASTER_INTRO_PRESET_DUMMY_D_A", "nodeType": "PatientMedicalStatePreset",
+      "nextIdentifier": "DISASTER_INTRO_BIND_A_ANY",
+      "targetEntityIdentifier": "patient_dummy_d_a", "transitionMode": "Immediate",
+      "name": "경증 외상 환자", "intendedTriage": "Level5"
+    },
+    "DISASTER_INTRO_BIND_A_ANY": {
+      "identifier": "DISASTER_INTRO_BIND_A_ANY", "nodeType": "EntityStateSignalBinding",
+      "nextIdentifier": "DISASTER_INTRO_BIND_A_CORRECT",
+      "bindingIdentifier": "disaster_intro_triage_a_any", "operation": "Register",
+      "targetEntityIdentifier": "patient_a", "eventName": "TriageSubmitted",
+      "outputSignalIdentifier": "disaster_intro_triage_submitted_patient_a", "consumeOnce": false
+    },
+    "DISASTER_INTRO_BIND_A_CORRECT": {
+      "identifier": "DISASTER_INTRO_BIND_A_CORRECT", "nodeType": "EntityStateSignalBinding",
+      "nextIdentifier": "DISASTER_INTRO_BIND_DUMMY_D_A_ANY",
+      "bindingIdentifier": "disaster_intro_triage_a_correct", "operation": "Register",
+      "targetEntityIdentifier": "patient_a", "eventName": "TriageSubmitted", "eventKey": "Level1",
+      "outputSignalIdentifier": "disaster_intro_triage_correct_patient_a", "consumeOnce": false
+    },
+    "DISASTER_INTRO_BIND_DUMMY_D_A_ANY": {
+      "identifier": "DISASTER_INTRO_BIND_DUMMY_D_A_ANY", "nodeType": "EntityStateSignalBinding",
+      "nextIdentifier": "DISASTER_INTRO_BIND_DUMMY_D_A_CORRECT",
+      "bindingIdentifier": "disaster_intro_triage_dummy_d_a_any", "operation": "Register",
+      "targetEntityIdentifier": "patient_dummy_d_a", "eventName": "TriageSubmitted",
+      "outputSignalIdentifier": "disaster_intro_triage_submitted_patient_dummy_d_a", "consumeOnce": false
+    },
+    "DISASTER_INTRO_BIND_DUMMY_D_A_CORRECT": {
+      "identifier": "DISASTER_INTRO_BIND_DUMMY_D_A_CORRECT", "nodeType": "EntityStateSignalBinding",
+      "nextIdentifier": "D001",
+      "bindingIdentifier": "disaster_intro_triage_dummy_d_a_correct", "operation": "Register",
+      "targetEntityIdentifier": "patient_dummy_d_a", "eventName": "TriageSubmitted", "eventKey": "Level5",
+      "outputSignalIdentifier": "disaster_intro_triage_correct_patient_dummy_d_a", "consumeOnce": false
+    },
     "D001": {
       "identifier": "D001",
       "nodeType": "Dialogue",
@@ -322,10 +346,106 @@
       "dialogueContent": "환자를 차례대로 클릭하여 환자의 상태를 확인하고, 중증도 분류를 실시하세요.",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V002",
+      "nextIdentifier": "INFO_A_1",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "DISASTER_INTRO_TRIAGE_ENABLE_A": {
+      "identifier": "DISASTER_INTRO_TRIAGE_ENABLE_A",
+      "nodeType": "TriageAssessControl",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_WAIT_A",
+      "targetEntityIdentifier": "patient_a",
+      "assessable": true
+    },
+    "DISASTER_INTRO_TRIAGE_WAIT_A": {
+      "identifier": "DISASTER_INTRO_TRIAGE_WAIT_A",
+      "nodeType": "Validator",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_EVALUATE_A",
+      "rootConditions": [{
+        "condition": "RegistryContains",
+        "validationRules": [{
+          "type": "Registry", "condition": "Contains", "registryType": "RuntimeState",
+          "registryIdentifier": "sig.disaster_intro_triage_submitted_patient_a"
+        }]
+      }],
+      "onFailure": "Ignore", "failureNextIdentifier": "N001_3",
+      "waitForCondition": true, "waitTimeoutSeconds": 180, "onWaitTimeout": "FailBranch"
+    },
+    "DISASTER_INTRO_TRIAGE_EVALUATE_A": {
+      "identifier": "DISASTER_INTRO_TRIAGE_EVALUATE_A",
+      "nodeType": "Validator",
+      "nextIdentifier": "N001_3",
+      "rootConditions": [{
+        "condition": "RegistryContains",
+        "validationRules": [{
+          "type": "Registry", "condition": "Contains", "registryType": "RuntimeState",
+          "registryIdentifier": "sig.disaster_intro_triage_correct_patient_a"
+        }]
+      }],
+      "onFailure": "Branching", "failureNextIdentifier": "DISASTER_INTRO_TRIAGE_WRONG_A",
+      "waitForCondition": false
+    },
+    "DISASTER_INTRO_TRIAGE_WRONG_A": {
+      "identifier": "DISASTER_INTRO_TRIAGE_WRONG_A", "nodeType": "Dialogue",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, KTAS 1(소생)이 적절합니다.",
+      "dialogueContentTTSPassing": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, 케이타스 원 소생이 적절합니다.",
+      "portraitSpriteIdentifier": null, "nextIdentifier": "DISASTER_INTRO_TRIAGE_RESET_A",
+      "playTTS": true, "ttsVoiceIdentifier": null, "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "DISASTER_INTRO_TRIAGE_RESET_A": {
+      "identifier": "DISASTER_INTRO_TRIAGE_RESET_A", "nodeType": "InvokeEvent",
+      "eventIdentifier": "reset_disaster_intro_patient_a_triage",
+      "moveNextBehavior": "WaitUntilDone", "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_A"
+    },
+    "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A": {
+      "identifier": "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A",
+      "nodeType": "TriageAssessControl",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_WAIT_DUMMY_D_A",
+      "targetEntityIdentifier": "patient_dummy_d_a",
+      "assessable": true
+    },
+    "DISASTER_INTRO_TRIAGE_WAIT_DUMMY_D_A": {
+      "identifier": "DISASTER_INTRO_TRIAGE_WAIT_DUMMY_D_A",
+      "nodeType": "Validator",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_EVALUATE_DUMMY_D_A",
+      "rootConditions": [{
+        "condition": "RegistryContains",
+        "validationRules": [{
+          "type": "Registry", "condition": "Contains", "registryType": "RuntimeState",
+          "registryIdentifier": "sig.disaster_intro_triage_submitted_patient_dummy_d_a"
+        }]
+      }],
+      "onFailure": "Ignore", "failureNextIdentifier": "N001_4",
+      "waitForCondition": true, "waitTimeoutSeconds": 180, "onWaitTimeout": "FailBranch"
+    },
+    "DISASTER_INTRO_TRIAGE_EVALUATE_DUMMY_D_A": {
+      "identifier": "DISASTER_INTRO_TRIAGE_EVALUATE_DUMMY_D_A",
+      "nodeType": "Validator",
+      "nextIdentifier": "N001_4",
+      "rootConditions": [{
+        "condition": "RegistryContains",
+        "validationRules": [{
+          "type": "Registry", "condition": "Contains", "registryType": "RuntimeState",
+          "registryIdentifier": "sig.disaster_intro_triage_correct_patient_dummy_d_a"
+        }]
+      }],
+      "onFailure": "Branching", "failureNextIdentifier": "DISASTER_INTRO_TRIAGE_WRONG_DUMMY_D_A",
+      "waitForCondition": false
+    },
+    "DISASTER_INTRO_TRIAGE_WRONG_DUMMY_D_A": {
+      "identifier": "DISASTER_INTRO_TRIAGE_WRONG_DUMMY_D_A", "nodeType": "Dialogue",
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다.",
+      "dialogueContentTTSPassing": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 케이타스 파이브 비응급 상태로 보입니다.",
+      "portraitSpriteIdentifier": null, "nextIdentifier": "DISASTER_INTRO_TRIAGE_RESET_DUMMY_D_A",
+      "playTTS": true, "ttsVoiceIdentifier": null, "ttsVoiceProfile": { "preset": "F3" }
+    },
+    "DISASTER_INTRO_TRIAGE_RESET_DUMMY_D_A": {
+      "identifier": "DISASTER_INTRO_TRIAGE_RESET_DUMMY_D_A", "nodeType": "InvokeEvent",
+      "eventIdentifier": "reset_disaster_intro_patient_dummy_d_a_triage",
+      "moveNextBehavior": "WaitUntilDone", "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A"
     },
     "V002": {
       "identifier": "V002",
@@ -369,7 +489,7 @@
       "dialogueContent": "활력징후 측정 결과:\n혈압: 70/40mmHg\n맥박: 140회/분 (빠르고 약함)\n호흡수: 8회/분\n체온: 35.9도\nSpO2: 82%",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C001",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_A",
       "playTTS": false,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": { "preset": "F3" }
@@ -426,7 +546,7 @@
       "dialogueContent": "해당 환자를 KTAS 1으로 분류했습니다. 다음 환자를 클릭하세요.",
       "dialogueContentTTSPassing": "해당 환자를 케이타스 원으로 분류했습니다. 다음 환자를 클릭하세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V003",
+      "nextIdentifier": "INFO_D_1",
       "playTTS": true,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": { "preset": "F3" }
@@ -461,7 +581,7 @@
       "dialogueContent": "외양: 사지에 약간의 타박상\n현재 의식 상태: 원활한 대화 가능\n활력징후 정상\nC/C: 하지 통증",
       "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C002",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A",
       "playTTS": false,
       "ttsVoiceIdentifier": null,
       "ttsVoiceProfile": { "preset": "F3" }

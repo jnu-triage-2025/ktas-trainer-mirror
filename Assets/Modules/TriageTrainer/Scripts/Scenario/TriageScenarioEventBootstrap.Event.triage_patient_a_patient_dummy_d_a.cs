@@ -59,5 +59,21 @@ namespace TriageTrainer.Scenario
 #endif
       yield break;
     }
+
+    private IEnumerator Event_ResetDisasterIntroTriageAttempt(string patientIdentifier)
+    {
+      ResolveRuntimeReferencesIfNeeded();
+      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Clear(
+        $"disaster_intro_triage_submitted_{patientIdentifier}");
+      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Clear(
+        $"disaster_intro_triage_correct_{patientIdentifier}");
+
+      GameObject target = patientIdentifier == "patient_a"
+        ? _patientAObject
+        : _patientDummyDAObject;
+      target?.GetComponentInChildren<TriageTrainer.Entity.PatientController>(true)
+        ?.ResetTriageAssessmentForRetry();
+      yield break;
+    }
   }
 }
