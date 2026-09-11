@@ -57,6 +57,28 @@ namespace MultiplayerInfrastructure.Editor.Tests
       Assert.That(source, Does.Contain("_chatService.BroadcastSystemMessage(message);"));
     }
 
+    [Test]
+    public void EntityPresetSpawnIsSkippedOnRemoteClients()
+    {
+      string source = File.ReadAllText(
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/ScenarioController.cs");
+
+      int methodStart = source.IndexOf(
+        "private void ExecuteEntityPresetSpawnNode(ScenarioEntityPresetSpawnNode node)",
+        StringComparison.Ordinal);
+      int spawnCall = source.IndexOf("Registry.Registry.TrySpawnEntityPreset(", methodStart,
+        StringComparison.Ordinal);
+      int authorityGuard = source.IndexOf(
+        "if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline)",
+        methodStart,
+        StringComparison.Ordinal);
+
+      Assert.That(methodStart, Is.GreaterThanOrEqualTo(0));
+      Assert.That(spawnCall, Is.GreaterThan(methodStart));
+      Assert.That(authorityGuard, Is.InRange(methodStart, spawnCall),
+        "원격 클라이언트가 EntityPresetSpawn을 실행하면 로컬 전용 하위 오브젝트가 남을 수 있습니다.");
+    }
+
     [TestCase("Assets/Modules/TriageTrainer/Scripts/Entities/Stretcher/StretcherController.cs")]
     [TestCase("Assets/Modules/MultiplayerInfrastructure/Scripts/Entity/MinecraftBoatLikeControl.cs")]
     public void VehicleInputRpcRejectsNonFiniteValues(string path)

@@ -3598,6 +3598,16 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      // 프리셋에는 NetworkObject가 아닌 보조 루트나 unwrap 하위 오브젝트가 포함될 수 있다.
+      // 호환 실행 경로의 원격 클라이언트가 직접 프리셋을 생성하면 NetworkObject 스폰은 거부되지만
+      // 이러한 로컬 오브젝트만 남아 해당 피어에만 보이게 된다. 실제 생성은 서버 권위로 한정하고,
+      // 원격 클라이언트는 서버가 복제하는 결과를 받으면서 그래프 진행만 계속한다.
+      if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline)
+      {
+        Advance();
+        return;
+      }
+
       if (!string.IsNullOrWhiteSpace(node.ActingNpcIdentifier))
       {
         var actingNpc = _currentGraph?.ActingNpcs?.FirstOrDefault(value => value != null
