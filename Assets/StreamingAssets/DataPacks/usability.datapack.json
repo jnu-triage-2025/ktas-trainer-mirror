@@ -18,6 +18,9 @@
     { "name": "nurse_b", "target": "/tag add @self nurse_b" },
     { "name": "nurse_c", "target": "/tag add @self nurse_c" },
     { "name": "nurse_d", "target": "/tag add @self nurse_d" },
-    { "name": "opall", "target": "/permission user set @a operator" }
+    { "name": "opall", "target": "/permission user set @a operator" },
+    { "name": "s1", "target": "/scenario execute @a disaster_intro" },
+    { "name": "s2", "target": "/scenario execute @a patient_a_critical" },
+    { "name": "s3", "target": "/scenario execute @a patient_b_c_ct" }
   ]
 }
