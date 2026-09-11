@@ -51,6 +51,12 @@ namespace TriageTrainer.Editor.Utils
     public const string CommonSpawnPointIdentifier = "spawnpoint-commons";
     public static readonly Vector3 DefaultCommonSpawnPoint = new(-73f, 1f, -7.5f);
 
+    public const string DisasterIntroPatientASpawnWaypointIdentifier = "disaster_intro:patient_spawnpoint_a";
+    public static readonly Vector3 DefaultDisasterIntroPatientASpawnWaypoint = new(-72.85f, 0.01f, 2.3f);
+
+    public const string DisasterIntroPatientDummyDASpawnWaypointIdentifier = "disaster_intro:patient_spawnpoint_dummy_d_a";
+    public static readonly Vector3 DefaultDisasterIntroPatientDummyDASpawnWaypoint = new(-70.3f, 0f, 2.3f);
+
     // Scenario A 앵커는 TriageScenarioEventBootstrap.PatientAWorldAnchors.EnsurePatientAWorldAnchors
     // 의 런타임 폴백과 같은 값을 쓴다. 양쪽을 항상 동기화한다. 씬에 작성된 앵커가 런타임
     // 폴백보다 우선하므로, 여기서 구운 플레이스홀더가 patient_a 스폰 위치를 해결되지 않은
@@ -144,6 +150,8 @@ namespace TriageTrainer.Editor.Utils
         DefaultTreatmentRoomEnterance,
         CommonSpawnPointIdentifier,
         DefaultCommonSpawnPoint,
+        DisasterIntroPatientASpawnWaypointIdentifier, DefaultDisasterIntroPatientASpawnWaypoint,
+        DisasterIntroPatientDummyDASpawnWaypointIdentifier, DefaultDisasterIntroPatientDummyDASpawnWaypoint,
         PatientASpawnWaypointIdentifier, DefaultPatientASpawnWaypoint,
         PatientAArrivalWaypointIdentifier, DefaultPatientAArrivalWaypoint,
         PatientADoctorTreatroomEnteranceWaypointIdentifier, DefaultPatientADoctorWaypoint,
@@ -176,6 +184,8 @@ namespace TriageTrainer.Editor.Utils
         Vector3 treatmentRoomEnterance,
         string commonSpawnPointIdentifier,
         Vector3 commonSpawnPoint,
+        string disasterIntroPatientASpawnWaypointIdentifier, Vector3 disasterIntroPatientASpawnWaypoint,
+        string disasterIntroPatientDummyDASpawnWaypointIdentifier, Vector3 disasterIntroPatientDummyDASpawnWaypoint,
         string patientASpawnWaypointIdentifier, Vector3 patientASpawnWaypoint,
         string patientAArrivalWaypointIdentifier, Vector3 patientAArrivalWaypoint,
         string patientADoctorWaypointIdentifier, Vector3 patientADoctorWaypoint,
@@ -204,6 +214,8 @@ namespace TriageTrainer.Editor.Utils
       DeleteGeneratedScenarioObjects(generatedRoot.transform);
       CreateWaypoint(generatedRoot.transform, buildingIdentifier, buildingEnterance);
       CreateWaypoint(generatedRoot.transform, treatmentIdentifier, treatmentRoomEnterance);
+      CreateWaypoint(generatedRoot.transform, disasterIntroPatientASpawnWaypointIdentifier, disasterIntroPatientASpawnWaypoint);
+      CreateWaypoint(generatedRoot.transform, disasterIntroPatientDummyDASpawnWaypointIdentifier, disasterIntroPatientDummyDASpawnWaypoint);
       CreateWaypoint(generatedRoot.transform, patientASpawnWaypointIdentifier, patientASpawnWaypoint);
       CreateWaypoint(generatedRoot.transform, patientAArrivalWaypointIdentifier, patientAArrivalWaypoint);
       CreateWaypoint(generatedRoot.transform, patientADoctorWaypointIdentifier, patientADoctorWaypoint);
