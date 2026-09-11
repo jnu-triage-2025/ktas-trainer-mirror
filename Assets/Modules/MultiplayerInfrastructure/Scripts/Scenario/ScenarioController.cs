@@ -3438,6 +3438,19 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingPlayerTag;
 
+      // 호환 실행 경로에서는 원격 피어도 자기 상태기를 실행하지만 플레이어 태그 저장소는 서버
+      // 권위다. 역할 선택(Add + Current)을 로컬에서 직접 적용하면 PlayerTagService가 거부하고,
+      // 피어별 ByRole 배정이 서로 다른 태그 스냅샷을 보게 된다. 서버가 그래프의 실제 노드를
+      // 검증한 뒤 요청한 참가자 자신에게 태그를 부여하도록 위임한다.
+      if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline
+          && node.Operation == ScenarioPlayerTagOperationType.Add
+          && node.Scope == ScenarioPlayerTagScope.Current
+          && ScenarioNetworkRelay.RequestCompatibilityPlayerTag(_currentGraph?.Identifier, node.Identifier))
+      {
+        Advance();
+        return;
+      }
+
       // Swap 은 두 태그 그룹 간 교환이므로 대상-세션 루프와 별개로 처리한다.
       if (node.Operation == ScenarioPlayerTagOperationType.Swap)
       {
@@ -3497,6 +3510,8 @@ namespace MultiplayerInfrastructure.Scenario
         switch (node.Operation)
         {
           case ScenarioPlayerTagOperationType.Add:
+            if (node.Scope == ScenarioPlayerTagScope.Current)
+              RemoveOtherChoiceRoleTags(session.Identifier, node);
             bool hadTag = PlayerTagService.HasTag(session.Identifier, node.Tag);
             PlayerTagService.AddTag(session.Identifier, node.Tag);
             if (!hadTag)
@@ -3535,6 +3550,29 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    private void RemoveOtherChoiceRoleTags(string playerIdentifier, ScenarioPlayerTagNode selectedNode)
+    {
+      if (_currentGraph == null || selectedNode == null || string.IsNullOrWhiteSpace(playerIdentifier))
+        return;
+
+      var choiceTargets = _currentGraph.Nodes.Values
+        .OfType<ScenarioChoiceNode>()
+        .Where(choice => choice.Options != null)
+        .SelectMany(choice => choice.Options)
+        .Select(option => option?.NextNodeIdentifier)
+        .Where(identifier => !string.IsNullOrWhiteSpace(identifier))
+        .ToHashSet(StringComparer.Ordinal);
+      foreach (var roleNode in _currentGraph.Nodes.Values.OfType<ScenarioPlayerTagNode>())
+      {
+        if (roleNode.Operation != ScenarioPlayerTagOperationType.Add
+            || roleNode.Scope != ScenarioPlayerTagScope.Current
+            || string.IsNullOrWhiteSpace(roleNode.Tag)
+            || !choiceTargets.Contains(roleNode.Identifier))
+          continue;
+        PlayerTagService.RemoveTag(playerIdentifier, roleNode.Tag);
+      }
     }
 
     /// <summary>
@@ -5964,7 +6002,6 @@ namespace MultiplayerInfrastructure.Scenario
 
         bool sharedRoleAllocation = _executionMode != ExecutionMode.ServerAuthoritative
           && node.AllocationType == ScenarioParallelAllocationType.ByRole
-          && _currentGraph?.ActiveRoleTags?.Count > 0
           && ScenarioNetworkRelay.HasCompatibilitySession(_currentGraph?.Identifier);
         if (sharedRoleAllocation)
         {
@@ -7869,15 +7906,24 @@ namespace MultiplayerInfrastructure.Scenario
       out List<ActiveRoleRosterEntry> roster,
       out string error)
     {
-      roster = new List<ActiveRoleRosterEntry>();
-      error = null;
       var declaredRoles = graph?.ActiveRoleTags?
         .Where(role => !string.IsNullOrWhiteSpace(role))
         .Distinct(StringComparer.Ordinal)
         .ToArray() ?? Array.Empty<string>();
-      if (declaredRoles.Length == 0)
+      return TryBuildRoleRoster(declaredRoles, clientIds, out roster, out error);
+    }
+
+    private static bool TryBuildRoleRoster(
+      IReadOnlyCollection<string> declaredRoles,
+      IReadOnlyList<int> clientIds,
+      out List<ActiveRoleRosterEntry> roster,
+      out string error)
+    {
+      roster = new List<ActiveRoleRosterEntry>();
+      error = null;
+      if (declaredRoles == null || declaredRoles.Count == 0)
       {
-        error = "graph has no activeRoleTags";
+        error = "no roles were declared";
         return false;
       }
 
@@ -7922,7 +7968,8 @@ namespace MultiplayerInfrastructure.Scenario
         }
       }
 
-      roster.AddRange(holderByRole.Values.OrderBy(entry => Array.IndexOf(declaredRoles, entry.Role)));
+      var roleOrder = declaredRoles.ToList();
+      roster.AddRange(holderByRole.Values.OrderBy(entry => roleOrder.IndexOf(entry.Role)));
       return true;
     }
 
@@ -8287,7 +8334,14 @@ namespace MultiplayerInfrastructure.Scenario
     {
       owners = null;
       var clients = participants.OrderBy(id => id).ToArray();
-      if (!TryBuildActiveRoleRoster(graph, clients, out var roster, out _))
+      var declaredRoles = node.Branches?
+        .Where(branch => branch?.RequiredPlayerTags != null)
+        .SelectMany(branch => branch.RequiredPlayerTags)
+        .Where(role => !string.IsNullOrWhiteSpace(role))
+        .Select(role => role.Trim())
+        .Distinct(StringComparer.Ordinal)
+        .ToArray() ?? Array.Empty<string>();
+      if (!TryBuildRoleRoster(declaredRoles, clients, out var roster, out _))
         return false;
       // 등록 유예 안에서는 접속 중인 참여자 전원이 역할을 등록할 때까지 기다린다. 유예가 지나면
       // 역할 없는 참여자(관전자, 역할 선택을 마치지 못한 인원)를 제외하고 배정해 무한 대기를 막는다.
@@ -8295,7 +8349,7 @@ namespace MultiplayerInfrastructure.Scenario
           && !HasRegisteredCompatibilityRoles(clients, roster.Select(entry => entry.ClientId)))
         return false;
       var allocation = new Dictionary<ScenarioParallelBranch, int?>();
-      if (!TryAssignActiveRoleBranches(node.Branches, new HashSet<string>(graph.ActiveRoleTags),
+      if (!TryAssignActiveRoleBranches(node.Branches, new HashSet<string>(declaredRoles),
             roster.ToDictionary(entry => entry.Role, entry => entry.ClientId, StringComparer.Ordinal),
             graph.SkipAbsentRoleBranches,
             (branch, clientId) => IsPlayerEligibleForBranch(branch, clientId, allowTagGateBypass: false),

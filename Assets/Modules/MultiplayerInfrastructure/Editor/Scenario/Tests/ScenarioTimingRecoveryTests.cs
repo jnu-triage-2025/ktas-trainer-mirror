@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.Tag;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -88,6 +90,46 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(method.Invoke(null, new object[] { participants, new[] { 1, 2, 3, 3 } }), Is.False);
       Assert.That(method.Invoke(null, new object[] { participants, new[] { 4, 3, 2, 1 } }), Is.True);
       Assert.That(method.Invoke(null, new object[] { new[] { 1, 2, 3 }, new[] { 1, 2, 3 } }), Is.True);
+    }
+
+    [Test]
+    public void CompatibilityAllocationUsesParallelRolesWhenActiveRoleTagsAreEmpty()
+    {
+      const string nurseA = "compat-nurse-a";
+      const string nurseD = "compat-nurse-d";
+      var go = new GameObject("compatibility-dynamic-role-allocation");
+      try
+      {
+        UserDescriptorService.Register(101, new UserDescriptor(nurseA, "Nurse A"));
+        UserDescriptorService.Register(104, new UserDescriptor(nurseD, "Nurse D"));
+        PlayerTagService.ReplaceTags(nurseA, new[] { "nurse_a" });
+        PlayerTagService.ReplaceTags(nurseD, new[] { "nurse_d" });
+
+        var graph = new ScenarioGraph { Identifier = "dynamic-roles", ActiveRoleTags = Array.Empty<string>() };
+        var parallel = new ScenarioParallelNode
+        {
+          Identifier = "P001",
+          AllocationType = ScenarioParallelAllocationType.ByRole,
+          Branches = new[]
+          {
+            new ScenarioParallelBranch { Identifier = "A", RequiredPlayerTags = new[] { "nurse_a" } },
+            new ScenarioParallelBranch { Identifier = "D", RequiredPlayerTags = new[] { "nurse_d" } }
+          }
+        };
+        var controller = go.AddComponent<ScenarioController>();
+
+        Assert.That(controller.TryAllocateCompatibilityRoles(
+          graph, parallel, new[] { 101, 104 }, out var owners), Is.True);
+        Assert.That(owners, Is.EqualTo(new[] { 101, 104 }));
+      }
+      finally
+      {
+        PlayerTagService.ReplaceTags(nurseA, Array.Empty<string>());
+        PlayerTagService.ReplaceTags(nurseD, Array.Empty<string>());
+        UserDescriptorService.Unregister(nurseA);
+        UserDescriptorService.Unregister(nurseD);
+        UnityEngine.Object.DestroyImmediate(go);
+      }
     }
 
     [Test]

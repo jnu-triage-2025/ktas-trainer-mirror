@@ -5,6 +5,7 @@ using System.Linq;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
+using MultiplayerInfrastructure.Session;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
@@ -142,6 +143,20 @@ namespace MultiplayerInfrastructure.Scenario
       => _instance != null && InstanceFinder.IsClientStarted
          && !string.IsNullOrEmpty(_localCompatibilitySession) && _localCompatibilityGraph == graphIdentifier;
 
+    /// <summary>호환 실행 중 원격 참가자가 선택한 자기 역할 태그를 서버에 적용하도록 요청한다.</summary>
+    public static bool RequestCompatibilityPlayerTag(string graphIdentifier, string nodeIdentifier)
+    {
+      if (_instance == null || !InstanceFinder.IsClientStarted || InstanceFinder.IsServerStarted
+          || string.IsNullOrEmpty(_localCompatibilitySession)
+          || _localCompatibilityGraph != graphIdentifier
+          || string.IsNullOrWhiteSpace(nodeIdentifier))
+        return false;
+
+      _instance.CmdRequestCompatibilityPlayerTag(
+        _localCompatibilitySession, graphIdentifier, nodeIdentifier);
+      return true;
+    }
+
     /// <summary>
     /// 서버가 내려 주는 ByRole 분기 배정을 기다린다. <paramref name="timeoutSeconds"/> 안에 배정이 오지
     /// 않으면 <paramref name="apply"/> 를 부르지 않고 끝나며, 호출자가 로컬 배정으로 복구한다.
@@ -176,6 +191,49 @@ namespace MultiplayerInfrastructure.Scenario
     private bool IsCompatibilityParticipant(NetworkConnection sender, string session, string graphIdentifier)
       => sender != null && session == _compatibilitySession && graphIdentifier == _compatibilityGraph
          && _compatibilityParticipants.TryGetValue(sender.ClientId, out var participant) && participant == sender;
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdRequestCompatibilityPlayerTag(
+      string session, string graphIdentifier, string nodeIdentifier, NetworkConnection sender = null)
+    {
+      if (!IsCompatibilityParticipant(sender, session, graphIdentifier)
+          || !Registry.Registry.TryGetScenarioGraph(graphIdentifier, out ScenarioGraph graph, out _)
+          || !graph.TryGetNode(nodeIdentifier, out var rawNode)
+          || rawNode is not ScenarioPlayerTagNode node
+          || node.Operation != ScenarioPlayerTagOperationType.Add
+          || node.Scope != ScenarioPlayerTagScope.Current
+          || string.IsNullOrWhiteSpace(node.Tag)
+          || !IsChoiceTarget(graph, nodeIdentifier)
+          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var player)
+          || player == null
+          || string.IsNullOrWhiteSpace(player.Identifier))
+        return;
+
+      var roleTags = graph.Nodes.Values
+        .OfType<ScenarioChoiceNode>()
+        .Where(choice => choice.Options != null)
+        .SelectMany(choice => choice.Options)
+        .Select(option => option?.NextNodeIdentifier)
+        .Where(target => !string.IsNullOrWhiteSpace(target)
+                         && graph.TryGetNode(target, out var candidate)
+                         && candidate is ScenarioPlayerTagNode tagNode
+                         && tagNode.Operation == ScenarioPlayerTagOperationType.Add
+                         && tagNode.Scope == ScenarioPlayerTagScope.Current)
+        .Select(target => ((ScenarioPlayerTagNode)graph.Nodes[target]).Tag)
+        .Where(tag => !string.IsNullOrWhiteSpace(tag))
+        .Select(tag => tag.Trim())
+        .Distinct(StringComparer.Ordinal)
+        .ToArray();
+
+      foreach (string roleTag in roleTags)
+        Tag.PlayerTagService.RemoveTag(player.Identifier, roleTag);
+      Tag.PlayerTagService.AddTag(player.Identifier, node.Tag.Trim());
+    }
+
+    private static bool IsChoiceTarget(ScenarioGraph graph, string nodeIdentifier)
+      => graph?.Nodes?.Values.OfType<ScenarioChoiceNode>().Any(choice =>
+        choice.Options != null && choice.Options.Any(option =>
+          option != null && string.Equals(option.NextNodeIdentifier, nodeIdentifier, StringComparison.Ordinal))) == true;
 
     [ServerRpc(RequireOwnership = false)]
     private void CmdLeaveCompatibilitySession(string session, string graphIdentifier, NetworkConnection sender = null)
