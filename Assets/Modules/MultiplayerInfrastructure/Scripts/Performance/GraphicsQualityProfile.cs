@@ -125,6 +125,19 @@ namespace MultiplayerInfrastructure.Performance
       LodBias = Mathf.Clamp(LodBias, 0.25f, 4f);
       MaximumLodLevel = Mathf.Clamp(MaximumLodLevel, 0, 3);
       PixelLightCount = Mathf.Clamp(PixelLightCount, 0, 8);
+
+      // 정수로 저장된 열거형은 값이 바뀐 다른 버전의 저장값을 그대로 들여올 수 있다. 열거형에 없는 값은
+      // URP 에셋이나 QualitySettings에 그대로 들어가므로 기본값으로 바꾼다. 프로파일만은 나머지 값을 보존하는
+      // 사용자 지정으로 본다.
+      Profile = SanitizeEnum(Profile, GraphicsQualityProfile.Custom);
+      AntiAliasing = SanitizeEnum(AntiAliasing, GraphicsAntiAliasing.Disabled);
+      AnisotropicFiltering = SanitizeEnum(AnisotropicFiltering, AnisotropicFiltering.Disable);
+      ShadowResolution = SanitizeEnum(ShadowResolution, GraphicsShadowResolution.Low);
+      AdditionalLights = SanitizeEnum(AdditionalLights, GraphicsAdditionalLights.PerVertex);
     }
+
+    /// <summary>열거형에 없는 저장값을 <paramref name="fallback"/>으로 바꿉니다.</summary>
+    private static T SanitizeEnum<T>(T value, T fallback) where T : struct, Enum
+      => Enum.IsDefined(typeof(T), value) ? value : fallback;
   }
 }

@@ -1,4 +1,5 @@
 ﻿using PlayerPrefs = MultiplayerInfrastructure.Automation.ProfilePlayerPrefs;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -61,10 +62,9 @@ namespace MultiplayerInfrastructure.UI
       {
         if (string.IsNullOrEmpty(entry.actionId))
           continue;
-        string prefsKey = PrefsKeyPrefix + entry.actionId;
-        if (!PlayerPrefs.HasKey(prefsKey))
+        if (!TryGetStoredKey(entry.actionId, out var storedKey))
           continue;
-        entry.boundKey = (KeyCode)PlayerPrefs.GetInt(prefsKey);
+        entry.boundKey = storedKey;
         anyLoaded = true;
       }
       return anyLoaded;
@@ -72,18 +72,36 @@ namespace MultiplayerInfrastructure.UI
 
     /// <summary>
     /// 설정 화면과 실제 게임 입력이 같은 PlayerPrefs 바인딩을 사용하도록 현재 키를 조회한다.
-    /// 아직 저장된 값이 없으면 <paramref name="defaultKey"/>를 사용한다.
+    /// 아직 저장된 값이 없거나 저장된 값이 유효한 키가 아니면 <paramref name="defaultKey"/>를 사용한다.
     /// </summary>
     public static KeyCode GetBoundKey(string actionId, KeyCode defaultKey)
+      => TryGetStoredKey(actionId, out var storedKey) ? storedKey : defaultKey;
+
+    /// <summary>
+    /// 저장된 키를 읽습니다. 저장된 정수가 <see cref="KeyCode"/>에 없는 값이면(다른 버전이 남겼거나 손상된 값)
+    /// 저장되지 않은 것으로 봅니다. 그 값을 그대로 쓰면 정의되지 않은 키가 입력 판정에 들어가고,
+    /// 설정 화면에는 숫자만 표시됩니다.
+    /// </summary>
+    public static bool TryGetStoredKey(string actionId, out KeyCode key)
     {
+      key = KeyCode.None;
       if (string.IsNullOrEmpty(actionId))
-        return defaultKey;
+        return false;
 
       string prefsKey = PrefsKeyPrefix + actionId;
-      return PlayerPrefs.HasKey(prefsKey)
-        ? (KeyCode)PlayerPrefs.GetInt(prefsKey)
-        : defaultKey;
+      if (!PlayerPrefs.HasKey(prefsKey))
+        return false;
+
+      int raw = PlayerPrefs.GetInt(prefsKey);
+      if (!IsValidStoredKey(raw))
+        return false;
+
+      key = (KeyCode)raw;
+      return true;
     }
+
+    /// <summary>저장된 정수가 실제 <see cref="KeyCode"/> 값인지 확인합니다.</summary>
+    public static bool IsValidStoredKey(int raw) => Enum.IsDefined(typeof(KeyCode), raw);
 
     // ──────────────────────────────────────────────────────────────────────────
     // 초기화
