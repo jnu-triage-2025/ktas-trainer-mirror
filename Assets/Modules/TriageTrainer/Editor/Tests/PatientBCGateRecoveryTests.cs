@@ -162,6 +162,17 @@ namespace TriageTrainer.Tests
       Assert.That(selectionTask.Type, Is.EqualTo(QuestCompletionCriteriaType.InteractionSignalReceived));
       Assert.That(selectionTask.SignalId, Is.EqualTo("move_patient_a"));
       Assert.That(selectionTask.SignalScope, Is.EqualTo(ScenarioSignalScope.Owner));
+
+      var clientSignalAuthorization = new ScenarioClientSignalAuthorization();
+      clientSignalAuthorization.ConfigureScenario(graph);
+      Assert.That(clientSignalAuthorization.CanRaise(
+          clientId: 7,
+          playerIdentifier: "nurse-a-non-host",
+          normalizedSignalId: ScenarioInteractionSignals.Normalize(selectionTask.SignalId),
+          out string authorizationError),
+        Is.True,
+        $"비호스트 nurse_a의 긴급 환자 선택 신호가 서버에서 거부됩니다: {authorizationError}");
+
       Assert.That(graph.Nodes["N001_4"].NextIdentifier, Is.EqualTo("N001_5"),
         "두 번째 분류 직후에는 퀘스트를 제거하지 않고 긴급 환자 선택 목표를 안내해야 합니다.");
       Assert.That(graph.Nodes["V004"].NextIdentifier, Is.EqualTo("Q_TRIAGE_A_REMOVE"),

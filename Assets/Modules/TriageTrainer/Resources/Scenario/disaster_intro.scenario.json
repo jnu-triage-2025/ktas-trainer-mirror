@@ -63,7 +63,8 @@
     "sig.click_intravenous_set",
     "sig.click_blood_bag",
     "sig.click_patient_a",
-    "sig.click_patient_dummy_d_a"
+    "sig.click_patient_dummy_d_a",
+    "sig.move_patient_a"
   ],
   "clientSignalPrefixes": [],
   "questDefinitionIncludes": [
