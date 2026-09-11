@@ -25,6 +25,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("gamerule AllowMultipleRoleBranchesForSinglePlayer [true|false]", "Run duplicate role branches sequentially for each assigned player (default true)."),
       new UsageLine("gamerule UseMicInRecognitionCheck [true|false]", "Allow microphone volume for patient recognition checks (default false)."),
       new UsageLine("gamerule DisableInteractionInRecognitionCheck [true|false]", "Disable click interaction for recognition checks; microphone must be enabled."),
+      new UsageLine("gamerule ShowRecognitionMicrophoneUnavailableGuidance [true|false]", "Show guidance when the recognition-check microphone is unavailable (default false)."),
       new UsageLine("gamerule DEBUG_INT_CPR_PLAYING_ESCAPE_KEY [true|false]", "Allow the local CPR performer to release animation and position lock with Left Shift (default false)."),
       new UsageLine("gamerule CareZoneMissingEquipmentFallback [wall_suction,oxyflowmeter,defibrillator|none]", "Use nearest equipment when expected CareZone equipment is absent (default defibrillator)."),
     };
@@ -49,7 +50,7 @@ namespace MultiplayerInfrastructure.Command
       if (args == null || args.Length == 0)
       {
         _chat.SendSystemMessage(sender,
-          $"Game rules:\n  runningSpeedMultiplier = {Format(PlayerController.ServerRunningSpeedMultiplier)}\n  IgnoreTagAssignFullSatisfactionOnScenarioPlay = {ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay}\n  AllowMultipleRoleBranchesForSinglePlayer = {ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer}\n  UseMicInRecognitionCheck = {ScenarioGameRules.UseMicInRecognitionCheck}\n  DisableInteractionInRecognitionCheck = {ScenarioGameRules.DisableInteractionInRecognitionCheck}\n  DEBUG_INT_CPR_PLAYING_ESCAPE_KEY = {ScenarioGameRules.DEBUG_INT_CPR_PLAYING_ESCAPE_KEY}\n  CareZoneMissingEquipmentFallback = {ScenarioGameRules.FormatMissingCareZoneEquipmentFallback()}");
+          $"Game rules:\n  runningSpeedMultiplier = {Format(PlayerController.ServerRunningSpeedMultiplier)}\n  IgnoreTagAssignFullSatisfactionOnScenarioPlay = {ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay}\n  AllowMultipleRoleBranchesForSinglePlayer = {ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer}\n  UseMicInRecognitionCheck = {ScenarioGameRules.UseMicInRecognitionCheck}\n  DisableInteractionInRecognitionCheck = {ScenarioGameRules.DisableInteractionInRecognitionCheck}\n  ShowRecognitionMicrophoneUnavailableGuidance = {ScenarioGameRules.ShowRecognitionMicrophoneUnavailableGuidance}\n  DEBUG_INT_CPR_PLAYING_ESCAPE_KEY = {ScenarioGameRules.DEBUG_INT_CPR_PLAYING_ESCAPE_KEY}\n  CareZoneMissingEquipmentFallback = {ScenarioGameRules.FormatMissingCareZoneEquipmentFallback()}");
         return;
       }
 
@@ -106,6 +107,32 @@ namespace MultiplayerInfrastructure.Command
         HandleRecognitionRule(sender, args, "DisableInteractionInRecognitionCheck",
           ScenarioGameRules.DisableInteractionInRecognitionCheck,
           ScenarioGameRules.TrySetDisableInteractionInRecognitionCheck);
+        return;
+      }
+
+      if (string.Equals(args[0], "ShowRecognitionMicrophoneUnavailableGuidance", System.StringComparison.OrdinalIgnoreCase))
+      {
+        if (args.Length == 1)
+        {
+          _chat.SendSystemMessage(sender,
+            $"ShowRecognitionMicrophoneUnavailableGuidance = {ScenarioGameRules.ShowRecognitionMicrophoneUnavailableGuidance}");
+          return;
+        }
+
+        if (args.Length != 2 || !bool.TryParse(args[1], out var enabled))
+        {
+          _chat.SendSystemMessage(sender, "ShowRecognitionMicrophoneUnavailableGuidance must be true or false.");
+          return;
+        }
+
+        if (!_chat.TrySetRecognitionMicrophoneUnavailableGuidanceServer(enabled))
+        {
+          _chat.SendSystemMessage(sender,
+            "ShowRecognitionMicrophoneUnavailableGuidance could not be synchronized.");
+          return;
+        }
+
+        _chat.SendSystemMessage(sender, $"Set ShowRecognitionMicrophoneUnavailableGuidance to {enabled}.");
         return;
       }
 

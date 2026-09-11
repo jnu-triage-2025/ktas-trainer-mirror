@@ -400,6 +400,9 @@ namespace TriageTrainer.Entity
       RecognitionCheckMicrophoneInput.Availability availability,
       bool force)
     {
+      if (!ScenarioGameRules.ShowRecognitionMicrophoneUnavailableGuidance)
+        return;
+
       if (!force && availability == _lastReportedMicrophoneAvailability)
         return;
       _lastReportedMicrophoneAvailability = availability;

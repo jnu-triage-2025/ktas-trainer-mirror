@@ -208,6 +208,37 @@ namespace MultiplayerInfrastructure.Chat
       ScenarioGameRules.DEBUG_INT_CPR_PLAYING_ESCAPE_KEY = enabled;
     }
 
+    /// <summary>
+    /// 마이크 미사용 안내의 표시 여부를 서버와 모든 관찰 클라이언트에 동일하게 적용한다.
+    /// 안내 문구는 각 클라이언트가 표시하므로 서버의 static 값만 변경하면 원격 클라이언트에 반영되지 않는다.
+    /// </summary>
+    public bool TrySetRecognitionMicrophoneUnavailableGuidanceServer(bool enabled)
+    {
+      if (InstanceFinder.IsOffline)
+      {
+        ApplyRecognitionMicrophoneUnavailableGuidance(enabled);
+        return true;
+      }
+
+      if (!IsServerInitialized)
+        return false;
+
+      ApplyRecognitionMicrophoneUnavailableGuidance(enabled);
+      SyncRecognitionMicrophoneUnavailableGuidanceObserversRpc(enabled);
+      return true;
+    }
+
+    [ObserversRpc(BufferLast = true)]
+    private void SyncRecognitionMicrophoneUnavailableGuidanceObserversRpc(bool enabled)
+    {
+      ApplyRecognitionMicrophoneUnavailableGuidance(enabled);
+    }
+
+    private static void ApplyRecognitionMicrophoneUnavailableGuidance(bool enabled)
+    {
+      ScenarioGameRules.ShowRecognitionMicrophoneUnavailableGuidance = enabled;
+    }
+
     [TargetRpc]
     private void TargetRunScenario(
       NetworkConnection conn,

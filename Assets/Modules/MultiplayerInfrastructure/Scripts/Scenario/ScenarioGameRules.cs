@@ -20,6 +20,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       DEBUG_INT_CPR_PLAYING_ESCAPE_KEY = false;
       MissingCareZoneEquipmentFallback = CareZoneMissingEquipmentFallback.Defibrillator;
+      ShowRecognitionMicrophoneUnavailableGuidance = false;
     }
 
     /// <summary>
@@ -44,6 +45,9 @@ namespace MultiplayerInfrastructure.Scenario
 
     /// <summary>의식 확인의 직접 상호작용 경로를 숨긴다. 마이크 경로가 켜진 경우에만 허용된다.</summary>
     public static bool DisableInteractionInRecognitionCheck { get; private set; }
+
+    /// <summary>의식 확인에서 마이크를 사용할 수 없을 때의 안내 문구를 표시한다.</summary>
+    public static bool ShowRecognitionMicrophoneUnavailableGuidance { get; set; }
 
     public static CareZoneMissingEquipmentFallback MissingCareZoneEquipmentFallback { get; private set; }
       = CareZoneMissingEquipmentFallback.Defibrillator;
