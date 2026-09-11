@@ -76,6 +76,40 @@
       "entity": {
         "id": "patient_a"
       },
+      "interaction": "triage_assess",
+      "extras": {
+        "triageBriefing": "외양: 흉부 관통상, 다량의 출혈, 피부 창백하고 차가움\n빈맥\n불규칙한 서호흡\n의식 상태: 대화가 불가능하고 신음소리만 내고 있음\n\n활력징후 측정 결과:\n혈압: 70/40mmHg\n맥박: 140회/분 (빠르고 약함)\n호흡수: 8회/분\n체온: 35.9도\nSpO2: 82%"
+      },
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_dummy_d_a"
+      },
+      "interaction": "triage_assess",
+      "extras": {
+        "triageBriefing": "외양: 사지에 약간의 타박상\n현재 의식 상태: 원활한 대화 가능\n활력징후 정상\nC/C: 하지 통증"
+      },
+      "visibility": {
+        "conditions": [
+          {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          }
+        ]
+      }
+    },
+    {
+      "entity": {
+        "id": "patient_a"
+      },
       "interaction": "transfer_prompt",
       "kind": "Action",
       "display": {
@@ -976,7 +1010,7 @@
       },
       "identifier": "N001_2",
       "nodeType": "Dialogue",
-      "nextIdentifier": "INFO_A_1"
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_A"
     },
     "N001_3": {
       "speakerName": "시스템",
@@ -997,7 +1031,7 @@
       },
       "identifier": "N001_3",
       "nodeType": "Dialogue",
-      "nextIdentifier": "INFO_D_1"
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A"
     },
     "N001_4": {
       "speakerName": "시스템",
