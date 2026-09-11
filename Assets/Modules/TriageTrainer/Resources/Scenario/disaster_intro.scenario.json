@@ -1,15 +1,5 @@
 {
   "identifier": "disaster_intro",
-  "clientSignalIdentifiers": [
-    "sig.click_vital_set",
-    "sig.click_normal_saline_1000ml",
-    "sig.click_plasma_solution_1000ml",
-    "sig.click_intravenous_set",
-    "sig.click_blood_bag",
-    "sig.click_patient_a",
-    "sig.click_patient_dummy_d_a"
-  ],
-  "defaultEntrypoint": "DISASTER_INTRO_SPAWN_A",
   "tags": [
     "access_support",
     "airway_team",
@@ -30,28 +20,51 @@
     "triage_lead",
     "vital_team"
   ],
+  "activeRoleTags": [],
+  "skipAbsentRoleBranches": null,
   "checklistItemSetsByPlayerTag": {
     "nurse_a": [
-      { "identifier": "vital_set", "count": 1 }
+      {
+        "identifier": "vital_set",
+        "count": 1
+      }
     ],
     "nurse_b": [],
     "nurse_c": [],
     "nurse_d": [
-      { "identifier": "normal_saline_1000ml", "count": 1 },
-      { "identifier": "plasma_solution_1000ml", "count": 1 },
-      { "identifier": "intravenous_set", "count": 2 },
-      { "identifier": "blood_bag", "count": 1 }
+      {
+        "identifier": "normal_saline_1000ml",
+        "count": 1
+      },
+      {
+        "identifier": "plasma_solution_1000ml",
+        "count": 1
+      },
+      {
+        "identifier": "intravenous_set",
+        "count": 2
+      },
+      {
+        "identifier": "blood_bag",
+        "count": 1
+      }
     ]
   },
+  "clientSignalIdentifiers": [
+    "sig.click_vital_set",
+    "sig.click_normal_saline_1000ml",
+    "sig.click_plasma_solution_1000ml",
+    "sig.click_intravenous_set",
+    "sig.click_blood_bag",
+    "sig.click_patient_a",
+    "sig.click_patient_dummy_d_a"
+  ],
+  "clientSignalPrefixes": [],
   "questDefinitionIncludes": [
     "disaster_intro.quests.quest"
   ],
-  "ttsVoiceProfiles": [
-    { "preset": "F1", "voiceIdentifier": "narrator", "voiceStyleName": "F1" },
-    { "preset": "M1", "voiceIdentifier": "dispatcher", "voiceStyleName": "M1" },
-    { "preset": "M2", "voiceIdentifier": "doctor", "voiceStyleName": "M2" },
-    { "preset": "F3", "voiceIdentifier": "patient", "voiceStyleName": "F3" }
-  ],
+  "defaultEntrypoint": "D001",
+  "actingNpcs": null,
   "interactions": [
     {
       "entity": {
@@ -69,86 +82,1134 @@
       }
     }
   ],
+  "waypoints": null,
+  "ttsVoiceProfiles": [
+    {
+      "preset": "F1",
+      "voiceIdentifier": "narrator",
+      "voiceStyleName": "F1",
+      "language": null,
+      "speed": null,
+      "totalStep": null
+    },
+    {
+      "preset": "M1",
+      "voiceIdentifier": "dispatcher",
+      "voiceStyleName": "M1",
+      "language": null,
+      "speed": null,
+      "totalStep": null
+    },
+    {
+      "preset": "M2",
+      "voiceIdentifier": "doctor",
+      "voiceStyleName": "M2",
+      "language": null,
+      "speed": null,
+      "totalStep": null
+    },
+    {
+      "preset": "F3",
+      "voiceIdentifier": "patient",
+      "voiceStyleName": "F3",
+      "language": null,
+      "speed": null,
+      "totalStep": null
+    }
+  ],
   "nodes": {
-    "DISASTER_INTRO_SPAWN_A": {
-      "identifier": "DISASTER_INTRO_SPAWN_A", "nodeType": "EntityPresetSpawn",
-      "nextIdentifier": "DISASTER_INTRO_SPAWN_DUMMY_D_A",
-      "presetIdentifier": "patient_a", "spawnedEntityIdentifier": "patient_a",
-      "positionSourceEntityIdentifier": null,
-      "positionX": -71.73906, "positionY": 0.01, "positionZ": 0.07443,
-      "rotationX": 0, "rotationY": -90, "rotationZ": 0
+    "A001": {
+      "inputItemIdentifiers": [
+        "ns1",
+        "iv_set"
+      ],
+      "outputItemIdentifier": "ns1_ready",
+      "autoCombine": true,
+      "identifier": "A001",
+      "nodeType": "CombineItem",
+      "nextIdentifier": "N003_2"
     },
-    "DISASTER_INTRO_SPAWN_DUMMY_D_A": {
-      "identifier": "DISASTER_INTRO_SPAWN_DUMMY_D_A", "nodeType": "EntityPresetSpawn",
-      "nextIdentifier": "DISASTER_INTRO_PRESET_A",
-      "presetIdentifier": "patient_dummy_d_a", "spawnedEntityIdentifier": "patient_dummy_d_a",
-      "positionSourceEntityIdentifier": null,
-      "positionX": -70, "positionY": 0, "positionZ": 2.3,
-      "rotationX": 0, "rotationY": -90, "rotationZ": 0
+    "A002": {
+      "inputItemIdentifiers": [
+        "ps1",
+        "iv_set"
+      ],
+      "outputItemIdentifier": "ps1_ready",
+      "autoCombine": true,
+      "identifier": "A002",
+      "nodeType": "CombineItem",
+      "nextIdentifier": "N003_3"
     },
-    "DISASTER_INTRO_PRESET_A": {
-      "identifier": "DISASTER_INTRO_PRESET_A", "nodeType": "PatientMedicalStatePreset",
-      "nextIdentifier": "DISASTER_INTRO_PRESET_DUMMY_D_A",
-      "targetEntityIdentifier": "patient_a", "transitionMode": "Immediate",
-      "name": "중증 외상 환자", "intendedTriage": "Level1"
+    "C001": {
+      "speakerName": "시스템",
+      "dialogueContent": "해당 환자의 중증도 분류를 시행하세요.",
+      "portraitSpriteIdentifier": null,
+      "options": [
+        {
+          "displayText": "KTAS 1(소생)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "N001_3"
+        },
+        {
+          "displayText": "KTAS 2(긴급)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "N001_retry_a"
+        },
+        {
+          "displayText": "KTAS 3(응급)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "N001_retry_a"
+        },
+        {
+          "displayText": "KTAS 4(준응급)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "N001_retry_a"
+        },
+        {
+          "displayText": "KTAS 5(비응급)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "N001_retry_a"
+        }
+      ],
+      "assessmentIdentifier": null,
+      "correctOptionIndex": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "nextIdentifier": null,
+      "identifier": "C001",
+      "nodeType": "Choice"
     },
-    "DISASTER_INTRO_PRESET_DUMMY_D_A": {
-      "identifier": "DISASTER_INTRO_PRESET_DUMMY_D_A", "nodeType": "PatientMedicalStatePreset",
-      "nextIdentifier": "DISASTER_INTRO_BIND_A_ANY",
-      "targetEntityIdentifier": "patient_dummy_d_a", "transitionMode": "Immediate",
-      "name": "경증 외상 환자", "intendedTriage": "Level5"
+    "C002": {
+      "speakerName": "시스템",
+      "dialogueContent": "해당 환자의 중증도 분류를 시행하세요.",
+      "portraitSpriteIdentifier": null,
+      "options": [
+        {
+          "displayText": "KTAS 1(소생)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "N001_retry_b"
+        },
+        {
+          "displayText": "KTAS 2(긴급)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "N001_retry_b"
+        },
+        {
+          "displayText": "KTAS 3(응급)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "N001_retry_b"
+        },
+        {
+          "displayText": "KTAS 4(준응급)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "N001_retry_b"
+        },
+        {
+          "displayText": "KTAS 5(비응급)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "N001_4"
+        }
+      ],
+      "assessmentIdentifier": null,
+      "correctOptionIndex": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "nextIdentifier": null,
+      "identifier": "C002",
+      "nodeType": "Choice"
     },
-    "DISASTER_INTRO_BIND_A_ANY": {
-      "identifier": "DISASTER_INTRO_BIND_A_ANY", "nodeType": "EntityStateSignalBinding",
-      "nextIdentifier": "DISASTER_INTRO_BIND_A_CORRECT",
-      "bindingIdentifier": "disaster_intro_triage_a_any", "operation": "Register",
-      "targetEntityIdentifier": "patient_a", "eventName": "TriageSubmitted",
-      "outputSignalIdentifier": "disaster_intro_triage_submitted_patient_a", "consumeOnce": false
+    "CC_A_Triage": {
+      "targetEntityIdentifier": null,
+      "stateKey": "branch.completion.CC_A_Triage",
+      "stateValue": "true",
+      "identifier": "CC_A_Triage",
+      "nodeType": "StateUpdate",
+      "nextIdentifier": null
     },
-    "DISASTER_INTRO_BIND_A_CORRECT": {
-      "identifier": "DISASTER_INTRO_BIND_A_CORRECT", "nodeType": "EntityStateSignalBinding",
-      "nextIdentifier": "DISASTER_INTRO_BIND_DUMMY_D_A_ANY",
-      "bindingIdentifier": "disaster_intro_triage_a_correct", "operation": "Register",
-      "targetEntityIdentifier": "patient_a", "eventName": "TriageSubmitted", "eventKey": "Level1",
-      "outputSignalIdentifier": "disaster_intro_triage_correct_patient_a", "consumeOnce": false
+    "CC_BC_Ready": {
+      "targetEntityIdentifier": null,
+      "stateKey": "branch.completion.CC_BC_Ready",
+      "stateValue": "true",
+      "identifier": "CC_BC_Ready",
+      "nodeType": "StateUpdate",
+      "nextIdentifier": null
     },
-    "DISASTER_INTRO_BIND_DUMMY_D_A_ANY": {
-      "identifier": "DISASTER_INTRO_BIND_DUMMY_D_A_ANY", "nodeType": "EntityStateSignalBinding",
-      "nextIdentifier": "DISASTER_INTRO_BIND_DUMMY_D_A_CORRECT",
-      "bindingIdentifier": "disaster_intro_triage_dummy_d_a_any", "operation": "Register",
-      "targetEntityIdentifier": "patient_dummy_d_a", "eventName": "TriageSubmitted",
-      "outputSignalIdentifier": "disaster_intro_triage_submitted_patient_dummy_d_a", "consumeOnce": false
+    "CC_D_Ready": {
+      "targetEntityIdentifier": null,
+      "stateKey": "branch.completion.CC_D_Ready",
+      "stateValue": "true",
+      "identifier": "CC_D_Ready",
+      "nodeType": "StateUpdate",
+      "nextIdentifier": null
     },
-    "DISASTER_INTRO_BIND_DUMMY_D_A_CORRECT": {
-      "identifier": "DISASTER_INTRO_BIND_DUMMY_D_A_CORRECT", "nodeType": "EntityStateSignalBinding",
-      "nextIdentifier": "D001",
-      "bindingIdentifier": "disaster_intro_triage_dummy_d_a_correct", "operation": "Register",
-      "targetEntityIdentifier": "patient_dummy_d_a", "eventName": "TriageSubmitted", "eventKey": "Level5",
-      "outputSignalIdentifier": "disaster_intro_triage_correct_patient_dummy_d_a", "consumeOnce": false
+    "C_role_select": {
+      "speakerName": "시스템",
+      "dialogueContent": "당신의 역할을 선택하세요. (각 플레이어가 한 명씩 선택)",
+      "portraitSpriteIdentifier": null,
+      "options": [
+        {
+          "displayText": "간호사 A (KTAS 분류 / CPR 보조)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "TAG_a_0"
+        },
+        {
+          "displayText": "간호사 B (환자 처치)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "TAG_b_0"
+        },
+        {
+          "displayText": "간호사 C (환자 처치)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "TAG_c_0"
+        },
+        {
+          "displayText": "간호사 D (약물 전담)",
+          "displayIconIdentifier": null,
+          "displayColor": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "nextNodeIdentifier": "TAG_d_0"
+        }
+      ],
+      "assessmentIdentifier": null,
+      "correctOptionIndex": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "nextIdentifier": null,
+      "identifier": "C_role_select",
+      "nodeType": "Choice"
     },
     "D001": {
-      "identifier": "D001",
-      "nodeType": "Dialogue",
       "speakerName": "원내 방송",
       "dialogueContent": "병원 인근 지하철역에서 폭발 사고 발생. 재난 상황 발령되었습니다. 응급실 대비 바랍니다.",
-      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D002",
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
       "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceIdentifier": "M1",
+      "ttsVoiceProfile": {
+        "preset": "M1",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "D001",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "D002"
     },
     "D002": {
-      "identifier": "D002",
-      "nodeType": "Dialogue",
       "speakerName": "시스템",
       "dialogueContent": "의료진 간 재난 상황을 공유하고 초기 대응을 시작합니다.",
-      "dialogueContentTTSPassing": null,
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C_role_select",
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
       "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "D002",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "C_role_select"
+    },
+    "D003": {
+      "speakerName": "시스템",
+      "dialogueContent": "잠시 후 환자가 이송됩니다. 중증도 분류 후 환자 처치가 시작됩니다. 각자의 역할에 대비하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "D003",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "DISASTER_INTRO_SPAWN_A"
+    },
+    "D003_1": {
+      "speakerName": "시스템",
+      "dialogueContent": "환자 두 명이 이송되었습니다. @t=[nurse_a, ???]가 중증도 분류를 시행합니다.",
+      "dialogueContentTTSPassing": "환자 두 명이 이송되었습니다. @t=[nurse_a, ???]가 중증도 분류를 시행합니다.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "D003_1",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "Q_TRIAGE_A_ADD"
+    },
+    "D004": {
+      "speakerName": "간호사 A",
+      "dialogueContent": "KTAS 1(소생)으로 분류된 환자를 이송하겠습니다. @t=[nurse_b, ???], @t=[nurse_c, ???], @t=[nurse_d, ???]선생님, 해당 환자 처치실로 이동하도록 도와주세요.",
+      "dialogueContentTTSPassing": "케이타스 원 소생으로 분류된 환자를 이송하겠습니다. @t=[nurse_b, ???], @t=[nurse_c, ???], @t=[nurse_d, ???] 선생님, 해당 환자 처치실로 이동하도록 도와주세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F1",
+      "ttsVoiceProfile": {
+        "preset": "F1",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "D004",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "Q005"
+    },
+    "DISASTER_INTRO_BIND_A_ANY": {
+      "bindingIdentifier": "disaster_intro_triage_a_any",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_a",
+      "targetEntityStateKey": null,
+      "eventName": "TriageSubmitted",
+      "eventKey": null,
+      "outputSignalIdentifier": "disaster_intro_triage_submitted_patient_a",
+      "consumeOnce": null,
+      "identifier": "DISASTER_INTRO_BIND_A_ANY",
+      "nodeType": "EntityStateSignalBinding",
+      "nextIdentifier": "DISASTER_INTRO_BIND_A_CORRECT"
+    },
+    "DISASTER_INTRO_BIND_A_CORRECT": {
+      "bindingIdentifier": "disaster_intro_triage_a_correct",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_a",
+      "targetEntityStateKey": null,
+      "eventName": "TriageSubmitted",
+      "eventKey": "Level1",
+      "outputSignalIdentifier": "disaster_intro_triage_correct_patient_a",
+      "consumeOnce": null,
+      "identifier": "DISASTER_INTRO_BIND_A_CORRECT",
+      "nodeType": "EntityStateSignalBinding",
+      "nextIdentifier": "DISASTER_INTRO_BIND_DUMMY_D_A_ANY"
+    },
+    "DISASTER_INTRO_BIND_DUMMY_D_A_ANY": {
+      "bindingIdentifier": "disaster_intro_triage_dummy_d_a_any",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_dummy_d_a",
+      "targetEntityStateKey": null,
+      "eventName": "TriageSubmitted",
+      "eventKey": null,
+      "outputSignalIdentifier": "disaster_intro_triage_submitted_patient_dummy_d_a",
+      "consumeOnce": null,
+      "identifier": "DISASTER_INTRO_BIND_DUMMY_D_A_ANY",
+      "nodeType": "EntityStateSignalBinding",
+      "nextIdentifier": "DISASTER_INTRO_BIND_DUMMY_D_A_CORRECT"
+    },
+    "DISASTER_INTRO_BIND_DUMMY_D_A_CORRECT": {
+      "bindingIdentifier": "disaster_intro_triage_dummy_d_a_correct",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_dummy_d_a",
+      "targetEntityStateKey": null,
+      "eventName": "TriageSubmitted",
+      "eventKey": "Level5",
+      "outputSignalIdentifier": "disaster_intro_triage_correct_patient_dummy_d_a",
+      "consumeOnce": null,
+      "identifier": "DISASTER_INTRO_BIND_DUMMY_D_A_CORRECT",
+      "nodeType": "EntityStateSignalBinding",
+      "nextIdentifier": "E001"
+    },
+    "DISASTER_INTRO_PRESET_A": {
+      "targetEntityIdentifier": "patient_a",
+      "targetEntityStateKey": null,
+      "transitionMode": null,
+      "transitionDurationSeconds": null,
+      "name": "중증 외상 환자",
+      "sex": null,
+      "age": null,
+      "bloodType": null,
+      "intendedTriage": "Level1",
+      "consciousnessGcs": null,
+      "consciousnessEyeOpening": null,
+      "consciousnessVerbal": null,
+      "consciousnessMotor": null,
+      "consciousnessLocLabel": null,
+      "consciousnessPupillaryResponse": null,
+      "respirationAwRR": null,
+      "respirationType": null,
+      "pulseRate": null,
+      "pulseForceType": null,
+      "bloodPressureSystolic": null,
+      "bloodPressureDiastolic": null,
+      "skinColorHue": null,
+      "skinTemperatureType": null,
+      "bodyTemperatureCelsius": null,
+      "spo2": null,
+      "isCardiacArrest": null,
+      "identifier": "DISASTER_INTRO_PRESET_A",
+      "nodeType": "PatientMedicalStatePreset",
+      "nextIdentifier": "DISASTER_INTRO_PRESET_DUMMY_D_A"
+    },
+    "DISASTER_INTRO_PRESET_DUMMY_D_A": {
+      "targetEntityIdentifier": "patient_dummy_d_a",
+      "targetEntityStateKey": null,
+      "transitionMode": null,
+      "transitionDurationSeconds": null,
+      "name": "경증 외상 환자",
+      "sex": null,
+      "age": null,
+      "bloodType": null,
+      "intendedTriage": "Level5",
+      "consciousnessGcs": null,
+      "consciousnessEyeOpening": null,
+      "consciousnessVerbal": null,
+      "consciousnessMotor": null,
+      "consciousnessLocLabel": null,
+      "consciousnessPupillaryResponse": null,
+      "respirationAwRR": null,
+      "respirationType": null,
+      "pulseRate": null,
+      "pulseForceType": null,
+      "bloodPressureSystolic": null,
+      "bloodPressureDiastolic": null,
+      "skinColorHue": null,
+      "skinTemperatureType": null,
+      "bodyTemperatureCelsius": null,
+      "spo2": null,
+      "isCardiacArrest": null,
+      "identifier": "DISASTER_INTRO_PRESET_DUMMY_D_A",
+      "nodeType": "PatientMedicalStatePreset",
+      "nextIdentifier": "DISASTER_INTRO_BIND_A_ANY"
+    },
+    "DISASTER_INTRO_SPAWN_A": {
+      "presetIdentifier": "patient_a",
+      "spawnedEntityIdentifier": "patient_a",
+      "positionSourceEntityIdentifier": "disaster_intro:patient_spawnpoint_a",
+      "positionX": -71.7390594,
+      "positionY": 0.00999999978,
+      "positionZ": 0.0744299963,
+      "rotationX": 0,
+      "rotationY": -90,
+      "rotationZ": 0,
+      "resultStateKey": null,
+      "identifier": "DISASTER_INTRO_SPAWN_A",
+      "nodeType": "EntityPresetSpawn",
+      "nextIdentifier": "DISASTER_INTRO_SPAWN_DUMMY_D_A"
+    },
+    "DISASTER_INTRO_SPAWN_DUMMY_D_A": {
+      "presetIdentifier": "patient_dummy_d_a",
+      "spawnedEntityIdentifier": "patient_dummy_d_a",
+      "positionSourceEntityIdentifier": "disaster_intro:patient_spawnpoint_dummy_d_a",
+      "positionX": -70,
+      "positionY": 0,
+      "positionZ": 2.29999995,
+      "rotationX": 0,
+      "rotationY": -90,
+      "rotationZ": 0,
+      "resultStateKey": null,
+      "identifier": "DISASTER_INTRO_SPAWN_DUMMY_D_A",
+      "nodeType": "EntityPresetSpawn",
+      "nextIdentifier": "DISASTER_INTRO_PRESET_A"
+    },
+    "DISASTER_INTRO_TRIAGE_ENABLE_A": {
+      "targetEntityIdentifier": "patient_a",
+      "assessable": true,
+      "identifier": "DISASTER_INTRO_TRIAGE_ENABLE_A",
+      "nodeType": "TriageAssessControl",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_WAIT_A"
+    },
+    "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A": {
+      "targetEntityIdentifier": "patient_dummy_d_a",
+      "assessable": true,
+      "identifier": "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A",
+      "nodeType": "TriageAssessControl",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_WAIT_DUMMY_D_A"
+    },
+    "DISASTER_INTRO_TRIAGE_EVALUATE_A": {
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.disaster_intro_triage_correct_patient_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Branching",
+      "failureReportTargets": "UnityConsole",
+      "failureNextIdentifier": "DISASTER_INTRO_TRIAGE_WRONG_A",
+      "waitForCondition": null,
+      "waitTimeoutSeconds": null,
+      "onWaitTimeout": null,
+      "idleWhileWaiting": null,
+      "identifier": "DISASTER_INTRO_TRIAGE_EVALUATE_A",
+      "nodeType": "Validator",
+      "nextIdentifier": "N001_3"
+    },
+    "DISASTER_INTRO_TRIAGE_EVALUATE_DUMMY_D_A": {
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.disaster_intro_triage_correct_patient_dummy_d_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Branching",
+      "failureReportTargets": "UnityConsole",
+      "failureNextIdentifier": "DISASTER_INTRO_TRIAGE_WRONG_DUMMY_D_A",
+      "waitForCondition": null,
+      "waitTimeoutSeconds": null,
+      "onWaitTimeout": null,
+      "idleWhileWaiting": null,
+      "identifier": "DISASTER_INTRO_TRIAGE_EVALUATE_DUMMY_D_A",
+      "nodeType": "Validator",
+      "nextIdentifier": "N001_4"
+    },
+    "DISASTER_INTRO_TRIAGE_RESET_A": {
+      "eventIdentifier": "reset_disaster_intro_patient_a_triage",
+      "invokeOnRoleClient": null,
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "DISASTER_INTRO_TRIAGE_RESET_A",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_A"
+    },
+    "DISASTER_INTRO_TRIAGE_RESET_DUMMY_D_A": {
+      "eventIdentifier": "reset_disaster_intro_patient_dummy_d_a_triage",
+      "invokeOnRoleClient": null,
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "DISASTER_INTRO_TRIAGE_RESET_DUMMY_D_A",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A"
+    },
+    "DISASTER_INTRO_TRIAGE_WAIT_A": {
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.disaster_intro_triage_submitted_patient_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
+      "failureNextIdentifier": "N001_3",
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "FailBranch",
+      "idleWhileWaiting": null,
+      "identifier": "DISASTER_INTRO_TRIAGE_WAIT_A",
+      "nodeType": "Validator",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_EVALUATE_A"
+    },
+    "DISASTER_INTRO_TRIAGE_WAIT_DUMMY_D_A": {
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.disaster_intro_triage_submitted_patient_dummy_d_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
+      "failureNextIdentifier": "N001_4",
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "FailBranch",
+      "idleWhileWaiting": null,
+      "identifier": "DISASTER_INTRO_TRIAGE_WAIT_DUMMY_D_A",
+      "nodeType": "Validator",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_EVALUATE_DUMMY_D_A"
+    },
+    "DISASTER_INTRO_TRIAGE_WRONG_A": {
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, KTAS 1(소생)이 적절합니다.",
+      "dialogueContentTTSPassing": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, 케이타스 원 소생이 적절합니다.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "DISASTER_INTRO_TRIAGE_WRONG_A",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_RESET_A"
+    },
+    "DISASTER_INTRO_TRIAGE_WRONG_DUMMY_D_A": {
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다.",
+      "dialogueContentTTSPassing": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 케이타스 파이브 비응급 상태로 보입니다.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "DISASTER_INTRO_TRIAGE_WRONG_DUMMY_D_A",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_RESET_DUMMY_D_A"
+    },
+    "E001": {
+      "eventIdentifier": "triage_patient_a_patient_dummy_d_a",
+      "invokeOnRoleClient": null,
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "E001",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "D003_1"
+    },
+    "E004": {
+      "eventIdentifier": "B_C_D_to_triage",
+      "invokeOnRoleClient": null,
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "E004",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "N004"
+    },
+    "INFO_A_1": {
+      "speakerName": "시스템",
+      "dialogueContent": "외양: 흉부 관통상, 다량의 출혈, 피부 창백하고 차가움\n빈맥\n불규칙한 서호흡\n의식 상태: 대화가 불가능하고 신음소리만 내고 있음",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": null,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "INFO_A_1",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "INFO_A_2"
+    },
+    "INFO_A_2": {
+      "speakerName": "시스템",
+      "dialogueContent": "활력징후 측정 결과:\n혈압: 70/40mmHg\n맥박: 140회/분 (빠르고 약함)\n호흡수: 8회/분\n체온: 35.9도\nSpO2: 82%",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": null,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "INFO_A_2",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_A"
+    },
+    "INFO_D_1": {
+      "speakerName": "시스템",
+      "dialogueContent": "외양: 사지에 약간의 타박상\n현재 의식 상태: 원활한 대화 가능\n활력징후 정상\nC/C: 하지 통증",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": null,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "INFO_D_1",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A"
+    },
+    "ISC_SHOW_MOVE_PATIENT_A": {
+      "operation": "Show",
+      "targets": [
+        {
+          "entity": {
+            "id": "patient_a"
+          },
+          "interaction": "transfer_prompt"
+        }
+      ],
+      "identifier": "ISC_SHOW_MOVE_PATIENT_A",
+      "nodeType": "InteractionVisibility",
+      "nextIdentifier": "V004"
+    },
+    "N001": {
+      "speakerName": "시스템",
+      "dialogueContent": "중증도 분류 구역으로 이동하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N001",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "Q001"
+    },
+    "N001_1": {
+      "speakerName": "시스템",
+      "dialogueContent": "카트 위 활력징후 측정도구를 획득하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": true,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N001_1",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "q002_item"
+    },
+    "N001_2": {
+      "speakerName": "시스템",
+      "dialogueContent": "환자를 차례대로 클릭하여 환자의 상태를 확인하고, 중증도 분류를 실시하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N001_2",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "INFO_A_1"
+    },
+    "N001_3": {
+      "speakerName": "시스템",
+      "dialogueContent": "해당 환자를 KTAS 1으로 분류했습니다. 다음 환자를 클릭하세요.",
+      "dialogueContentTTSPassing": "해당 환자를 케이타스 원으로 분류했습니다. 다음 환자를 클릭하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N001_3",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "INFO_D_1"
+    },
+    "N001_4": {
+      "speakerName": "시스템",
+      "dialogueContent": "해당 환자를 KTAS 5로 분류했습니다.",
+      "dialogueContentTTSPassing": "해당 환자를 케이타스 파이브로 분류했습니다.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N001_4",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "Q_TRIAGE_A_REMOVE"
+    },
+    "N001_5": {
+      "speakerName": "시스템",
+      "dialogueContent": "이제 치료를 위해 이송할 긴급 환자를 클릭하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N001_5",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "ISC_SHOW_MOVE_PATIENT_A"
+    },
+    "N001_retry_a": {
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, KTAS 1(소생)이 적절합니다.",
+      "dialogueContentTTSPassing": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, 케이타스 원 소생이 적절합니다.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N001_retry_a",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "C001"
+    },
+    "N001_retry_b": {
+      "speakerName": "시스템",
+      "dialogueContent": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다.",
+      "dialogueContentTTSPassing": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 케이타스 파이브 비응급 상태로 보입니다.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N001_retry_b",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "C002"
+    },
+    "N002": {
+      "speakerName": "시스템",
+      "dialogueContent": "KTAS 1(소생) 환자에 대비하기 위해 처치실로 이동하세요.",
+      "dialogueContentTTSPassing": "케이타스 원 소생 환자에 대비하기 위해 처치실로 이동하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N002",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "Q003"
+    },
+    "N002_1": {
+      "speakerName": "시스템",
+      "dialogueContent": "처치실에 있는 물품의 위치를 확인하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N002_1",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "CC_BC_Ready"
+    },
+    "N003": {
+      "speakerName": "시스템",
+      "dialogueContent": "준비실로 이동하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N003",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "Q004"
+    },
+    "N003_1": {
+      "speakerName": "시스템",
+      "dialogueContent": "생리식염수 1L 수액백과 수액세트를 각각 획득하세요.",
+      "dialogueContentTTSPassing": "생리식염수 1리터 수액백과 수액세트를 각각 획득하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": 0.200000003,
+      "interactionRequired": true,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N003_1",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "q006"
+    },
+    "N003_2": {
+      "speakerName": "시스템",
+      "dialogueContent": "플라즈마 솔루션 1L 수액백과 수액세트를 획득하세요.",
+      "dialogueContentTTSPassing": "플라즈마 솔루션 1리터 수액백과 수액세트를 획득하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": true,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N003_2",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "q007"
+    },
+    "N003_3": {
+      "speakerName": "시스템",
+      "dialogueContent": "수액 준비가 완료되었습니다. 혈액백을 클릭해 획득하세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": true,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N003_3",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "q008"
+    },
+    "N004": {
+      "speakerName": "시스템",
+      "dialogueContent": "초기 대응과 중증도 분류를 완료했습니다. 다음 처치 시나리오를 진행합니다.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "F3",
+      "ttsVoiceProfile": {
+        "preset": "F3",
+        "voiceIdentifier": null,
+        "voiceStyleName": null,
+        "language": null,
+        "speed": null,
+        "totalStep": null
+      },
+      "identifier": "N004",
+      "nodeType": "Dialogue",
+      "nextIdentifier": null
     },
     "P001": {
       "identifier": "P001",
@@ -176,7 +1237,7 @@
           "requiredPlayerTagsMatchMode": "All"
         },
         {
-          "identifier": "N002_C",
+          "identifier": "N002",
           "completionConditionIdentifier": "CC_BC_Ready",
           "requiredPlayerTags": [
             "nurse_c"
@@ -196,80 +1257,361 @@
       ],
       "nextIdentifier": "D004"
     },
-    "N001": {
-      "identifier": "N001",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "중증도 분류 구역으로 이동하세요.",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q001",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
     "Q001": {
-      "identifier": "Q001",
-      "nodeType": "QuestControl",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": null,
       "quest": {
-        "Id": "Quest_MoveToTriage"
+        "Id": "Quest_MoveToTriage",
+        "DefinitionIdentifier": "",
+        "Title": null,
+        "Description": null,
+        "QuestContent": null,
+        "Progress": {
+          "Current": 0,
+          "Target": 1
+        },
+        "Completed": false,
+        "IsOrdinal": false,
+        "Tasks": [],
+        "CompletionCriteria": [],
+        "Scope": "Player",
+        "IsTracked": false,
+        "IsTrackable": true,
+        "IsAutoComplete": false,
+        "PersistProgressOnSessionEnd": false,
+        "WaypointIdentifier": "",
+        "PresentationBindings": []
       },
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q001",
+      "nodeType": "QuestControl",
       "nextIdentifier": "Q001_1"
     },
     "Q001_1": {
-      "identifier": "Q001_1",
-      "nodeType": "QuestControl",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": null,
       "quest": {
-        "Id": "Quest_MoveToTriage"
+        "Id": "Quest_MoveToTriage",
+        "DefinitionIdentifier": "",
+        "Title": null,
+        "Description": null,
+        "QuestContent": null,
+        "Progress": {
+          "Current": 0,
+          "Target": 1
+        },
+        "Completed": false,
+        "IsOrdinal": false,
+        "Tasks": [],
+        "CompletionCriteria": [],
+        "Scope": "Player",
+        "IsTracked": false,
+        "IsTrackable": true,
+        "IsAutoComplete": false,
+        "PersistProgressOnSessionEnd": false,
+        "WaypointIdentifier": "",
+        "PresentationBindings": []
       },
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q001_1",
+      "nodeType": "QuestControl",
       "nextIdentifier": "N001_1"
     },
-    "N001_1": {
-      "identifier": "N001_1",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "카트 위 활력징후 측정도구를 획득하세요.",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
-      "nextIdentifier": "q002_item",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "q002_item": {
-      "identifier": "q002_item",
-      "nodeType": "QuestControl",
+    "Q002": {
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": null,
+      "quest": {
+        "Id": "Quest_GetVitalSet",
+        "DefinitionIdentifier": "",
+        "Title": null,
+        "Description": null,
+        "QuestContent": null,
+        "Progress": {
+          "Current": 0,
+          "Target": 1
+        },
+        "Completed": false,
+        "IsOrdinal": false,
+        "Tasks": [],
+        "CompletionCriteria": [],
+        "Scope": "Player",
+        "IsTracked": false,
+        "IsTrackable": true,
+        "IsAutoComplete": false,
+        "PersistProgressOnSessionEnd": false,
+        "WaypointIdentifier": "",
+        "PresentationBindings": []
+      },
+      "skipCompletionDisplayDelay": null,
       "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::collect_vital_set",
-      "quest": null,
-      "nextIdentifier": "Q002"
-    },
-    "Q002": {
       "identifier": "Q002",
       "nodeType": "QuestControl",
-      "operation": "Add",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "quest": {
-        "Id": "Quest_GetVitalSet"
-      },
       "nextIdentifier": "V001"
     },
+    "Q002_2": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": null,
+      "quest": {
+        "Id": "Quest_GetVitalSet",
+        "DefinitionIdentifier": "",
+        "Title": null,
+        "Description": null,
+        "QuestContent": null,
+        "Progress": {
+          "Current": 0,
+          "Target": 1
+        },
+        "Completed": false,
+        "IsOrdinal": false,
+        "Tasks": [],
+        "CompletionCriteria": [],
+        "Scope": "Player",
+        "IsTracked": false,
+        "IsTrackable": true,
+        "IsAutoComplete": false,
+        "PersistProgressOnSessionEnd": false,
+        "WaypointIdentifier": "",
+        "PresentationBindings": []
+      },
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q002_2",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "q002_item_1"
+    },
+    "Q003": {
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::move_to_treatment_room",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q003",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "V005"
+    },
+    "Q003_1": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::move_to_treatment_room",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q003_1",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "N002_1"
+    },
+    "Q004": {
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "",
+      "quest": {
+        "Id": "Quest_MoveToPrepRoom",
+        "DefinitionIdentifier": "",
+        "Title": null,
+        "Description": null,
+        "QuestContent": null,
+        "Progress": {
+          "Current": 0,
+          "Target": 1
+        },
+        "Completed": false,
+        "IsOrdinal": false,
+        "Tasks": [],
+        "CompletionCriteria": [],
+        "Scope": "Player",
+        "IsTracked": false,
+        "IsTrackable": true,
+        "IsAutoComplete": false,
+        "PersistProgressOnSessionEnd": false,
+        "WaypointIdentifier": "",
+        "PresentationBindings": []
+      },
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q004",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "Q004_1"
+    },
+    "Q004_1": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "",
+      "quest": {
+        "Id": "Quest_MoveToPrepRoom",
+        "DefinitionIdentifier": "",
+        "Title": null,
+        "Description": null,
+        "QuestContent": null,
+        "Progress": {
+          "Current": 0,
+          "Target": 1
+        },
+        "Completed": false,
+        "IsOrdinal": false,
+        "Tasks": [],
+        "CompletionCriteria": [],
+        "Scope": "Player",
+        "IsTracked": false,
+        "IsTrackable": true,
+        "IsAutoComplete": false,
+        "PersistProgressOnSessionEnd": false,
+        "WaypointIdentifier": "",
+        "PresentationBindings": []
+      },
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q004_1",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "N003_1"
+    },
+    "Q005": {
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": null,
+      "quest": {
+        "Id": "Quest_playerB_playerC_playerD_to_triage",
+        "DefinitionIdentifier": "",
+        "Title": null,
+        "Description": null,
+        "QuestContent": null,
+        "Progress": {
+          "Current": 0,
+          "Target": 1
+        },
+        "Completed": false,
+        "IsOrdinal": false,
+        "Tasks": [],
+        "CompletionCriteria": [],
+        "Scope": "Player",
+        "IsTracked": false,
+        "IsTrackable": true,
+        "IsAutoComplete": false,
+        "PersistProgressOnSessionEnd": false,
+        "WaypointIdentifier": "",
+        "PresentationBindings": []
+      },
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q005",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "V009"
+    },
+    "Q005_1": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": null,
+      "quest": {
+        "Id": "Quest_playerB_playerC_playerD_to_triage",
+        "DefinitionIdentifier": "",
+        "Title": null,
+        "Description": null,
+        "QuestContent": null,
+        "Progress": {
+          "Current": 0,
+          "Target": 1
+        },
+        "Completed": false,
+        "IsOrdinal": false,
+        "Tasks": [],
+        "CompletionCriteria": [],
+        "Scope": "Player",
+        "IsTracked": false,
+        "IsTrackable": true,
+        "IsAutoComplete": false,
+        "PersistProgressOnSessionEnd": false,
+        "WaypointIdentifier": "",
+        "PresentationBindings": []
+      },
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q005_1",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "E004"
+    },
+    "Q_TRIAGE_A_ADD": {
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::triage_patients",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q_TRIAGE_A_ADD",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "N001_2"
+    },
+    "Q_TRIAGE_A_REMOVE": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::triage_patients",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q_TRIAGE_A_REMOVE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "N001_5"
+    },
+    "TAG_a_0": {
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "nurse_a",
+      "fromTag": null,
+      "toTag": null,
+      "swapTagA": null,
+      "swapTagB": null,
+      "identifier": "TAG_a_0",
+      "nodeType": "TagModification",
+      "nextIdentifier": "P001"
+    },
+    "TAG_b_0": {
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "nurse_b",
+      "fromTag": null,
+      "toTag": null,
+      "swapTagA": null,
+      "swapTagB": null,
+      "identifier": "TAG_b_0",
+      "nodeType": "TagModification",
+      "nextIdentifier": "P001"
+    },
+    "TAG_c_0": {
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "nurse_c",
+      "fromTag": null,
+      "toTag": null,
+      "swapTagA": null,
+      "swapTagB": null,
+      "identifier": "TAG_c_0",
+      "nodeType": "TagModification",
+      "nextIdentifier": "P001"
+    },
+    "TAG_d_0": {
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "nurse_d",
+      "fromTag": null,
+      "toTag": null,
+      "swapTagA": null,
+      "swapTagB": null,
+      "identifier": "TAG_d_0",
+      "nodeType": "TagModification",
+      "nextIdentifier": "P001"
+    },
     "V001": {
-      "identifier": "V001",
-      "nodeType": "Validator",
       "rootConditions": [
         {
           "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
           "validationRules": [
             {
               "type": "Registry",
@@ -281,188 +1623,23 @@
         }
       ],
       "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "WarnAndKeepWaiting",
+      "idleWhileWaiting": null,
+      "identifier": "V001",
+      "nodeType": "Validator",
       "nextIdentifier": "Q002_2"
     },
-    "Q002_2": {
-      "identifier": "Q002_2",
-      "nodeType": "QuestControl",
-      "operation": "Remove",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "quest": {
-        "Id": "Quest_GetVitalSet"
-      },
-      "nextIdentifier": "q002_item_1"
-    },
-    "q002_item_1": {
-      "identifier": "q002_item_1",
-      "nodeType": "QuestControl",
-      "operation": "Remove",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::collect_vital_set",
-      "quest": null,
-      "nextIdentifier": "D003"
-    },
-    "D003": {
-      "identifier": "D003",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "잠시 후 환자가 이송됩니다. 중증도 분류 후 환자 처치가 시작됩니다. 각자의 역할에 대비하세요.",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E001",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "E001": {
-      "identifier": "E001",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "triage_patient_a_patient_dummy_d_a",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "D003_1"
-    },
-    "D003_1": {
-      "identifier": "D003_1",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "환자 두 명이 이송되었습니다. @t=[nurse_a, ???]가 중증도 분류를 시행합니다.",
-      "dialogueContentTTSPassing": "환자 두 명이 이송되었습니다. @t=[nurse_a, ???]가 중증도 분류를 시행합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q_TRIAGE_A_ADD",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "Q_TRIAGE_A_ADD": {
-      "identifier": "Q_TRIAGE_A_ADD",
-      "nodeType": "QuestControl",
-      "operation": "Add",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::triage_patients",
-      "quest": null,
-      "nextIdentifier": "N001_2"
-    },
-    "N001_2": {
-      "identifier": "N001_2",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "환자를 차례대로 클릭하여 환자의 상태를 확인하고, 중증도 분류를 실시하세요.",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "INFO_A_1",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "DISASTER_INTRO_TRIAGE_ENABLE_A": {
-      "identifier": "DISASTER_INTRO_TRIAGE_ENABLE_A",
-      "nodeType": "TriageAssessControl",
-      "nextIdentifier": "DISASTER_INTRO_TRIAGE_WAIT_A",
-      "targetEntityIdentifier": "patient_a",
-      "assessable": true
-    },
-    "DISASTER_INTRO_TRIAGE_WAIT_A": {
-      "identifier": "DISASTER_INTRO_TRIAGE_WAIT_A",
-      "nodeType": "Validator",
-      "nextIdentifier": "DISASTER_INTRO_TRIAGE_EVALUATE_A",
-      "rootConditions": [{
-        "condition": "RegistryContains",
-        "validationRules": [{
-          "type": "Registry", "condition": "Contains", "registryType": "RuntimeState",
-          "registryIdentifier": "sig.disaster_intro_triage_submitted_patient_a"
-        }]
-      }],
-      "onFailure": "Ignore", "failureNextIdentifier": "N001_3",
-      "waitForCondition": true, "waitTimeoutSeconds": 180, "onWaitTimeout": "FailBranch"
-    },
-    "DISASTER_INTRO_TRIAGE_EVALUATE_A": {
-      "identifier": "DISASTER_INTRO_TRIAGE_EVALUATE_A",
-      "nodeType": "Validator",
-      "nextIdentifier": "N001_3",
-      "rootConditions": [{
-        "condition": "RegistryContains",
-        "validationRules": [{
-          "type": "Registry", "condition": "Contains", "registryType": "RuntimeState",
-          "registryIdentifier": "sig.disaster_intro_triage_correct_patient_a"
-        }]
-      }],
-      "onFailure": "Branching", "failureNextIdentifier": "DISASTER_INTRO_TRIAGE_WRONG_A",
-      "waitForCondition": false
-    },
-    "DISASTER_INTRO_TRIAGE_WRONG_A": {
-      "identifier": "DISASTER_INTRO_TRIAGE_WRONG_A", "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, KTAS 1(소생)이 적절합니다.",
-      "dialogueContentTTSPassing": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, 케이타스 원 소생이 적절합니다.",
-      "portraitSpriteIdentifier": null, "nextIdentifier": "DISASTER_INTRO_TRIAGE_RESET_A",
-      "playTTS": true, "ttsVoiceIdentifier": null, "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "DISASTER_INTRO_TRIAGE_RESET_A": {
-      "identifier": "DISASTER_INTRO_TRIAGE_RESET_A", "nodeType": "InvokeEvent",
-      "eventIdentifier": "reset_disaster_intro_patient_a_triage",
-      "moveNextBehavior": "WaitUntilDone", "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_A"
-    },
-    "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A": {
-      "identifier": "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A",
-      "nodeType": "TriageAssessControl",
-      "nextIdentifier": "DISASTER_INTRO_TRIAGE_WAIT_DUMMY_D_A",
-      "targetEntityIdentifier": "patient_dummy_d_a",
-      "assessable": true
-    },
-    "DISASTER_INTRO_TRIAGE_WAIT_DUMMY_D_A": {
-      "identifier": "DISASTER_INTRO_TRIAGE_WAIT_DUMMY_D_A",
-      "nodeType": "Validator",
-      "nextIdentifier": "DISASTER_INTRO_TRIAGE_EVALUATE_DUMMY_D_A",
-      "rootConditions": [{
-        "condition": "RegistryContains",
-        "validationRules": [{
-          "type": "Registry", "condition": "Contains", "registryType": "RuntimeState",
-          "registryIdentifier": "sig.disaster_intro_triage_submitted_patient_dummy_d_a"
-        }]
-      }],
-      "onFailure": "Ignore", "failureNextIdentifier": "N001_4",
-      "waitForCondition": true, "waitTimeoutSeconds": 180, "onWaitTimeout": "FailBranch"
-    },
-    "DISASTER_INTRO_TRIAGE_EVALUATE_DUMMY_D_A": {
-      "identifier": "DISASTER_INTRO_TRIAGE_EVALUATE_DUMMY_D_A",
-      "nodeType": "Validator",
-      "nextIdentifier": "N001_4",
-      "rootConditions": [{
-        "condition": "RegistryContains",
-        "validationRules": [{
-          "type": "Registry", "condition": "Contains", "registryType": "RuntimeState",
-          "registryIdentifier": "sig.disaster_intro_triage_correct_patient_dummy_d_a"
-        }]
-      }],
-      "onFailure": "Branching", "failureNextIdentifier": "DISASTER_INTRO_TRIAGE_WRONG_DUMMY_D_A",
-      "waitForCondition": false
-    },
-    "DISASTER_INTRO_TRIAGE_WRONG_DUMMY_D_A": {
-      "identifier": "DISASTER_INTRO_TRIAGE_WRONG_DUMMY_D_A", "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다.",
-      "dialogueContentTTSPassing": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 케이타스 파이브 비응급 상태로 보입니다.",
-      "portraitSpriteIdentifier": null, "nextIdentifier": "DISASTER_INTRO_TRIAGE_RESET_DUMMY_D_A",
-      "playTTS": true, "ttsVoiceIdentifier": null, "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "DISASTER_INTRO_TRIAGE_RESET_DUMMY_D_A": {
-      "identifier": "DISASTER_INTRO_TRIAGE_RESET_DUMMY_D_A", "nodeType": "InvokeEvent",
-      "eventIdentifier": "reset_disaster_intro_patient_dummy_d_a_triage",
-      "moveNextBehavior": "WaitUntilDone", "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A"
-    },
     "V002": {
-      "identifier": "V002",
-      "nodeType": "Validator",
       "rootConditions": [
         {
           "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
           "validationRules": [
             {
               "type": "Registry",
@@ -474,99 +1651,23 @@
         }
       ],
       "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "WarnAndKeepWaiting",
+      "idleWhileWaiting": null,
+      "identifier": "V002",
+      "nodeType": "Validator",
       "nextIdentifier": "INFO_A_1"
     },
-    "INFO_A_1": {
-      "identifier": "INFO_A_1",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "외양: 흉부 관통상, 다량의 출혈, 피부 창백하고 차가움\n빈맥\n불규칙한 서호흡\n의식 상태: 대화가 불가능하고 신음소리만 내고 있음",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "INFO_A_2",
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "INFO_A_2": {
-      "identifier": "INFO_A_2",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "활력징후 측정 결과:\n혈압: 70/40mmHg\n맥박: 140회/분 (빠르고 약함)\n호흡수: 8회/분\n체온: 35.9도\nSpO2: 82%",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_A",
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "C001": {
-      "identifier": "C001",
-      "nodeType": "Choice",
-      "speakerName": "시스템",
-      "dialogueContent": "해당 환자의 중증도 분류를 시행하세요.",
-      "portraitSpriteIdentifier": null,
-      "options": [
-        {
-          "displayText": "KTAS 1(소생)",
-          "nextNodeIdentifier": "N001_3"
-        },
-        {
-          "displayText": "KTAS 2(긴급)",
-          "nextNodeIdentifier": "N001_retry_a"
-        },
-        {
-          "displayText": "KTAS 3(응급)",
-          "nextNodeIdentifier": "N001_retry_a"
-        },
-        {
-          "displayText": "KTAS 4(준응급)",
-          "nextNodeIdentifier": "N001_retry_a"
-        },
-        {
-          "displayText": "KTAS 5(비응급)",
-          "nextNodeIdentifier": "N001_retry_a"
-        }
-      ],
-      "nextIdentifier": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "N001_retry_a": {
-      "identifier": "N001_retry_a",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, KTAS 1(소생)이 적절합니다.",
-      "dialogueContentTTSPassing": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, 케이타스 원 소생이 적절합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C001",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "N001_3": {
-      "identifier": "N001_3",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "해당 환자를 KTAS 1으로 분류했습니다. 다음 환자를 클릭하세요.",
-      "dialogueContentTTSPassing": "해당 환자를 케이타스 원으로 분류했습니다. 다음 환자를 클릭하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "INFO_D_1",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
     "V003": {
-      "identifier": "V003",
-      "nodeType": "Validator",
       "rootConditions": [
         {
           "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
           "validationRules": [
             {
               "type": "Registry",
@@ -578,109 +1679,23 @@
         }
       ],
       "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "WarnAndKeepWaiting",
+      "idleWhileWaiting": null,
+      "identifier": "V003",
+      "nodeType": "Validator",
       "nextIdentifier": "INFO_D_1"
     },
-    "INFO_D_1": {
-      "identifier": "INFO_D_1",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "외양: 사지에 약간의 타박상\n현재 의식 상태: 원활한 대화 가능\n활력징후 정상\nC/C: 하지 통증",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A",
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "C002": {
-      "identifier": "C002",
-      "nodeType": "Choice",
-      "speakerName": "시스템",
-      "dialogueContent": "해당 환자의 중증도 분류를 시행하세요.",
-      "portraitSpriteIdentifier": null,
-      "options": [
-        {
-          "displayText": "KTAS 1(소생)",
-          "nextNodeIdentifier": "N001_retry_b"
-        },
-        {
-          "displayText": "KTAS 2(긴급)",
-          "nextNodeIdentifier": "N001_retry_b"
-        },
-        {
-          "displayText": "KTAS 3(응급)",
-          "nextNodeIdentifier": "N001_retry_b"
-        },
-        {
-          "displayText": "KTAS 4(준응급)",
-          "nextNodeIdentifier": "N001_retry_b"
-        },
-        {
-          "displayText": "KTAS 5(비응급)",
-          "nextNodeIdentifier": "N001_4"
-        }
-      ],
-      "nextIdentifier": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "N001_retry_b": {
-      "identifier": "N001_retry_b",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다.",
-      "dialogueContentTTSPassing": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 케이타스 파이브 비응급 상태로 보입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C002",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "N001_4": {
-      "identifier": "N001_4",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "해당 환자를 KTAS 5로 분류했습니다.",
-      "dialogueContentTTSPassing": "해당 환자를 케이타스 파이브로 분류했습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q_TRIAGE_A_REMOVE",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "Q_TRIAGE_A_REMOVE": {
-      "identifier": "Q_TRIAGE_A_REMOVE",
-      "nodeType": "QuestControl",
-      "operation": "Remove",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::triage_patients",
-      "quest": null,
-      "nextIdentifier": "N001_5"
-    },
-    "N001_5": {
-      "identifier": "N001_5",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "이제 치료를 위해 이송할 긴급 환자를 클릭하세요.",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "ISC_SHOW_MOVE_PATIENT_A",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
     "V004": {
-      "identifier": "V004",
-      "nodeType": "Validator",
       "rootConditions": [
         {
           "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
           "validationRules": [
             {
               "type": "Registry",
@@ -692,60 +1707,23 @@
         }
       ],
       "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance",
+      "idleWhileWaiting": null,
+      "identifier": "V004",
+      "nodeType": "Validator",
       "nextIdentifier": "CC_A_Triage"
     },
-    "CC_A_Triage": {
-      "identifier": "CC_A_Triage",
-      "nodeType": "StateUpdate",
-      "targetEntityIdentifier": null,
-      "stateKey": "branch.completion.CC_A_Triage",
-      "stateValue": "true",
-      "nextIdentifier": null
-    },
-    "N002": {
-      "identifier": "N002",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "KTAS 1(소생) 환자에 대비하기 위해 처치실로 이동하세요.",
-      "dialogueContentTTSPassing": "케이타스 원 소생 환자에 대비하기 위해 처치실로 이동하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q003",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "N002_C": {
-      "identifier": "N002_C",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "KTAS 1(소생) 환자에 대비하기 위해 처치실로 이동하세요.",
-      "dialogueContentTTSPassing": "케이타스 원 소생 환자에 대비하기 위해 처치실로 이동하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N002",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "Q003": {
-      "identifier": "Q003",
-      "nodeType": "QuestControl",
-      "operation": "Add",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::move_to_treatment_room",
-      "quest": null,
-      "nextIdentifier": "V005"
-    },
     "V005": {
-      "identifier": "V005",
-      "nodeType": "Validator",
       "rootConditions": [
         {
           "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
           "validationRules": [
             {
               "type": "Registry",
@@ -757,106 +1735,23 @@
         }
       ],
       "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance",
+      "idleWhileWaiting": null,
+      "identifier": "V005",
+      "nodeType": "Validator",
       "nextIdentifier": "Q003_1"
     },
-    "Q003_1": {
-      "identifier": "Q003_1",
-      "nodeType": "QuestControl",
-      "operation": "Remove",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::move_to_treatment_room",
-      "quest": null,
-      "nextIdentifier": "N002_1"
-    },
-    "N002_1": {
-      "identifier": "N002_1",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "처치실에 있는 물품의 위치를 확인하세요.",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "CC_BC_Ready",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "CC_BC_Ready": {
-      "identifier": "CC_BC_Ready",
-      "nodeType": "StateUpdate",
-      "targetEntityIdentifier": null,
-      "stateKey": "branch.completion.CC_BC_Ready",
-      "stateValue": "true",
-      "nextIdentifier": null
-    },
-    "N003": {
-      "identifier": "N003",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "준비실로 이동하세요.",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q004",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "Q004": {
-      "identifier": "Q004",
-      "nodeType": "QuestControl",
-      "operation": "Add",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "quest": {
-        "Id": "Quest_MoveToPrepRoom"
-      },
-      "nextIdentifier": "Q004_1"
-    },
-    "Q004_1": {
-      "identifier": "Q004_1",
-      "nodeType": "QuestControl",
-      "operation": "Remove",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "quest": {
-        "Id": "Quest_MoveToPrepRoom"
-      },
-      "nextIdentifier": "N003_1"
-    },
-    "N003_1": {
-      "identifier": "N003_1",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "생리식염수 1L 수액백과 수액세트를 각각 획득하세요.",
-      "dialogueContentTTSPassing": "생리식염수 1리터 수액백과 수액세트를 각각 획득하세요.",
-      "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
-      "autoAdvanceSeconds": 0.2,
-      "nextIdentifier": "q006",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "q006": {
-      "identifier": "q006",
-      "nodeType": "QuestControl",
-      "operation": "Add",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::collect_ns1_and_iv_set",
-      "quest": null,
-      "nextIdentifier": "V006"
-    },
     "V006": {
-      "identifier": "V006",
-      "nodeType": "Validator",
       "rootConditions": [
         {
           "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
           "validationRules": [
             {
               "type": "Registry",
@@ -874,62 +1769,23 @@
         }
       ],
       "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "WarnAndKeepWaiting",
+      "idleWhileWaiting": null,
+      "identifier": "V006",
+      "nodeType": "Validator",
       "nextIdentifier": "q006_1"
     },
-    "q006_1": {
-      "identifier": "q006_1",
-      "nodeType": "QuestControl",
-      "operation": "Remove",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::collect_ns1_and_iv_set",
-      "quest": null,
-      "nextIdentifier": "A001"
-    },
-    "A001": {
-      "identifier": "A001",
-      "nodeType": "CombineItem",
-      "inputItemIdentifiers": [
-        "ns1",
-        "iv_set"
-      ],
-      "outputItemIdentifier": "ns1_ready",
-      "autoCombine": true,
-      "nextIdentifier": "N003_2"
-    },
-    "N003_2": {
-      "identifier": "N003_2",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "플라즈마 솔루션 1L 수액백과 수액세트를 획득하세요.",
-      "dialogueContentTTSPassing": "플라즈마 솔루션 1리터 수액백과 수액세트를 획득하세요.",
-      "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
-      "nextIdentifier": "q007",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "q007": {
-      "identifier": "q007",
-      "nodeType": "QuestControl",
-      "operation": "Add",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::collect_ps1_and_iv_set",
-      "quest": null,
-      "nextIdentifier": "V007"
-    },
     "V007": {
-      "identifier": "V007",
-      "nodeType": "Validator",
       "rootConditions": [
         {
           "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
           "validationRules": [
             {
               "type": "Registry",
@@ -953,62 +1809,23 @@
         }
       ],
       "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "WarnAndKeepWaiting",
+      "idleWhileWaiting": null,
+      "identifier": "V007",
+      "nodeType": "Validator",
       "nextIdentifier": "q007_1"
     },
-    "q007_1": {
-      "identifier": "q007_1",
-      "nodeType": "QuestControl",
-      "operation": "Remove",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::collect_ps1_and_iv_set",
-      "quest": null,
-      "nextIdentifier": "A002"
-    },
-    "A002": {
-      "identifier": "A002",
-      "nodeType": "CombineItem",
-      "inputItemIdentifiers": [
-        "ps1",
-        "iv_set"
-      ],
-      "outputItemIdentifier": "ps1_ready",
-      "autoCombine": true,
-      "nextIdentifier": "N003_3"
-    },
-    "N003_3": {
-      "identifier": "N003_3",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "수액 준비가 완료되었습니다. 혈액백을 클릭해 획득하세요.",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
-      "nextIdentifier": "q008",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "q008": {
-      "identifier": "q008",
-      "nodeType": "QuestControl",
-      "operation": "Add",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::collect_blood_bag",
-      "quest": null,
-      "nextIdentifier": "V008"
-    },
     "V008": {
-      "identifier": "V008",
-      "nodeType": "Validator",
       "rootConditions": [
         {
           "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
           "validationRules": [
             {
               "type": "Registry",
@@ -1020,59 +1837,23 @@
         }
       ],
       "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "WarnAndKeepWaiting",
+      "idleWhileWaiting": null,
+      "identifier": "V008",
+      "nodeType": "Validator",
       "nextIdentifier": "q008_1"
     },
-    "q008_1": {
-      "identifier": "q008_1",
-      "nodeType": "QuestControl",
-      "operation": "Remove",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro::collect_blood_bag",
-      "quest": null,
-      "nextIdentifier": "CC_D_Ready"
-    },
-    "CC_D_Ready": {
-      "identifier": "CC_D_Ready",
-      "nodeType": "StateUpdate",
-      "targetEntityIdentifier": null,
-      "stateKey": "branch.completion.CC_D_Ready",
-      "stateValue": "true",
-      "nextIdentifier": null
-    },
-    "D004": {
-      "identifier": "D004",
-      "nodeType": "Dialogue",
-      "speakerName": "간호사 A",
-      "dialogueContent": "KTAS 1(소생)으로 분류된 환자를 이송하겠습니다. @t=[nurse_b, ???], @t=[nurse_c, ???], @t=[nurse_d, ???]선생님, 해당 환자 처치실로 이동하도록 도와주세요.",
-      "dialogueContentTTSPassing": "케이타스 원 소생으로 분류된 환자를 이송하겠습니다. @t=[nurse_b, ???], @t=[nurse_c, ???], @t=[nurse_d, ???] 선생님, 해당 환자 처치실로 이동하도록 도와주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q005",
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F1" }
-    },
-    "Q005": {
-      "identifier": "Q005",
-      "nodeType": "QuestControl",
-      "operation": "Add",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "quest": {
-        "Id": "Quest_playerB_playerC_playerD_to_triage"
-      },
-      "nextIdentifier": "V009"
-    },
     "V009": {
-      "identifier": "V009",
-      "nodeType": "Validator",
       "rootConditions": [
         {
           "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
           "validationRules": [
             {
               "type": "Registry",
@@ -1084,124 +1865,103 @@
         }
       ],
       "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
       "failureNextIdentifier": null,
       "waitForCondition": true,
       "waitTimeoutSeconds": 180,
       "onWaitTimeout": "ForceAdvance",
+      "idleWhileWaiting": null,
+      "identifier": "V009",
+      "nodeType": "Validator",
       "nextIdentifier": "Q005_1"
     },
-    "Q005_1": {
-      "identifier": "Q005_1",
+    "q002_item": {
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::collect_vital_set",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "q002_item",
       "nodeType": "QuestControl",
+      "nextIdentifier": "Q002"
+    },
+    "q002_item_1": {
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::collect_vital_set",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
       "persistProgressOnSessionEnd": false,
-      "quest": {
-        "Id": "Quest_playerB_playerC_playerD_to_triage"
-      },
-      "nextIdentifier": "E004"
+      "identifier": "q002_item_1",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "D003"
     },
-    "E004": {
-      "identifier": "E004",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "B_C_D_to_triage",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "N004"
-    },
-    "N004": {
-      "identifier": "N004",
-      "nodeType": "Dialogue",
-      "speakerName": "시스템",
-      "dialogueContent": "초기 대응과 중증도 분류를 완료했습니다. 다음 처치 시나리오를 진행합니다.",
-      "dialogueContentTTSPassing": null,
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "C_role_select": {
-      "identifier": "C_role_select",
-      "nodeType": "Choice",
-      "speakerName": "시스템",
-      "dialogueContent": "당신의 역할을 선택하세요. (각 플레이어가 한 명씩 선택)",
-      "portraitSpriteIdentifier": null,
-      "options": [
-        {
-          "displayText": "간호사 A (KTAS 분류 / CPR 보조)",
-          "nextNodeIdentifier": "TAG_a_0"
-        },
-        {
-          "displayText": "간호사 B (환자 처치)",
-          "nextNodeIdentifier": "TAG_b_0"
-        },
-        {
-          "displayText": "간호사 C (환자 처치)",
-          "nextNodeIdentifier": "TAG_c_0"
-        },
-        {
-          "displayText": "간호사 D (약물 전담)",
-          "nextNodeIdentifier": "TAG_d_0"
-        }
-      ],
-      "nextIdentifier": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": { "preset": "F3" }
-    },
-    "TAG_a_0": {
-      "identifier": "TAG_a_0",
-      "nodeType": "PlayerTag",
+    "q006": {
       "operation": "Add",
-      "scope": "Current",
-      "tag": "nurse_a",
-      "fromTag": null,
-      "toTag": null,
-      "nextIdentifier": "P001"
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::collect_ns1_and_iv_set",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "q006",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "V006"
     },
-    "TAG_b_0": {
-      "identifier": "TAG_b_0",
-      "nodeType": "PlayerTag",
+    "q006_1": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::collect_ns1_and_iv_set",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "q006_1",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "A001"
+    },
+    "q007": {
       "operation": "Add",
-      "scope": "Current",
-      "tag": "nurse_b",
-      "fromTag": null,
-      "toTag": null,
-      "nextIdentifier": "P001"
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::collect_ps1_and_iv_set",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "q007",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "V007"
     },
-    "TAG_c_0": {
-      "identifier": "TAG_c_0",
-      "nodeType": "PlayerTag",
+    "q007_1": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::collect_ps1_and_iv_set",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "q007_1",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "A002"
+    },
+    "q008": {
       "operation": "Add",
-      "scope": "Current",
-      "tag": "nurse_c",
-      "fromTag": null,
-      "toTag": null,
-      "nextIdentifier": "P001"
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::collect_blood_bag",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "q008",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "V008"
     },
-    "TAG_d_0": {
-      "identifier": "TAG_d_0",
-      "nodeType": "PlayerTag",
-      "operation": "Add",
-      "scope": "Current",
-      "tag": "nurse_d",
-      "fromTag": null,
-      "toTag": null,
-      "nextIdentifier": "P001"
-    },
-    "ISC_SHOW_MOVE_PATIENT_A": {
-      "identifier": "ISC_SHOW_MOVE_PATIENT_A",
-      "nodeType": "InteractionVisibility",
-      "operation": "Show",
-      "targets": [
-        {
-          "entity": {
-            "id": "patient_a"
-          },
-          "interaction": "transfer_prompt"
-        }
-      ],
-      "nextIdentifier": "V004"
+    "q008_1": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::collect_blood_bag",
+      "quest": null,
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "q008_1",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_D_Ready"
     }
   }
 }
