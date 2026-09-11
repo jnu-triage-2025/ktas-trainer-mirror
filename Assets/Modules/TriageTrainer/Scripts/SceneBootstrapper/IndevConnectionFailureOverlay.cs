@@ -7,6 +7,7 @@ using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -140,6 +141,16 @@ namespace TriageTrainer.SceneBootstrapper
 
       if (args.ConnectionState != LocalConnectionState.Stopped || !_connectionAttempted)
         return;
+
+      // 플레이어가 타이틀로 돌아가려고 세션을 끊는 중이면 장애가 아니다. 실패 화면을 띄우면
+      // 월드 씬을 따로 내리고 버튼을 한 번 더 눌러야 하므로, 화면 전환은 복귀 절차에 맡긴다.
+      if (TitleReturnService.IsReturning)
+      {
+        _connectionAttempted = false;
+        _connected = false;
+        Hide();
+        return;
+      }
 
       if (_connected)
       {

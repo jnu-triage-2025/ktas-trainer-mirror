@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections;
 using MultiplayerInfrastructure.Definitions;
-using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -172,16 +171,11 @@ namespace MultiplayerInfrastructure.UI
 
       _titleTransitionStarted = true;
       _titleButton?.SetEnabled(false);
-      StartCoroutine(ReturnToTitleRoutine());
-    }
 
-    private IEnumerator ReturnToTitleRoutine()
-    {
-      var fishNetSupport = FishNetSupport.Instance ?? FindFirstObjectByType<FishNetSupport>();
-      if (fishNetSupport != null)
-        yield return fishNetSupport.StopSessionAndWait();
-
-      LoadingScreen.LoadSceneAsync(introSceneName);
+      // 이 컨트롤러는 씬 NetworkObject의 자식이라 클라이언트 연결이 끊기면 FishNet이 비활성화한다.
+      // 여기서 코루틴을 돌리면 세션 종료를 기다리는 도중 코루틴이 멈춰 IntroScene 로드가 시작되지
+      // 않으므로, 복귀 절차는 씬 수명과 무관한 영구 오브젝트에 맡긴다.
+      TitleReturnService.ReturnToTitle(introSceneName);
     }
 
     public void OnOverlayPushed()
