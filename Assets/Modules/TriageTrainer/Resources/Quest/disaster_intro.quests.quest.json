@@ -28,6 +28,14 @@
           "signalScope": "Owner",
           "displayTextContent": "경증 외상 환자 중증도 분류",
           "count": 1
+        },
+        {
+          "identifier": "select-critical-patient",
+          "type": "InteractionSignalReceived",
+          "signalId": "move_patient_a",
+          "signalScope": "Owner",
+          "displayTextContent": "이송할 긴급 환자 선택",
+          "count": 1
         }
       ]
     },

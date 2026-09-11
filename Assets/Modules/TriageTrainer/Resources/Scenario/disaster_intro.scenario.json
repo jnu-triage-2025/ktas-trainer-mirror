@@ -1052,7 +1052,7 @@
       },
       "identifier": "N001_4",
       "nodeType": "Dialogue",
-      "nextIdentifier": "Q_TRIAGE_A_REMOVE"
+      "nextIdentifier": "N001_5"
     },
     "N001_5": {
       "speakerName": "시스템",
@@ -1666,7 +1666,7 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q_TRIAGE_A_REMOVE",
       "nodeType": "QuestControl",
-      "nextIdentifier": "N001_5"
+      "nextIdentifier": "CC_A_Triage"
     },
     "TAG_a_0": {
       "operation": "Add",
@@ -1826,7 +1826,7 @@
       "idleWhileWaiting": null,
       "identifier": "V004",
       "nodeType": "Validator",
-      "nextIdentifier": "CC_A_Triage"
+      "nextIdentifier": "Q_TRIAGE_A_REMOVE"
     },
     "V005": {
       "rootConditions": [

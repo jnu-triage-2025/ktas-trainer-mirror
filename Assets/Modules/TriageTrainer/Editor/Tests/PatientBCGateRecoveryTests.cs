@@ -1,5 +1,8 @@
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Scenario;
 using NUnit.Framework;
 using UnityEngine;
@@ -120,6 +123,43 @@ namespace TriageTrainer.Tests
 
       Assert.That(graph.Nodes["N001_2"].NextIdentifier, Is.EqualTo("DISASTER_INTRO_TRIAGE_ENABLE_A"));
       Assert.That(graph.Nodes["N001_3"].NextIdentifier, Is.EqualTo("DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A"));
+    }
+
+    [Test]
+    public void DisasterIntroKeepsNurseATriageQuestUntilCriticalPatientSelectionCompletes()
+    {
+      var scenarioPath = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/disaster_intro.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(scenarioPath), validateWithSchema: true);
+      var questPath = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Quest/disaster_intro.quests.quest.json");
+      var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+      jsonOptions.Converters.Add(new JsonStringEnumConverter());
+      var definitions = JsonSerializer.Deserialize<QuestDefinitionRegistryPayload>(
+        File.ReadAllText(questPath), jsonOptions);
+      var triageQuest = definitions?.Definitions?.SingleOrDefault(definition =>
+        definition.Identifier == "triage_patients");
+      var selectionTask = triageQuest?.Tasks?.SingleOrDefault(task =>
+        task.Identifier == "select-critical-patient");
+
+      Assert.That(triageQuest, Is.Not.Null);
+      Assert.That(triageQuest.IsOrdinal, Is.True);
+      Assert.That(triageQuest.Tasks.Select(task => task.Identifier), Is.EqualTo(new[]
+      {
+        "triage-patient-a",
+        "triage-patient-dummy-d-a",
+        "select-critical-patient"
+      }));
+      Assert.That(selectionTask, Is.Not.Null);
+      Assert.That(selectionTask.Type, Is.EqualTo(QuestCompletionCriteriaType.InteractionSignalReceived));
+      Assert.That(selectionTask.SignalId, Is.EqualTo("move_patient_a"));
+      Assert.That(selectionTask.SignalScope, Is.EqualTo(ScenarioSignalScope.Owner));
+      Assert.That(graph.Nodes["N001_4"].NextIdentifier, Is.EqualTo("N001_5"),
+        "두 번째 분류 직후에는 퀘스트를 제거하지 않고 긴급 환자 선택 목표를 안내해야 합니다.");
+      Assert.That(graph.Nodes["V004"].NextIdentifier, Is.EqualTo("Q_TRIAGE_A_REMOVE"),
+        "긴급 환자 선택 신호를 확인한 뒤에만 중증도 분류 퀘스트를 제거해야 합니다.");
+      Assert.That(graph.Nodes["Q_TRIAGE_A_REMOVE"].NextIdentifier, Is.EqualTo("CC_A_Triage"),
+        "퀘스트를 제거한 직후 nurse_a 분기를 완료하여 다른 참여자 대기 상태로 전환해야 합니다.");
     }
 
     [TestCase("patient_b_c_ct")]
