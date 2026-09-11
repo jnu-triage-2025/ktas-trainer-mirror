@@ -8,6 +8,7 @@ using TriageTrainer.Entity;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.LineConnection;
 using TriageTrainer.Entity.OxyLine;
+using TriageTrainer.Entity.PatientMonitor.Models;
 using TriageTrainer.Scenario;
 using UnityEngine;
 
@@ -15,6 +16,31 @@ namespace TriageTrainer.Tests
 {
   public sealed class PatientEquipmentConnectionTests
   {
+    [Test]
+    public void MonitorDisconnectRequestClearsPatientWithoutSelectionModeWhenOffline()
+    {
+      var root = new GameObject("monitor-disconnect-request-test");
+      root.SetActive(false);
+      try
+      {
+        var patientObject = new GameObject("patient");
+        patientObject.transform.SetParent(root.transform, false);
+        var monitorObject = new GameObject("monitor");
+        monitorObject.transform.SetParent(root.transform, false);
+        var patient = patientObject.AddComponent<PatientController>();
+        var monitor = monitorObject.AddComponent<SinglePatientMonitorController>();
+
+        monitor.SetMonitoringPatient(patient);
+        monitor.RequestMonitoringPatientDisconnect();
+
+        Assert.That(monitor.MonitoringPatient, Is.Null);
+      }
+      finally
+      {
+        Object.DestroyImmediate(root);
+      }
+    }
+
     [Test]
     public void CareZoneMissingEquipmentFallbackGameRuleParsesCommaSeparatedValues()
     {

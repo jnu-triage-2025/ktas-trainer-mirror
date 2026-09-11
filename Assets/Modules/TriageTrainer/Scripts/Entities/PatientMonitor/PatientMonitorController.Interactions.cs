@@ -132,7 +132,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       {
         if (!CanInteract(interactor))
           return;
-        _owner.SetMonitoringPatient(null);
+        _owner.RequestMonitoringPatientDisconnect();
       }
     }
 

@@ -42,6 +42,27 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       ApplyMonitoringPatient(patient);
     }
 
+    /// <summary>
+    /// 현재 추적 환자의 연결을 해제한다. 환자 선택 모드는 새 환자를 지정할 때만 필요한
+    /// 권한이므로, 해제 요청은 별도의 근접성 검증 경로를 사용한다.
+    /// </summary>
+    public void RequestMonitoringPatientDisconnect()
+    {
+      if (IsServerStarted)
+      {
+        SetMonitoringPatientOnServer(null);
+        return;
+      }
+
+      if (IsClientStarted)
+      {
+        CmdRequestMonitoringPatientDisconnect();
+        return;
+      }
+
+      ApplyMonitoringPatient(null);
+    }
+
     public override void OnStartServer()
     {
       base.OnStartServer();
@@ -100,6 +121,17 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       SetMonitoringPatientOnServer(patient);
       _serverSelectionClientIds.Remove(sender.ClientId);
       TargetConfirmMonitoringPatient(sender, true);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdRequestMonitoringPatientDisconnect(NetworkConnection sender = null)
+    {
+      var player = sender != null && sender.IsValid ? FindPlayer(sender.ClientId) : null;
+      if (player == null || (player.transform.position - transform.position).sqrMagnitude > 9f)
+        return;
+
+      SetMonitoringPatientOnServer(null);
+      _serverSelectionClientIds.Remove(sender.ClientId);
     }
 
     [ServerRpc(RequireOwnership = false)]
