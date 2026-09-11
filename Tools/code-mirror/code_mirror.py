@@ -350,13 +350,33 @@ def anchor_refs(refs: dict[str, str], state: dict[str, Any]) -> None:
 
 
 def http_askpass(token_env: str, username: str) -> tuple[Path, dict[str, str]]:
+    """Answer Git's credential prompts without the token reaching Git itself.
+
+    Git runs GIT_ASKPASS as a program, so the helper needs a launcher the
+    platform can execute on its own. A shebang naming an interpreter by command
+    name is not one: Git on Windows reads the shebang, keeps only the
+    interpreter's file name and looks that name up on PATH, which finds nothing
+    when the run was started through the py launcher or through any interpreter
+    that is not itself on PATH. Both launchers therefore spell out the running
+    interpreter by full path.
+    """
     directory = Path(tempfile.mkdtemp(prefix="code-mirror-askpass-"))
     script = directory / "askpass.py"
-    interpreter = "python" if sys.platform == "win32" else "python3"
-    script.write_text(f"#!/usr/bin/env {interpreter}\nimport os, sys\nprint(os.environ[os.environ['CODE_MIRROR_TOKEN_ENV']] if 'Password' in sys.argv[1] else os.environ['CODE_MIRROR_HTTP_USERNAME'])\n", encoding="utf-8")
-    script.chmod(0o700)
+    script.write_text(
+        "import os, sys\n"
+        "prompt = sys.argv[1] if len(sys.argv) > 1 else ''\n"
+        "print(os.environ[os.environ['CODE_MIRROR_TOKEN_ENV']] if 'Password' in prompt else os.environ['CODE_MIRROR_HTTP_USERNAME'])\n",
+        encoding="utf-8")
+    script.chmod(0o600)
+    if sys.platform == "win32":
+        launcher = directory / "askpass.bat"
+        launcher.write_text(f'@echo off\r\n"{sys.executable}" "{script}" %*\r\n', encoding="utf-8")
+    else:
+        launcher = directory / "askpass.sh"
+        launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n', encoding="utf-8")
+    launcher.chmod(0o700)
     env = os.environ.copy()
-    env.update({"GIT_ASKPASS": str(script), "GIT_TERMINAL_PROMPT": "0", "CODE_MIRROR_TOKEN_ENV": token_env, "CODE_MIRROR_HTTP_USERNAME": username})
+    env.update({"GIT_ASKPASS": str(launcher), "GIT_TERMINAL_PROMPT": "0", "CODE_MIRROR_TOKEN_ENV": token_env, "CODE_MIRROR_HTTP_USERNAME": username})
     return directory, env
 
 
