@@ -59,8 +59,9 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes["TRIAGE_ENABLE_B"].NextIdentifier, Is.EqualTo("TRIAGE_ENABLE_C"));
       Assert.That(graph.Nodes["TRIAGE_ENABLE_C"].NextIdentifier, Is.EqualTo("TRIAGE_ENABLE_D"));
       Assert.That(graph.Nodes["TRIAGE_ENABLE_D"].NextIdentifier, Is.EqualTo("TRIAGE_WAIT_ALL"));
-      Assert.That(graph.Nodes["TRIAGE_B_CONFIRMED"].NextIdentifier, Is.EqualTo("TRIAGE_A_REMOVE"));
-      Assert.That(graph.Nodes["TRIAGE_D_CONFIRMED"].NextIdentifier, Is.EqualTo("TRIAGE_CHECK_CORRECT"));
+      Assert.That(graph.Nodes["TRIAGE_B_CONFIRMED"].NextIdentifier, Is.EqualTo("TRIAGE_CHECK_CORRECT"));
+      Assert.That(graph.Nodes["TRIAGE_C_CONFIRMED"].NextIdentifier, Is.EqualTo("TRIAGE_A_REMOVE"));
+      Assert.That(graph.Nodes["TRIAGE_D_CONFIRMED"].NextIdentifier, Is.EqualTo("TRIAGE_COMPLETE_EVENT"));
     }
 
     [Test]
@@ -946,14 +947,20 @@ namespace TriageTrainer.Tests
         Is.EqualTo("reset_patient_c_triage_attempt"));
       Assert.That((graph.Nodes["TRIAGE_REENABLE_C"] as ScenarioInvokeEventNode)?.EventIdentifier,
         Is.EqualTo("reset_patient_dummy_d_b_triage_attempt"));
+      Assert.That(graph.Nodes["TRIAGE_B_CONFIRMED"].NextIdentifier,
+        Is.EqualTo("TRIAGE_CHECK_CORRECT"));
       Assert.That(graph.Nodes["TRIAGE_CHECK_CORRECT"].NextIdentifier,
         Is.EqualTo("TRIAGE_C_EVALUATE_CURRENT"));
       Assert.That(graph.Nodes["TRIAGE_C_EVALUATE_CURRENT"].NextIdentifier,
         Is.EqualTo("TRIAGE_C_CONFIRMED"));
+      Assert.That(graph.Nodes["TRIAGE_C_CONFIRMED"].NextIdentifier,
+        Is.EqualTo("TRIAGE_A_REMOVE"));
       Assert.That(graph.Nodes["TRIAGE_A_REMOVE"].NextIdentifier,
         Is.EqualTo("TRIAGE_REENABLE_D"));
       Assert.That(graph.Nodes["TRIAGE_REENABLE_D"].NextIdentifier,
         Is.EqualTo("TRIAGE_D_CONFIRMED"));
+      Assert.That(graph.Nodes["TRIAGE_D_CONFIRMED"].NextIdentifier,
+        Is.EqualTo("TRIAGE_COMPLETE_EVENT"));
       Assert.That(graph.Nodes["TRIAGE_COMPLETE_EVENT"].NextIdentifier,
         Is.EqualTo("TRIAGE_A_FINAL_REMOVE"));
       Assert.That(graph.Nodes["TRIAGE_A_FINAL_REMOVE"].NextIdentifier,

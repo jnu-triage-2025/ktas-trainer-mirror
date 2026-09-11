@@ -1214,7 +1214,7 @@
     "TRIAGE_B_CONFIRMED": {
       "identifier": "TRIAGE_B_CONFIRMED",
       "nodeType": "Dialogue",
-      "nextIdentifier": "TRIAGE_A_REMOVE",
+      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
       "speakerName": "시스템",
       "dialogueContent": "해당 환자를 KTAS 2(긴급)로 분류했습니다. 다음 환자를 확인하세요.",
       "portraitSpriteIdentifier": null,
@@ -1260,7 +1260,7 @@
     "TRIAGE_D_CONFIRMED": {
       "identifier": "TRIAGE_D_CONFIRMED",
       "nodeType": "Dialogue",
-      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
+      "nextIdentifier": "TRIAGE_COMPLETE_EVENT",
       "speakerName": "시스템",
       "dialogueContent": "해당 환자를 KTAS 5(비응급)로 분류했습니다. 다음 환자를 확인하세요.",
       "portraitSpriteIdentifier": null,
@@ -1306,7 +1306,7 @@
     "TRIAGE_C_CONFIRMED": {
       "identifier": "TRIAGE_C_CONFIRMED",
       "nodeType": "Dialogue",
-      "nextIdentifier": "TRIAGE_COMPLETE_EVENT",
+      "nextIdentifier": "TRIAGE_A_REMOVE",
       "speakerName": "시스템",
       "dialogueContent": "해당 환자를 KTAS 2(긴급)로 분류했습니다.",
       "portraitSpriteIdentifier": null,
