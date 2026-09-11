@@ -29,7 +29,7 @@ namespace TriageTrainer.Entity
   /// </para>
   ///
   /// <para>
-  /// 적용 경로 자체는 기존과 같은 <see cref="OnItemUsed"/> 를 그대로 쓰므로, 서버 권위 판정과
+  /// 지혈과 기관내관 고정은 각각 별도 사용 경로로 실행한다. 서버 권위 판정과
   /// 아이템 소비, 신호 발신 규약은 달라지지 않는다.
   /// </para>
   /// </summary>
@@ -140,7 +140,13 @@ namespace TriageTrainer.Entity
           return;
         }
 
-        _owner.OnItemUsed(player.PlayerEntity, itemIdentifier);
+        if (_spec.InteractionIdentifier == InteractIdPatientAUsePlasterOnIntubation)
+          _owner.ApplyAndConsumeIntubationFixationItemUse(player.PlayerEntity, itemIdentifier);
+        else if (_spec.InteractionIdentifier == InteractIdPatientAUseGauze
+                 || _spec.InteractionIdentifier == InteractIdPatientAUsePlasterOnGauze)
+          _owner.ApplyAndConsumeBleedingControlItemUse(player.PlayerEntity, itemIdentifier);
+        else
+          _owner.OnItemUsed(player.PlayerEntity, itemIdentifier);
       }
 
       private string ResolveInventoryItemIdentifier(PlayerController player)

@@ -207,6 +207,23 @@ namespace TriageTrainer.Entity
 
     private bool ApplyAndConsumeItemUse(MI.Entity.Entity user, string itemIdentifier)
     {
+      if (string.Equals(itemIdentifier, Gauze.Identifier, StringComparison.Ordinal))
+        return ApplyAndConsumeBleedingControlItemUse(user, itemIdentifier);
+      if (string.Equals(itemIdentifier, Plaster.Identifier, StringComparison.Ordinal))
+      {
+        if (string.Equals(ResolveTreatmentIdentifierForItem(itemIdentifier), TreatmentPlasterOnIntubation, StringComparison.Ordinal))
+          return ApplyAndConsumeIntubationFixationItemUse(user, itemIdentifier);
+        return ApplyAndConsumeBleedingControlItemUse(user, itemIdentifier);
+      }
+      return ApplyAndConsumeOtherItemUse(user, itemIdentifier);
+    }
+
+    private bool ApplyAndConsumeBleedingControlItemUse(MI.Entity.Entity user, string itemIdentifier)
+    {
+      if (!string.Equals(itemIdentifier, Gauze.Identifier, StringComparison.Ordinal)
+          && !string.Equals(ResolveTreatmentIdentifierForItem(itemIdentifier), TreatmentPlasterOnGauze, StringComparison.Ordinal))
+        return false;
+
       PlayerController sourcePlayer = null;
       var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
       foreach (var player in players)
@@ -222,7 +239,7 @@ namespace TriageTrainer.Entity
       if (sourcePlayer != null && sourcePlayer.CountItemInInventory(itemIdentifier) < 1)
         return false;
 
-      if (sourcePlayer != null && IsBleedingControlItem(itemIdentifier) && !HasEquippedGloves(sourcePlayer))
+      if (sourcePlayer != null && !HasEquippedGloves(sourcePlayer))
       {
         PresentBleedingControlRequirementsDialogue();
         return false;
@@ -247,9 +264,80 @@ namespace TriageTrainer.Entity
       return applied;
     }
 
-    private static bool IsBleedingControlItem(string itemIdentifier) =>
-      string.Equals(itemIdentifier, Gauze.Identifier, StringComparison.Ordinal)
-      || string.Equals(itemIdentifier, Plaster.Identifier, StringComparison.Ordinal);
+    private bool ApplyAndConsumeIntubationFixationItemUse(MI.Entity.Entity user, string itemIdentifier)
+    {
+      if (!string.Equals(ResolveTreatmentIdentifierForItem(itemIdentifier), TreatmentPlasterOnIntubation, StringComparison.Ordinal))
+        return false;
+
+      PlayerController sourcePlayer = null;
+      var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      foreach (var player in players)
+      {
+        if (player != null && ReferenceEquals(player.PlayerEntity, user))
+        {
+          sourcePlayer = player;
+          break;
+        }
+      }
+
+      // 디버그/테스트는 플레이어 없이 적용할 수 있다. 실제 플레이어 사용은 아이템을 소유해야만 한다.
+      if (sourcePlayer != null && sourcePlayer.CountItemInInventory(itemIdentifier) < 1)
+        return false;
+
+      if (IsFishNetClientInitialized && !IsFishNetServerStarted)
+      {
+        CmdApplyPatientItemUse(itemIdentifier);
+        return true;
+      }
+
+      if (HasPendingApprovedItemUse(itemIdentifier) || !CanApplyItemUse(itemIdentifier))
+        return false;
+
+      // 실제 플레이어 경로는 소비를 먼저 확정한 뒤에만 상태·Display·신호를 변경한다.
+      PlayerController.ItemUseConsumptionReceipt receipt = null;
+      if (sourcePlayer != null && !sourcePlayer.TryConsumeItemUse(itemIdentifier, out receipt))
+        return false;
+
+      bool applied = ApplyItemUse(itemIdentifier);
+      sourcePlayer?.CompleteConsumedItemUse(receipt, applied);
+      return applied;
+    }
+
+    private bool ApplyAndConsumeOtherItemUse(MI.Entity.Entity user, string itemIdentifier)
+    {
+      PlayerController sourcePlayer = null;
+      var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      foreach (var player in players)
+      {
+        if (player != null && ReferenceEquals(player.PlayerEntity, user))
+        {
+          sourcePlayer = player;
+          break;
+        }
+      }
+
+      // 디버그/테스트는 플레이어 없이 적용할 수 있다. 실제 플레이어 사용은 아이템을 소유해야만 한다.
+      if (sourcePlayer != null && sourcePlayer.CountItemInInventory(itemIdentifier) < 1)
+        return false;
+
+      if (IsFishNetClientInitialized && !IsFishNetServerStarted)
+      {
+        CmdApplyPatientItemUse(itemIdentifier);
+        return true;
+      }
+
+      if (HasPendingApprovedItemUse(itemIdentifier) || !CanApplyItemUse(itemIdentifier))
+        return false;
+
+      // 실제 플레이어 경로는 소비를 먼저 확정한 뒤에만 상태·Display·신호를 변경한다.
+      PlayerController.ItemUseConsumptionReceipt receipt = null;
+      if (sourcePlayer != null && !sourcePlayer.TryConsumeItemUse(itemIdentifier, out receipt))
+        return false;
+
+      bool applied = ApplyItemUse(itemIdentifier);
+      sourcePlayer?.CompleteConsumedItemUse(receipt, applied);
+      return applied;
+    }
 
     private static bool HasEquippedGloves(PlayerController player)
     {
