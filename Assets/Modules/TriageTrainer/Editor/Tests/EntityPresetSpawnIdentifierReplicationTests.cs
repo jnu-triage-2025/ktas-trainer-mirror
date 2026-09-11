@@ -33,9 +33,23 @@ namespace TriageTrainer.Tests
       "Assets/Modules/TriageTrainer/ScriptableObjects/EntityPreset Registry Requirements SO.asset";
     private const string PatientAPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeA.prefab";
+    private const string DoctorNpcPrefabPath =
+      "Assets/Modules/TriageTrainer/Prefabs/Entities/NPC/DoctorNPCHat.prefab";
     private const string DefibrillatorPadChildName = "defibrillatorpad_subclavicle_A";
 
     private static readonly Vector3 IsolatedSpawnPosition = new Vector3(14000f, 0f, 14000f);
+
+    [Test]
+    public void DoctorNpcIsGlobalSoEveryScenarioParticipantObservesItsSpawn()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(DoctorNpcPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+
+      var networkObject = prefab.GetComponent<FishNet.Object.NetworkObject>();
+      Assert.That(networkObject, Is.Not.Null);
+      Assert.That(networkObject.IsGlobal, Is.True,
+        "Additive 씬의 관찰자 등록 상태와 무관하게 모든 참가자에게 의사 NPC가 스폰되어야 합니다.");
+    }
 
     [Test]
     public void PatientSpawnedIdentifierReachesTheReplicatedSyncVarBeforeSpawn()
