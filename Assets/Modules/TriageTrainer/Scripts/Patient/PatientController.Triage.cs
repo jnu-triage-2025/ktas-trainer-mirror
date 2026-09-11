@@ -201,7 +201,17 @@ namespace TriageTrainer.Entity
       }
     }
 
-    /// <summary>시나리오 진행에 따라 트리아지 인터랙션 노출을 켜고 끈다.</summary>
+    /// <summary>
+    /// 시나리오 진행에 따라 트리아지 인터랙션 노출을 켜고 끈다.
+    ///
+    /// <para>
+    /// 호환 실행 경로에서 ByRole 브랜치(TriageAssessControl 노드)와 브랜치 이벤트는 배정된 클라이언트
+    /// 한 곳에서만 실행된다. 담당자가 호스트가 아니면 이 피어는 서버 권위 SyncVar 를 쓸 수 없으므로
+    /// 서버에 위임한다. 서버가 값을 갱신하면 요청자를 포함한 전 피어로 복제되고, 각 피어는 SyncVar
+    /// OnChange 로 상호작용 힌트를 다시 그린다. 위임하지 않으면 담당자가 서버 호스트일 때만
+    /// 인터랙션이 열리는 문제가 생긴다.
+    /// </para>
+    /// </summary>
     public void SetTriageAssessable(bool assessable)
     {
       // 인스펙터 초깃값도 갱신해 두어(서버가 아직 SyncVar 를 승격하기 전 폴백 일관성) 초기 상태가 어긋나지 않게 한다.
@@ -212,7 +222,22 @@ namespace TriageTrainer.Entity
         _assessable.Value = assessable;
         _assessableInitialized = true;
       }
+      else if (IsFishNetClientInitialized)
+      {
+        CmdSetTriageAssessable(assessable);
+      }
 
+      RefreshTriageInteractableHints();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdSetTriageAssessable(bool assessable, NetworkConnection sender = null)
+    {
+      // 시나리오 노드가 보내는 요청이므로 거리 검사는 하지 않지만, 등록된 플레이어의 요청만 받는다.
+      if (!TryResolveTriageRequester(sender, out _))
+        return;
+
+      SetAssessableAuthoritative(assessable);
       RefreshTriageInteractableHints();
     }
 
@@ -225,6 +250,8 @@ namespace TriageTrainer.Entity
     /// 이벤트에서 호출되고 시나리오 이벤트는 표시 전용 클라이언트에서도 실행되므로, 컨텍스트를
     /// 검사하지 않으면 서버 권위 값에 비권위 쓰기가 발생한다. 그러면 해당 피어만 미분류로
     /// 보이거나 오류가 기록되어, 재시도 인터랙션 노출 상태가 피어마다 갈라진다.
+    /// 호환 실행 경로에서는 재시도 이벤트가 담당 클라이언트 한 곳에서만 실행되므로, 클라이언트는
+    /// <see cref="SetTriageAssessable"/> 과 같은 이유로 서버에 초기화를 위임한다.
     /// </para>
     /// </summary>
     public void ResetTriageAssessmentForRetry()
@@ -234,19 +261,37 @@ namespace TriageTrainer.Entity
       _triageConfig.Assessable = true;
 
       if (hasAuthority)
-      {
-        _assessedTriage.Value = TriageLevel.Unassessed;
-        _assessable.Value = true;
-        _assessableInitialized = true;
-
-        if (_patientDescriptor != null)
-          _patientDescriptor.assessedTriage = TriageLevel.Unassessed;
-      }
+        ApplyTriageRetryResetAuthoritative();
+      else if (IsFishNetClientInitialized)
+        CmdResetTriageAssessmentForRetry();
 
       // 표시 갱신은 모든 피어에서 수행한다. 권위 값은 서버가 복제하며, 클라이언트는
       // 복제된 값이 도착하면 그에 맞춰 다시 갱신된다.
       UpdateTriageOverheadLabel(hasAuthority ? TriageLevel.Unassessed : AssessedTriage);
       RefreshTriageInteractableHints();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdResetTriageAssessmentForRetry(NetworkConnection sender = null)
+    {
+      if (!TryResolveTriageRequester(sender, out _))
+        return;
+
+      _triageConfig.Assessable = true;
+      ApplyTriageRetryResetAuthoritative();
+      UpdateTriageOverheadLabel(TriageLevel.Unassessed);
+      RefreshTriageInteractableHints();
+    }
+
+    // 서버(또는 오프라인) 컨텍스트: 이전 등급과 활성화 상태를 권위 값으로 초기화한다.
+    private void ApplyTriageRetryResetAuthoritative()
+    {
+      _assessedTriage.Value = TriageLevel.Unassessed;
+      _assessable.Value = true;
+      _assessableInitialized = true;
+
+      if (_patientDescriptor != null)
+        _patientDescriptor.assessedTriage = TriageLevel.Unassessed;
     }
 
     /// <summary>

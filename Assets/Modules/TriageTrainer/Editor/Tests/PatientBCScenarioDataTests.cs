@@ -1258,6 +1258,26 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void TriageAssessableControlDelegatesToServerFromNonHostClients()
+    {
+      // 호환 실행 경로에서 nurse_a 브랜치의 TriageAssessControl 노드와 재시도 이벤트는 담당 클라이언트에서만
+      // 실행된다. 담당자가 호스트가 아니어도 서버 권위 SyncVar 가 갱신되려면 ServerRpc 위임 경로가 있어야 한다.
+      var setAssessable = typeof(PatientController).GetMethod(
+        "CmdSetTriageAssessable",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      var resetForRetry = typeof(PatientController).GetMethod(
+        "CmdResetTriageAssessmentForRetry",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      Assert.That(setAssessable, Is.Not.Null,
+        "nurse_a 가 서버 호스트가 아니어도 중증도 분류 인터랙션이 열리려면 활성화 요청을 서버에 위임해야 합니다.");
+      Assert.That(resetForRetry, Is.Not.Null,
+        "재시도 초기화도 담당 클라이언트가 호스트가 아닐 때 서버에 위임해야 합니다.");
+      Assert.That(setAssessable.GetCustomAttribute<ServerRpcAttribute>(), Is.Not.Null);
+      Assert.That(resetForRetry.GetCustomAttribute<ServerRpcAttribute>(), Is.Not.Null);
+    }
+
+    [Test]
     public void TriageAssessableSyncRefreshesLocalInteractionHints()
     {
       var callback = typeof(PatientController).GetMethod(
