@@ -9,6 +9,29 @@ namespace TriageTrainer.Tests
   public sealed class PatientBCGateRecoveryTests
   {
     [Test]
+    public void DisasterIntroGivesNurseBAndNurseCIndependentEquivalentBranches()
+    {
+      var path = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/disaster_intro.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+      var parallel = (ScenarioParallelNode)graph.Nodes["P001"];
+
+      Assert.That(parallel.Branches, Has.Count.EqualTo(4));
+      Assert.That(parallel.Branches.SelectMany(branch => branch.RequiredPlayerTags),
+        Is.EqualTo(new[] { "nurse_a", "nurse_b", "nurse_c", "nurse_d" }));
+
+      var nurseB = parallel.Branches.Single(branch => branch.RequiredPlayerTags.Contains("nurse_b"));
+      var nurseC = parallel.Branches.Single(branch => branch.RequiredPlayerTags.Contains("nurse_c"));
+      Assert.That(nurseC.Identifier, Is.Not.EqualTo(nurseB.Identifier));
+      Assert.That(nurseC.CompletionConditionIdentifier, Is.Not.EqualTo(nurseB.CompletionConditionIdentifier));
+
+      var nurseBDialogue = (ScenarioDialogueNode)graph.Nodes[nurseB.Identifier];
+      var nurseCDialogue = (ScenarioDialogueNode)graph.Nodes[nurseC.Identifier];
+      Assert.That(nurseCDialogue.DialogueContent, Is.EqualTo(nurseBDialogue.DialogueContent));
+      Assert.That(nurseCDialogue.DialogueContentTTSPassing, Is.EqualTo(nurseBDialogue.DialogueContentTTSPassing));
+    }
+
+    [Test]
     public void DisasterIntroPreparesPatientsBeforeRoleSpecificExecution()
     {
       var path = Path.Combine(Application.dataPath,
