@@ -109,8 +109,8 @@ namespace MultiplayerInfrastructure.UI
         RemoveFromClassList("collapsed");
         AddToClassList("expanded");
         style.display = DisplayStyle.Flex;
-        // 열릴 때마다 선택 상태를 현재 목록에 맞춰 정리한다(완료·삭제된 임무 선택 방지).
-        EnsureSelection();
+        // 열릴 때마다 현재 추적 중인 임무를 우선해 상세 내용을 바로 보여 준다.
+        SelectQuestForOpen();
         RebuildList();
         RebuildDetail();
       }
@@ -569,6 +569,21 @@ namespace MultiplayerInfrastructure.UI
 
       if (_quests.Count > 0)
         _selectedQuestId = _quests[0].Id;
+    }
+
+    /// <summary>UI를 열 때는 기존 선택보다 현재 추적 중인 미완료 임무를 우선한다.</summary>
+    private void SelectQuestForOpen()
+    {
+      for (int i = 0; i < _quests.Count; i++)
+      {
+        if (!_quests[i].Completed && IsTracked(_quests[i]))
+        {
+          _selectedQuestId = _quests[i].Id;
+          return;
+        }
+      }
+
+      EnsureSelection();
     }
 
     // ── 상세 ────────────────────────────────────────────────────────────
