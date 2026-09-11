@@ -10,11 +10,16 @@ namespace MultiplayerInfrastructure.Audio
     private const int SampleRate = 16000;
     private const int MaxBufferedSamples = SampleRate;
     private const int PrebufferSamples = SampleRate * 60 / 1000;
+    private const int SamplesPerFrame = 320;
+    private const int ReorderWindowFrames = 3;
     private readonly Queue<float> _samples = new(MaxBufferedSamples);
     private readonly object _gate = new();
+    private readonly Dictionary<ushort, byte[]> _pendingFrames = new();
     private AudioSource _source;
     private AudioClip _clip;
     private bool _buffering = true;
+    private bool _hasExpectedSequence;
+    private ushort _expectedSequence;
 
     public void Initialize()
     {
@@ -27,19 +32,53 @@ namespace MultiplayerInfrastructure.Audio
       _source.clip = _clip; _source.Play();
     }
 
-    public void Enqueue(byte[] pcm16)
+    public void Enqueue(ushort sequence, byte[] pcm16)
     {
       if (pcm16 == null || pcm16.Length == 0 || (pcm16.Length & 1) != 0) return;
       lock (_gate)
       {
-        int incoming = pcm16.Length / 2;
-        while (_samples.Count + incoming > MaxBufferedSamples && _samples.Count > 0) _samples.Dequeue();
-        for (int i = 0; i < pcm16.Length; i += 2)
+        if (!_hasExpectedSequence)
         {
-          short value = (short)(pcm16[i] | (pcm16[i + 1] << 8));
-          _samples.Enqueue(value / 32768f);
+          _hasExpectedSequence = true;
+          _expectedSequence = sequence;
+        }
+        ushort forward = (ushort)(sequence - _expectedSequence);
+        if (forward >= 32768 || _pendingFrames.ContainsKey(sequence)) return;
+        _pendingFrames.Add(sequence, pcm16);
+        DrainContiguousFrames();
+        while (_pendingFrames.Count >= ReorderWindowFrames)
+        {
+          AppendSilenceFrame();
+          _expectedSequence++;
+          DrainContiguousFrames();
         }
       }
+    }
+
+    private void DrainContiguousFrames()
+    {
+      while (_pendingFrames.Remove(_expectedSequence, out var frame))
+      {
+        AppendPcm(frame);
+        _expectedSequence++;
+      }
+    }
+
+    private void AppendPcm(byte[] pcm16)
+    {
+      int incoming = pcm16.Length / 2;
+      while (_samples.Count + incoming > MaxBufferedSamples && _samples.Count > 0) _samples.Dequeue();
+      for (int i = 0; i < pcm16.Length; i += 2)
+      {
+        short value = (short)(pcm16[i] | (pcm16[i + 1] << 8));
+        _samples.Enqueue(value / 32768f);
+      }
+    }
+
+    private void AppendSilenceFrame()
+    {
+      while (_samples.Count + SamplesPerFrame > MaxBufferedSamples && _samples.Count > 0) _samples.Dequeue();
+      for (int i = 0; i < SamplesPerFrame; i++) _samples.Enqueue(0f);
     }
 
     private void Update() { if (_source != null) _source.volume = VoiceChatSettings.OutputVolume; }
