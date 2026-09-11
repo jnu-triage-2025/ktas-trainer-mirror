@@ -196,11 +196,14 @@ namespace MultiplayerInfrastructure.Scenario
     private void CmdRequestCompatibilityPlayerTag(
       string session, string graphIdentifier, string nodeIdentifier, NetworkConnection sender = null)
     {
-      if (!IsCompatibilityParticipant(sender, session, graphIdentifier)
-          || !Registry.Registry.TryGetScenarioGraph(graphIdentifier, out ScenarioGraph graph, out _)
-          || !graph.TryGetNode(nodeIdentifier, out var rawNode)
-          || rawNode is not ScenarioPlayerTagNode node
-          || node.Operation != ScenarioPlayerTagOperationType.Add
+      if (!IsCompatibilityParticipant(sender, session, graphIdentifier))
+        return;
+      if (!Registry.Registry.TryGetScenarioGraph(graphIdentifier, out ScenarioGraph graph, out _))
+        return;
+      if (!graph.TryGetNode(nodeIdentifier, out var rawNode)
+          || rawNode is not ScenarioPlayerTagNode node)
+        return;
+      if (node.Operation != ScenarioPlayerTagOperationType.Add
           || node.Scope != ScenarioPlayerTagScope.Current
           || string.IsNullOrWhiteSpace(node.Tag)
           || !IsChoiceTarget(graph, nodeIdentifier)
