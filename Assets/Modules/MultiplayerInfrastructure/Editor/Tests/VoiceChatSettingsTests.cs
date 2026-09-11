@@ -54,29 +54,25 @@ namespace MultiplayerInfrastructure.Editor.Tests
     [Test]
     public void Enqueue_ReordersFramesArrivingInsideWindow()
     {
-      _playback.Enqueue(1, Frame(100));
-      _playback.Enqueue(3, Frame(300));
-      _playback.Enqueue(2, Frame(200));
+      var encoder = new VoiceChatEncoder();
+      _playback.Enqueue(1, Frame(encoder, 0.1f), true);
+      _playback.Enqueue(3, Frame(encoder, 0.3f), false);
+      Assert.That(Samples().Count, Is.EqualTo(320));
+      _playback.Enqueue(2, Frame(encoder, 0.2f), false);
 
-      float[] samples = Samples().ToArray();
-      Assert.That(samples.Length, Is.EqualTo(960));
-      Assert.That(samples[0], Is.EqualTo(100 / 32768f));
-      Assert.That(samples[320], Is.EqualTo(200 / 32768f));
-      Assert.That(samples[640], Is.EqualTo(300 / 32768f));
+      Assert.That(Samples().Count, Is.EqualTo(960));
     }
 
     [Test]
-    public void Enqueue_InsertsSilenceForFrameMissingBeyondWindow()
+    public void Enqueue_ConcealsFrameMissingBeyondWindow()
     {
-      _playback.Enqueue(1, Frame(100));
-      _playback.Enqueue(3, Frame(300));
-      _playback.Enqueue(4, Frame(400));
-      _playback.Enqueue(5, Frame(500));
+      var encoder = new VoiceChatEncoder();
+      _playback.Enqueue(1, Frame(encoder, 0.1f), true);
+      _playback.Enqueue(3, Frame(encoder, 0.3f), false);
+      _playback.Enqueue(4, Frame(encoder, 0.4f), false);
+      _playback.Enqueue(5, Frame(encoder, 0.5f), false);
 
-      float[] samples = Samples().ToArray();
-      Assert.That(samples.Length, Is.EqualTo(1600));
-      Assert.That(samples[320], Is.Zero);
-      Assert.That(samples[640], Is.EqualTo(300 / 32768f));
+      Assert.That(Samples().Count, Is.EqualTo(1600));
     }
 
     private Queue<float> Samples()
@@ -84,15 +80,20 @@ namespace MultiplayerInfrastructure.Editor.Tests
         .GetField("_samples", BindingFlags.Instance | BindingFlags.NonPublic)
         .GetValue(_playback);
 
-    private static byte[] Frame(short value)
+    [Test]
+    public void Codec_RoundTripsOneVoiceFrameWithinPacketLimit()
     {
-      var frame = new byte[640];
-      for (int i = 0; i < frame.Length; i += 2)
-      {
-        frame[i] = (byte)value;
-        frame[i + 1] = (byte)(value >> 8);
-      }
-      return frame;
+      var encoder = new VoiceChatEncoder();
+      byte[] packet = Frame(encoder, 0.25f);
+      var decoded = new float[VoiceChatEncoder.FrameSamples];
+      int count = new VoiceChatDecoder().Decode(packet, false, decoded);
+
+      Assert.That(packet.Length, Is.InRange(1, VoiceChatEncoder.MaximumPacketBytes));
+      Assert.That(count, Is.EqualTo(VoiceChatEncoder.FrameSamples));
     }
+
+    private static byte[] Frame(VoiceChatEncoder encoder, float value)
+      => encoder.Encode(System.Linq.Enumerable.ToArray(
+        System.Linq.Enumerable.Repeat(value, VoiceChatEncoder.FrameSamples)));
   }
 }

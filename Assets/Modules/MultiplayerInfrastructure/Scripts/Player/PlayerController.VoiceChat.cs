@@ -13,9 +13,8 @@ namespace MultiplayerInfrastructure.Player
 {
   public partial class PlayerController
   {
-    private const int VoiceSampleRate = 16000;
-    private const int VoiceFrameSamples = 320;
-    private const int VoiceFrameBytes = VoiceFrameSamples * 2;
+    private const int VoiceSampleRate = VoiceChatEncoder.SampleRate;
+    private const int VoiceFrameSamples = VoiceChatEncoder.FrameSamples;
     private const float VoiceMaximumDistance = 15f;
     private const float VoiceHangoverSeconds = 0.22f;
     private const float VoicePacketMinimumInterval = 0.012f;
@@ -27,9 +26,11 @@ namespace MultiplayerInfrastructure.Player
     private float _lastVoicePacketServerTime;
     private float _nextVoiceMicrophoneRetryTime;
     private readonly float[] _voiceInputFrame = new float[VoiceFrameSamples];
-    private readonly byte[] _voicePacket = new byte[VoiceFrameBytes];
     private ushort _voiceSequence;
     private ushort _voiceTestSequence;
+    private VoiceChatEncoder _voiceEncoder;
+    private VoiceChatEncoder _voiceTestEncoder;
+    private bool _wasVoiceTransmitting;
     private static PlayerController _localVoiceController;
     private static float _localVoiceInputRms;
     private static readonly HashSet<PlayerController> ServerVoicePlayers = new();
@@ -58,6 +59,8 @@ namespace MultiplayerInfrastructure.Player
       if (!IsOwner) { _voicePlayback = gameObject.AddComponent<VoiceChatPlayback>(); _voicePlayback.Initialize(); return; }
       if (DedicatedServerRuntime.IsActive) return;
       _localVoiceController = this;
+      _voiceEncoder = new VoiceChatEncoder();
+      _voiceTestEncoder = new VoiceChatEncoder();
       AudioDevicePreferenceService.InputDeviceChanged += RestartVoiceMicrophone;
       AudioSettings.OnAudioConfigurationChanged += HandleVoiceAudioConfigurationChanged;
       StartVoiceMicrophone();
@@ -138,27 +141,23 @@ namespace MultiplayerInfrastructure.Player
       {
         _voicePlayback ??= gameObject.AddComponent<VoiceChatPlayback>();
         _voicePlayback.Initialize();
-        EncodeVoiceFrame();
-        _voicePlayback.Enqueue(_voiceTestSequence++, _voicePacket);
+        _voicePlayback.Enqueue(_voiceTestSequence++, _voiceTestEncoder.Encode(_voiceInputFrame), false);
       }
-      if (!VoiceChatSettings.Enabled || !transmitting || !IsClientInitialized) return;
-      EncodeVoiceFrame();
-      SubmitVoiceFrameServerRpc(_voiceSequence++, _voicePacket);
-    }
-
-    private void EncodeVoiceFrame()
-    {
-      for (int i = 0, b = 0; i < _voiceInputFrame.Length; i++, b += 2)
+      if (!VoiceChatSettings.Enabled || !transmitting || !IsClientInitialized)
       {
-        short value = (short)Mathf.RoundToInt(_voiceInputFrame[i] * 32767f);
-        _voicePacket[b] = (byte)value; _voicePacket[b + 1] = (byte)(value >> 8);
+        _wasVoiceTransmitting = false;
+        return;
       }
+      bool beginsTalkspurt = !_wasVoiceTransmitting;
+      if (beginsTalkspurt) _voiceEncoder.Reset();
+      _wasVoiceTransmitting = true;
+      SubmitVoiceFrameServerRpc(_voiceSequence++, beginsTalkspurt, _voiceEncoder.Encode(_voiceInputFrame));
     }
 
     [ServerRpc]
-    private void SubmitVoiceFrameServerRpc(ushort sequence, byte[] pcm16, Channel channel = Channel.Unreliable, NetworkConnection sender = null)
+    private void SubmitVoiceFrameServerRpc(ushort sequence, bool beginsTalkspurt, byte[] opus, Channel channel = Channel.Unreliable, NetworkConnection sender = null)
     {
-      if (pcm16 == null || pcm16.Length != VoiceFrameBytes || sender == null || sender != Owner) return;
+      if (opus == null || opus.Length == 0 || opus.Length > VoiceChatEncoder.MaximumPacketBytes || sender == null || sender != Owner) return;
       float now = Time.unscaledTime;
       if (now - _lastVoicePacketServerTime < VoicePacketMinimumInterval) return;
       _lastVoicePacketServerTime = now;
@@ -167,17 +166,17 @@ namespace MultiplayerInfrastructure.Player
       {
         if (listener == null || listener == this || listener.Owner == null || !listener.Owner.IsActive) continue;
         if ((listener.transform.position - transform.position).sqrMagnitude > maxDistanceSqr) continue;
-        ReceiveVoiceFrameTargetRpc(listener.Owner, sequence, pcm16);
+        ReceiveVoiceFrameTargetRpc(listener.Owner, sequence, beginsTalkspurt, opus);
       }
     }
 
     [TargetRpc]
-    private void ReceiveVoiceFrameTargetRpc(NetworkConnection target, ushort sequence, byte[] pcm16, Channel channel = Channel.Unreliable)
+    private void ReceiveVoiceFrameTargetRpc(NetworkConnection target, ushort sequence, bool beginsTalkspurt, byte[] opus, Channel channel = Channel.Unreliable)
     {
       if (IsOwner || !VoiceChatSettings.Enabled || VoiceChatSettings.IsPlayerMuted(UserIdentifier) || _voicePlayback == null) return;
       var local = FindLocalVoiceListener();
       if (local == null || (local.transform.position - transform.position).sqrMagnitude > VoiceMaximumDistance * VoiceMaximumDistance) return;
-      _voicePlayback.Enqueue(sequence, pcm16);
+      _voicePlayback.Enqueue(sequence, opus, beginsTalkspurt);
     }
 
     private static PlayerController FindLocalVoiceListener()

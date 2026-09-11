@@ -7,19 +7,32 @@ namespace MultiplayerInfrastructure.Audio
   /// <summary>네트워크에서 받은 PCM을 Unity 오디오 스레드에 공급하는 작은 지터 버퍼입니다.</summary>
   public sealed class VoiceChatPlayback : MonoBehaviour
   {
-    private const int SampleRate = 16000;
+    private const int SampleRate = VoiceChatEncoder.SampleRate;
     private const int MaxBufferedSamples = SampleRate;
     private const int PrebufferSamples = SampleRate * 60 / 1000;
-    private const int SamplesPerFrame = 320;
+    private const int SamplesPerFrame = VoiceChatEncoder.FrameSamples;
     private const int ReorderWindowFrames = 3;
     private readonly Queue<float> _samples = new(MaxBufferedSamples);
     private readonly object _gate = new();
-    private readonly Dictionary<ushort, byte[]> _pendingFrames = new();
+    private readonly Dictionary<ushort, EncodedFrame> _pendingFrames = new();
     private AudioSource _source;
     private AudioClip _clip;
     private bool _buffering = true;
     private bool _hasExpectedSequence;
     private ushort _expectedSequence;
+    private readonly VoiceChatDecoder _decoder = new();
+    private readonly float[] _decodedFrame = new float[SamplesPerFrame];
+
+    private readonly struct EncodedFrame
+    {
+      public readonly byte[] Packet;
+      public readonly bool BeginsTalkspurt;
+      public EncodedFrame(byte[] packet, bool beginsTalkspurt)
+      {
+        Packet = packet;
+        BeginsTalkspurt = beginsTalkspurt;
+      }
+    }
 
     public void Initialize()
     {
@@ -32,9 +45,9 @@ namespace MultiplayerInfrastructure.Audio
       _source.clip = _clip; _source.Play();
     }
 
-    public void Enqueue(ushort sequence, byte[] pcm16)
+    public void Enqueue(ushort sequence, byte[] opus, bool beginsTalkspurt)
     {
-      if (pcm16 == null || pcm16.Length == 0 || (pcm16.Length & 1) != 0) return;
+      if (opus == null || opus.Length == 0 || opus.Length > VoiceChatEncoder.MaximumPacketBytes) return;
       lock (_gate)
       {
         if (!_hasExpectedSequence)
@@ -44,11 +57,11 @@ namespace MultiplayerInfrastructure.Audio
         }
         ushort forward = (ushort)(sequence - _expectedSequence);
         if (forward >= 32768 || _pendingFrames.ContainsKey(sequence)) return;
-        _pendingFrames.Add(sequence, pcm16);
+        _pendingFrames.Add(sequence, new EncodedFrame(opus, beginsTalkspurt));
         DrainContiguousFrames();
         while (_pendingFrames.Count >= ReorderWindowFrames)
         {
-          AppendSilenceFrame();
+          AppendConcealedFrame();
           _expectedSequence++;
           DrainContiguousFrames();
         }
@@ -59,26 +72,33 @@ namespace MultiplayerInfrastructure.Audio
     {
       while (_pendingFrames.Remove(_expectedSequence, out var frame))
       {
-        AppendPcm(frame);
+        if (frame.BeginsTalkspurt) _decoder.Reset();
+        AppendDecodedFrame(frame.Packet, false);
         _expectedSequence++;
       }
     }
 
-    private void AppendPcm(byte[] pcm16)
+    private void AppendConcealedFrame()
     {
-      int incoming = pcm16.Length / 2;
-      while (_samples.Count + incoming > MaxBufferedSamples && _samples.Count > 0) _samples.Dequeue();
-      for (int i = 0; i < pcm16.Length; i += 2)
-      {
-        short value = (short)(pcm16[i] | (pcm16[i + 1] << 8));
-        _samples.Enqueue(value / 32768f);
-      }
+      ushort followingSequence = (ushort)(_expectedSequence + 1);
+      byte[] fecPacket = _pendingFrames.TryGetValue(followingSequence, out var following)
+        ? following.Packet
+        : null;
+      AppendDecodedFrame(fecPacket, fecPacket != null);
     }
 
-    private void AppendSilenceFrame()
+    private void AppendDecodedFrame(byte[] packet, bool useForwardErrorCorrection)
     {
-      while (_samples.Count + SamplesPerFrame > MaxBufferedSamples && _samples.Count > 0) _samples.Dequeue();
-      for (int i = 0; i < SamplesPerFrame; i++) _samples.Enqueue(0f);
+      int decoded;
+      try { decoded = _decoder.Decode(packet, useForwardErrorCorrection, _decodedFrame); }
+      catch (Exception)
+      {
+        Array.Clear(_decodedFrame, 0, _decodedFrame.Length);
+        decoded = 0;
+      }
+      if (decoded <= 0) decoded = SamplesPerFrame;
+      while (_samples.Count + decoded > MaxBufferedSamples && _samples.Count > 0) _samples.Dequeue();
+      for (int i = 0; i < decoded; i++) _samples.Enqueue(_decodedFrame[i]);
     }
 
     private void Update() { if (_source != null) _source.volume = VoiceChatSettings.OutputVolume; }
