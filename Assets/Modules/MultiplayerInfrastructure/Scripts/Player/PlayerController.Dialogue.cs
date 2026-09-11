@@ -16,12 +16,18 @@ namespace MultiplayerInfrastructure.Player
         return;
 
       if (_dialoguePanelUIController.IsUnityNull())
-        _dialoguePanelUIController = FindDialoguePanelUIController();
+        _dialoguePanelUIController = FindDialoguePanelUIController(false);
 
       if (!_dialoguePanelUIController.IsUnityNull())
       {
         // 레지스트리에 인스턴스를 등록해 다른 시스템이 경고 없이 조회할 수 있게 한다.
         Registry.Registry.Register(RegistryType.UI, Registry.Registry.TypeKey<DialoguePanelUIController>(), _dialoguePanelUIController);
+        Debug.Log("[PlayerController][UIBinding] Dialogue UI bound during client startup.", this);
+      }
+      else
+      {
+        Debug.LogWarning("[PlayerController][UIBinding] DialoguePanelUIController is not available yet; binding will keep retrying.", this);
+        StartCoroutine(BindDialogueWhenReady());
       }
 
       // 표시 전용 클라이언트는 시스템 오버레이 씬(ScenarioController 포함)이 플레이어 스폰보다
@@ -37,6 +43,37 @@ namespace MultiplayerInfrastructure.Player
       }
 
       RegisterScenarioReferences();
+    }
+
+    private System.Collections.IEnumerator BindDialogueWhenReady()
+    {
+      float startedAt = Time.unscaledTime;
+      bool delayedWarningLogged = false;
+      while (IsOwner && _dialoguePanelUIController.IsUnityNull())
+      {
+        yield return null;
+        _dialoguePanelUIController = FindDialoguePanelUIController(false);
+        if (!delayedWarningLogged && Time.unscaledTime - startedAt >= 5f)
+        {
+          delayedWarningLogged = true;
+          Debug.LogWarning("[PlayerController][UIBinding] Dialogue UI is still unavailable after 5s.", this);
+        }
+      }
+
+      if (_dialoguePanelUIController.IsUnityNull())
+        yield break;
+
+      Registry.Registry.Register(
+        RegistryType.UI,
+        Registry.Registry.TypeKey<DialoguePanelUIController>(),
+        _dialoguePanelUIController);
+
+      if (_interactableHintUI != null)
+        _dialoguePanelUIController.SetInteractableHintUI(_interactableHintUI);
+
+      RegisterScenarioReferences();
+      Debug.Log($"[PlayerController][UIBinding] Dialogue UI bound after {Time.unscaledTime - startedAt:F2}s; " +
+                $"interactableHint={_interactableHintUI != null}, scenarioController={!_scenarioController.IsUnityNull()}.", this);
     }
 
     private void OnStopClient_Dialogue()
@@ -69,7 +106,7 @@ namespace MultiplayerInfrastructure.Player
     /// <summary>
     /// DialoguePanelUIController를 씬에서 찾아 반환합니다. Inspector 할당을 권장하지만, 누락 시 이름/타입 검색으로 보완합니다.
     /// </summary>
-    private DialoguePanelUIController FindDialoguePanelUIController()
+    private DialoguePanelUIController FindDialoguePanelUIController(bool logWarning = true)
     {
       // 이름으로 우선 검색
       var byName = GameObject.Find("DialoguePanelUI");
@@ -80,13 +117,14 @@ namespace MultiplayerInfrastructure.Player
           return controller;
       }
 
-      var found = FindFirstObjectByType<DialoguePanelUIController>(FindObjectsInactive.Exclude);
+      var found = FindFirstObjectByType<DialoguePanelUIController>(FindObjectsInactive.Include);
       if (!found.IsUnityNull())
       {
         return found;
       }
 
-      Debug.LogWarning("[PlayerController] DialoguePanelUIController not found in scene.");
+      if (logWarning)
+        Debug.LogWarning("[PlayerController] DialoguePanelUIController not found in scene.");
       return null;
     }
   }

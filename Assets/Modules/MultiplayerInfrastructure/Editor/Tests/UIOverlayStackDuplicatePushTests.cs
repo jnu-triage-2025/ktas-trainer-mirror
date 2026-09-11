@@ -117,7 +117,8 @@ namespace MultiplayerInfrastructure.Tests.UI
       UIOverlayStack.Push(chat);
 
       Assert.That(UIOverlayStack.Remove(dialogue), Is.True);
-      Assert.That(dialogue.PoppedCount, Is.EqualTo(1));
+      Assert.That(dialogue.PoppedCount, Is.EqualTo(2),
+        "가려질 때와 실제로 제거될 때 각각 통보해야 UI가 표시 상태와 내부 상태를 구분해 정리한다.");
       Assert.That(UIOverlayStack.IsTop(chat), Is.True);
 
       UIOverlayStack.Pop();

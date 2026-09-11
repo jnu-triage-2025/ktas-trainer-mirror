@@ -7,6 +7,9 @@ namespace MultiplayerInfrastructure.UI
     private static Stack<IUIOverlay> Stack { get; } = new();
     public static event System.Action StackChanged;
 
+    /// <summary>진단 로그에서 현재 스택 깊이를 확인하기 위한 값입니다.</summary>
+    public static int Count => Stack.Count;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetOnSubsystemRegistration()
     {

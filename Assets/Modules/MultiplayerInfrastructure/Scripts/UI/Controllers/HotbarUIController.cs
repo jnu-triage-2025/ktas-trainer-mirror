@@ -36,15 +36,16 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>현재 핫바가 실제로 표시 중인 슬롯 수. 초기화 전에는 설정값을 반환한다.</summary>
     public int SlotCount => _hotbar != null ? _hotbar.SlotCount : hotbarSlotCount;
 
-    public void SetupHotbarUI()
+    public bool SetupHotbarUI(bool logFailure = true)
     {
       if (_uiDocument.IsUnityNull())
         _uiDocument = GetComponent<UIDocument>();
 
       if (_uiDocument.IsUnityNull())
       {
-        Debug.LogError("[HotbarUIController] UIDocument is null");
-        return;
+        if (logFailure)
+          Debug.LogError("[HotbarUIController] UIDocument is null");
+        return false;
       }
 
       var root = _uiDocument.rootVisualElement;
@@ -53,8 +54,9 @@ namespace MultiplayerInfrastructure.UI
         // UIDocument 가 비활성이거나 패널이 아직 만들어지지 않은 동안(예: 애디티브
         // 씬 로드 순서)에는 rootVisualElement 가 null 이다. 여기서 예외를 던지면
         // FishNet 의 OnStartClient 콜백 체인이 중단된다.
-        Debug.LogWarning("[HotbarUIController] rootVisualElement is not ready yet. Skipping hotbar setup.");
-        return;
+        if (logFailure)
+          Debug.LogWarning("[HotbarUIController] rootVisualElement is not ready yet. Skipping hotbar setup.");
+        return false;
       }
 
       _hotbar = root.Q<HotbarControl>("hotbar-root");
@@ -62,8 +64,9 @@ namespace MultiplayerInfrastructure.UI
 
       if (_hotbar.IsUnityNull())
       {
-        Debug.LogError("[HotbarUIController] Hotbar is null");
-        return;
+        if (logFailure)
+          Debug.LogError("[HotbarUIController] Hotbar is null");
+        return false;
       }
 
       _hotbar.Initialize(Math.Clamp(hotbarSlotCount, HotbarControl.MinSlotSize, HotbarControl.MaxSlotSize));
@@ -77,6 +80,7 @@ namespace MultiplayerInfrastructure.UI
       _hotbar.OnHeldItemNameChanged -= OnHeldItemNameChanged;
       _hotbar.OnSlotSelected += OnHotbarSlotSelected;
       _hotbar.OnHeldItemNameChanged += OnHeldItemNameChanged;
+      return true;
     }
 
     /// <summary>
@@ -165,6 +169,12 @@ namespace MultiplayerInfrastructure.UI
       _boundInventory = inventory;
       if (EnsureHotbarReady())
         _hotbar.BindInventory(inventory);
+    }
+
+    /// <summary>UIDocument가 준비되기 전에도 이후 바인딩할 인벤토리를 보관한다.</summary>
+    public void CacheInventory(IReadOnlyList<InventorySlotModelDTO> inventory)
+    {
+      _boundInventory = inventory;
     }
   }
 }

@@ -48,6 +48,9 @@ namespace MultiplayerInfrastructure.Player
 
     public void Update_Input()
     {
+      // 오버레이가 열린 동안 게임 모드 변경 등에서 이동/커서 상태를 덮어써도 다음 프레임에 복구한다.
+      EnsureOverlayDrivenPlayerState();
+
       // if (Input.GetKeyDown(KeyCode.F)) Debug.Log($"[PlayerController] F key pressed. IsOwner: {IsOwner}, IsClient: {IsClientInitialized}, IsServer: {IsServerInitialized}");
 
       // Update_Movement보다 먼저, 그리고 아래의 어떤 early return보다도 먼저 갱신해야 한다.

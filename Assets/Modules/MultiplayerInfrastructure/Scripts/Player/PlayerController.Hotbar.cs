@@ -23,12 +23,52 @@ namespace MultiplayerInfrastructure.Player
 
       if (_hotbarUI == null)
       {
-        Debug.LogWarning("[PlayerController] HotbarUIController is not available. Skipping hotbar startup for now.");
+        Debug.LogWarning("[PlayerController][UIBinding] HotbarUIController is not available yet; binding will keep retrying.", this);
+        StartCoroutine(BindHotbarWhenReady());
         return;
       }
 
-      _hotbarUI.SetupHotbarUI();
-      _hotbarUI.BindInventory(_slots);
+      _hotbarUI.CacheInventory(_slots);
+      if (!_hotbarUI.SetupHotbarUI())
+      {
+        Debug.LogWarning("[PlayerController][UIBinding] Hotbar UIDocument is not ready yet; binding will keep retrying.", this);
+        StartCoroutine(BindHotbarWhenReady());
+      }
+      else
+      {
+        Debug.Log("[PlayerController][UIBinding] Hotbar UI bound during client startup.", this);
+      }
+    }
+
+    private System.Collections.IEnumerator BindHotbarWhenReady()
+    {
+      float startedAt = Time.unscaledTime;
+      bool delayedWarningLogged = false;
+      while (IsOwner)
+      {
+        if (_hotbarUI == null)
+          _hotbarUI = Registry.Registry.Get<HotbarUIController>(RegistryType.UI, Registry.Registry.TypeKey<HotbarUIController>());
+        if (_hotbarUI == null)
+          _hotbarUI = FindFirstObjectByType<HotbarUIController>(FindObjectsInactive.Include);
+
+        if (_hotbarUI != null)
+        {
+          _hotbarUI.CacheInventory(_slots);
+          if (_hotbarUI.SetupHotbarUI(false))
+          {
+            Debug.Log($"[PlayerController][UIBinding] Hotbar UI bound after {Time.unscaledTime - startedAt:F2}s.", this);
+            yield break;
+          }
+        }
+
+        if (!delayedWarningLogged && Time.unscaledTime - startedAt >= 5f)
+        {
+          delayedWarningLogged = true;
+          Debug.LogWarning("[PlayerController][UIBinding] Hotbar UI is still unavailable or not attached to a panel after 5s.", this);
+        }
+
+        yield return null;
+      }
     }
 
     private void HandleHotbarInputNumkey()

@@ -29,13 +29,41 @@ namespace MultiplayerInfrastructure.Player
 
       if (_crosshairUI.IsUnityNull())
       {
-        Debug.LogWarning("[PlayerController] CrosshairUIController를 찾지 못했습니다. " +
-                         "씬에 CrosshairUI GameObject가 배치되어 있는지 확인하세요.");
+        Debug.LogWarning("[PlayerController][UIBinding] CrosshairUIController is not available yet; binding will keep retrying.", this);
+        StartCoroutine(BindCrosshairWhenReady());
         return;
       }
 
       // 크로스헤어 UI를 보이게 설정
       _crosshairUI.SetCrosshairVisible(true);
+      Debug.Log("[PlayerController][UIBinding] Crosshair UI bound during client startup.", this);
+    }
+
+    private System.Collections.IEnumerator BindCrosshairWhenReady()
+    {
+      float startedAt = Time.unscaledTime;
+      bool delayedWarningLogged = false;
+      while (IsOwner && _crosshairUI.IsUnityNull())
+      {
+        yield return null;
+        _crosshairUI = Registry.Registry.Get<CrosshairUIController>(
+          RegistryType.UI,
+          Registry.Registry.TypeKey<CrosshairUIController>());
+        if (_crosshairUI.IsUnityNull())
+          _crosshairUI = FindFirstObjectByType<CrosshairUIController>(FindObjectsInactive.Include);
+
+        if (!delayedWarningLogged && Time.unscaledTime - startedAt >= 5f)
+        {
+          delayedWarningLogged = true;
+          Debug.LogWarning("[PlayerController][UIBinding] Crosshair UI is still unavailable after 5s.", this);
+        }
+      }
+
+      if (_crosshairUI.IsUnityNull())
+        yield break;
+
+      _crosshairUI.SetCrosshairVisible(true);
+      Debug.Log($"[PlayerController][UIBinding] Crosshair UI bound after {Time.unscaledTime - startedAt:F2}s.", this);
     }
   }
 }
