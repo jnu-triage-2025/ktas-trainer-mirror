@@ -5,6 +5,7 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Commons;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Player;
 using TriageTrainer.Entity.Patient;
 using UnityEngine;
@@ -30,6 +31,7 @@ namespace TriageTrainer.Entity
   public partial class PatientController
   {
     private const float TriageInteractionDistance = 3f;
+    private const string TriageFlowLogTag = "TriageFlow";
     /// <summary>
     /// 트리아지 평가 완료 후 인터랙션 재노출 정책.
     /// </summary>
@@ -304,21 +306,33 @@ namespace TriageTrainer.Entity
     private void BeginTriageAssessment(Transform interactor, string briefing = null)
     {
       if (!EffectiveAssessable || !CanPerformTriageOrAssessment)
+      {
+        LogTriageFlow(
+          $"Triage UI open rejected: patient={Identifier}, assessable={EffectiveAssessable}, canPerform={CanPerformTriageOrAssessment}");
         return;
+      }
 
       var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
       if (player == null || !player.IsOwner)
+      {
+        LogTriageFlow(
+          $"Triage UI open rejected: patient={Identifier}, reason=invalid-local-player, player={FormatTriagePlayer(player)}");
         return;
+      }
 
       void OpenAssessmentUI()
       {
         var ui = TriageTrainer.UI.TriageAssessmentUIController.ActiveInstance;
         if (ui == null)
         {
+          LogTriageFlow(
+            $"Triage UI open failed: patient={Identifier}, player={FormatTriagePlayer(player)}, reason=ui-not-found");
           Debug.LogWarning("[PatientController] TriageAssessmentUIController 를 찾을 수 없어 트리아지 UI 를 열 수 없습니다.", this);
           return;
         }
 
+        LogTriageFlow(
+          $"Triage UI opened: patient={Identifier}, player={FormatTriagePlayer(player)}, current={AssessedTriage}");
         ui.Open(AssessedTriage, selected => SubmitTriageAssessment(selected));
       }
 
@@ -343,8 +357,16 @@ namespace TriageTrainer.Entity
     /// </summary>
     public void SubmitTriageAssessment(TriageLevel level)
     {
-      if (!CanPerformTriageOrAssessment || !IsValidAssessedTriage(level))
+      bool validLevel = IsValidAssessedTriage(level);
+      LogTriageFlow(
+        $"Triage selection submitted locally: patient={Identifier}, level={level}, canPerform={CanPerformTriageOrAssessment}, validLevel={validLevel}, server={IsFishNetServerStarted}, client={IsFishNetClientInitialized}");
+
+      if (!CanPerformTriageOrAssessment || !validLevel)
+      {
+        LogTriageFlow(
+          $"Triage selection rejected locally: patient={Identifier}, level={level}, reason={(validLevel ? "cannot-perform" : "invalid-level")}");
         return;
+      }
 
       SetAssessedTriageNetworked(level);
     }
@@ -375,10 +397,25 @@ namespace TriageTrainer.Entity
     [ServerRpc(RequireOwnership = false)]
     private void CmdSetAssessedTriage(TriageLevel level, NetworkConnection sender = null)
     {
-      if (!TryResolveTriageRequester(sender, out var requester)
-          || (requester.transform.position - transform.position).sqrMagnitude
-          > TriageInteractionDistance * TriageInteractionDistance)
+      int senderClientId = sender != null && sender.IsValid ? sender.ClientId : -1;
+      if (!TryResolveTriageRequester(sender, out var requester))
+      {
+        LogTriageFlow(
+          $"Triage RPC rejected: patient={Identifier}, level={level}, senderClientId={senderClientId}, reason=invalid-requester");
         return;
+
+      }
+
+      float distance = Vector3.Distance(requester.transform.position, transform.position);
+      LogTriageFlow(
+        $"Triage RPC received: patient={Identifier}, level={level}, player={FormatTriagePlayer(requester)}, distance={distance:F3}");
+      if (distance > TriageInteractionDistance)
+      {
+        LogTriageFlow(
+          $"Triage RPC rejected: patient={Identifier}, level={level}, player={FormatTriagePlayer(requester)}, reason=out-of-range, distance={distance:F3}, limit={TriageInteractionDistance:F3}");
+        return;
+      }
+
       ApplyAssessedTriage(level);
     }
 
@@ -407,12 +444,21 @@ namespace TriageTrainer.Entity
     {
       // 서버 권위 게이트: 현재 평가 가능 상태가 아니면 거부(클라이언트 게이트 우회 방지).
       if (!EffectiveAssessable || !CanPerformTriageOrAssessment)
+      {
+        LogTriageFlow(
+          $"Triage application rejected: patient={Identifier}, level={level}, reason=state-gate, assessable={EffectiveAssessable}, canPerform={CanPerformTriageOrAssessment}, previous={AssessedTriage}");
         return;
+      }
 
       // 값 검증: 정의되지 않은 enum/미분류 값 거부(조작된 RPC 방지).
       if (!IsValidAssessedTriage(level))
+      {
+        LogTriageFlow(
+          $"Triage application rejected: patient={Identifier}, level={level}, reason=invalid-level, previous={AssessedTriage}");
         return;
+      }
 
+      TriageLevel previous = _assessedTriage.Value;
       _assessedTriage.Value = level;
       if (_patientDescriptor != null)
         _patientDescriptor.assessedTriage = level;
@@ -423,9 +469,26 @@ namespace TriageTrainer.Entity
 
       ApplyAssessableChangePolicy(level);
 
+      LogTriageFlow(
+        $"Triage application completed: patient={Identifier}, previous={previous}, level={level}, intended={IntendedTriage}, correct={level == IntendedTriage}, assessableAfter={EffectiveAssessable}");
+
       // 세분화 상태 이벤트(OnTriageSubmitted) + 시나리오 바인딩 디스패치.
       // 서버 권위 컨텍스트에서 발생하므로 시나리오 신호 Raise 가 서버 권위로 동작한다.
       RaiseTriageSubmittedEvent(level);
+    }
+
+    private static string FormatTriagePlayer(PlayerController player)
+    {
+      if (player == null)
+        return "(null)";
+
+      int clientId = player.Owner != null && player.Owner.IsValid ? player.Owner.ClientId : -1;
+      return $"'{player.UserIdentifier}'(clientId={clientId})";
+    }
+
+    private static void LogTriageFlow(string message)
+    {
+      GameLogService.WriteInteraction(message, TriageFlowLogTag);
     }
 
     // 재노출 정책은 서버 권위 SyncVar(_assessable)를 통해 전 피어에 일관되게 반영한다.
