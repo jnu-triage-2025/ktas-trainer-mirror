@@ -533,7 +533,7 @@
       },
       "identifier": "D004",
       "nodeType": "Dialogue",
-      "nextIdentifier": "Q005"
+      "nextIdentifier": "P_FINAL_TRIAGE"
     },
     "DISASTER_INTRO_BIND_A_ANY": {
       "bindingIdentifier": "disaster_intro_triage_a_any",
@@ -1283,7 +1283,7 @@
     },
     "N004": {
       "speakerName": "시스템",
-      "dialogueContent": "초기 대응과 중증도 분류를 완료했습니다. 다음 처치 시나리오를 진행합니다.",
+      "dialogueContent": "초기 대응과 중증도 분류 훈련을 완료했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -1586,28 +1586,9 @@
     "Q005": {
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "questDefinitionIdentifier": null,
+      "questDefinitionIdentifier": "disaster_intro::move_to_triage_area",
       "quest": {
-        "Id": "Quest_playerB_playerC_playerD_to_triage",
-        "DefinitionIdentifier": "",
-        "Title": null,
-        "Description": null,
-        "QuestContent": null,
-        "Progress": {
-          "Current": 0,
-          "Target": 1
-        },
-        "Completed": false,
-        "IsOrdinal": false,
-        "Tasks": [],
-        "CompletionCriteria": [],
-        "Scope": "Player",
-        "IsTracked": false,
-        "IsTrackable": true,
-        "IsAutoComplete": false,
-        "PersistProgressOnSessionEnd": false,
-        "WaypointIdentifier": "",
-        "PresentationBindings": []
+        "Id": "disaster_intro::move_to_triage_area_b"
       },
       "skipCompletionDisplayDelay": null,
       "persistProgressOnSessionEnd": false,
@@ -1618,34 +1599,15 @@
     "Q005_1": {
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "questDefinitionIdentifier": null,
+      "questDefinitionIdentifier": "disaster_intro::move_to_triage_area",
       "quest": {
-        "Id": "Quest_playerB_playerC_playerD_to_triage",
-        "DefinitionIdentifier": "",
-        "Title": null,
-        "Description": null,
-        "QuestContent": null,
-        "Progress": {
-          "Current": 0,
-          "Target": 1
-        },
-        "Completed": false,
-        "IsOrdinal": false,
-        "Tasks": [],
-        "CompletionCriteria": [],
-        "Scope": "Player",
-        "IsTracked": false,
-        "IsTrackable": true,
-        "IsAutoComplete": false,
-        "PersistProgressOnSessionEnd": false,
-        "WaypointIdentifier": "",
-        "PresentationBindings": []
+        "Id": "disaster_intro::move_to_triage_area_b"
       },
       "skipCompletionDisplayDelay": null,
       "persistProgressOnSessionEnd": false,
       "identifier": "Q005_1",
       "nodeType": "QuestControl",
-      "nextIdentifier": "E004"
+      "nextIdentifier": "CC_B_FINAL_TRIAGE"
     },
     "Q_TRIAGE_A_ADD": {
       "operation": "Add",
@@ -1999,7 +1961,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.enter_triage_zone"
+              "registryIdentifier": "quest.completed.disaster_intro::move_to_triage_area_b"
             }
           ]
         }
@@ -2014,6 +1976,175 @@
       "identifier": "V009",
       "nodeType": "Validator",
       "nextIdentifier": "Q005_1"
+    },
+    "CC_B_FINAL_TRIAGE": {
+      "targetEntityIdentifier": null,
+      "stateKey": "branch.completion.CC_B_FINAL_TRIAGE",
+      "stateValue": "true",
+      "identifier": "CC_B_FINAL_TRIAGE",
+      "nodeType": "StateUpdate",
+      "nextIdentifier": null
+    },
+    "Q005_C": {
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::move_to_triage_area",
+      "quest": {
+        "Id": "disaster_intro::move_to_triage_area_c"
+      },
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q005_C",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "V009_C"
+    },
+    "V009_C": {
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "quest.completed.disaster_intro::move_to_triage_area_c"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
+      "failureNextIdentifier": null,
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "ForceAdvance",
+      "idleWhileWaiting": null,
+      "identifier": "V009_C",
+      "nodeType": "Validator",
+      "nextIdentifier": "Q005_C_1"
+    },
+    "Q005_C_1": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::move_to_triage_area",
+      "quest": {
+        "Id": "disaster_intro::move_to_triage_area_c"
+      },
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q005_C_1",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_C_FINAL_TRIAGE"
+    },
+    "CC_C_FINAL_TRIAGE": {
+      "targetEntityIdentifier": null,
+      "stateKey": "branch.completion.CC_C_FINAL_TRIAGE",
+      "stateValue": "true",
+      "identifier": "CC_C_FINAL_TRIAGE",
+      "nodeType": "StateUpdate",
+      "nextIdentifier": null
+    },
+    "Q005_D": {
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::move_to_triage_area",
+      "quest": {
+        "Id": "disaster_intro::move_to_triage_area_d"
+      },
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q005_D",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "V009_D"
+    },
+    "V009_D": {
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "targetCount": 0,
+          "playerTag": null,
+          "playerScope": "Any",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "quest.completed.disaster_intro::move_to_triage_area_d"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureReportTargets": "UnityConsole",
+      "failureNextIdentifier": null,
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 180,
+      "onWaitTimeout": "ForceAdvance",
+      "idleWhileWaiting": null,
+      "identifier": "V009_D",
+      "nodeType": "Validator",
+      "nextIdentifier": "Q005_D_1"
+    },
+    "Q005_D_1": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro::move_to_triage_area",
+      "quest": {
+        "Id": "disaster_intro::move_to_triage_area_d"
+      },
+      "skipCompletionDisplayDelay": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q005_D_1",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_D_FINAL_TRIAGE"
+    },
+    "CC_D_FINAL_TRIAGE": {
+      "targetEntityIdentifier": null,
+      "stateKey": "branch.completion.CC_D_FINAL_TRIAGE",
+      "stateValue": "true",
+      "identifier": "CC_D_FINAL_TRIAGE",
+      "nodeType": "StateUpdate",
+      "nextIdentifier": null
+    },
+    "P_FINAL_TRIAGE": {
+      "identifier": "P_FINAL_TRIAGE",
+      "nodeType": "Parallel",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Ignore",
+      "branches": [
+        {
+          "identifier": "Q005",
+          "completionConditionIdentifier": "CC_B_FINAL_TRIAGE",
+          "requiredPlayerTags": [
+            "nurse_b"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "Q005_C",
+          "completionConditionIdentifier": "CC_C_FINAL_TRIAGE",
+          "requiredPlayerTags": [
+            "nurse_c"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "Q005_D",
+          "completionConditionIdentifier": "CC_D_FINAL_TRIAGE",
+          "requiredPlayerTags": [
+            "nurse_d"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        }
+      ],
+      "nextIdentifier": "E004"
     },
     "q002_item": {
       "operation": "Add",
