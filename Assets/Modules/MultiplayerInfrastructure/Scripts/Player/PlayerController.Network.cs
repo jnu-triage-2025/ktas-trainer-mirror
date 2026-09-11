@@ -365,7 +365,7 @@ namespace MultiplayerInfrastructure.Player
         return;
 
       _joinMessageBroadcast = true;
-      BroadcastConnectionMessage($"{displayName}가 들어왔습니다.");
+      BroadcastConnectionMessage($"{displayName}이(가) 들어왔습니다.");
     }
 
     private void RegisterPlayerEntity()
