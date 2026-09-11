@@ -264,7 +264,7 @@ namespace MultiplayerInfrastructure.UI
 
         string captured = outputId;
         slot.RegisterCallback<PointerDownEvent>(evt => HandleRecipeClicked(captured, evt));
-        slot.RegisterCallback<PointerEnterEvent>(evt => ShowTooltipForRecipe(captured, evt.position));
+        slot.RegisterCallback<PointerEnterEvent>(evt => ShowTooltipForCraftingItem(captured, evt.position));
         slot.RegisterCallback<PointerLeaveEvent>(_ => HideTooltip());
 
         currentRow.Add(slot);
@@ -286,10 +286,10 @@ namespace MultiplayerInfrastructure.UI
     }
 
     /// <summary>
-    /// 조합 목록 슬롯 hover 시, 결과 아이템의 임시 인스턴스를 만들어 인벤토리 슬롯과 동일한 툴팁을 표시한다.
-    /// 레시피는 인스턴스가 아닌 identifier 만 가지므로 스택 수량은 표시하지 않는다.
+    /// 조합 결과 또는 필요 아이템 슬롯 hover 시, 임시 인스턴스를 만들어 인벤토리 슬롯과 동일한 툴팁을 표시한다.
+    /// 조합 정보는 인스턴스가 아닌 identifier 만 가지므로 스택 수량은 표시하지 않는다.
     /// </summary>
-    private void ShowTooltipForRecipe(string outputId, UnityEngine.Vector2 panelPosition)
+    private void ShowTooltipForCraftingItem(string itemIdentifier, UnityEngine.Vector2 panelPosition)
     {
       // 손에 아이템을 들고 있는 동안에는 ghost 가 우선이므로 툴팁을 표시하지 않는다.
       if (_heldItem != null)
@@ -298,7 +298,7 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      var item = Registry.Registry.CreateItemInstance(outputId);
+      var item = Registry.Registry.CreateItemInstance(itemIdentifier);
       if (item == null)
       {
         HideTooltip();
@@ -468,6 +468,11 @@ namespace MultiplayerInfrastructure.UI
       {
         var slot = new VisualElement();
         slot.AddToClassList("crafting-req-slot");
+
+        string ingredientIdentifier = ing.Identifier;
+        slot.RegisterCallback<PointerEnterEvent>(evt =>
+          ShowTooltipForCraftingItem(ingredientIdentifier, evt.position));
+        slot.RegisterCallback<PointerLeaveEvent>(_ => HideTooltip());
 
         var icon = new Image { name = "ReqIcon", pickingMode = PickingMode.Ignore };
         icon.AddToClassList("crafting-req-slot__icon");
