@@ -185,7 +185,8 @@ namespace TriageTrainer.Tests
           stageSyncVar, System.Enum.Parse(stageType, "AwaitingGauze"));
 
         var interaction = patient.Interacts.Single(value =>
-          value.InteractionIdentifier == PatientController.InteractIdItemApply);
+          value is IQuestPresentationTarget target
+          && target.InteractionIdentifier == PatientController.InteractIdItemApply);
 
         Assert.That(interaction.DisplayText, Is.EqualTo("지혈하기"));
         Assert.That(((IInteractorConditional)interaction).CanInteract(player.transform), Is.True,
