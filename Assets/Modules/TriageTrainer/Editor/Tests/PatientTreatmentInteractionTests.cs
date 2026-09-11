@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using NUnit.Framework;
@@ -152,6 +154,42 @@ namespace TriageTrainer.Tests
         Assert.That(patient.OnItemUsed(player.PlayerEntity, Gauze.Identifier), Is.True,
           "장갑을 착용한 플레이어는 거즈로 지혈할 수 있어야 합니다.");
         Assert.That(patient.IsTreatmentApplied(PatientController.TreatmentGauze), Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(playerObject);
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    [Test]
+    public void PatientBCBleedingInteractionRemainsAvailableWithoutTreatmentItems()
+    {
+      var patientObject = new GameObject("patient_b");
+      var playerObject = new GameObject("bleeding-interaction-player");
+
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier("patient_b");
+        var player = playerObject.AddComponent<PlayerController>();
+
+        var stageType = typeof(PatientController).GetNestedType(
+          "PatientBCTreatmentStage", BindingFlags.NonPublic);
+        var stageField = typeof(PatientController).GetField(
+          "_patientBCNurseDStage", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(stageType, Is.Not.Null);
+        Assert.That(stageField, Is.Not.Null);
+        var stageSyncVar = stageField.GetValue(patient);
+        stageSyncVar.GetType().GetProperty("Value")?.SetValue(
+          stageSyncVar, System.Enum.Parse(stageType, "AwaitingGauze"));
+
+        var interaction = patient.Interacts.Single(value =>
+          value.InteractionIdentifier == PatientController.InteractIdItemApply);
+
+        Assert.That(interaction.DisplayText, Is.EqualTo("지혈하기"));
+        Assert.That(((IInteractorConditional)interaction).CanInteract(player.transform), Is.True,
+          "지혈 준비물이 없어도 상호작용을 선택하여 필요한 물품 안내를 확인할 수 있어야 합니다.");
       }
       finally
       {

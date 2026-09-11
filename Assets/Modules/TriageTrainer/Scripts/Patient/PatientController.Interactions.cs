@@ -119,7 +119,9 @@ namespace TriageTrainer.Entity
       public PatientItemApplyInteract(PatientController owner) { _owner = owner; }
       public string PresentationEntityIdentifier => _owner.Identifier;
       public string InteractionIdentifier => InteractIdItemApply;
-      public string DisplayText => "환자에게 들고 있는 처치 물품 적용";
+      public string DisplayText => _owner.IsPatientBCBleedingControlStage
+        ? "지혈하기"
+        : "환자에게 들고 있는 처치 물품 적용";
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;
       public Color DisplayColor => Color.clear;
@@ -127,18 +129,29 @@ namespace TriageTrainer.Entity
       public bool CanInteract(Transform interactor)
       {
         // 시나리오별 노출(환자 A 에서는 물품별 상호작용이 대신하므로 숨김)은 레지스트리의 데이터 정의가 정한다.
-        // 여기서는 적용할 수 있는 물품을 들고 있는지만 본다.
+        // B/C 지혈 단계에서는 준비물이 없어도 상호작용을 유지해야 필요한 물품을 안내할 수 있다.
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        if (player == null)
+          return false;
+        if (_owner.IsPatientBCBleedingControlStage)
+          return true;
+
         string itemIdentifier = _owner.FindApplicableTreatmentInventoryItem(player);
         if (_owner.IsPatientBCNasalCannulaItem(itemIdentifier))
           return false;
-        return player != null && itemIdentifier != null;
+        return itemIdentifier != null;
       }
 
       public void Interact(Transform interactor)
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         string itemIdentifier = _owner.FindApplicableTreatmentInventoryItem(player);
+        if (player != null && _owner.IsPatientBCBleedingControlStage && itemIdentifier == null)
+        {
+          PresentBleedingControlRequirementsDialogue();
+          return;
+        }
+
         if (player?.PlayerEntity != null && _owner.CanApplyHeldTreatmentItem(itemIdentifier))
           _owner.OnItemUsed(player.PlayerEntity, itemIdentifier);
       }

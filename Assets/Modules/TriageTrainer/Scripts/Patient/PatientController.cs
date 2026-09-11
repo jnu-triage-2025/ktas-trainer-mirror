@@ -224,7 +224,7 @@ namespace TriageTrainer.Entity
 
       if (sourcePlayer != null && IsBleedingControlItem(itemIdentifier) && !HasEquippedGloves(sourcePlayer))
       {
-        PresentGlovesRequiredDialogue();
+        PresentBleedingControlRequirementsDialogue();
         return false;
       }
 
@@ -267,7 +267,7 @@ namespace TriageTrainer.Entity
       return false;
     }
 
-    private static void PresentGlovesRequiredDialogue()
+    private static void PresentBleedingControlRequirementsDialogue()
     {
       var dialogue = Registry.Get<DialoguePanelUIController>(
         RegistryType.UI, Registry.TypeKey<DialoguePanelUIController>());
@@ -276,7 +276,7 @@ namespace TriageTrainer.Entity
 
       dialogue?.TryPresentTransientDialogue(
         DialoguePanelUIController.PlayerNamePlaceholder,
-        "(지혈하려면 장갑을 착용해야 한다.)");
+        "(지혈하려면 장갑을 착용하고 거즈와 플라스터를 준비해야 한다.)");
     }
 
     public void SetCurrentBed(MovingPatientBedController bed)

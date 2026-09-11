@@ -887,6 +887,11 @@ namespace TriageTrainer.Entity
       new(PatientBCTreatmentStage.Inactive);
     private readonly SyncVar<PatientBCTreatmentStage> _patientBCNurseDStage =
       new(PatientBCTreatmentStage.Inactive);
+
+    private bool IsPatientBCBleedingControlStage =>
+      IsPatientBC
+      && (_patientBCNurseDStage.Value == PatientBCTreatmentStage.AwaitingGauze
+          || _patientBCNurseDStage.Value == PatientBCTreatmentStage.AwaitingPlaster);
     private bool _patientBCRequiresOxygenDetach;
     private bool _patientBCObservedOxygenDetach;
     private bool _patientBCFreshOxygenInstalled;
