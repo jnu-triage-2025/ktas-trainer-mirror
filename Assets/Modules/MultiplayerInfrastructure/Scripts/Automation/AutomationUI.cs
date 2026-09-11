@@ -22,6 +22,10 @@ namespace MultiplayerInfrastructure.Automation
     private Vector2 _position;
     private bool _pressed;
     private double _pressedUntil;
+#if UNITY_EDITOR
+    private InputSettings _originalInputSettings;
+    private InputSettings _automationInputSettings;
+#endif
     internal JObject Diagnostics()
     {
       var position = _mouse != null ? _mouse.position.ReadValue() : Vector2.zero;
@@ -32,6 +36,20 @@ namespace MultiplayerInfrastructure.Automation
         ["eventSystemFocused"] = EventSystem.current != null && EventSystem.current.isFocused,
         ["moduleReady"] = IsReady,
         ["activeModule"] = EventSystem.current?.currentInputModule?.GetType().Name,
+        ["cursorLock"] = UnityEngine.Cursor.lockState.ToString(),
+        ["eventSystems"] = new JArray(UnityEngine.Object.FindObjectsByType<EventSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None).Select(system => new JObject {
+          ["name"] = system.name, ["scene"] = system.gameObject.scene.name,
+          ["active"] = system.isActiveAndEnabled, ["current"] = system == EventSystem.current,
+          ["modules"] = new JArray(system.GetComponents<BaseInputModule>().Select(module => new JObject {
+            ["type"] = module.GetType().Name, ["enabled"] = module.isActiveAndEnabled,
+            ["pointEnabled"] = (module as InputSystemUIInputModule)?.point?.action?.enabled,
+            ["clickEnabled"] = (module as InputSystemUIInputModule)?.leftClick?.action?.enabled
+          }))
+        })),
+        ["panelRaycasters"] = new JArray(UnityEngine.Object.FindObjectsByType<PanelRaycaster>(FindObjectsInactive.Include, FindObjectsSortMode.None).Select(raycaster => new JObject {
+          ["name"] = raycaster.name, ["scene"] = raycaster.gameObject.scene.name,
+          ["active"] = raycaster.isActiveAndEnabled, ["hasPanel"] = raycaster.panel != null
+        })),
         ["virtualMouseEnabled"] = _mouse != null && _mouse.enabled,
         ["virtualKeyboardEnabled"] = _keyboard != null && _keyboard.enabled,
         ["virtualMouseCanRunInBackground"] = _mouse != null && _mouse.canRunInBackground,
@@ -117,6 +135,16 @@ namespace MultiplayerInfrastructure.Automation
     }
     private void EnsureDevices()
     {
+#if UNITY_EDITOR
+      if (_automationInputSettings == null)
+      {
+        _originalInputSettings = InputSystem.settings;
+        _automationInputSettings = UnityEngine.Object.Instantiate(_originalInputSettings);
+        _automationInputSettings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+        _automationInputSettings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+        InputSystem.settings = _automationInputSettings;
+      }
+#endif
       if (_mouse == null || _keyboard == null) RegisterLayouts();
       if (_mouse == null) {
         _mouse = (Mouse)InputSystem.AddDevice("E2EBackgroundMouse", "E2E Mouse");
@@ -228,6 +256,15 @@ namespace MultiplayerInfrastructure.Automation
       foreach (var module in _disabled) if (module != null) module.enabled = true;
       if (_createdSystem != null) UnityEngine.Object.Destroy(_createdSystem);
       _disabled.Clear(); _mouse = null; _keyboard = null; _module = null; _createdSystem = null;
+#if UNITY_EDITOR
+      if (_automationInputSettings != null)
+      {
+        if (InputSystem.settings == _automationInputSettings) InputSystem.settings = _originalInputSettings;
+        UnityEngine.Object.Destroy(_automationInputSettings);
+        _automationInputSettings = null;
+        _originalInputSettings = null;
+      }
+#endif
     }
   }
 }
