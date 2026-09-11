@@ -206,6 +206,10 @@ namespace MultiplayerInfrastructure.Player
 
     private void HandleChatInput()
     {
+      // 스폰 시점에 채팅 UI가 아직 등록되지 않았을 수 있다(표시 전용 클라이언트의 늦은 오버레이 준비).
+      // 한 번 비어 있다고 영영 포기하면 그 클라이언트는 채팅과 커맨드를 끝내 열 수 없다.
+      if (_chatUI.IsUnityNull())
+        _chatUI = Registry.Registry.Get<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>());
       if (_chatUI.IsUnityNull())
         return;
 

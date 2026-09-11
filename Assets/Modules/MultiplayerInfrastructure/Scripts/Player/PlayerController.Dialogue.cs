@@ -24,7 +24,41 @@ namespace MultiplayerInfrastructure.Player
         Registry.Registry.Register(RegistryType.UI, Registry.Registry.TypeKey<DialoguePanelUIController>(), _dialoguePanelUIController);
       }
 
+      // 표시 전용 클라이언트는 시스템 오버레이 씬(ScenarioController 포함)이 플레이어 스폰보다
+      // 늦게 준비될 수 있다. 그때 역참조하면 예외로 나머지 UI 바인딩까지 건너뛰므로, 인스턴스가
+      // 생기는 시점에 다시 등록한다.
       _scenarioController = ScenarioController.Instance;
+      if (_scenarioController.IsUnityNull())
+      {
+        ScenarioController.InstanceAvailable -= HandleScenarioControllerAvailable;
+        ScenarioController.InstanceAvailable += HandleScenarioControllerAvailable;
+        Debug.LogWarning("[PlayerController] ScenarioController is not available yet; dialogue references will be registered when it appears.", this);
+        return;
+      }
+
+      RegisterScenarioReferences();
+    }
+
+    private void OnStopClient_Dialogue()
+    {
+      ScenarioController.InstanceAvailable -= HandleScenarioControllerAvailable;
+    }
+
+    private void HandleScenarioControllerAvailable(ScenarioController controller)
+    {
+      ScenarioController.InstanceAvailable -= HandleScenarioControllerAvailable;
+      if (this == null || !IsOwner || controller.IsUnityNull())
+        return;
+
+      _scenarioController = controller;
+      RegisterScenarioReferences();
+    }
+
+    private void RegisterScenarioReferences()
+    {
+      if (_scenarioController.IsUnityNull())
+        return;
+
       _scenarioController.RegisterReferences(
         _dialoguePanelUIController,
         _camControl,

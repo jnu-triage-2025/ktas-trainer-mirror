@@ -103,6 +103,7 @@ namespace MultiplayerInfrastructure.Player
       // 종료도 같은 이유로 격리한다. 오버레이 동기화 해제가 실패하면 정적 스택 구독이 남아
       // 파괴된 컨트롤러가 다음 세션의 커서/이동 상태를 계속 건드린다.
       RunClientLifecycleStep(OnStopClient_UIOverlaySync, nameof(OnStopClient_UIOverlaySync));
+      RunClientLifecycleStep(OnStopClient_Dialogue, nameof(OnStopClient_Dialogue));
       RunClientLifecycleStep(OnStopClient_AnyPeer, nameof(OnStopClient_AnyPeer));    // 모든 클라이언트 — owner 여부 무관
       base.OnStopClient();
     }

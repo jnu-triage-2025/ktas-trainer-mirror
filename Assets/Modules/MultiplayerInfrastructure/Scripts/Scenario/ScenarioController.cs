@@ -832,6 +832,18 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      // 표시 전용 클라이언트에서 BeginPresentationScenario 시점에 대화 UI가 아직 없었다면 여기서 다시 확보한다.
+      // 그대로 두면 서버가 재전송해도 표시되지 않고 응답도 못 보내, 그 클라이언트만 화면 없이 대기한다.
+      if (_uiController.IsUnityNull())
+      {
+        ResolveUIControllers();
+        if (!_uiController.IsUnityNull() && !_uiController.IsScenarioActive)
+        {
+          _uiController.SetInteractableHintUI(_hintUIController);
+          _uiController.StartScenario(this);
+        }
+      }
+
       if (PresentsDialogueSurface(node) && !string.IsNullOrEmpty(presentationToken))
       {
         if (presentationToken == _receivedPresentationToken && !_uiController.IsUnityNull()
