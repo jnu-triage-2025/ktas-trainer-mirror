@@ -3659,15 +3659,16 @@ namespace MultiplayerInfrastructure.Scenario
             spawnPosition,
             Quaternion.Euler(node.RotationX, node.RotationY, node.RotationZ),
             node.SpawnedEntityIdentifier,
-            out var spawnedGameObject,
+            out _,
             out var spawnedDescriptor,
-            out var error))
+            out var error,
+            out var spawnedObjects))
       {
         ReportGateArmingDegraded(node, $"preset '{node.PresetIdentifier}' could not be spawned: {error}");
         Advance();
         return;
       }
-      TrackCleanup(() => DestroyScenarioActingNpc(spawnedGameObject));
+      TrackCleanup(() => DestroySpawnedEntityPresetObjects(spawnedObjects));
 
       string stateKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
         ? $"{node.Identifier}.spawnedEntityIdentifier"
@@ -3682,6 +3683,17 @@ namespace MultiplayerInfrastructure.Scenario
       ApplySpawnedEntityTags(spawnedIdentifier, node.Tags);
 
       Advance();
+    }
+
+    private static void DestroySpawnedEntityPresetObjects(IReadOnlyList<GameObject> spawnedObjects)
+    {
+      if (spawnedObjects == null)
+        return;
+
+      // 하위를 먼저 제거하면 비-unwrap 하위가 부모 파괴와 함께 사라진 뒤 중복 처리되는 일을 피할 수 있다.
+      // 특히 unwrap 된 환자 침대는 별도 루트이므로 반드시 개별적으로 제거해야 한다.
+      for (int i = spawnedObjects.Count - 1; i >= 0; i--)
+        DestroyScenarioActingNpc(spawnedObjects[i]);
     }
 
     private static bool TryResolveSpawnPositionSource(

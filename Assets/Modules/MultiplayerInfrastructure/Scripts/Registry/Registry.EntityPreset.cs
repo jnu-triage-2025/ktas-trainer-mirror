@@ -81,12 +81,41 @@ namespace MultiplayerInfrastructure.Registry
       out EntityDescriptor descriptor,
       out string error)
     {
+      return TrySpawnEntityPreset(
+        identifier,
+        position,
+        rotation,
+        desiredEntityIdentifier,
+        out spawned,
+        out descriptor,
+        out error,
+        out _);
+    }
+
+    /// <summary>
+    /// 엔티티 프리셋과 그 하위 참조를 스폰하고, 이번 작업에서 생성된 모든 루트 인스턴스를 반환한다.
+    /// <paramref name="spawnedObjects"/> 는 부모보다 하위가 나중에 오는 생성 순서이며,
+    /// <c>unwrapOnSpawn</c> 으로 계층에서 분리된 하위도 포함한다.
+    /// </summary>
+    public static bool TrySpawnEntityPreset(
+      string identifier,
+      Vector3 position,
+      Quaternion rotation,
+      string desiredEntityIdentifier,
+      out GameObject spawned,
+      out EntityDescriptor descriptor,
+      out string error,
+      out IReadOnlyList<GameObject> spawnedObjects)
+    {
+      var spawnedObjectList = new List<GameObject>();
+      spawnedObjects = spawnedObjectList;
       return TrySpawnEntityPresetInternal(
         identifier,
         position,
         rotation,
         desiredEntityIdentifier,
         parentForHierarchy: null,
+        spawnedObjects: spawnedObjectList,
         out spawned,
         out descriptor,
         out error);
@@ -103,6 +132,7 @@ namespace MultiplayerInfrastructure.Registry
       Quaternion rotation,
       string desiredEntityIdentifier,
       Transform parentForHierarchy,
+      List<GameObject> spawnedObjects,
       out GameObject spawned,
       out EntityDescriptor descriptor,
       out string error)
@@ -148,6 +178,8 @@ namespace MultiplayerInfrastructure.Registry
           error = $"Failed to spawn entity preset '{identifier}'.";
           return false;
         }
+        if (parentForHierarchy == null)
+          spawnedObjects?.Add(spawned);
         MultiplayerInfrastructure.Performance.MppmLiteMode.StripVisuals(spawned);
 
         // 1) 계층 부착(비-unwrap 하위 스폰일 때만).
@@ -177,7 +209,12 @@ namespace MultiplayerInfrastructure.Registry
         //    unwrap 은 루트와 동일 계층(형제 독립 루트)으로 둔다.
         if (preset.ChildReferences != null && preset.ChildReferences.Count > 0)
         {
-          SpawnChildPresetReferences(spawned.transform, preset, identifier, runtimeEntityIdentifier);
+          SpawnChildPresetReferences(
+            spawned.transform,
+            preset,
+            identifier,
+            runtimeEntityIdentifier,
+            spawnedObjects);
         }
 
         // 5) 레지스트리 등록. 자가 등록 컴포넌트가 있으면 소유권은 그 컴포넌트에 있고(EntityType 도 컴포넌트가 결정),
@@ -225,7 +262,8 @@ namespace MultiplayerInfrastructure.Registry
       Transform rootTransform,
       EntityPresetDefinition rootPreset,
       string rootIdentifier,
-      string rootRuntimeIdentifier)
+      string rootRuntimeIdentifier,
+      List<GameObject> spawnedObjects)
     {
       if (rootTransform == null || rootPreset?.ChildReferences == null)
       {
@@ -259,6 +297,7 @@ namespace MultiplayerInfrastructure.Registry
               baseRotation,
               child.spawnedEntityIdentifier,
               parentForChild,
+              spawnedObjects,
               out var childGo,
               out _,
               out var childError))
