@@ -1,6 +1,8 @@
 # Edit destination.url before using --push.
 dotenv_file = ".env"
-state_file = ".code-mirror-state.json"
+# A directory of its own so a CI cache can restore it without touching
+# anything else under Tools/code-mirror/.
+state_file = ".state/code-mirror-state.json"
 generated_config = "code-mirror.gen.toml"
 
 [source]

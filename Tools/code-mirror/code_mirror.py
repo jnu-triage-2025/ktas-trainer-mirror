@@ -22,6 +22,7 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Iterable
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -75,8 +76,21 @@ def load_config(config_path: Path) -> dict[str, Any]:
     return config
 
 
+@lru_cache(maxsize=None)
+def path_facts(path: str) -> tuple[str, str, tuple[str, ...]]:
+    """Return the file name, lowercased suffix and path components of a path.
+
+    Every rule check of every source commit needs these, and a long history
+    repeats the same paths thousands of times. Parsing each distinct path once
+    keeps a run that cannot reuse recorded rewrites from spending most of its
+    time in the path parser.
+    """
+    parsed = Path(path)
+    return parsed.name, parsed.suffix.lower(), parsed.parts
+
+
 def module_name(path: str) -> str | None:
-    parts = Path(path).parts
+    parts = path_facts(path)[2]
     if len(parts) >= 3 and parts[0:2] == ("Assets", "Modules"):
         return parts[2]
     return None
@@ -211,51 +225,76 @@ def branch_membership(refs: dict[str, str]) -> dict[str, set[str]]:
     return membership
 
 
+@lru_cache(maxsize=None)
+def normalized_extensions(values: tuple[str, ...]) -> frozenset[str]:
+    return frozenset(item.lower() if item.startswith(".") else f".{item.lower()}" for item in values)
+
+
 def matches(rule: dict[str, Any], path: str, size: int) -> bool:
-    if rule.get("preserve_meta", False) and Path(path).suffix.lower() == ".meta":
+    filename, extension, parts = path_facts(path)
+    directory_names = parts[:-1]
+    if rule.get("preserve_meta", False) and extension == ".meta":
         return False
     selector = rule.get("match", {})
     if "max_size_bytes" in selector and size >= int(selector["max_size_bytes"]):
         return True
-    filename = Path(path).name
-    extension = Path(path).suffix.lower()
-    directory_names = Path(path).parts[:-1]
     return (
         any(fnmatch.fnmatchcase(part, pattern) for pattern in selector.get("directory_names", []) for part in directory_names)
         or any(fnmatch.fnmatchcase(filename, pattern) for pattern in selector.get("file_names", []))
-        or extension in {item.lower() if item.startswith(".") else f".{item.lower()}" for item in selector.get("extensions", [])}
+        or extension in normalized_extensions(tuple(selector.get("extensions", [])))
         or any(fnmatch.fnmatchcase(path, pattern) for pattern in selector.get("paths", []))
     )
 
 
 def allowed_by_default(config: dict[str, Any], path: str) -> bool:
     policy = module_policy(config, path)
+    filename, extension, _parts = path_facts(path)
     if policy == "include":
         return True
     if policy == "exclude":
-        return Path(path).suffix.lower() == ".meta" and bool(config.get("module_policies", {}).get("always_include_meta", True))
+        return extension == ".meta" and bool(config.get("module_policies", {}).get("always_include_meta", True))
     include = config.get("include", {})
-    filename = Path(path).name
-    extension = Path(path).suffix.lower()
-    extensions = {item.lower() if item.startswith(".") else f".{item.lower()}" for item in include.get("extensions", [])}
+    extensions = normalized_extensions(tuple(include.get("extensions", [])))
     return extension in extensions or any(fnmatch.fnmatchcase(filename, pattern) for pattern in include.get("file_names", [])) or any(fnmatch.fnmatchcase(path, pattern) for pattern in include.get("paths", []))
 
 
+def path_is_excluded(config: dict[str, Any], path: str, kind: str, size: int, active: list[dict[str, Any]]) -> bool:
+    policy = module_policy(config, path)
+    extension = path_facts(path)[1]
+    excluded_module_meta = policy == "exclude" and extension == ".meta" and bool(config.get("module_policies", {}).get("always_include_meta", True))
+    # Explicit module inclusion and retained excluded-module metadata ignore
+    # generic size and extension rules.
+    force_include = policy == "include" or excluded_module_meta
+    force_exclude = any(rule.get("force", False) and matches(rule, path, size) for rule in active)
+    # Keep explicitly allowed submodule gitlinks so directories such as
+    # Tools remain visible in the filtered mirror. Other tree entry kinds
+    # are still excluded because they cannot be represented safely here.
+    explicitly_allowed_gitlink = kind == "commit" and allowed_by_default(config, path)
+    return (kind != "blob" and not explicitly_allowed_gitlink) or force_exclude or not allowed_by_default(config, path) or (not force_include and any(matches(rule, path, size) for rule in active))
+
+
+# Keyed by the set of active rules, then by the tree entry the verdict describes.
+DECISION_CACHE: dict[tuple[int, ...], dict[tuple[str, str, int], bool]] = {}
+
+
 def excluded_paths(config: dict[str, Any], commit: str, branches: set[str]) -> list[str]:
-    active = [rule for rule in config.get("rules", []) if applies_to_commit(rule.get("scope", {}), commit, branches)]
+    rules = config.get("rules", [])
+    active_indices = tuple(index for index, rule in enumerate(rules) if applies_to_commit(rule.get("scope", {}), commit, branches))
+    active = [rules[index] for index in active_indices]
+    # A verdict depends only on the tree entry and on which rules are active, so
+    # every commit that carries the same entry reaches the same answer. Deciding
+    # each distinct entry once is what keeps a run that cannot reuse recorded
+    # rewrites from evaluating the rule set millions of times over a long
+    # history, where nearly every path is repeated by nearly every commit.
+    cache = DECISION_CACHE.setdefault(active_indices, {})
     result: list[str] = []
     for path, _mode, kind, size in paths_at(commit):
-        policy = module_policy(config, path)
-        excluded_module_meta = policy == "exclude" and Path(path).suffix.lower() == ".meta" and bool(config.get("module_policies", {}).get("always_include_meta", True))
-        # Explicit module inclusion and retained excluded-module metadata ignore
-        # generic size and extension rules.
-        force_include = policy == "include" or excluded_module_meta
-        force_exclude = any(rule.get("force", False) and matches(rule, path, size) for rule in active)
-        # Keep explicitly allowed submodule gitlinks so directories such as
-        # Tools remain visible in the filtered mirror. Other tree entry kinds
-        # are still excluded because they cannot be represented safely here.
-        explicitly_allowed_gitlink = kind == "commit" and allowed_by_default(config, path)
-        if (kind != "blob" and not explicitly_allowed_gitlink) or force_exclude or not allowed_by_default(config, path) or (not force_include and any(matches(rule, path, size) for rule in active)):
+        entry = (path, kind, size)
+        verdict = cache.get(entry)
+        if verdict is None:
+            verdict = path_is_excluded(config, path, kind, size, active)
+            cache[entry] = verdict
+        if verdict:
             result.append(path)
     return result
 
@@ -283,6 +322,7 @@ def load_state(path: Path) -> dict[str, Any]:
 
 
 def write_state(path: Path, state: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     temporary.replace(path)
@@ -310,14 +350,60 @@ def anchor_refs(refs: dict[str, str], state: dict[str, Any]) -> None:
 
 
 def http_askpass(token_env: str, username: str) -> tuple[Path, dict[str, str]]:
+    """Answer Git's credential prompts without the token reaching Git itself.
+
+    Git runs GIT_ASKPASS as a program, so the helper needs a launcher the
+    platform can execute on its own. A shebang naming an interpreter by command
+    name is not one: Git on Windows reads the shebang, keeps only the
+    interpreter's file name and looks that name up on PATH, which finds nothing
+    when the run was started through the py launcher or through any interpreter
+    that is not itself on PATH. Both launchers therefore spell out the running
+    interpreter by full path.
+    """
     directory = Path(tempfile.mkdtemp(prefix="code-mirror-askpass-"))
     script = directory / "askpass.py"
-    interpreter = "python" if sys.platform == "win32" else "python3"
-    script.write_text(f"#!/usr/bin/env {interpreter}\nimport os, sys\nprint(os.environ[os.environ['CODE_MIRROR_TOKEN_ENV']] if 'Password' in sys.argv[1] else os.environ['CODE_MIRROR_HTTP_USERNAME'])\n", encoding="utf-8")
-    script.chmod(0o700)
+    script.write_text(
+        "import os, sys\n"
+        "prompt = sys.argv[1] if len(sys.argv) > 1 else ''\n"
+        "print(os.environ[os.environ['CODE_MIRROR_TOKEN_ENV']] if 'Password' in prompt else os.environ['CODE_MIRROR_HTTP_USERNAME'])\n",
+        encoding="utf-8")
+    script.chmod(0o600)
+    if sys.platform == "win32":
+        launcher = directory / "askpass.bat"
+        launcher.write_text(f'@echo off\r\n"{sys.executable}" "{script}" %*\r\n', encoding="utf-8")
+    else:
+        launcher = directory / "askpass.sh"
+        launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n', encoding="utf-8")
+    launcher.chmod(0o700)
     env = os.environ.copy()
-    env.update({"GIT_ASKPASS": str(script), "GIT_TERMINAL_PROMPT": "0", "CODE_MIRROR_TOKEN_ENV": token_env, "CODE_MIRROR_HTTP_USERNAME": username})
+    env.update({"GIT_ASKPASS": str(launcher), "GIT_TERMINAL_PROMPT": "0", "CODE_MIRROR_TOKEN_ENV": token_env, "CODE_MIRROR_HTTP_USERNAME": username})
     return directory, env
+
+
+def destination_git_env(destination: dict[str, Any]) -> tuple[Path | None, dict[str, str]]:
+    url = str(destination["url"])
+    token_name = destination.get("token_env")
+    if token_name and urlparse(url).scheme == "https":
+        return http_askpass(str(token_name), str(destination.get("http_username", "git")))
+    return None, os.environ.copy()
+
+
+def fetch_published_mirror(destination: dict[str, Any]) -> None:
+    """Bring the published rewrite back into the anchor namespace.
+
+    Reusing a recorded rewrite needs its commit to still be in the object
+    database, and a workspace created on another agent has none of them even
+    when the state file was restored: the mapping alone cannot recreate the
+    objects. The destination holds exactly those commits, so one fetch is
+    enough to make the mapping usable again.
+    """
+    askpass_dir, env = destination_git_env(destination)
+    try:
+        run_git(["fetch", "--force", str(destination["url"]),
+                 f"+refs/heads/*:{ANCHOR_PREFIX}heads/*", f"+refs/tags/*:{ANCHOR_PREFIX}tags/*"], env=env)
+    finally:
+        if askpass_dir:
+            shutil.rmtree(askpass_dir, ignore_errors=True)
 
 
 def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str, Any]) -> None:
@@ -328,15 +414,10 @@ def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str
     from the rewrite is therefore overwritten rather than reported: dropping
     commits published there loses nothing that the source does not still have.
     """
-    url = str(destination["url"])
-    env = os.environ.copy()
-    askpass_dir: Path | None = None
-    token_name = destination.get("token_env")
-    if token_name and urlparse(url).scheme == "https":
-        askpass_dir, env = http_askpass(str(token_name), str(destination.get("http_username", "git")))
+    askpass_dir, env = destination_git_env(destination)
     try:
         refspecs = [f"{state['commits'][source]}:{ref}" for ref, source in refs.items()]
-        run_git(["push", "--force", url, *refspecs], env=env)
+        run_git(["push", "--force", str(destination["url"]), *refspecs], env=env)
     finally:
         if askpass_dir:
             shutil.rmtree(askpass_dir, ignore_errors=True)
@@ -348,15 +429,21 @@ def toml_array(values: list[str]) -> str:
 
 def generate_config(config_path: Path) -> int:
     config = tomllib.loads(config_path.read_text(encoding="utf-8"))
-    root = Path(run_git(["rev-parse", "--show-toplevel"]).decode().strip())
+    # Reading the checked-out commit rather than the working tree makes the
+    # policy a function of that commit alone. The generated policy feeds the
+    # filtering fingerprint, and a workspace shared across branches keeps module
+    # directories another branch left behind, so a working-tree scan would let
+    # that leftover change the fingerprint and stop the next run outright.
+    listing = run_git(["ls-tree", "-r", "--name-only", "-z", "HEAD", "Assets/Modules/"]).decode().split("\0")
+    manifests = sorted(path for path in listing if path.endswith("/package.json") and path.count("/") == 3)
     included: list[str] = []
-    for manifest_path in sorted((root / "Assets" / "Modules").glob("*/package.json")):
+    for manifest_path in manifests:
         try:
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+            manifest = json.loads(run_git(["cat-file", "blob", f"HEAD:{manifest_path}"]).decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise MirrorError(f"Cannot read package manifest {manifest_path}: {error}") from error
         if "unity" in manifest and str(manifest.get("license", "")).strip().upper() == "MIT":
-            included.append(manifest_path.parent.name)
+            included.append(manifest_path.split("/")[2])
     output_path = config_path.parent / config.get("generated_config", "code-mirror.gen.toml")
     content = (
         "# Generated by code_mirror.py --generate-config. Do not edit manually.\n"
@@ -404,6 +491,18 @@ def main() -> int:
     reusable: set[str] = set()
     if not args.rebuild and not branch_scoped and state.get("config_fingerprint") == fingerprint:
         reusable = existing_commits(state["commits"].values())
+        missing = {state["commits"][source] for source, _parents in graph if source in state["commits"]} - reusable
+        # A dry run promises to leave refs alone, so it accepts the slower path.
+        if missing and not args.dry_run:
+            print(f"{len(missing)} recorded rewrites are missing locally; fetching the published mirror.", flush=True)
+            try:
+                fetch_published_mirror(config["destination"])
+            except MirrorError as error:
+                # An empty or unreachable destination only costs the rewrite the
+                # fetch was meant to avoid, so it must not stop the run.
+                print(f"Could not fetch the published mirror, rewriting instead: {error}", flush=True)
+            else:
+                reusable = existing_commits(state["commits"].values())
     removed_count = 0
     new_count = 0
     reused_count = 0

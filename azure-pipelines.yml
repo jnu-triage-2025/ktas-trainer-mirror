@@ -65,19 +65,40 @@ stages:
     jobs:
       - job: PushCodeMirror
         displayName: 'Create and push filtered Git mirror'
+        # A run that cannot reuse a recorded rewrite filters every source commit
+        # again, and that run also fetches and pushes the whole history for the
+        # first time. Together those exceed the 60-minute default, and a job
+        # cancelled there saves no state, so the next run starts cold as well.
+        # Runs that reuse the state file finish in a fraction of the budget.
+        timeoutInMinutes: 240
         pool:
           name: ${{ parameters.mirrorAgentPool }}
         steps:
           # The mirror reads every remote-tracking branch and tag, so a shallow
           # checkout cannot provide a complete source history.
-          # clean: false keeps the untracked state file, which records the
-          # source-to-mirror commit mapping and the last published refs. Without
-          # it every run rewrites the whole history and then fails the push
-          # because it no longer knows what it published last time.
+          # clean: false keeps both halves of a reusable rewrite: the untracked
+          # state file holding the source-to-mirror commit mapping, and the
+          # rewritten objects the anchor refs keep reachable. Cleaning here
+          # would make every run filter the whole history again.
           - checkout: self
             fetchDepth: 0
             persistCredentials: true
             clean: false
+          # The state file is untracked, so it reaches only the one workspace
+          # that wrote it. A pool with more than one agent, or a workspace that
+          # was reset, would otherwise start every such run from an empty
+          # mapping. The rewritten objects the mapping refers to are restored
+          # separately: the tool fetches them back from the mirror destination.
+          # The key changes every run because a cache entry cannot be replaced;
+          # restoreKeys then falls back to the newest entry of the prefix.
+          - task: Cache@2
+            displayName: 'Restore and save the code mirror state'
+            inputs:
+              key: '"code-mirror-state" | "$(Agent.OS)" | "$(Build.BuildId)"'
+              restoreKeys: |
+                "code-mirror-state" | "$(Agent.OS)"
+                "code-mirror-state"
+              path: '$(Build.SourcesDirectory)/Tools/code-mirror/.state'
           - powershell: |
               $mirrorScript = Join-Path '$(Build.SourcesDirectory)' 'Tools\CI\mirror-code.ps1'
               if (-not (Test-Path -LiteralPath $mirrorScript -PathType Leaf)) {

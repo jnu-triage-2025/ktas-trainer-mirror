@@ -1,7 +1,9 @@
 .env
+.state/
+# Where the state file lived before it moved into .state/. Kept so a workspace
+# that predates the move does not report the leftover as untracked.
 .code-mirror-state.json
 .code-mirror-state.json.tmp
-code-mirror.gen.toml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
