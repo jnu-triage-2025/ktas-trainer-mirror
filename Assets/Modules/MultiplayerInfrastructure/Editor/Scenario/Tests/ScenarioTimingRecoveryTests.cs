@@ -118,9 +118,12 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         };
         var controller = go.AddComponent<ScenarioController>();
 
-        Assert.That(controller.TryAllocateCompatibilityRoles(
-          graph, parallel, new[] { 101, 104 }, out var owners), Is.True);
-        Assert.That(owners, Is.EqualTo(new[] { 101, 104 }));
+        var allocate = typeof(ScenarioController).GetMethod(
+          "TryAllocateCompatibilityRoles", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(allocate, Is.Not.Null);
+        var arguments = new object[] { graph, parallel, new[] { 101, 104 }, null, true };
+        Assert.That(allocate.Invoke(controller, arguments), Is.True);
+        Assert.That((int[])arguments[3], Is.EqualTo(new[] { 101, 104 }));
       }
       finally
       {
