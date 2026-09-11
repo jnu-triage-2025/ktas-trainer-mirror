@@ -1356,6 +1356,33 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void SecondCyclePulseAssessmentRequiresNurseAAndUsesNurseAAsSpeaker()
+    {
+      var graph = LoadPatientAGraph();
+      var pulseAssessment = FindInteractionDefinition(graph, "patient_a", "assess_pulse_r2");
+      Assert.That(pulseAssessment.InitialVisible, Is.False,
+        "2주기 맥박 확인은 시나리오 활성화 전에는 노출되지 않아야 합니다.");
+      Assert.That(pulseAssessment.MatchMode, Is.EqualTo(ScenarioConditionMatchMode.All));
+      Assert.That(HasTagCondition(pulseAssessment, "nurse_a"), Is.True,
+        "2주기 맥박 확인은 Nurse_a 역할만 수행할 수 있어야 합니다.");
+      Assert.That(HasQuestCondition(
+        pulseAssessment, "Quest_Check_Pulse_ROSC", "assess-pulse-patient-a-r2"), Is.True);
+
+      const string playerIdentifier = "test-second-cycle-pulse-no-role";
+      PlayerTagService.ClearTags(playerIdentifier);
+      bool visible = ScenarioConditionEvaluator.Evaluate(
+        pulseAssessment.VisibilityConditions, pulseAssessment.MatchMode,
+        ScenarioConditionContext.ForPlayerIdentifier(playerIdentifier), out string reason);
+      Assert.That(visible, Is.False,
+        $"Nurse_a가 아닌 플레이어에게 2주기 맥박 확인을 노출하거나 허용하면 안 됩니다. ({reason})");
+
+      var pulseReport = graph.Nodes["D035"] as ScenarioDialogueNode;
+      Assert.That(pulseReport, Is.Not.Null);
+      Assert.That(pulseReport.SpeakerName, Is.EqualTo("@t=[nurse_a, ???]"),
+        "2주기 맥박 확인 결과 대화에는 Nurse_a 태그를 가진 플레이어의 이름이 표시되어야 합니다.");
+    }
+
+    [Test]
     public void PatientAStageGatedActionsStartHiddenInScenarioData()
     {
       var graph = LoadPatientAGraph();

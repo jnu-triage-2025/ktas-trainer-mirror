@@ -421,6 +421,10 @@
       "visibility": {
         "conditions": [
           {
+            "type": "PlayerHasTag",
+            "tag": "nurse_a"
+          },
+          {
             "type": "PlayerHasQuest",
             "questIdentifier": "Quest_Check_Pulse_ROSC",
             "completionCriteriaIdentifier": "assess-pulse-patient-a-r2"
@@ -3298,7 +3302,7 @@
       "nextIdentifier": "Q027"
     },
     "D035": {
-      "speakerName": "@s",
+      "speakerName": "@t=[nurse_a, ???]",
       "dialogueContent": "환자 맥박 느껴집니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
