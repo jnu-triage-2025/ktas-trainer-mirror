@@ -121,7 +121,7 @@ namespace MultiplayerInfrastructure.Player
       PlayerQuestStateFlagService.ClearFlags(_userIdentifier.Value);
       UserDescriptorService.Unregister(_userIdentifier.Value);
       if (!string.IsNullOrWhiteSpace(displayName))
-        BroadcastConnectionMessage($"{displayName}가 나갔습니다.");
+        BroadcastConnectionMessage($"{displayName}이(가) 나갔습니다.");
 
       // 이 플레이어가 승인받았으나 확정(성공/실패)하지 못한 정적 아이템 픽업 예약이 있으면
       // 선점 감소한 Remains 를 복원한다. 아래 ClearUser 보다 먼저 수행해야 Local 예약 복원이 유효하다.
