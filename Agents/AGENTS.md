@@ -14,6 +14,10 @@ Most human operator instructions pertain to the codebase and serialized data of 
 
 If you determine that a third-party module must be modified, you must obtain confirmation from the human operator before proceeding with the modification, unless the instruction explicitly states in advance that the third-party module should be modified.  
 
+### E2E 테스트에서 발견한 문제를 수정할 때의 제한 사항
+
+E2E 테스트를 수행하는 중에 문제를 발견하더라도, 문제를 해결하기 위해 Unity 씬에 배치된 오브젝트를 이동해서는 안 된다. 씬 오브젝트의 위치를 변경하여 테스트가 통과하도록 우회하지 말고, 문제의 원인이 있는 코드나 데이터 또는 테스트 동작을 수정해야 한다.
+
 ## Terminology
 
 - Do not use `계약` or `contract` to mean a requirement, work objective, specification, interface expectation, validation rule, or acceptance criterion.
