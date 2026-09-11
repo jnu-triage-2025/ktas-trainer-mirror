@@ -11,7 +11,7 @@ namespace MultiplayerInfrastructure.UI
   /// 인벤토리 우측에 조합 패널을 구성한다.
   ///   (b) 상단 : 현재 선택된 레시피의 "필요 아이템" 칸 (요구 수량 / 보유 수량)
   ///   ───── 구분선 ─────
-  ///   (a) 하단 : 현재 조합 가능한 결과 아이템 목록
+  ///   (a) 하단 : 현재 보유한 재료와 관련된 결과 아이템 목록
   ///
   /// 상호작용:
   ///   · (a) 목록에서 아이템을 한 번 클릭 → 선택(=(b) 에 필요 아이템 표시)
@@ -129,8 +129,8 @@ namespace MultiplayerInfrastructure.UI
       divider.AddToClassList("crafting-divider");
       _craftingPanel.Add(divider);
 
-      // (a) 조합 가능한 아이템 목록 섹션
-      var listLabel = new Label { text = "조합 가능", name = "CraftingListLabel" };
+      // (a) 보유한 재료와 관련된 조합 아이템 목록 섹션
+      var listLabel = new Label { text = "조합 아이템", name = "CraftingListLabel" };
       listLabel.AddToClassList("crafting-section-label");
       _craftingPanel.Add(listLabel);
 
@@ -188,8 +188,8 @@ namespace MultiplayerInfrastructure.UI
     }
 
     /// <summary>
-    /// 조합 가능한 레시피 목록을 갱신한다. 컨트롤러가 인벤토리 변화 시마다 호출한다.
-    /// 선택 상태는 가능하면 유지하되, 더 이상 조합 불가능한 레시피면 선택을 해제한다.
+    /// 보유한 재료와 관련된 레시피 목록을 갱신한다. 컨트롤러가 인벤토리 변화 시마다 호출한다.
+    /// 선택 상태는 가능하면 유지하되, 관련 재료가 하나도 남지 않은 레시피면 선택을 해제한다.
     /// </summary>
     public void UpdateCraftableRecipes(IReadOnlyList<CraftableRecipeDisplay> recipes)
     {
@@ -228,7 +228,7 @@ namespace MultiplayerInfrastructure.UI
 
       if (_craftableRecipes.Count == 0)
       {
-        var empty = new Label { text = "조합 가능한 아이템이 없습니다." };
+        var empty = new Label { text = "보유한 재료로 확인할 수 있는 조합 아이템이 없습니다." };
         empty.AddToClassList("crafting-recipe-list__empty");
         _craftingRecipeList.Add(empty);
         return;

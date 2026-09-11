@@ -83,5 +83,27 @@ namespace MultiplayerInfrastructure.ItemSystem
 
       return true;
     }
+
+    /// <summary>
+    /// 지정한 레시피의 재료 중 하나라도 인벤토리에 있는지 검사합니다.
+    /// 필요 수량을 모두 충족했는지는 검사하지 않습니다.
+    /// </summary>
+    public static bool HasAnyIngredient(
+      ItemCombineRecipe recipe,
+      IReadOnlyDictionary<string, int> inventoryCounts)
+    {
+      if (recipe == null || inventoryCounts == null)
+        return false;
+
+      var ingredients = recipe.Ingredients;
+      for (int i = 0; i < ingredients.Count; i++)
+      {
+        var ing = ingredients[i];
+        if (inventoryCounts.TryGetValue(ing.Identifier, out int available) && available > 0)
+          return true;
+      }
+
+      return false;
+    }
   }
 }

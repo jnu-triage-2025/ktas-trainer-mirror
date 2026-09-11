@@ -229,8 +229,9 @@ namespace MultiplayerInfrastructure.Player
     // =========================================================================
 
     /// <summary>
-    /// 현재 인벤토리 보유량 기준으로 조합 가능한 레시피 목록을 조합 패널용 DTO로 반환한다.
-    /// (등록된 모든 레시피 중, 재료가 충분한 레시피만 포함)
+    /// 현재 인벤토리 보유량 기준으로 관련 레시피 목록을 조합 패널용 DTO로 반환한다.
+    /// 등록된 모든 레시피 중, 재료를 하나라도 보유한 레시피를 포함한다.
+    /// 실제 조합 가능 여부는 <see cref="TryCraftRecipe"/>에서 별도로 검사한다.
     /// </summary>
     public List<InventoryUIView.CraftableRecipeDisplay> GetCraftableRecipes()
     {
@@ -244,7 +245,7 @@ namespace MultiplayerInfrastructure.Player
         var recipe = recipes[i];
         if (recipe == null || string.IsNullOrWhiteSpace(recipe.OutputItemIdentifier))
           continue;
-        if (!ItemCombineRecipeRegistry.RecipeCanCombine(recipe, counts))
+        if (!ItemCombineRecipeRegistry.HasAnyIngredient(recipe, counts))
           continue;
 
         var ingredients = new List<InventoryUIView.CraftableRecipeDisplay.Ingredient>(recipe.Ingredients.Count);

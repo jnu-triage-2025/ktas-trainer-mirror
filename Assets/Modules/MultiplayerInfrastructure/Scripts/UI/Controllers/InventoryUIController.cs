@@ -261,7 +261,7 @@ namespace MultiplayerInfrastructure.UI
       _view?.BindEquipment(equipmentSlots);
     }
 
-    /// <summary>조합 패널의 "조합 가능" 목록과 "필요 아이템" 표시를 현재 보유량 기준으로 갱신한다.</summary>
+    /// <summary>조합 패널의 "조합 아이템" 목록과 "필요 아이템" 표시를 현재 보유량 기준으로 갱신한다.</summary>
     private void RefreshCraftableRecipes()
     {
       if (_view == null)
