@@ -5599,7 +5599,7 @@
     "CT_SCENARIO_COMPLETE": {
       "identifier": "CT_SCENARIO_COMPLETE",
       "nodeType": "DisinteractableDialogue",
-      "nextIdentifier": "E_END_BC_FADE",
+      "nextIdentifier": null,
       "speakerName": "시스템",
       "dialogueContent": "시나리오 B, C 환자 대응 종료. 모든 시나리오를 수행하였습니다.",
       "portraitSpriteIdentifier": null,
@@ -5608,14 +5608,6 @@
       "fadeOutDuration": { "value": 0.2, "unit": "Seconds" },
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "F1" }
-    },
-    "E_END_BC_FADE": {
-      "identifier": "E_END_BC_FADE",
-      "nodeType": "InvokeEvent",
-      "nextIdentifier": null,
-      "eventIdentifier": "fade_out_patient_b_c",
-      "invokeOnRoleClient": false,
-      "moveNextBehavior": "WaitUntilDone"
     }
   }
 }
