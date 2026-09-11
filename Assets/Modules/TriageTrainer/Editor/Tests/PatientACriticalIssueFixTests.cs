@@ -556,7 +556,7 @@ namespace TriageTrainer.Tests
         var definition = FindInteractionDefinition(graph, target.Entity.Identifier, target.InteractionIdentifier);
         Assert.That(definition.Kind, Is.EqualTo(InteractionKind.ItemSubmission), nodeIdentifier);
         Assert.That(definition.InitialVisible, Is.False,
-          $"{nodeIdentifier}가 열기 전에는 전달 상호작용이 숨겨져 있어야 합니다.");
+          $"{nodeIdentifier}이(가) 열기 전에는 전달 상호작용이 숨겨져 있어야 합니다.");
         Assert.That(definition.AfterInteract, Is.EqualTo(InteractionAfterInteract.HideForAll),
           $"{nodeIdentifier}의 전달 상호작용은 한 번 수행하면 모두에게 숨겨져야 합니다.");
       }

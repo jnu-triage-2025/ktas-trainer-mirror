@@ -178,7 +178,7 @@ namespace MultiplayerInfrastructure.Command
 
       if (!suppressSystemMessages)
       {
-        _chat.SendSystemNotification(sender, $"엔티티 프리셋 {presetIdentifier}가 {descriptor.Identifier}로 스폰되었습니다.");
+        _chat.SendSystemNotification(sender, $"엔티티 프리셋 {presetIdentifier}이(가) {descriptor.Identifier}로 스폰되었습니다.");
       }
 
       return true;

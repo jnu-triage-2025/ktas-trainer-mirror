@@ -144,7 +144,7 @@ namespace MultiplayerInfrastructure.Command
       }
 
       string targetName = ResolveDisplayName(targetToken, controller);
-      _chat.BroadcastSystemMessage($"{targetName}가 {modelIdentifier}캐릭터로 변경했습니다.");
+      _chat.BroadcastSystemMessage($"{targetName}이(가) {modelIdentifier}캐릭터로 변경했습니다.");
     }
 
     private bool TryResolveController(string playerIdentifier, NetworkConnection sender, out PlayerController controller, out string error)

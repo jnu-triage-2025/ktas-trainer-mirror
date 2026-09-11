@@ -1114,7 +1114,7 @@ namespace MultiplayerInfrastructure.Editor
           Severity.Warning,
           node.Identifier,
           $"이 시나리오 파일에서는 {waypointId} waypoint가 정의되지 않았습니다. " +
-          $"게임을 실행하기 전, 게임 시스템에 다른 방법으로 {waypointId}를 등록했는지 확인하세요."));
+          $"게임을 실행하기 전, 게임 시스템에 다른 방법으로 {waypointId}을(를) 등록했는지 확인하세요."));
       }
     }
 
@@ -1160,7 +1160,7 @@ namespace MultiplayerInfrastructure.Editor
           items.Add(new DiagnosticItem(
             Severity.Warning,
             node.Identifier,
-            $"이 시나리오 파일의 actingNpcs에 {questMark.EntityIdentifier}가 없습니다. " +
+            $"이 시나리오 파일의 actingNpcs에 {questMark.EntityIdentifier}이(가) 없습니다. " +
             "씬에 배치된 NPC라면 무시해도 되지만, 식별자 오타가 아닌지 확인하세요."));
         }
       }

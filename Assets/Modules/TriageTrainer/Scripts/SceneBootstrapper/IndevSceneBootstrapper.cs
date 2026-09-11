@@ -127,7 +127,7 @@ namespace TriageTrainer.SceneBootstrapper
 
       if (portOccupied)
       {
-        Debug.Log($"{LogPrefix} 포트 {port}가 이미 사용 중입니다. 기존 서버에 클라이언트로 접속합니다.");
+        Debug.Log($"{LogPrefix} 포트 {port}이(가) 이미 사용 중입니다. 기존 서버에 클라이언트로 접속합니다.");
       }
 
       var started = fishNetSupport.StartSession(sessionInformation, isOpeningServer);
