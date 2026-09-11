@@ -29,7 +29,7 @@
 .dialogue__header {
   flex-direction: row;
   align-items: center;
-  padding: 8px 16px;
+  padding: 3px 10px;
   background-color: rgba(20, 20, 40, 0.85);
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
@@ -75,22 +75,20 @@
 /* ===== Speaker ===== */
 .dialogue__speaker-container {
   background-color: rgba(60, 80, 120, 0.6);
-  padding: 8px 20px;
+  padding: 1px 10px;
   align-self: flex-start;
-  border-bottom-right-radius: 12px;
-  margin-bottom: 5px;
+  border-radius: 4px;
 }
 
 .dialogue__speaker-name {
-  font-size: 18px;
-  color: rgb(255, 255, 255);
+  font-size: 13px;
+  color: rgb(205, 220, 245);
   -unity-font-style: bold;
-  letter-spacing: 1px;
 }
 
 /* ===== Dialogue Text ===== */
 .dialogue__text-container {
-  padding: 12px 20px 20px 20px;
+  padding: 8px 14px 10px 14px;
 }
 
 .dialogue__dialogue-text {
