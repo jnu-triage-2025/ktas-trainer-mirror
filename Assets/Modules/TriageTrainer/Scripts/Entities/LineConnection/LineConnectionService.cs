@@ -597,12 +597,9 @@ namespace TriageTrainer.Entity.LineConnection
         return false;
       }
       if (sender == null || !sender.IsValid
-          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
-          || descriptor == null
-          || string.IsNullOrWhiteSpace(descriptor.Identifier)
-          || !TriageTrainer.Utils.TriageRoleGate.IsAllowed(descriptor.Identifier, "nurse_c"))
+          || !patient.CanPlayerCompletePatientBCNormalSalineConnection(player))
       {
-        reason = "sender is not nurse_c";
+        reason = "sender does not have the assigned patient treatment role";
         return false;
       }
       if (!patient.CanAuthoritativelyConnectPatientBCNormalSaline())

@@ -87,6 +87,17 @@ namespace MultiplayerInfrastructure.Editor.Tests
         "서버 인벤토리를 복원한 뒤 원격 소유자에게 결과를 미러링해야 합니다.");
     }
 
+    [Test]
+    public void PatientBCNormalSalineConnectionUsesThePatientAssignedRole()
+    {
+      string source = File.ReadAllText(
+        "Assets/Modules/TriageTrainer/Scripts/Entities/LineConnection/LineConnectionService.cs");
+
+      Assert.That(source, Does.Contain("patient.CanPlayerCompletePatientBCNormalSalineConnection(player)"));
+      Assert.That(source, Does.Not.Contain(
+        "TriageRoleGate.IsAllowed(descriptor.Identifier, \"nurse_c\")"));
+    }
+
     private static readonly string[] RuntimeScriptRoots =
     {
       "Assets/Modules/MultiplayerInfrastructure/Scripts",
