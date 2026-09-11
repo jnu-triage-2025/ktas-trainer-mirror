@@ -40,6 +40,8 @@ namespace MultiplayerInfrastructure.Scenario
     private static readonly Dictionary<string, bool> ReleasedCompatibilityBarriers = new(StringComparer.Ordinal);
     private static readonly Dictionary<int, bool> CompletedCompatibilityAuthorityRequests = new();
     private static int _nextCompatibilityAuthorityRequestId;
+    private static readonly Dictionary<int, bool> CompletedCompatibilityPlayerTagRequests = new();
+    private static int _nextCompatibilityPlayerTagRequestId;
     private static readonly Dictionary<string, Dictionary<int, bool>> ReceivedCompatibilityCompletions = new(StringComparer.Ordinal);
     private static readonly IReadOnlyDictionary<int, bool> EmptyCompatibilityCompletions = new Dictionary<int, bool>();
 
@@ -76,6 +78,7 @@ namespace MultiplayerInfrastructure.Scenario
       ReleasedCompatibilityBarriers.Clear();
       ReceivedCompatibilityCompletions.Clear();
       CompletedCompatibilityAuthorityRequests.Clear();
+      CompletedCompatibilityPlayerTagRequests.Clear();
     }
 
     /// <summary>이 피어가 <paramref name="nodeIdentifier"/> 에 대해 다음에 보고할 합류 방문 번호.</summary>
@@ -262,18 +265,43 @@ namespace MultiplayerInfrastructure.Scenario
       return false;
     }
 
-    /// <summary>호환 실행 중 원격 참가자가 선택한 자기 역할 태그를 서버에 적용하도록 요청한다.</summary>
-    public static bool RequestCompatibilityPlayerTag(string graphIdentifier, string nodeIdentifier)
+    /// <summary>
+    /// 호환 실행 중 원격 참가자가 선택한 자기 역할 태그를 서버에 적용하고 완료 응답을 기다린다.
+    /// 사용자 descriptor 등록이 늦으면 서버가 응답을 보류하며, 클라이언트는 제한 시간 동안 요청을
+    /// 재전송한다. 성공 응답 전에는 뒤따르는 ByRole 병렬 노드로 진행하지 않는다.
+    /// </summary>
+    public static IEnumerator WaitForCompatibilityPlayerTag(
+      string graphIdentifier, string nodeIdentifier, Action<bool> completed)
     {
       if (_instance == null || !InstanceFinder.IsClientStarted || InstanceFinder.IsServerStarted
           || string.IsNullOrEmpty(_localCompatibilitySession)
           || _localCompatibilityGraph != graphIdentifier
           || string.IsNullOrWhiteSpace(nodeIdentifier))
-        return false;
+      {
+        completed?.Invoke(false);
+        yield break;
+      }
 
-      _instance.CmdRequestCompatibilityPlayerTag(
-        _localCompatibilitySession, graphIdentifier, nodeIdentifier);
-      return true;
+      int requestId = ++_nextCompatibilityPlayerTagRequestId;
+      string session = _localCompatibilitySession;
+      double retryAt = 0d;
+      double deadline = Time.realtimeSinceStartupAsDouble + 15d;
+      while (session == _localCompatibilitySession && InstanceFinder.IsClientStarted
+             && !CompletedCompatibilityPlayerTagRequests.ContainsKey(requestId)
+             && Time.realtimeSinceStartupAsDouble < deadline)
+      {
+        if (Time.realtimeSinceStartupAsDouble >= retryAt)
+        {
+          _instance.CmdRequestCompatibilityPlayerTag(
+            session, graphIdentifier, nodeIdentifier, requestId);
+          retryAt = Time.realtimeSinceStartupAsDouble + 1d;
+        }
+        yield return null;
+      }
+
+      bool succeeded = CompletedCompatibilityPlayerTagRequests.TryGetValue(requestId, out bool result) && result;
+      CompletedCompatibilityPlayerTagRequests.Remove(requestId);
+      completed?.Invoke(succeeded);
     }
 
     /// <summary>
@@ -313,20 +341,34 @@ namespace MultiplayerInfrastructure.Scenario
 
     [ServerRpc(RequireOwnership = false)]
     private void CmdRequestCompatibilityPlayerTag(
-      string session, string graphIdentifier, string nodeIdentifier, NetworkConnection sender = null)
+      string session, string graphIdentifier, string nodeIdentifier, int requestId,
+      NetworkConnection sender = null)
     {
-      if (!IsCompatibilityParticipant(sender, session, graphIdentifier))
+      if (requestId <= 0 || !IsCompatibilityParticipant(sender, session, graphIdentifier))
         return;
       if (!Registry.Registry.TryGetScenarioGraph(graphIdentifier, out ScenarioGraph graph, out _))
+      {
+        TargetCompatibilityPlayerTagCompleted(sender, session, requestId, false);
         return;
+      }
       if (!graph.TryGetNode(nodeIdentifier, out var rawNode)
           || rawNode is not ScenarioPlayerTagNode node)
+      {
+        TargetCompatibilityPlayerTagCompleted(sender, session, requestId, false);
         return;
+      }
       if (node.Operation != ScenarioPlayerTagOperationType.Add
           || node.Scope != ScenarioPlayerTagScope.Current
           || string.IsNullOrWhiteSpace(node.Tag)
-          || !IsChoiceTarget(graph, nodeIdentifier)
-          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var player)
+          || !IsChoiceTarget(graph, nodeIdentifier))
+      {
+        TargetCompatibilityPlayerTagCompleted(sender, session, requestId, false);
+        return;
+      }
+
+      // 접속 직후에는 FishNet 연결보다 UserDescriptor 등록이 늦을 수 있다. 이 경우 실패 응답을
+      // 보내면 클라이언트가 역할 없이 다음 노드로 진행하므로, 응답을 보류해 재시도를 유도한다.
+      if (!UserDescriptorService.TryGetByClientId(sender.ClientId, out var player)
           || player == null
           || string.IsNullOrWhiteSpace(player.Identifier))
         return;
@@ -350,6 +392,15 @@ namespace MultiplayerInfrastructure.Scenario
       foreach (string roleTag in roleTags)
         Tag.PlayerTagService.RemoveTag(player.Identifier, roleTag);
       Tag.PlayerTagService.AddTag(player.Identifier, node.Tag.Trim());
+      TargetCompatibilityPlayerTagCompleted(sender, session, requestId, true);
+    }
+
+    [TargetRpc]
+    private void TargetCompatibilityPlayerTagCompleted(
+      NetworkConnection target, string session, int requestId, bool succeeded)
+    {
+      if (session == _localCompatibilitySession)
+        CompletedCompatibilityPlayerTagRequests[requestId] = succeeded;
     }
 
     private static bool IsChoiceTarget(ScenarioGraph graph, string nodeIdentifier)

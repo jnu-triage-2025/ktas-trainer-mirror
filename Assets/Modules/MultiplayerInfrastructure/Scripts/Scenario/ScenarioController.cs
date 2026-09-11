@@ -2518,7 +2518,7 @@ namespace MultiplayerInfrastructure.Scenario
           StartCoroutine(ExecutePlayTTSNode(playTTS));
           break;
         case ScenarioPlayerTagNode playerTag:
-          ExecutePlayerTagNode(playerTag);
+          StartCoroutine(ExecutePlayerTagNodeWithCompatibilityAck(playerTag));
           break;
         case ScenarioEntityPresetSpawnNode entityPresetSpawn:
           ExecuteEntityPresetSpawnNode(entityPresetSpawn);
@@ -3439,19 +3439,6 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingPlayerTag;
 
-      // 호환 실행 경로에서는 원격 피어도 자기 상태기를 실행하지만 플레이어 태그 저장소는 서버
-      // 권위다. 역할 선택(Add + Current)을 로컬에서 직접 적용하면 PlayerTagService가 거부하고,
-      // 피어별 ByRole 배정이 서로 다른 태그 스냅샷을 보게 된다. 서버가 그래프의 실제 노드를
-      // 검증한 뒤 요청한 참가자 자신에게 태그를 부여하도록 위임한다.
-      if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline
-          && node.Operation == ScenarioPlayerTagOperationType.Add
-          && node.Scope == ScenarioPlayerTagScope.Current
-          && ScenarioNetworkRelay.RequestCompatibilityPlayerTag(_currentGraph?.Identifier, node.Identifier))
-      {
-        Advance();
-        return;
-      }
-
       // Swap 은 두 태그 그룹 간 교환이므로 대상-세션 루프와 별개로 처리한다.
       if (node.Operation == ScenarioPlayerTagOperationType.Swap)
       {
@@ -3551,6 +3538,33 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    private IEnumerator ExecutePlayerTagNodeWithCompatibilityAck(ScenarioPlayerTagNode node)
+    {
+      // 호환 실행 경로에서는 PlayerTagService가 서버 권위다. 서버의 성공 응답 전에 P001로
+      // 진행하면 역할 로스터에서 이 플레이어가 빠질 수 있으므로, 태그 적용 완료를 먼저 기다린다.
+      if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline
+          && node.Operation == ScenarioPlayerTagOperationType.Add
+          && node.Scope == ScenarioPlayerTagScope.Current
+          && ScenarioNetworkRelay.HasCompatibilitySession(_currentGraph?.Identifier))
+      {
+        bool completed = false;
+        yield return ScenarioNetworkRelay.WaitForCompatibilityPlayerTag(
+          _currentGraph.Identifier, node.Identifier, result => completed = result);
+        if (completed)
+        {
+          Advance();
+          yield break;
+        }
+
+        Debug.LogError(
+          $"[ScenarioController] PlayerTag '{node.Identifier}' was not acknowledged by the server; "
+          + "the scenario remains at role selection to prevent an unassigned role branch.", this);
+        yield break;
+      }
+
+      ExecutePlayerTagNode(node);
     }
 
     private void RemoveOtherChoiceRoleTags(string playerIdentifier, ScenarioPlayerTagNode selectedNode)
@@ -7165,6 +7179,21 @@ namespace MultiplayerInfrastructure.Scenario
           ExecuteStateUpdateNode(stateUpdate);
           break;
         case ScenarioPlayerTagNode playerTag:
+          if (context.ReplicateEventsToPeers && !InstanceFinder.IsServerStarted
+              && ScenarioNetworkRelay.HasCompatibilitySession(_currentGraph?.Identifier)
+              && playerTag.Operation == ScenarioPlayerTagOperationType.Add
+              && playerTag.Scope == ScenarioPlayerTagScope.Current)
+          {
+            bool completed = false;
+            yield return ScenarioNetworkRelay.WaitForCompatibilityPlayerTag(
+              _currentGraph.Identifier, playerTag.Identifier, result => completed = result);
+            if (completed)
+              break;
+            Debug.LogError(
+              $"[ScenarioController] Branch PlayerTag '{playerTag.Identifier}' was not acknowledged by the server; "
+              + "the branch cannot continue without its role assignment.", this);
+            yield break;
+          }
           ExecutePlayerTagNode(playerTag);
           break;
         case ScenarioPlayTTSNode playTTS:
