@@ -84,6 +84,44 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes["E001"].NextIdentifier, Is.EqualTo("D003_1"));
     }
 
+    [Test]
+    public void DisasterIntroTriageInteractionsShowPatientBriefingsAndAdvanceFromSubmissions()
+    {
+      var path = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/disaster_intro.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+
+      var expectations = new[]
+      {
+        (Patient: "patient_a", DistinctText: "흉부 관통상", Enable: "DISASTER_INTRO_TRIAGE_ENABLE_A",
+          Wait: "DISASTER_INTRO_TRIAGE_WAIT_A", Evaluate: "DISASTER_INTRO_TRIAGE_EVALUATE_A", CorrectNext: "N001_3"),
+        (Patient: "patient_dummy_d_a", DistinctText: "하지 통증", Enable: "DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A",
+          Wait: "DISASTER_INTRO_TRIAGE_WAIT_DUMMY_D_A", Evaluate: "DISASTER_INTRO_TRIAGE_EVALUATE_DUMMY_D_A", CorrectNext: "N001_4"),
+      };
+
+      foreach (var expectation in expectations)
+      {
+        var definition = graph.Interactions.Single(item =>
+          item.Entity?.Identifier == expectation.Patient
+          && item.InteractionIdentifier == "triage_assess");
+        Assert.That(definition.GetExtra("triageBriefing"), Does.Contain(expectation.DistinctText),
+          $"{expectation.Patient}의 분류 인터랙션에서 환자 정보를 표시해야 합니다.");
+        Assert.That(definition.VisibilityConditions.Single().Tag, Is.EqualTo("nurse_a"));
+
+        var enable = (ScenarioTriageAssessControlNode)graph.Nodes[expectation.Enable];
+        var wait = (ScenarioValidatorNode)graph.Nodes[expectation.Wait];
+        var evaluate = (ScenarioValidatorNode)graph.Nodes[expectation.Evaluate];
+        Assert.That(enable.TargetEntityIdentifier, Is.EqualTo(expectation.Patient));
+        Assert.That(enable.NextIdentifier, Is.EqualTo(expectation.Wait));
+        Assert.That(wait.NextIdentifier, Is.EqualTo(expectation.Evaluate));
+        Assert.That(evaluate.NextIdentifier, Is.EqualTo(expectation.CorrectNext),
+          $"{expectation.Patient}의 올바른 분류 결과가 후속 처리로 진행되어야 합니다.");
+      }
+
+      Assert.That(graph.Nodes["N001_2"].NextIdentifier, Is.EqualTo("DISASTER_INTRO_TRIAGE_ENABLE_A"));
+      Assert.That(graph.Nodes["N001_3"].NextIdentifier, Is.EqualTo("DISASTER_INTRO_TRIAGE_ENABLE_DUMMY_D_A"));
+    }
+
     [TestCase("patient_b_c_ct")]
     [TestCase("patient_a_critical")]
     [TestCase("disaster_intro")]
