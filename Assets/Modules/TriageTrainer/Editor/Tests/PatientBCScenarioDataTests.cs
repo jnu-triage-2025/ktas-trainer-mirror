@@ -155,7 +155,7 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void DoctorArrivalWaitsForAllRolesThenStartsInitialAssessments()
+    public void DoctorArrivalWaitsForAllRolesThenPresentsInitialAssessmentInstructions()
     {
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(
         Path.Combine(Application.dataPath,
@@ -168,8 +168,8 @@ namespace TriageTrainer.Tests
 
       var removeWait = graph.Nodes["P_WAIT_DOCTOR_REMOVE"] as ScenarioParallelNode;
       Assert.That(removeWait, Is.Not.Null);
-      Assert.That(removeWait.NextIdentifier, Is.EqualTo("P_B_C_CARE"),
-        "의사 도착 대기 후에는 의식·활력징후 사정을 먼저 시작해야 한다.");
+      Assert.That(removeWait.NextIdentifier, Is.EqualTo("DOCTOR_INITIAL_ASSESSMENT_INSTRUCTION"),
+        "의사 도착 대기 후에는 사정 퀘스트를 생성하기 전에 의식 상태 사정 지시를 표시해야 한다.");
       Assert.That(removeWait.Branches.Select(branch => branch.RequiredPlayerTags.Single()),
         Is.EqualTo(new[] { "nurse_a", "nurse_b", "nurse_c", "nurse_d" }));
 
@@ -187,6 +187,21 @@ namespace TriageTrainer.Tests
       Assert.That(firstInstruction, Is.Not.Null);
       Assert.That(firstInstruction.PlayTTS, Is.True);
       Assert.That(firstInstruction.NextIdentifier, Is.EqualTo("DOC_D"));
+
+      var initialAssessmentInstruction =
+        graph.Nodes["DOCTOR_INITIAL_ASSESSMENT_INSTRUCTION"] as ScenarioDialogueNode;
+      Assert.That(initialAssessmentInstruction, Is.Not.Null);
+      Assert.That(initialAssessmentInstruction.DialogueContent,
+        Is.EqualTo("@t=[nurse_a, ???]선생님과 @t=[nurse_b, ???]선생님은 환자의 의식 상태를 사정해 주세요."));
+      Assert.That(initialAssessmentInstruction.NextIdentifier,
+        Is.EqualTo("DOCTOR_INITIAL_VITALS_INSTRUCTION"));
+
+      var initialVitalsInstruction =
+        graph.Nodes["DOCTOR_INITIAL_VITALS_INSTRUCTION"] as ScenarioDialogueNode;
+      Assert.That(initialVitalsInstruction, Is.Not.Null);
+      Assert.That(initialVitalsInstruction.DialogueContent,
+        Is.EqualTo("@t=[nurse_c, ???]선생님과 @t=[nurse_d, ???]선생님은 환자의 활력징후를 확인해 주세요."));
+      Assert.That(initialVitalsInstruction.NextIdentifier, Is.EqualTo("P_B_C_CARE"));
     }
 
     [Test]

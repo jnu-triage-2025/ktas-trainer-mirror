@@ -1874,7 +1874,7 @@
     "P_WAIT_DOCTOR_REMOVE": {
       "identifier": "P_WAIT_DOCTOR_REMOVE",
       "nodeType": "Parallel",
-      "nextIdentifier": "P_B_C_CARE",
+      "nextIdentifier": "DOCTOR_INITIAL_ASSESSMENT_INSTRUCTION",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
@@ -1908,6 +1908,28 @@
           "requiredPlayerTagsMatchMode": "All"
         }
       ]
+    },
+    "DOCTOR_INITIAL_ASSESSMENT_INSTRUCTION": {
+      "identifier": "DOCTOR_INITIAL_ASSESSMENT_INSTRUCTION",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "DOCTOR_INITIAL_VITALS_INSTRUCTION",
+      "speakerName": "의사",
+      "dialogueContent": "@t=[nurse_a, ???]선생님과 @t=[nurse_b, ???]선생님은 환자의 의식 상태를 사정해 주세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M2" }
+    },
+    "DOCTOR_INITIAL_VITALS_INSTRUCTION": {
+      "identifier": "DOCTOR_INITIAL_VITALS_INSTRUCTION",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "P_B_C_CARE",
+      "speakerName": "의사",
+      "dialogueContent": "@t=[nurse_c, ???]선생님과 @t=[nurse_d, ???]선생님은 환자의 활력징후를 확인해 주세요.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "WAIT_DOCTOR_A_REMOVE": {
       "identifier": "WAIT_DOCTOR_A_REMOVE",
