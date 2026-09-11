@@ -900,9 +900,18 @@ namespace TriageTrainer.Entity
     private string _patientBCPendingNormalSalineActorDisplayName;
     private IntravenousLineConnectionPoint _patientBCPhysicalNormalSalinePoint;
     private bool _patientBCIvAttachmentPointWarned;
-    private const string NurseCRoleTag = "nurse_c";
     private const string NurseDRoleTag = "nurse_d";
     private const string NurseBRoleTag = "nurse_b";
+
+    private string PatientBCPrimaryTreatmentRoleTag =>
+      string.Equals(Identifier, "patient_b", System.StringComparison.Ordinal)
+        ? "nurse_a"
+        : NurseBRoleTag;
+
+    private string PatientBCSecondaryTreatmentRoleTag =>
+      string.Equals(Identifier, "patient_b", System.StringComparison.Ordinal)
+        ? "nurse_c"
+        : NurseDRoleTag;
 
     public void RequestApplyPatientATreatmentSignal(string signalIdentifier)
     {
@@ -1051,7 +1060,8 @@ namespace TriageTrainer.Entity
         return true;
       }
 
-      if (IsPatientBC && player != null && !TryValidatePatientBCTreatmentActor(player, NurseCRoleTag))
+      if (IsPatientBC && player != null
+          && !TryValidatePatientBCTreatmentActor(player, PatientBCPrimaryTreatmentRoleTag))
         return false;
       return TryConnectPatientBCNormalSalineAuthoritative(player);
     }
@@ -1092,7 +1102,7 @@ namespace TriageTrainer.Entity
     private void CmdConnectPatientBCNormalSaline(string token, NetworkConnection sender = null)
     {
       bool accepted = false;
-      if (TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player,
+      if (TryValidatePatientBCTreatmentActor(sender, PatientBCPrimaryTreatmentRoleTag, out var player,
             out var actorIdentifier, out var actorDisplayName)
           && CanConnectPatientBCNormalSaline())
       {
@@ -1204,7 +1214,8 @@ namespace TriageTrainer.Entity
       NetworkConnection sender = null)
     {
       var salinePoint = FindIntravenousLineConnectionPoint(salinePointIdentifier);
-      if (!TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out _, out _)
+      if (!TryValidatePatientBCTreatmentActor(sender, PatientBCPrimaryTreatmentRoleTag,
+            out var player, out _, out _)
           || salinePoint == null
           || !IsWithinPatientBCTreatmentDistance(player, salinePoint.transform.position))
         return;
@@ -1502,7 +1513,7 @@ namespace TriageTrainer.Entity
     {
       if (!IsPatientBC
           || !CanApplyItemUse(itemIdentifier)
-          || !TryValidatePatientBCTreatmentActor(sender, NurseDRoleTag, out var player,
+          || !TryValidatePatientBCTreatmentActor(sender, PatientBCSecondaryTreatmentRoleTag, out var player,
             out var actorIdentifier, out var actorDisplayName))
         return;
 
@@ -1517,7 +1528,8 @@ namespace TriageTrainer.Entity
     {
       var salinePoint = FindIntravenousLineConnectionPoint(salinePointIdentifier);
       if (!IsPatientBC
-          || !TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out var actorIdentifier,
+          || !TryValidatePatientBCTreatmentActor(sender, PatientBCPrimaryTreatmentRoleTag,
+            out var player, out var actorIdentifier,
             out var actorDisplayName)
           || salinePoint == null
           || CurrentBed == null
@@ -1561,7 +1573,8 @@ namespace TriageTrainer.Entity
     private void CmdCompletePatientBCOxygenConnection(NetworkConnection sender = null)
     {
       if (!IsPatientBC
-          || !TryValidatePatientBCTreatmentActor(sender, NurseDRoleTag, out var player, out var actorIdentifier,
+          || !TryValidatePatientBCTreatmentActor(sender, PatientBCSecondaryTreatmentRoleTag,
+            out var player, out var actorIdentifier,
             out var actorDisplayName)
           || ConnectedOxyflowmeter == null
           || !ConnectedOxyflowmeter.IsAttached
@@ -1657,7 +1670,7 @@ namespace TriageTrainer.Entity
       actorKnown && hasRequiredRole && IsWithinPatientBCTreatmentDistance(player);
 
     public bool CanPlayerCompletePatientBCNormalSalineConnection(PlayerController player) =>
-      !IsPatientBC || TryValidatePatientBCTreatmentActor(player, NurseCRoleTag);
+      !IsPatientBC || TryValidatePatientBCTreatmentActor(player, PatientBCPrimaryTreatmentRoleTag);
 
     public bool CanAuthoritativelyConnectPatientBCNormalSaline() =>
       IsPatientBC

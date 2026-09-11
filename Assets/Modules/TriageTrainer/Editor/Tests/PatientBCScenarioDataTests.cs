@@ -2063,6 +2063,35 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PatientBCIvInteractionRemainsAvailableAfterMissingCannulaRetry()
+    {
+      var patientObject = new GameObject("patient_b");
+      var playerObject = new GameObject("nurse-a");
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier("patient_b");
+        patient.IntravenousLineCannulaSupported = true;
+        patient.ActivatePatientBCNurseCStage();
+        InvokePrivate(patient, "NotifyPatientBCPupilCompleted");
+
+        var player = playerObject.AddComponent<MultiplayerInfrastructure.Player.PlayerController>();
+        Assert.That(player.CountItemInInventory("cannula_20g"), Is.Zero);
+
+        InvokePrivate(patient, "PerformIntravenousLineCannulaInsertion", player.transform);
+        InvokePrivate(patient, "PerformIntravenousLineCannulaInsertion", player.transform);
+
+        Assert.That(patient.CanInteractIntravenousLineCannula, Is.True,
+          "캐뉼라가 없는 시도는 정맥로 단계를 소비하거나 이후 재시도를 막으면 안 됩니다.");
+      }
+      finally
+      {
+        Object.DestroyImmediate(playerObject);
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    [Test]
     public void PatientBCTreatmentActorMustBeKnownNearbyAndCorrectRole()
     {
       var patientObject = new GameObject("patient_b");
@@ -2085,6 +2114,50 @@ namespace TriageTrainer.Tests
       finally
       {
         Object.DestroyImmediate(playerObject);
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    [TestCase("patient_b", "nurse_a")]
+    [TestCase("patient_c", "nurse_b")]
+    public void PatientBCPrimaryTreatmentUsesTheAssignedRole(
+      string patientIdentifier,
+      string expectedRoleTag)
+    {
+      var patientObject = new GameObject(patientIdentifier);
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier(patientIdentifier);
+
+        Assert.That(
+          GetPrivateProperty<string>(patient, "PatientBCPrimaryTreatmentRoleTag"),
+          Is.EqualTo(expectedRoleTag));
+      }
+      finally
+      {
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    [TestCase("patient_b", "nurse_c")]
+    [TestCase("patient_c", "nurse_d")]
+    public void PatientBCSecondaryTreatmentUsesTheAssignedRole(
+      string patientIdentifier,
+      string expectedRoleTag)
+    {
+      var patientObject = new GameObject(patientIdentifier);
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier(patientIdentifier);
+
+        Assert.That(
+          GetPrivateProperty<string>(patient, "PatientBCSecondaryTreatmentRoleTag"),
+          Is.EqualTo(expectedRoleTag));
+      }
+      finally
+      {
         Object.DestroyImmediate(patientObject);
       }
     }
@@ -2767,6 +2840,15 @@ namespace TriageTrainer.Tests
       var field = FindInstanceField(target.GetType(), fieldName);
       Assert.That(field, Is.Not.Null, fieldName);
       return (T)field.GetValue(target);
+    }
+
+    private static T GetPrivateProperty<T>(object target, string propertyName)
+    {
+      var property = target.GetType().GetProperty(
+        propertyName,
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      Assert.That(property, Is.Not.Null, propertyName);
+      return (T)property.GetValue(target);
     }
 
     private static FieldInfo FindInstanceField(System.Type type, string fieldName)

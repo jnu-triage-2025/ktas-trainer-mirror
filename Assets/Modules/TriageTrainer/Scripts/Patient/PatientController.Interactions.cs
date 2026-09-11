@@ -289,7 +289,7 @@ namespace TriageTrainer.Entity
       return null;
     }
 
-    // 역할(nurse_d) 제한은 시나리오 데이터의 조건 절이 맡고, 서버 판정은 TryValidatePatientBCTreatmentActor 가 한다.
+    // 역할 제한은 시나리오 데이터의 조건 절이 맡고, 서버 판정은 환자별 담당 역할로 다시 확인한다.
     private bool CanDisplayPatientBCNurseDNasalCannula(PlayerController player) =>
       IsPatientBC
       && _patientBCNurseDStage.Value == PatientBCTreatmentStage.AwaitingNasalCannula

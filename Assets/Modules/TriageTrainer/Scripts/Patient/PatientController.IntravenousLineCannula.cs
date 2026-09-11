@@ -287,7 +287,8 @@ namespace TriageTrainer.Entity
         return;
       }
 
-      if (IsPatientBC && !TryValidatePatientBCTreatmentActor(player, NurseCRoleTag))
+      if (IsPatientBC
+          && !TryValidatePatientBCTreatmentActor(player, PatientBCPrimaryTreatmentRoleTag))
         return;
 
       // 아이템을 소비하기 전에 권한 있는 단계를 먼저 진행한다. 오래된 상호작용이
@@ -422,7 +423,8 @@ namespace TriageTrainer.Entity
           || (side != "left" && side != "right")
           || !string.Equals(itemIdentifier, TriageTrainer.ItemDefinitions.Cannula20g.Identifier,
             StringComparison.Ordinal)
-           || !TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out var actorIdentifier,
+           || !TryValidatePatientBCTreatmentActor(sender, PatientBCPrimaryTreatmentRoleTag,
+             out var player, out var actorIdentifier,
              out var actorDisplayName)
            || !CanPerformPatientBCIv())
         return false;
