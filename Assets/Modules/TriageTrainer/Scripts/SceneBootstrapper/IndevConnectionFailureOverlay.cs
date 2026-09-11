@@ -10,8 +10,6 @@ using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using RegistryStore = MultiplayerInfrastructure.Registry.Registry;
@@ -356,20 +354,9 @@ namespace TriageTrainer.SceneBootstrapper
 
     private static void EnsurePointerInput()
     {
-      var eventSystem = EventSystem.current
-        ?? FindFirstObjectByType<EventSystem>(FindObjectsInactive.Include);
-      if (eventSystem == null)
-      {
-        var go = new GameObject("EventSystem");
-        eventSystem = go.AddComponent<EventSystem>();
-      }
-
-      eventSystem.enabled = true;
-      var inputModule = eventSystem.GetComponent<InputSystemUIInputModule>()
-        ?? eventSystem.gameObject.AddComponent<InputSystemUIInputModule>();
-      inputModule.enabled = true;
-      if (inputModule.actionsAsset == null || inputModule.point.action == null || inputModule.leftClick.action == null)
-        inputModule.AssignDefaultActions();
+      // EventSystem 과 UI 입력 모듈의 생성·복구 정책은 한 곳(가드)에서만 관리한다.
+      // 여기서 따로 만들면 이전 씬의 EventSystem 과 겹쳐 공유 액션 에셋이 폐기될 수 있다.
+      UIRuntimeEventSystemGuard.EnsureNow();
     }
   }
 }
