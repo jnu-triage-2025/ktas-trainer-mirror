@@ -1684,61 +1684,73 @@ try {
    observations:await Promise.all(Object.values(actors).map(id=>platform.observe(id)))
   });
   phase='patient_a_cline_assist';
-  await closeTransientDialogue('p4','patient_a_cline_assignment_dialogue');
-  await acquireWorldItem('p4','central_line_set',[-60.7353935,-4.479912],[0,0,-1.5]);
-  await navigateAccessible('p4',-63.5,-7.3,'patient_a_p4_cline_return_doorway');
-  await navigateAccessible('p4',-62.7,-7.25,'patient_a_p4_cline_return_bed_edge');
+  // Nurse D closes the "both IV lines secured" report (D018); its branch then resolves the
+  // IV-complete signal and ends. Nurse C (the Q012 owner) is waiting on that signal and
+  // receives the C-line assignment (D019) together with Quest_Cline_Assist.
+  await closeTransientDialogue('p4','patient_a_iv_completion_dialogue');
+  const clineAssignmentDeadline=performance.now()+30000;
+  while(true){
+   const state=await platform.observe(actors.p3);
+   if(state.localQuests?.some((quest:any)=>quest.definitionId==='Quest_Cline_Assist'&&!quest.placeholder))break;
+   if(state.inputContext==='DialoguePanelUIController'&&(state.dialogue.canAdvance||state.dialogue.isTextAnimating))
+    await runner.step({actors} as any,{id:`patient_a_cline_assignment_${state.dialogue.nodeId}`,type:'dialogueAdvance',actor:'p3'},signal);
+   if(performance.now()>clineAssignmentDeadline)throw new Error('CLINE_ASSIGNMENT_DID_NOT_ADVANCE');
+   await delay(200,undefined,{signal});
+  }
+  await acquireWorldItem('p3','central_line_set',[-60.7353935,-4.479912],[0,0,-1.5]);
+  await navigateAccessible('p3',-63.5,-7.3,'patient_a_p3_cline_return_doorway');
+  await navigateAccessible('p3',-62.7,-7.25,'patient_a_p3_cline_return_bed_edge');
   // The doctor is an acting NPC and is not exported as a scenarioEntity
   // navigation target. Approach the adjacent patient, then prove arrival by
   // the doctor's exact interaction appearing in the live nearby list.
-  await runner.navigate(actors.p4,{id:'patient_a_p4_cline_return_doctor',type:'navigate',actor:'p4',target:'patient_a',mode:'input_adapter',timeoutMs:30000,args:{targetType:'scenarioEntity',arrivalRadius:.35,targetOffset:[-1,0,0]}},signal)
-   .catch(async error=>{const state=await platform.observe(actors.p4,false,{includeStaticItems:false});if(!/NAVIGATION_STUCK|MOVEMENT_BLOCKED/.test(String(error))||!state.interactions?.some((entry:any)=>entry.entityId==='npc-doctor-patient-a-critical'&&entry.interactionId==='patient-a-doctor-submit-central-line-set'))throw error;});
+  await runner.navigate(actors.p3,{id:'patient_a_p3_cline_return_doctor',type:'navigate',actor:'p3',target:'patient_a',mode:'input_adapter',timeoutMs:30000,args:{targetType:'scenarioEntity',arrivalRadius:.35,targetOffset:[-1,0,0]}},signal)
+   .catch(async error=>{const state=await platform.observe(actors.p3,false,{includeStaticItems:false});if(!/NAVIGATION_STUCK|MOVEMENT_BLOCKED/.test(String(error))||!state.interactions?.some((entry:any)=>entry.entityId==='npc-doctor-patient-a-critical'&&entry.interactionId==='patient-a-doctor-submit-central-line-set'))throw error;});
   const clineSubmissionCursor=await platform.historyCursor();
-  await interact('p4','patient-a-doctor-submit-central-line-set','npc-doctor-patient-a-critical');
+  await interact('p3','patient-a-doctor-submit-central-line-set','npc-doctor-patient-a-critical');
   const clineSubmissionDeadline=performance.now()+20000;
   while(true){
-   const state=await platform.observe(actors.p4);
-   const events=await platform.eventHistory(actors.p4,clineSubmissionCursor);
+   const state=await platform.observe(actors.p3);
+   const events=await platform.eventHistory(actors.p3,clineSubmissionCursor);
    if(events.some((row:any)=>row.kind==='game'&&row.body?.eventType==='signal.registered'
       &&row.body?.payload?.signalId==='sig.pass_central_line_set')){
     await platform.artifact(runId!,'patient-a-cline-submission-events.json',events);break;
    }
    if(state.inputContext==='ItemSubmissionUIController')
-    await clickUiElement('p4','ItemSubmissionSubmit');
+    await clickUiElement('p3','ItemSubmissionSubmit');
    else if(state.inputContext==='DialoguePanelUIController'&&(state.dialogue.canAdvance||state.dialogue.isTextAnimating))
-    await runner.step({actors} as any,{id:`patient_a_cline_submission_dialogue_${state.dialogue.nodeId}`,type:'dialogueAdvance',actor:'p4'},signal);
+    await runner.step({actors} as any,{id:`patient_a_cline_submission_dialogue_${state.dialogue.nodeId}`,type:'dialogueAdvance',actor:'p3'},signal);
    if(performance.now()>clineSubmissionDeadline)throw new Error('CLINE_SUBMISSION_UNCONFIRMED');
    await delay(200,undefined,{signal});
   }
-  const clineQuest=await waitQuestProgress('p4','Quest_Cline_Assist',1);
+  const clineQuest=await waitQuestProgress('p3','Quest_Cline_Assist',1);
   await platform.artifact(runId!,'patient-a-cline-assist-completed.json',{quest:clineQuest,observations:await Promise.all(Object.values(actors).map(id=>platform.observe(id)))});
   phase='patient_a_level1_fluids';
-  // The Q013 owner (nurse D) owns the rapid-infuser assignment. Both consumables are on the
+  // The Q012 owner (nurse C) also owns the rapid-infuser assignment. Both consumables are on the
   // south supply counter; their interaction side lies in Accessible 698072899.
-  await closeTransientDialogue('p4','patient_a_cline_completion_dialogue');
+  await closeTransientDialogue('p3','patient_a_cline_completion_dialogue');
   const level1AssignmentDeadline=performance.now()+30000;
   while(true){
-   const state=await platform.observe(actors.p4);
+   const state=await platform.observe(actors.p3);
    if(state.localQuests?.some((quest:any)=>quest.definitionId==='Quest_Lv1_Fluids'&&!quest.placeholder))break;
    if(state.inputContext==='DialoguePanelUIController'&&(state.dialogue.canAdvance||state.dialogue.isTextAnimating))
-    await runner.step({actors} as any,{id:`patient_a_level1_assignment_${state.dialogue.nodeId}`,type:'dialogueAdvance',actor:'p4'},signal);
+    await runner.step({actors} as any,{id:`patient_a_level1_assignment_${state.dialogue.nodeId}`,type:'dialogueAdvance',actor:'p3'},signal);
    if(performance.now()>level1AssignmentDeadline)throw new Error('LEVEL1_ASSIGNMENT_DID_NOT_ADVANCE');
    await delay(200,undefined,{signal});
   }
-  await acquireWorldItem('p4','plasma_solution_1000ml',[-63.0646,-4.405],[0,0,-1.5]);
-  await acquireWorldItem('p4','blood_bag',[-63.136,-4.636],[0,0,-1.3]);
-  await navigateAccessible('p4',-59.6,-5.5,'patient_a_p4_level1_approach');
+  await acquireWorldItem('p3','plasma_solution_1000ml',[-63.0646,-4.405],[0,0,-1.5]);
+  await acquireWorldItem('p3','blood_bag',[-63.136,-4.636],[0,0,-1.3]);
+  await navigateAccessible('p3',-59.6,-5.5,'patient_a_p3_level1_approach');
   for(const [itemId,interactionId,target] of [
    ['plasma_solution_1000ml','level1_add_plasma_solution',1],
    ['blood_bag','level1_add_blood_bag',2]
   ] as const){
    // The rapid infuser's ordinary-player interaction searches the complete
    // inventory for the requested fluid; it is not a held-item interaction.
-   await interact('p4',interactionId,'level1_rapid_infuser_a');
-   await waitQuestProgress('p4','Quest_Lv1_Fluids',target);
+   await interact('p3',interactionId,'level1_rapid_infuser_a');
+   await waitQuestProgress('p3','Quest_Lv1_Fluids',target);
   }
-  await interact('p4','level1_connect_cline','level1_rapid_infuser_a');
-  const level1Quest=await waitQuestProgress('p4','Quest_Lv1_Fluids',3);
+  await interact('p3','level1_connect_cline','level1_rapid_infuser_a');
+  const level1Quest=await waitQuestProgress('p3','Quest_Lv1_Fluids',3);
   await platform.artifact(runId!,'patient-a-level1-fluids-completed.json',{quest:level1Quest,observations:await Promise.all(Object.values(actors).map(id=>platform.observe(id)))});
   phase='patient_a_arrest_pulse_check';
   // A completed task can still leave its explanatory dialogue/choice open.

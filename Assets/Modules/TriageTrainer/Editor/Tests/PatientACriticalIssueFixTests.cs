@@ -1025,22 +1025,84 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void PatientAP004IntubationAndIvBranchesDeclareAnyModeFallbackRoles()
+    public void PatientAP004IvAndBleedingBranchesDeclareAnyModeFallbackRoles()
     {
       string path = Path.Combine(Application.dataPath,
         "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
 
       var p004 = (ScenarioParallelNode)graph.Nodes["P004"];
-      var intubation = System.Array.Find(p004.Branches.ToArray(), each => each.Identifier == "Q010");
-      Assert.That(intubation.RequiredPlayerTags, Is.EqualTo(new[] { "nurse_b", "nurse_a" }),
-        "nurse_b 부재 시 nurse_a가 삽관 브랜치를 대신 수행해야 합니다.");
-      Assert.That(intubation.RequiredPlayerTagsMatchMode, Is.EqualTo(ScenarioPlayerTagMatchMode.Any));
+      var branches = p004.Branches.ToArray();
 
-      var ivLine = System.Array.Find(p004.Branches.ToArray(), each => each.Identifier == "Q013");
+      // 콘텐츠 결정(c904b902): 삽관 브랜치는 nurse_b 전담이며 대체 담당자를 두지 않는다.
+      var intubation = System.Array.Find(branches, each => each.Identifier == "Q010");
+      Assert.That(intubation.RequiredPlayerTags, Is.EqualTo(new[] { "nurse_b" }));
+      Assert.That(intubation.RequiredPlayerTagsMatchMode, Is.EqualTo(ScenarioPlayerTagMatchMode.All));
+
+      var ivLine = System.Array.Find(branches, each => each.Identifier == "Q013");
       Assert.That(ivLine.RequiredPlayerTags, Is.EqualTo(new[] { "nurse_d", "nurse_c" }),
         "nurse_d 부재 시 nurse_c가 IV 라인 브랜치를 대신 수행해야 합니다.");
       Assert.That(ivLine.RequiredPlayerTagsMatchMode, Is.EqualTo(ScenarioPlayerTagMatchMode.Any));
+
+      var bleeding = System.Array.Find(branches, each => each.Identifier == "Q012");
+      Assert.That(bleeding.RequiredPlayerTags, Is.EqualTo(new[] { "nurse_c", "nurse_d" }),
+        "nurse_c 부재 시 nurse_d가 지혈·C-line 보조·Level 1 브랜치를 대신 수행해야 합니다.");
+      Assert.That(bleeding.RequiredPlayerTagsMatchMode, Is.EqualTo(ScenarioPlayerTagMatchMode.Any));
+
+      // 같은 플레이어가 두 브랜치를 모두 맡으면 그래프 선언 순서대로 순차 실행되므로,
+      // 완료 신호를 올리는 IV 브랜치가 그 신호를 기다리는 지혈 브랜치보다 앞에 선언돼야 한다.
+      Assert.That(System.Array.IndexOf(branches, ivLine), Is.LessThan(System.Array.IndexOf(branches, bleeding)),
+        "IV 브랜치(Q013)는 지혈 브랜치(Q012)보다 먼저 선언돼야 대체 담당자 경로에서 대기가 풀립니다.");
+    }
+
+    [Test]
+    public void PatientAClineAssistAndLevel1FluidsRunOnTheNurseCBranchAfterIvLinesComplete()
+    {
+      string path = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+
+      // nurse_d 브랜치: 양측 정맥로 확보 보고 뒤 완료 신호를 올리고 끝난다.
+      Assert.That(((ScenarioQuestControlNode)graph.Nodes["Q013_1"]).NextIdentifier, Is.EqualTo("SIG_IV_LINES_COMPLETE"));
+      var resolve = (ScenarioServerInternalSignalNode)graph.Nodes["SIG_IV_LINES_COMPLETE"];
+      Assert.That(resolve.Operation, Is.EqualTo(ScenarioServerInternalSignalOperationType.Resolve));
+      Assert.That(resolve.SignalIdentifier, Is.EqualTo("patient_a_iv_lines_complete"));
+      Assert.That(resolve.NextIdentifier, Is.EqualTo("CC_D_iv_patient_a"),
+        "IV 브랜치는 C-line 보조로 이어지지 않고 완료 조건에서 끝나야 합니다.");
+
+      // nurse_c 브랜치: 지혈을 마치면 대기 퀘스트를 띄우고 완료 신호를 기다린 뒤 C-line 보조로 이어진다.
+      Assert.That(((ScenarioQuestControlNode)graph.Nodes["Q012_1"]).NextIdentifier, Is.EqualTo("Q_WAIT_IV_C_ADD"));
+      var waitQuestAdd = (ScenarioQuestControlNode)graph.Nodes["Q_WAIT_IV_C_ADD"];
+      Assert.That(waitQuestAdd.Operation, Is.EqualTo(ScenarioQuestOperationType.Add));
+      Assert.That(waitQuestAdd.QuestDefinitionIdentifier, Is.EqualTo("Quest_Wait_IvLines_PatientA"));
+      Assert.That(waitQuestAdd.NextIdentifier, Is.EqualTo("WAIT_IV_LINES_COMPLETE"));
+
+      var register = (ScenarioServerInternalSignalNode)graph.Nodes["WAIT_IV_LINES_COMPLETE"];
+      Assert.That(register.Operation, Is.EqualTo(ScenarioServerInternalSignalOperationType.Register));
+      Assert.That(register.SignalIdentifier, Is.EqualTo(resolve.SignalIdentifier));
+      Assert.That(register.WaitForResolution, Is.True);
+      Assert.That(register.WaitTimeoutSeconds, Is.GreaterThan(0f),
+        "담당자 이탈 시 무한 대기가 되지 않도록 상한이 있어야 합니다.");
+      Assert.That(register.NextIdentifier, Is.EqualTo("Q_WAIT_IV_C_REMOVE"));
+
+      var waitQuestRemove = (ScenarioQuestControlNode)graph.Nodes["Q_WAIT_IV_C_REMOVE"];
+      Assert.That(waitQuestRemove.Operation, Is.EqualTo(ScenarioQuestOperationType.Remove));
+      Assert.That(waitQuestRemove.QuestDefinitionIdentifier, Is.EqualTo("Quest_Wait_IvLines_PatientA"));
+      Assert.That(waitQuestRemove.NextIdentifier, Is.EqualTo("D019"));
+
+      // 의사가 nurse_c를 부르는 D019/D020 은 nurse_c 브랜치 안에서 재생돼야 한다.
+      foreach (string dialogueId in new[] { "D019", "D020" })
+      {
+        var dialogue = (ScenarioDialogueNode)graph.Nodes[dialogueId];
+        StringAssert.Contains("@t=[nurse_c, @s]", dialogue.DialogueContent, dialogueId);
+      }
+
+      Assert.That(((ScenarioQuestControlNode)graph.Nodes["Q015_1"]).NextIdentifier, Is.EqualTo("CC_C_stopbleeding_patient_a"),
+        "Level 1 수액 퀘스트 회수는 nurse_c 브랜치의 완료 조건으로 끝나야 합니다.");
+
+      string questsJson = File.ReadAllText(Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Quest/patient_a_critical.quests.quest.json"));
+      StringAssert.Contains("\"identifier\": \"Quest_Wait_IvLines_PatientA\"", questsJson);
     }
 
     [Test]

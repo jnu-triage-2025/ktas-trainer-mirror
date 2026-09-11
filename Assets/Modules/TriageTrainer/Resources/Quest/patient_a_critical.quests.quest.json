@@ -1203,6 +1203,19 @@
       "scope": "Player",
       "isOrdinal": false,
       "tasks": []
+    },
+    {
+      "identifier": "Quest_Wait_IvLines_PatientA",
+      "title": "정맥로 확보 대기",
+      "description": "양측 정맥로 확보가 끝날 때까지 C-line 보조를 준비하며 기다립니다.",
+      "questContent": "정맥로 확보가 끝날 때까지 기다리기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": []
     }
   ]
 }

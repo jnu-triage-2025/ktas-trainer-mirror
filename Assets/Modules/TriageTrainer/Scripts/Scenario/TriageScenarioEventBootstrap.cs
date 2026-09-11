@@ -35,7 +35,7 @@ namespace TriageTrainer.Scenario
     [SerializeField] private string _patientDummyDAEntityIdentifier = "patientDummyDA";
     [SerializeField] private string[] _patientDummyDAAliases = { "patientDummyDA", "patient_dummy_d_a" };
     [SerializeField] private string _patientABedEntityIdentifier = "patientABed";
-    [SerializeField] private string[] _patientABedAliases = { "patientABed", "patient_a_bed", "bedA" };
+    [SerializeField] private string[] _patientABedAliases = { "patientABed", "patient_a_bed", "bedA", "bed_a" };
     [SerializeField] private string _patientDummyDABedEntityIdentifier = "patientDummyDABed";
     [SerializeField] private string[] _patientDummyDABedAliases = { "patientDummyDABed", "patient_dummy_d_a_bed", "bed_d_a" };
     [SerializeField] private GameObject _patientAObject;

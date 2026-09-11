@@ -597,6 +597,8 @@ flags: ["refactor-required"]
       - TTS: true
   - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 - `nurse_c`에게 퀘스트 발행 (`Quest_BleedingControl_PatientA`)
+  - 기술 노트: `nurse_c`가 배정되지 않았다면 `nurse_d`가 이 브랜치를 대신 수행한다(`requiredPlayerTagsMatchMode=Any`). 같은 플레이어가 정맥로 브랜치까지 맡으면 그래프 선언 순서대로 순차 실행되므로, P004에서는 정맥로 브랜치(`Q013`)를 이 브랜치(`Q012`)보다 앞에 선언한다.
+  - 기술 노트: 지혈을 마치면 대기 퀘스트 `Quest_Wait_IvLines_PatientA`("정맥로 확보 대기")를 발행하고 정맥로 브랜치가 올리는 완료 신호(`patient_a_iv_lines_complete`, 대기 상한 600초)를 기다린다. 신호가 오면 대기 퀘스트를 회수하고, 아래 "정맥로 확보 완료 뒤 `nurse_c` 브랜치에서 계속" 절의 C-line 보조와 Level 1 연결을 이 브랜치가 이어서 수행한다.
   - 제목: "출혈 부위 지혈"
   - 목표: ""
   - 퀘스트 발행과 함께 다음 처리 수행:
@@ -755,11 +757,12 @@ flags: ["refactor-required"]
       - Content: "양측 정맥로 모두 확보했습니다."
       - TTS: true
     10. 퀘스트 완료처리
+    11. 정맥로 확보 완료 신호(`patient_a_iv_lines_complete`)를 발신하고 이 브랜치를 끝낸다(`SIG_IV_LINES_COMPLETE`). C-line 보조와 Level 1 연결은 `nurse_c` 브랜치가 이어받는다.
 
-- 위 퀘스트가 모두 완료되었을 때 계속
+- 정맥로 확보 완료 뒤 `nurse_c` 브랜치에서 계속 (지혈 → 정맥로 확보 대기 → 아래 순서. 발행되는 퀘스트는 모두 `nurse_c`에게 간다.)
       1. Dialogue
         - Speaker: "의사"
-        - Content: "그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_d, @s]선생님, C-line set 건네주세요."
+        - Content: "그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_c, @s]선생님, C-line set 건네주세요."
         - TTS: true
       2. 퀘스트 "중심정맥관 삽입 보조"(`Quest_Cline_Assist`) 발행
         - 목표 표기: "C-line set을 의사에게 전달하기"
@@ -777,7 +780,7 @@ flags: ["refactor-required"]
           - 제출이 완료되면 환자 상태 필드에 cline 삽입 완료 상태 플래그를 활성화하고, Display State Descriptor에서 C-line 시각화 오브젝트를 활성화한다.
       3. Dialogue
         - Speaker: "의사"
-        - Content: "@t=[nurse_d, @s]선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요."
+        - Content: "@t=[nurse_c, @s]선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요."
         - TTS: true
       4. 퀘스트 "대량 수액 공급"(`Quest_Lv1_Fluids`) 발행
         - 기술노트: Level 1 rapid infuser 가져오기 퀘스트가 필요할 수도 있으나, 이것은 인게임에서 퀘스트가 벌어지는 장소에 따라 다르므로, 우선은 코멘트만 해두기
@@ -1573,8 +1576,10 @@ flags: ["refactor-required"]
   `nurse_a`에게 지시하는 대사와 실제 수행자가 어긋나 있던 문제를 해소한다. 삽관 브랜치는 마지막 대사 뒤에 삽관
   완료 신호를 발신하고, `nurse_a` 브랜치는 그 신호를 기다린다.
 - P007(ROSC 후속 조치)에 `nurse_c` 대기 브랜치를 추가해 네 브랜치로 바꿨다.
-- C-line 보조와 Level 1 연결에서 의사가 `간호사 C`를 부르던 대사를 실제 수행 브랜치인 `nurse_d`(`@t=[nurse_d, @s]`)로
-  맞췄다. 보고 대사의 화자도 수행자 본인(`@s`)으로 바꿨다.
+- C-line 보조와 Level 1 연결은 `nurse_c` 브랜치가 맡는다. 정맥로 브랜치(`nurse_d`)는 양측 정맥로 보고 뒤 완료
+  신호를 올리고 끝나며, `nurse_c` 브랜치는 지혈을 마친 뒤 그 신호를 기다렸다가 C-line 보조와 Level 1 연결로
+  이어진다. 개정 전에는 정맥로 브랜치가 이 구간까지 한 줄로 수행해서 의사가 `nurse_c`를 부르는 대사와 실제
+  수행자가 어긋났고, 그동안 `nurse_c`는 아무 퀘스트도 받지 못했다. 보고 대사의 화자는 수행자 본인(`@s`)이다.
 - 각 브랜치는 처리를 마치면 목표 표기를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 바꾸고, 전원이 그 상태가
   되면 병렬 구간을 완료 처리한다. 환자 B/C와 같은 합류 방식이다.
 - 종료 처리에 의사의 마무리 대사와 Title 연출을 추가했다. 개정 전에는 `시스템` 화자의 종료 안내 한 줄이었다.

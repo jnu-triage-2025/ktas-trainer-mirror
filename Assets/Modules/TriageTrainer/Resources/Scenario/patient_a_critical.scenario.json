@@ -160,6 +160,22 @@
       {
         "identifier": "syringe_20cc",
         "count": 1
+      },
+      {
+        "identifier": "plasma_solution_1000ml",
+        "count": 1
+      },
+      {
+        "identifier": "central_line_set",
+        "count": 1
+      },
+      {
+        "identifier": "blood_bag",
+        "count": 1
+      },
+      {
+        "identifier": "level1_rapid_infuser",
+        "count": 1
       }
     ],
     "nurse_d": [
@@ -193,18 +209,6 @@
       },
       {
         "identifier": "plasma_solution_1000ml",
-        "count": 2
-      },
-      {
-        "identifier": "central_line_set",
-        "count": 1
-      },
-      {
-        "identifier": "blood_bag",
-        "count": 1
-      },
-      {
-        "identifier": "level1_rapid_infuser",
         "count": 1
       }
     ]
@@ -4468,20 +4472,21 @@
           "requiredPlayerTagsMatchMode": "All"
         },
         {
-          "identifier": "Q012",
-          "completionConditionIdentifier": "CC_C_stopbleeding_patient_a",
-          "requiredPlayerTags": [
-            "nurse_c"
-          ],
-          "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
-        },
-        {
           "identifier": "Q013",
           "completionConditionIdentifier": "CC_D_iv_patient_a",
           "requiredPlayerTags": [
             "nurse_d",
             "nurse_c"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "Any"
+        },
+        {
+          "identifier": "Q012",
+          "completionConditionIdentifier": "CC_C_stopbleeding_patient_a",
+          "requiredPlayerTags": [
+            "nurse_c",
+            "nurse_d"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "Any"
@@ -5238,7 +5243,35 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q012_1",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_C_stopbleeding_patient_a"
+      "nextIdentifier": "Q_WAIT_IV_C_ADD"
+    },
+    "Q_WAIT_IV_C_ADD": {
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "Quest_Wait_IvLines_PatientA",
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q_WAIT_IV_C_ADD",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "WAIT_IV_LINES_COMPLETE"
+    },
+    "WAIT_IV_LINES_COMPLETE": {
+      "targetIdentifier": "@m",
+      "signalIdentifier": "patient_a_iv_lines_complete",
+      "operation": "Register",
+      "waitForResolution": true,
+      "waitTimeoutSeconds": 600,
+      "identifier": "WAIT_IV_LINES_COMPLETE",
+      "nodeType": "ServerInternalSignal",
+      "nextIdentifier": "Q_WAIT_IV_C_REMOVE"
+    },
+    "Q_WAIT_IV_C_REMOVE": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "Quest_Wait_IvLines_PatientA",
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q_WAIT_IV_C_REMOVE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "D019"
     },
     "Q013": {
       "operation": "Add",
@@ -5256,7 +5289,16 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q013_1",
       "nodeType": "QuestControl",
-      "nextIdentifier": "D019"
+      "nextIdentifier": "SIG_IV_LINES_COMPLETE"
+    },
+    "SIG_IV_LINES_COMPLETE": {
+      "targetIdentifier": "@m",
+      "signalIdentifier": "patient_a_iv_lines_complete",
+      "operation": "Resolve",
+      "waitForResolution": false,
+      "identifier": "SIG_IV_LINES_COMPLETE",
+      "nodeType": "ServerInternalSignal",
+      "nextIdentifier": "CC_D_iv_patient_a"
     },
     "Q014": {
       "operation": "Add",
@@ -5292,7 +5334,7 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q015_1",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_D_iv_patient_a"
+      "nextIdentifier": "CC_C_stopbleeding_patient_a"
     },
     "Q018": {
       "operation": "Add",
