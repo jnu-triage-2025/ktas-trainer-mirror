@@ -1,4 +1,5 @@
-﻿using FishNet.Connection;
+﻿using System.Collections.Generic;
+using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
@@ -62,7 +63,6 @@ namespace MultiplayerInfrastructure.Command
 
       int count = 1;
       string targetIdentifier = null;
-
       if (args.Length >= 2)
       {
         if (int.TryParse(args[1], out int parsedCount))
@@ -89,25 +89,58 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (!TryResolveTargetConnection(sender, targetIdentifier, out var targetConn, out var resolveError))
+      if (!TryResolveTargetConnections(sender, targetIdentifier, out var targetConnections, out var resolveError))
       {
         message = resolveError;
         return false;
       }
 
-      if (!TryGetPlayerController(targetConn, out var targetPlayer))
-      {
-        message = "Target is not available.";
-        return false;
-      }
-
-      var toGive = Registry.Registry.CreateItemInstance(itemIdentifier);
-      if (toGive == null)
+      ItemSystem.Item preparedItem = Registry.Registry.CreateItemInstance(itemIdentifier);
+      if (preparedItem == null)
       {
         message = $"Item '{itemIdentifier}' data is unavailable.";
         return false;
       }
-      toGive.CurrentStackCount = count;
+
+      var targetPlayers = new List<PlayerController>(targetConnections.Count);
+      for (int i = 0; i < targetConnections.Count; i++)
+      {
+        if (!TryGetPlayerController(targetConnections[i], out var targetPlayer))
+        {
+          message = "Target is not available.";
+          return false;
+        }
+
+        targetPlayers.Add(targetPlayer);
+      }
+
+      var messages = new List<string>(targetConnections.Count);
+      for (int i = 0; i < targetConnections.Count; i++)
+      {
+        if (!TryGiveToTarget(targetConnections[i], targetPlayers[i], targetIdentifier,
+              itemIdentifier, count, ref preparedItem, out string targetMessage))
+        {
+          message = targetMessage;
+          return false;
+        }
+
+        messages.Add(targetMessage);
+      }
+
+      message = string.Join("\n", messages);
+      return true;
+    }
+
+    private static bool TryGiveToTarget(
+      NetworkConnection targetConn,
+      PlayerController targetPlayer,
+      string targetIdentifier,
+      string itemIdentifier,
+      int count,
+      ref ItemSystem.Item preparedItem,
+      out string message)
+    {
+      message = string.Empty;
 
       // Remote inventories live on their owning client, as with normal pickup confirmations.
       if (!targetPlayer.IsOwner)
@@ -117,11 +150,18 @@ namespace MultiplayerInfrastructure.Command
         return true;
       }
 
+      ItemSystem.Item toGive = preparedItem ?? Registry.Registry.CreateItemInstance(itemIdentifier);
+      if (toGive == null)
+      {
+        message = $"Item '{itemIdentifier}' data is unavailable.";
+        return false;
+      }
+      preparedItem = null;
+      toGive.CurrentStackCount = count;
+
       bool fullyAdded = targetPlayer.TryAddItemToInventory(toGive, out ItemSystem.Item leftover);
       if (leftover != null && leftover.CurrentStackCount > 0)
-      {
         targetPlayer.TryDropItemInFront(leftover);
-      }
 
       int delivered = count - (leftover?.CurrentStackCount ?? 0);
       int dropped = leftover?.CurrentStackCount ?? 0;
@@ -137,9 +177,13 @@ namespace MultiplayerInfrastructure.Command
       return true;
     }
 
-    private static bool TryResolveTargetConnection(NetworkConnection sender, string rawTarget, out NetworkConnection target, out string error)
+    private static bool TryResolveTargetConnections(
+      NetworkConnection sender,
+      string rawTarget,
+      out List<NetworkConnection> targets,
+      out string error)
     {
-      target = null;
+      targets = null;
       error = string.Empty;
 
       // 대상을 생략하면 실행자 자신에게 지급한다.
@@ -151,11 +195,11 @@ namespace MultiplayerInfrastructure.Command
           return false;
         }
 
-        target = sender;
+        targets = new List<NetworkConnection> { sender };
         return true;
       }
 
-      return PlayerTargetResolver.TryResolveSingleConnection(sender, rawTarget, out target, out error);
+      return PlayerTargetResolver.TryResolveConnections(sender, rawTarget, out targets, out error);
     }
 
     private static bool TryGetPlayerController(NetworkConnection conn, out PlayerController controller)
