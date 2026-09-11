@@ -113,6 +113,7 @@ namespace MultiplayerInfrastructure.Player
         _worldItemTransformSyncAuthority = null;
 
       PlayerGamemodeService.UnregisterPlayer(this);
+      OnStopServer_PlayerModel();
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
       PlayerTagService.ClearTags(_userIdentifier.Value);
       PlayerQuestStateFlagService.ClearFlags(_userIdentifier.Value);

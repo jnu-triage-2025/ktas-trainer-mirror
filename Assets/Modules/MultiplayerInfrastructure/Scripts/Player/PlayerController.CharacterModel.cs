@@ -19,6 +19,9 @@ namespace MultiplayerInfrastructure.Player
 
     private readonly SyncVar<string> _playerModelIdentifier = new SyncVar<string>();
 
+    // 배정 해제 시점(OnStopServer)에는 Owner가 이미 무효일 수 있으므로 배정에 사용한 ClientId를 보관한다.
+    private int _assignedPlayerModelClientId = -1;
+
     public string CurrentPlayerModelIdentifier => _currentPlayerModelIdentifier;
 
     private void Awake_PlayerModel()
@@ -40,7 +43,39 @@ namespace MultiplayerInfrastructure.Player
           this);
       }
 
-      ApplyPlayerModelByIdentifierServer(_defaultPlayerModelIdentifier);
+      ApplyPlayerModelByIdentifierServer(ResolveServerAssignedPlayerModelIdentifier());
+    }
+
+    private void OnStopServer_PlayerModel()
+    {
+      if (_assignedPlayerModelClientId < 0)
+        return;
+
+      PlayerCharacterModelAssignmentService.Release(_assignedPlayerModelClientId);
+      _assignedPlayerModelClientId = -1;
+    }
+
+    /// <summary>
+    /// 입장 시 서버가 이 플레이어에게 사용할 기본 모델 식별자를 결정한다.
+    /// 세션 전체에서 중복되지 않도록 <see cref="PlayerCharacterModelAssignmentService"/>가 무작위로 배정하며,
+    /// 배정이 불가능하면 직렬화된 기본값으로 되돌아간다.
+    /// </summary>
+    private string ResolveServerAssignedPlayerModelIdentifier()
+    {
+      if (Owner == null || !Owner.IsValid)
+        return _defaultPlayerModelIdentifier;
+
+      string assignedIdentifier = PlayerCharacterModelAssignmentService.Assign(Owner.ClientId);
+      if (string.IsNullOrWhiteSpace(assignedIdentifier))
+      {
+        Debug.LogWarning(
+          $"[PlayerController] No player model assignment candidate is available. Falling back to '{_defaultPlayerModelIdentifier}'.",
+          this);
+        return _defaultPlayerModelIdentifier;
+      }
+
+      _assignedPlayerModelClientId = Owner.ClientId;
+      return assignedIdentifier;
     }
 
     private void OnStartClient_AnyPeer_PlayerModel()
@@ -87,6 +122,14 @@ namespace MultiplayerInfrastructure.Player
 
       _playerModelIdentifier.Value = modelIdentifier;
       _currentPlayerModelIdentifier = modelIdentifier;
+
+      // 명령어 등으로 모델이 바뀐 경우에도 세션 배정 상태가 실제 점유를 반영하도록 갱신한다.
+      if (Owner != null && Owner.IsValid)
+      {
+        PlayerCharacterModelAssignmentService.NotifyIdentifierApplied(Owner.ClientId, modelIdentifier);
+        _assignedPlayerModelClientId = Owner.ClientId;
+      }
+
       ApplyPlayerModelByIdentifierLocal(modelIdentifier);
       return true;
     }

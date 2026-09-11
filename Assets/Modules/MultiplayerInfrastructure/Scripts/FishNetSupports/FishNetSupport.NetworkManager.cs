@@ -9,6 +9,7 @@ using FishNet.Managing.Server;
 using FishNet.Object;
 using FishNet.Transporting;
 using MultiplayerInfrastructure.ItemSystem;
+using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
 using Unity.VisualScripting;
@@ -291,6 +292,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
         StaticObjectDisplaymentService.ClearAll();
         ConnectionGateService.ResetState();
         MultiplayerInfrastructure.Variable.SessionVariableService.ClearSessionState();
+        PlayerCharacterModelAssignmentService.ClearAll();
 
         _deferredPlayerSpawningPrepared = false;
         PrepareDeferredPlayerSpawning();
@@ -307,6 +309,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
         StaticObjectDisplaymentService.ClearAll();
         ConnectionGateService.ResetState();
         MultiplayerInfrastructure.Variable.SessionVariableService.ClearSessionState();
+        PlayerCharacterModelAssignmentService.ClearAll();
         _deferredPlayerSpawningPrepared = false;
         _systemSceneObserverPrepared = false;
       }
