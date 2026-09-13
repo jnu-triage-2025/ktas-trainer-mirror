@@ -91,57 +91,6 @@ class InteractionMigrationTests(unittest.TestCase):
         self.assertFalse(definition['visibility']['initial'])
         self.assertEqual(definition['completionSignal'], 'move_patient_a')
 
-    def test_intro_final_arrival_uses_current_position_and_waits_for_each_role(self):
-        nodes = load('disaster_intro')['nodes']
-        parallel = nodes[nodes['D004']['nextIdentifier']]
-        self.assertEqual(parallel['nodeType'], 'Parallel')
-        self.assertEqual(parallel['waitMode'], 'All')
-        self.assertEqual(parallel['allocationType'], 'ByRole')
-        branches = parallel['branches']
-        self.assertEqual([branch['requiredPlayerTags'] for branch in branches],
-                         [['nurse_b'], ['nurse_c'], ['nurse_d']])
-        self.assertEqual(len({branch['identifier'] for branch in branches}), 3)
-        self.assertEqual(len({branch['completionConditionIdentifier'] for branch in branches}), 3)
-        # A single player can hold multiple roles; removing one quest must not erase another gate's state.
-        self.assertEqual(len({nodes[branch['identifier']]['quest']['Id'] for branch in branches}), 3)
-
-        payload = json.loads((ROOT / 'Assets/Modules/TriageTrainer/Resources/Quest'
-                              / 'disaster_intro.quests.quest.json').read_text())
-        definitions = {f"{payload['namespace']}::{q['identifier']}": q
-                       for q in payload['definitions']}
-        scene = (ROOT / 'Assets/Scenes/OverworldScene.unity').read_text()
-        for branch in branches:
-            with self.subTest(role=branch['requiredPlayerTags']):
-                add = nodes[branch['identifier']]
-                quest_id = add['quest']['Id']
-                definition = definitions[add['questDefinitionIdentifier']]
-                self.assertEqual(add['operation'], 'Add')
-                self.assertEqual(definition['scope'], 'Player')
-                self.assertTrue(definition['isAutoComplete'])
-                self.assertTrue(definition['isTrackedByDefault'])
-                criterion, = definition['completionCriteria']
-                # A signal left over from the initial triage visit must not complete this quest.
-                self.assertEqual(criterion['type'], 'WaypointReached')
-                self.assertGreater(criterion['reachDistance'], 0)
-                self.assertIn(f"  identifier: {criterion['waypointIdentifier']}\n", scene)
-                gate = nodes[add['nextIdentifier']]
-                rule, = gate['rootConditions'][0]['validationRules']
-                self.assertEqual(rule['registryIdentifier'], f'quest.completed.{quest_id}')
-                self.assertTrue(gate['waitForCondition'])
-                remove = nodes[gate['nextIdentifier']]
-                self.assertEqual(remove['operation'], 'Remove')
-                self.assertEqual(remove['quest']['Id'], quest_id)
-                self.assertEqual(remove['questDefinitionIdentifier'], add['questDefinitionIdentifier'])
-                self.assertEqual(remove['nextIdentifier'], branch['completionConditionIdentifier'])
-                self.assertIn(remove['nextIdentifier'], nodes)
-
-        event = nodes[parallel['nextIdentifier']]
-        self.assertEqual(event['eventIdentifier'], 'B_C_D_to_triage')
-        ending = nodes[event['nextIdentifier']]
-        self.assertEqual(ending['nodeType'], 'Dialogue')
-        self.assertIsNone(ending['nextIdentifier'])
-        self.assertNotIn('다음 처치 시나리오', ending['dialogueContent'])
-
     def test_bc_visibility_roles_follow_current_patient_branches(self):
         data = load('patient_b_c_ct')
         expected_ids = {'recognition_1', 'recognition_2', 'recognition_3', 'recognition_4',

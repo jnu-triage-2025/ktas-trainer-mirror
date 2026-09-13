@@ -154,27 +154,6 @@
           "conditions": []
         }
       ]
-    },
-    {
-      "identifier": "move_to_triage_area",
-      "title": "분류 구역 이동",
-      "description": "환자 이송을 돕기 위해 분류 구역으로 이동하세요.",
-      "questContent": "분류 구역으로 이동",
-      "isTrackable": true,
-      "isAutoComplete": true,
-      "persistProgressOnSessionEnd": false,
-      "isTrackedByDefault": true,
-      "scope": "Player",
-      "tasks": [],
-      "completionCriteria": [
-        {
-          "type": "WaypointReached",
-          "waypointIdentifier": "scen_b:quest_arrival_triage_area",
-          "reachDistance": 6,
-          "displayTextContent": "분류 구역으로 이동",
-          "conditions": []
-        }
-      ]
     }
   ]
 }
