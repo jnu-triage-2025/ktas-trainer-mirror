@@ -52,7 +52,7 @@ namespace TriageTrainer.Entity.PatientMonitor
 
       _graphs = new PatientMonitorGraphElement[4];
       _graphValues = new Label[4];
-      _metricValues = new Label[12];
+      _metricValues = new Label[4];
 
       if (_type == PatientMonitorPlaneType.Metrics)
       {
@@ -153,13 +153,13 @@ namespace TriageTrainer.Entity.PatientMonitor
       column.style.flexGrow = 1f;
       column.style.flexDirection = FlexDirection.Column;
       column.style.justifyContent = Justify.FlexStart;
-      string[] titles = { "BPM", "PVCs", "ST", "PR", "PI", "%SpO2", "ART", "CVP", "NIBP", "ΔT", "T1", "T2" };
+      string[] titles = { "HR (BPM)", "SpO2", "NIBP", "Temperature" };
       for (int i = 0; i < titles.Length; i++)
       {
         var block = new VisualElement();
-        block.style.flexGrow = i == 2 ? 2f : 1f;
+        block.style.flexGrow = 1f;
         block.style.flexBasis = 0f;
-        block.style.minHeight = i == 2 ? 92f : 38f;
+        block.style.minHeight = 38f;
         block.style.marginBottom = 3f;
         block.style.borderBottomWidth = 1f;
         block.style.borderBottomColor = new StyleColor(new Color(1f, 1f, 1f, 0.08f));
@@ -169,7 +169,7 @@ namespace TriageTrainer.Entity.PatientMonitor
         title.style.unityFontStyleAndWeight = FontStyle.Bold;
         var value = new Label("-");
         value.style.flexGrow = 1f;
-        value.style.fontSize = i == 2 ? 9f : 18f;
+        value.style.fontSize = 24f;
         value.style.color = Color.white;
         value.style.unityTextAlign = TextAnchor.MiddleRight;
         value.style.whiteSpace = WhiteSpace.Normal;
