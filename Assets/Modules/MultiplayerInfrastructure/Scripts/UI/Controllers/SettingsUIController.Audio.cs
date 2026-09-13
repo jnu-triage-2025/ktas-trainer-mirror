@@ -22,6 +22,7 @@ namespace MultiplayerInfrastructure.UI
     private DropdownField _outputDeviceField;
     private DropdownField _inputDeviceField;
     private SliderInt _masterVolumeField;
+    private SliderInt _bgmVolumeField;
     private Toggle _ttsDisabledField;
     private Toggle _voiceEnabledField;
     private DropdownField _voiceModeField;
@@ -54,6 +55,8 @@ namespace MultiplayerInfrastructure.UI
         _inputDeviceField.UnregisterValueChangedCallback(HandleInputDeviceChanged);
       if (_masterVolumeField != null)
         _masterVolumeField.UnregisterValueChangedCallback(HandleMasterVolumeChanged);
+      if (_bgmVolumeField != null)
+        _bgmVolumeField.UnregisterValueChangedCallback(HandleBgmVolumeChanged);
       if (_ttsDisabledField != null)
         _ttsDisabledField.UnregisterValueChangedCallback(HandleTTSDisabledChanged);
 
@@ -61,6 +64,7 @@ namespace MultiplayerInfrastructure.UI
       _outputDeviceField = null;
       _inputDeviceField = null;
       _masterVolumeField = null;
+      _bgmVolumeField = null;
       _ttsDisabledField = null;
       _voiceEnabledField = null;
       _voiceModeField = null;
@@ -98,6 +102,8 @@ namespace MultiplayerInfrastructure.UI
           _inputDeviceField.UnregisterValueChangedCallback(HandleInputDeviceChanged);
         if (_masterVolumeField != null)
           _masterVolumeField.UnregisterValueChangedCallback(HandleMasterVolumeChanged);
+        if (_bgmVolumeField != null)
+          _bgmVolumeField.UnregisterValueChangedCallback(HandleBgmVolumeChanged);
         if (_ttsDisabledField != null)
           _ttsDisabledField.UnregisterValueChangedCallback(HandleTTSDisabledChanged);
 
@@ -105,6 +111,7 @@ namespace MultiplayerInfrastructure.UI
         _outputDeviceField = null;
         _inputDeviceField = null;
         _masterVolumeField = null;
+        _bgmVolumeField = null;
         _ttsDisabledField = null;
         _outputRoutingNote = null;
 
@@ -181,6 +188,14 @@ namespace MultiplayerInfrastructure.UI
       };
       _masterVolumeField.RegisterValueChangedCallback(HandleMasterVolumeChanged);
       AddRow(section, "전체 볼륨", _masterVolumeField);
+
+      _bgmVolumeField = new SliderInt(0, 100)
+      {
+        value = Mathf.RoundToInt(AudioVolumeSettings.BgmVolume * 100f),
+        showInputField = true,
+      };
+      _bgmVolumeField.RegisterValueChangedCallback(HandleBgmVolumeChanged);
+      AddRow(section, "BGM 볼륨", _bgmVolumeField);
     }
 
     private void BuildOutputSection(AudioDeviceSettingsData settings)
@@ -317,6 +332,15 @@ namespace MultiplayerInfrastructure.UI
 
       AudioVolumePreferenceService.GetOrCreateInstance().SetVolume(volume);
       SetStatusText($"전체 볼륨을 {change.newValue}%로 저장했습니다.");
+    }
+
+    private void HandleBgmVolumeChanged(ChangeEvent<int> change)
+    {
+      if (_audioFormInitializing)
+        return;
+
+      AudioVolumeSettings.SetBgmVolume(change.newValue / 100f);
+      SetStatusText($"BGM 볼륨을 {change.newValue}%로 저장했습니다.");
     }
 
     private void HandleTTSDisabledChanged(ChangeEvent<bool> change)

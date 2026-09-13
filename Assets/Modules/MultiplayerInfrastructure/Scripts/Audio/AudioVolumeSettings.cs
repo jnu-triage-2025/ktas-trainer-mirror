@@ -11,19 +11,20 @@ namespace MultiplayerInfrastructure.Audio
     private const string SfxKey = "audio.sfxVolume";
     private const string BgmKey = "audio.bgmVolume";
     private const float DefaultVolume = 1f;
+    private const float DefaultBgmVolume = 0.2f;
 
     public static event Action Changed;
 
     public static float MasterVolume { get; private set; } = 1f;
     public static float SfxVolume { get; private set; } = 1f;
-    public static float BgmVolume { get; private set; } = 1f;
+    public static float BgmVolume { get; private set; } = DefaultBgmVolume;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Initialize()
     {
       MasterVolume = Load(MasterKey);
       SfxVolume = Load(SfxKey);
-      BgmVolume = Load(BgmKey);
+      BgmVolume = Load(BgmKey, DefaultBgmVolume);
       ApplyMasterVolume();
     }
 
@@ -41,7 +42,7 @@ namespace MultiplayerInfrastructure.Audio
       Changed?.Invoke();
     }
 
-    private static float Load(string key) => PlayerPrefs.GetFloat(key, DefaultVolume);
+    private static float Load(string key, float defaultValue = DefaultVolume) => PlayerPrefs.GetFloat(key, defaultValue);
 
     /// <summary>저장된 세 음량 값을 지웁니다.</summary>
     public static void ClearStoredValues()
@@ -58,7 +59,7 @@ namespace MultiplayerInfrastructure.Audio
       ClearStoredValues();
       MasterVolume = DefaultVolume;
       SfxVolume = DefaultVolume;
-      BgmVolume = DefaultVolume;
+      BgmVolume = DefaultBgmVolume;
       ApplyMasterVolume();
       Changed?.Invoke();
     }

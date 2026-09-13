@@ -25,7 +25,7 @@ namespace MultiplayerInfrastructure.Audio
 
     public void Play()
     {
-      if (_musicClip == null) return;
+      if (_musicClip == null || (_audioSource.isPlaying && _audioSource.clip == _musicClip)) return;
       _audioSource.clip = _musicClip;
       _audioSource.Play();
     }
